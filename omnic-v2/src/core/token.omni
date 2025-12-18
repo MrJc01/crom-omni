@@ -20,13 +20,16 @@ let TOKEN_EQ = 28;
 let TOKEN_NOT_EQ = 29;
 
 // Delimiters
+let TOKEN_COLON = 30;
+let TOKEN_DOT = 31;
 let TOKEN_COMMA = 40;
 let TOKEN_SEMICOLON = 41;
 let TOKEN_LPAREN = 42;
 let TOKEN_RPAREN = 43;
 let TOKEN_LBRACE = 44;
 let TOKEN_RBRACE = 45;
-let TOKEN_COLON = 46;
+let TOKEN_LBRACKET = 46;
+let TOKEN_RBRACKET = 47;
 
 // Keywords
 let TOKEN_FN = 60;
@@ -36,11 +39,10 @@ let TOKEN_FALSE = 63;
 let TOKEN_IF = 64;
 let TOKEN_ELSE = 65;
 let TOKEN_RETURN = 66;
+let TOKEN_WHILE = 67;
 let TOKEN_STRUCT = 70;
-let TOKEN_IMPORT = 80;
-let TOKEN_NATIVE = 90;
-
-let TOKEN_DOT = 47;
+let TOKEN_NATIVE = 80;
+let TOKEN_IMPORT = 90;
 
 struct Token {
     kind: i64,

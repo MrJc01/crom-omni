@@ -118,72 +118,57 @@ Para mudar de `Laravel` para `Symfony`, altere `"framework": "laravel"` para `"f
 
 ---
 
-## Arquitetura de Sistemas Poliglotas
+## 🌍 Arquitetura de Sistemas Poliglotas
 
-O Omni permite que você construa **sistemas complexos onde diferentes componentes são compilados para linguagens diferentes**, tudo a partir de um único codebase unificado em Omni.
+O Omni foi projetado para a era pós-monólito. Uma das suas capacidades mais poderosas é o **Build Multi-Target Poliglota**.
 
-### Conceito
+Isso permite que você mantenha todo o seu sistema (Frontend, Backend, Workers, Scripts) em um único repositório (Monorepo), escrevendo tudo em Omni, mas compilando cada parte para a tecnologia mais adequada.
 
-Imagine um sistema moderno:
+### Exemplo de Configuração (`omni.config.json`)
 
-- **Frontend Web** precisa ser JavaScript/TypeScript
-- **Backend API** pode ser Python para ML ou Go para performance
-- **Workers/Jobs** podem ser Go ou Rust para processamento pesado
+Neste cenário, um único comando `omnic build` gera:
 
-Com Omni, você escreve **toda a lógica em Omni** e configura cada componente para compilar para sua linguagem ideal.
-
-### Configuração Multi-Target
+1.  Um servidor **Python** (para IA/Data Science).
+2.  Uma interface web **JavaScript/React** (para o usuário).
+3.  Um worker de alta performance (futuro target Go/Rust).
 
 ```json
 {
+  "project": {
+    "name": "SuperApp",
+    "version": "2.0.0"
+  },
   "targets": {
-    "webapp": {
-      "format": "js",
-      "source": "src/web/main.omni",
-      "output": "dist/public",
-      "framework": "react"
-    },
-    "api": {
+    "api_server": {
       "format": "python",
-      "source": "src/api/server.omni",
+      "source": "src/backend/server.omni",
       "output": "dist/api",
-      "framework": "fastapi"
+      "bundle": true
     },
-    "worker": {
-      "format": "go",
-      "source": "src/worker/processor.omni",
-      "output": "dist/worker",
-      "mode": "bare-metal"
+    "web_client": {
+      "format": "js",
+      "source": "src/frontend/app.omni",
+      "output": "dist/public/assets"
+    },
+    "data_worker": {
+      "format": "python",
+      "source": "src/workers/processor.omni",
+      "output": "dist/workers"
     }
   }
 }
 ```
 
-### Benefícios
-
-| Aspecto                  | Benefício                                                            |
-| ------------------------ | -------------------------------------------------------------------- |
-| **Consistência**         | Mesma sintaxe e lógica de negócios em todos os componentes           |
-| **Refatoração**          | Mude estruturas de dados em um lugar, propague para todos os targets |
-| **Tipos Compartilhados** | Structs e interfaces definidos uma vez, gerados para cada linguagem  |
-| **Deploy Otimizado**     | Cada componente usa a linguagem mais eficiente para seu caso de uso  |
-
 ### Fluxo de Build
 
-```
-omni build --profile prod
-    │
-    ├── webapp (JS)  ──────► dist/public/bundle.js
-    │
-    ├── api (Python) ──────► dist/api/server.py
-    │
-    └── worker (Go)  ──────► dist/worker/processor (binário)
-```
+1. **Source Único:** Você define suas regras de negócio e tipos de dados (Structs) uma única vez em `.omni`.
+2. **Transpilação Divergente:** O compilador lê o config e bifurca o processo.
+3. **Interoperabilidade:** Módulos compartilhados (ex: `src/shared/models.omni`) são compilados para ambas as linguagens, garantindo que o Backend Python e o Frontend JS sempre concordem sobre o formato dos dados.
 
-### Comunicação Entre Componentes
+### Tabela de Decisão de Targets
 
-O Omni gera automaticamente:
-
-- **Tipos compartilhados** em cada linguagem
-- **Clients HTTP/gRPC** para comunicação inter-serviços
-- **Schemas de validação** consistentes (JSON Schema, Protobuf)
+| Target            | Melhor Caso de Uso                             | Output Gerado       |
+| ----------------- | ---------------------------------------------- | ------------------- |
+| **JS (Node/Web)** | UI, IO-bound services, Serverless              | `.js` (ES6 Modules) |
+| **Python**        | Data Science, Scripts de Automação, Backend AI | `.py` (Type Hinted) |
+| **C++ / Rust**    | (Futuro) Systems Programming, Games            | Binário Nativo      |

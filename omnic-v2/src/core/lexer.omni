@@ -1,6 +1,6 @@
 import "token.omni";
 
-// Native helper to access characters in a string
+// Helpers Nativos
 fn char_at(s: string, i: i64) -> string {
     native "js" {
         if (i >= s.length) return "\0";
@@ -8,47 +8,20 @@ fn char_at(s: string, i: i64) -> string {
     }
 }
 
-// Native helper to check if a char is alphanumeric/underscore
 fn is_letter(ch: string) -> bool {
-    native "js" {
-        return /[a-zA-Z_]/.test(ch);
-    }
+    native "js" { return /[a-zA-Z_]/.test(ch); }
 }
 
-// Native helper to check if a char is digit
 fn is_digit(ch: string) -> bool {
-    native "js" {
-        return /\d/.test(ch);
-    }
+    native "js" { return /\d/.test(ch); }
 }
 
 struct Lexer {
     input: string,
-    position: i64,      // current position in input (points to current char)
-    read_position: i64, // current reading position in input (after current char)
-    ch: string,         // current char under examination
+    position: i64,
+    read_position: i64,
+    ch: string,
     line: i64
-}
-
-fn Lexer_read_char(self: Lexer) {
-    if (self.read_position >= 999999) { // TODO: Check EOF properly
-         self.ch = "\0";
-    } else {
-         self.ch = char_at(self.input, self.read_position);
-    }
-    
-    // Native check for EOF from char_at
-    let is_eof = false;
-    native "js" {
-        is_eof = self.ch === "\0";
-    }
-
-    if (is_eof) {
-        self.ch = "\0";
-    } else {
-        self.position = self.read_position;
-        self.read_position = self.read_position + 1;
-    }
 }
 
 fn new_lexer(input: string) -> Lexer {
@@ -59,175 +32,154 @@ fn new_lexer(input: string) -> Lexer {
         ch: "\0",
         line: 1
     };
-    Lexer_read_char(l);
+    Lexer_read_char(l); // Chamada de função livre
     return l;
 }
 
-fn Lexer_skip_whitespace(self: Lexer) {
+// Funções Livres (Substituindo impl)
+fn Lexer_read_char(l: Lexer) {
+    if (l.read_position >= 999999) {
+         l.ch = "\0";
+    } else {
+         l.ch = char_at(l.input, l.read_position);
+    }
+    
+    let is_eof = false;
+    native "js" { is_eof = l.ch === "\0"; }
+
+    if (is_eof) {
+        l.ch = "\0";
+    } else {
+        l.position = l.read_position;
+        l.read_position = l.read_position + 1;
+    }
+}
+
+fn Lexer_skip_whitespace(l: Lexer) {
     let is_ws = false;
     native "js" {
-        is_ws = self.ch === ' ' || self.ch === '\t' || self.ch === '\n' || self.ch === '\r';
+        is_ws = l.ch === ' ' || l.ch === '\t' || l.ch === '\n' || l.ch === '\r';
     }
     while (is_ws) {
-        if (self.ch == "\n") {
-            self.line = self.line + 1;
+        if (l.ch == "\n") {
+            l.line = l.line + 1;
         }
-        Lexer_read_char(self);
+        Lexer_read_char(l);
         native "js" {
-                is_ws = self.ch === ' ' || self.ch === '\t' || self.ch === '\n' || self.ch === '\r';
+             is_ws = l.ch === ' ' || l.ch === '\t' || l.ch === '\n' || l.ch === '\r';
         }
     }
 }
 
-fn Lexer_read_identifier(self: Lexer) -> string {
-    let start_pos = self.position;
-    while (is_letter(self.ch)) {
-        Lexer_read_char(self);
+fn Lexer_read_identifier(l: Lexer) -> string {
+    let start_pos = l.position;
+    while (is_letter(l.ch)) {
+        Lexer_read_char(l);
     }
-    // Slice string
     let ident = "";
     native "js" {
-        ident = self.input.substring(Number(start_pos), Number(self.position));
+        ident = l.input.substring(Number(start_pos), Number(l.position));
     }
     return ident;
 }
 
-fn Lexer_read_number(self: Lexer) -> string {
-    let start_pos = self.position;
-    while (is_digit(self.ch)) {
-        Lexer_read_char(self);
+fn Lexer_read_number(l: Lexer) -> string {
+    let start_pos = l.position;
+    while (is_digit(l.ch)) {
+        Lexer_read_char(l);
     }
     let num_str = "";
     native "js" {
-        num_str = self.input.substring(Number(start_pos), Number(self.position));
+        num_str = l.input.substring(Number(start_pos), Number(l.position));
     }
     return num_str;
-}
-
-fn Lexer_read_string(self: Lexer) -> string {
-    let start_pos = self.position + 1;
-    while (true) {
-        Lexer_read_char(self);
-        if (self.ch == "\"" || self.ch == "\0") {
-            break;
-        }
-    }
-    let str_val = "";
-    native "js" {
-        str_val = self.input.substring(Number(start_pos), Number(self.position));
-    }
-    return str_val;
 }
 
 fn Lexer_lookup_ident(ident: string) -> i64 {
     if (ident == "fn") return TOKEN_FN;
     if (ident == "let") return TOKEN_LET;
-    if (ident == "true") return TOKEN_TRUE;
-    if (ident == "false") return TOKEN_FALSE;
+    if (ident == "struct") return TOKEN_STRUCT;
     if (ident == "if") return TOKEN_IF;
     if (ident == "else") return TOKEN_ELSE;
     if (ident == "return") return TOKEN_RETURN;
-    if (ident == "struct") return TOKEN_STRUCT;
-    if (ident == "import") return TOKEN_IMPORT;
+    if (ident == "true") return TOKEN_TRUE;
+    if (ident == "false") return TOKEN_FALSE;
     if (ident == "native") return TOKEN_NATIVE;
+    if (ident == "import") return 90; // TOKEN_IMPORT
     return TOKEN_IDENTIFIER;
 }
 
-fn Lexer_next_token(self: Lexer) -> Token {
-    Lexer_skip_whitespace(self);
+fn Lexer_next_token(l: Lexer) -> Token {
+    Lexer_skip_whitespace(l);
+    let tok = new_token(TOKEN_ILLEGAL, l.ch, l.line);
 
-    let tok = new_token(TOKEN_ILLEGAL, self.ch, self.line);
-    tok.start = self.position;
-
-    if (self.ch == "\0") {
+    if (l.ch == "\0") {
         tok.kind = TOKEN_EOF;
         tok.lexeme = "";
         return tok;
     }
 
-    if (self.ch == "=") {
-        let next_char = char_at(self.input, self.read_position);
-        if (next_char == "=") {
-            Lexer_read_char(self);
-            tok.kind = TOKEN_EQ;
-            tok.lexeme = "==";
-        } else {
-            tok.kind = TOKEN_ASSIGN;
-            tok.lexeme = "=";
-        }
-    } else if (self.ch == "+") {
-        tok.kind = TOKEN_PLUS;
-        tok.lexeme = "+";
-    } else if (self.ch == "-") {
-        tok.kind = TOKEN_MINUS;
-        tok.lexeme = "-";
-    } else if (self.ch == "!") {
-            let next_char = char_at(self.input, self.read_position);
-            if (next_char == "=") {
-                Lexer_read_char(self);
-                tok.kind = TOKEN_NOT_EQ;
-                tok.lexeme = "!=";
-            } else {
-                tok.kind = TOKEN_BANG;
-                tok.lexeme = "!";
-            }
-    } else if (self.ch == "*") {
-        tok.kind = TOKEN_ASTERISK;
-        tok.lexeme = "*";
-    } else if (self.ch == "/") {
-        tok.kind = TOKEN_SLASH;
-        tok.lexeme = "/";
-    } else if (self.ch == "<") {
-        tok.kind = TOKEN_LT;
-        tok.lexeme = "<";
-    } else if (self.ch == ">") {
-        tok.kind = TOKEN_GT;
-        tok.lexeme = ">";
-    } else if (self.ch == ";") {
+    // Single char tokens
+    if (l.ch == "=") {
+        tok.kind = TOKEN_ASSIGN; 
+        tok.lexeme = "=";
+    } else if (l.ch == ";") {
         tok.kind = TOKEN_SEMICOLON;
         tok.lexeme = ";";
-    } else if (self.ch == ":") {
-        tok.kind = TOKEN_COLON;
-        tok.lexeme = ":";
-    } else if (self.ch == ",") {
-        tok.kind = TOKEN_COMMA;
-        tok.lexeme = ",";
-    } else if (self.ch == ".") {
-        tok.kind = TOKEN_DOT;
-        tok.lexeme = ".";
-    } else if (self.ch == "{") {
-        tok.kind = TOKEN_LBRACE;
-        tok.lexeme = "{";
-    } else if (self.ch == "}") {
-        tok.kind = TOKEN_RBRACE;
-        tok.lexeme = "}";
-    } else if (self.ch == "(") {
+    } else if (l.ch == "(") {
         tok.kind = TOKEN_LPAREN;
         tok.lexeme = "(";
-    } else if (self.ch == ")") {
+    } else if (l.ch == ")") {
         tok.kind = TOKEN_RPAREN;
         tok.lexeme = ")";
-    } else if (self.ch == "\"") {
+    } else if (l.ch == "{") {
+        tok.kind = TOKEN_LBRACE;
+        tok.lexeme = "{";
+    } else if (l.ch == "}") {
+        tok.kind = TOKEN_RBRACE;
+        tok.lexeme = "}";
+    } else if (l.ch == ",") {
+        tok.kind = TOKEN_COMMA;
+        tok.lexeme = ",";
+    } else if (l.ch == ":") {
+        tok.kind = 30; // TOKEN_COLON
+        tok.lexeme = ":";
+    } else if (l.ch == ".") {
+        tok.kind = 31; // TOKEN_DOT
+        tok.lexeme = ".";
+    } else if (l.ch == "+") {
+        tok.kind = TOKEN_PLUS;
+        tok.lexeme = "+";
+    } else if (l.ch == "\"") {
+        // String literal simple parsing
+        let str_val = "";
+        Lexer_read_char(l); // skip open quote
+        let start = l.position;
+        while (l.ch != "\"") {
+             Lexer_read_char(l);
+        }
+        let end = l.position;
+        native "js" {
+            str_val = l.input.substring(Number(start), Number(end));
+        }
         tok.kind = TOKEN_STRING;
-        tok.lexeme = Lexer_read_string(self);
-        // Note: read_string stops at the closing quote, but pointing TO it.
-        // We need to consume the closing quote.
+        tok.lexeme = str_val;
     } else {
-        if (is_letter(self.ch)) {
-            let literal = Lexer_read_identifier(self);
+        if (is_letter(l.ch)) {
+            let literal = Lexer_read_identifier(l);
             tok.kind = Lexer_lookup_ident(literal);
             tok.lexeme = literal;
             return tok;
-        } else if (is_digit(self.ch)) {
+        } else if (is_digit(l.ch)) {
             tok.kind = TOKEN_INT;
-            tok.lexeme = Lexer_read_number(self);
+            tok.lexeme = Lexer_read_number(l);
             return tok;
         } else {
             tok.kind = TOKEN_ILLEGAL;
-            tok.lexeme = self.ch;
+            tok.lexeme = l.ch;
         }
     }
 
-    Lexer_read_char(self);
+    Lexer_read_char(l);
     return tok;
 }
