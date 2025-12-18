@@ -262,122 +262,6 @@ impl<'a> Parser<'a> {
     }
 
     fn parse_native_block(&mut self) -> Result<Statement> {
-        self.expect(Token::Native)?;
-        self.expect(Token::ParenOpen)?;
-        let lang = match self.next_token()? {
-            Token::StringLiteral(s) => s,
-            t => return Err(anyhow!("Esperado string literal para linguagem nativa, encontrado {:?}", t)),
-        };
-        self.expect(Token::ParenClose)?;
-        
-        // Aqui está o truque: em vez de parsear bloco normal, consumimos "raw" até }
-        // Para o MVP, vamos confiar nos Tokens, mas reconstruindo o texto seria ideal.
-        // Como o Lexer já quebrou tudo, vamos recolher tokens até que o balanceamento de {} zere.
-        // Mas o "code" precisa ser String.
-        // Solução mais robusta: Usar ranges.
-        
-        self.expect(Token::BraceOpen)?;
-        
-        // Capturar range inicial
-        // Infelizmente, a struct Lexer não expõe current byte offset facilmente no peekable iter.
-        // Vamos iterar tokens e ir reconstruindo uma string aproximada ou apenas coletar tokens e depois o CodeGen se vira?
-        // O CodeGen precisa de string bruta.
-        // Se Token::Identifier("console"), Token::Dot, Token::Identifier("log")...
-        // Reconstruir perde formatação.
-        // Vamos tentar usar o span que vem do lexer.
-        
-        // Como o lexer retorna (Token, Range), podemos pegar o start do primeiro token e o end do último.
-        // Mas precisamos iterar até achar o BraceClose correspondente.
-        
-        let mut depth = 1; // Já consumimos um BraceOpen
-        let mut start_index = 0;
-        let mut end_index = 0;
-        let mut first = true;
-
-        // Precisamos olhar para os tokens "crus" para pegar o range.
-        // O `self.tokens` retorna Result<(Token, Range)>.
-        
-        loop {
-            // Peek para checar
-            let peeked = self.tokens.peek();
-            match peeked {
-                 Some(Ok((token, span))) => {
-                     if first {
-                         start_index = span.start;
-                         first = false;
-                     }
-                     end_index = span.end;
-
-                     if *token == Token::BraceOpen {
-                         depth += 1;
-                     } else if *token == Token::BraceClose {
-                         depth -= 1;
-                         if depth == 0 {
-                             // Encontramos o fim do bloco nativo
-                             break;
-                         }
-                     }
-                     // Consumir token
-                     self.tokens.next(); 
-                 },
-                 Some(Err(e)) => return Err(anyhow!("Erro no bloco nativo: {}", e.message)),
-                 None => return Err(anyhow!("Fim de arquivo inesperado dentro de native block")),
-            }
-        }
-
-        // Extrair string bruta do source
-        // O loop parou NO BraceClose de fechamento (peeked).
-        // Então o conteúdo vai de `start_index` (primeiro token dentro) até o `end_index` do token ANTERIOR ao close.
-        // Mas espere, "native js { console.log }" -> Tokens: console, ., log, BraceClose.
-        // O loop acima consome tudo até o último BraceClose.
-        // Actually, o loop consome tokens internos. Quando vê BraceClose que zera depth, ele faz break *sem consumir* o Close se fosse peek.
-        // Mas no meu loop eu chamo `self.tokens.next()` no fim.
-        // Se `token == BraceClose` e `depth == 0` -> break. Mas eu já consumi?
-        // Ah, a lógica ali: se token == BraceClose -> depth -= 1. Se depth == 0 break.
-        // E logo depois `self.tokens.next()`. Isso consome o BraceClose final? Sim.
-        // Isso é o que `parse_block` faz (consome o fecha chaves).
-        
-        // Mas para extrair o código, queremos o que está ENTRE as chaves.
-        // Então o range é [start_index_do_primeiro_token .. end_index_do_ultimo_token].
-        // Isso perde os espaços entre tokens se usarmos ranges de tokens individuais? Não, se usarmos Range no source.
-        // Mas se tiver whitespace entre tokens, o Token::Range não cobre? 
-        // Logos range é só o token.
-        // O espaço ` ` entre tokens não está em span.
-        // Solução hacky MVP:
-        // Vamos pegar (start do primeiro token) .. (start do Token BraceClose final).
-        // Isso deve incluir tudo, inclusive espaços, exceto talvez espaços no final antes do }.
-        
-        // Correção Lógica:
-        // Antes de entrar no loop, consumimos BraceOpen.
-        // O "conteúdo" começa logo após esse BraceOpen.
-        // Podemos tentar pegar o span do BraceOpen que acabamos de consumir? `self.expect` consome mas não retorna span fácil aqui.
-        // Vamos simplificar: O bloco nativo não pode ter chaves desbalanceadas.
-        // Vamos reconstruir o código token a token separado por espaço como fallback.
-        // É feio mas funciona pra `console.log(msg)`.
-        
-        // Revisitando: A melhor forma para MVP sem Span tracking complexo na struct Parser:
-        // Apenas reconstruir string aproximada.
-        // CodeGen `Naive`: join(" ").
-        
-        // Vamos tentar melhorar:
-        // Recuperar o código original é difícil sem acesso direto aos Spans anteriores.
-        // Mas o `self.tokens` é um iterador.
-        // Vamos acumular tokens num buffer de String.
-        
-        Ok(Statement::NativeBlock { 
-            lang, 
-            code: vec!["// Código nativo abstraído (Parser simplificado)".to_string()] 
-            // TODO: Implementar extração real.
-            // Pera, o prompt exige que funcione `console.log`. Se eu retornar comentário, não roda.
-            // Tenho que implementar.
-        })
-    }
-    
-    // override temporário para tentar fazer funcionar o native parse:
-    // Vou usar a estratégia de "reconstrução tosca" para o MVP.
-    // Iterar tokens e dar to_string() neles + espaço.
-    
-    fn parse_native_block_real(&mut self) -> Result<Statement> {
          self.expect(Token::Native)?;
          self.expect(Token::ParenOpen)?;
          let lang = match self.next_token()? {
@@ -409,17 +293,14 @@ impl<'a> Parser<'a> {
              
              let consumed = self.consume()?;
              
-             // Heurística simples de formatação
              let s = match consumed {
-                 Token::StringLiteral(s) => format!("\"{}\"", s), // repor aspas
-                 Token::Semicolon => ";\n".to_string(), // quebra linha em ;
+                 Token::StringLiteral(s) => format!("\"{}\"", s), 
+                 Token::Semicolon => ";\n".to_string(), 
                  Token::BraceOpen => "{\n".to_string(),
                  Token::BraceClose => "}\n".to_string(),
                  _ => format!("{}", consumed),
              };
              
-             // Se for identificador ou operador, adiciona espaço antes?
-             // MVP: Adiciona espaço sempre. JS aguenta espaços extras.
              current_line.push_str(&s);
              current_line.push(' ');
              
@@ -435,15 +316,6 @@ impl<'a> Parser<'a> {
          
          Ok(Statement::NativeBlock { lang, code: code_lines })
     }
-
-    // ... (restante dos métodos iguais)
-    
-    // ... Copy-paste do código anterior para garantir integridade do arquivo ...
-    // Para economizar tokens na resposta, vou truncar as repetições já que usei write_to_file
-    // Mas wait, preciso escrever o arquivo TODO.
-    // Vou usar o Parser antigo como base e aplicar somente as mudanças do Native e Source e construtor.
-    // O problema é que `write_to_file` precisa do conteúdo todo.
-    // Vou gerar o conteúdo completo do parser atualizado.
 
     fn parse_let_binding(&mut self) -> Result<Statement> {
         let is_mut = if self.peek_token()? == Token::Mut {
@@ -693,6 +565,75 @@ impl<'a> Parser<'a> {
             Some(Ok((token, _))) => Ok(token),
             Some(Err(e)) => Err(anyhow!("Erro Léxico: {}", e.message)),
             None => Err(anyhow!("Fim de arquivo inesperado")),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::core::lexer::Lexer;
+    use crate::core::ast::{Statement, Expression};
+
+    // Função auxiliar para facilitar os testes
+    fn parse_code(code: &str) -> Vec<Statement> {
+        let lexer = Lexer::new(code);
+        let mut parser = Parser::new(lexer, code);
+        let mut statements = Vec::new();
+        
+        while parser.peek_token().is_ok() {
+             match parser.parse_statement() {
+                 Ok(stmt) => statements.push(stmt),
+                 Err(e) => panic!("Falha no parsing: {}", e),
+             }
+        }
+        statements
+    }
+
+    #[test]
+    fn test_parse_array() {
+        let code = "let numeros = [1, 2, 3];";
+        let ast = parse_code(code);
+
+        // Verifica se gerou um Statement::LetBinding
+        if let Statement::LetBinding { name, value, .. } = &ast[0] {
+            assert_eq!(name, "numeros");
+            // Verifica se o valor é uma Expression::Array
+            if let Expression::Array(elements) = value {
+                assert_eq!(elements.len(), 3);
+            } else {
+                panic!("Esperava Expression::Array, encontrou {:?}", value);
+            }
+        } else {
+            panic!("Esperava Statement::LetBinding, encontrou {:?}", ast[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_while_loop() {
+        let code = "while (x < 10) { x = x + 1; }";
+        let ast = parse_code(code);
+
+        // Verifica se identificou o While
+        if let Statement::While { condition: _, body } = &ast[0] {
+            assert!(!body.statements.is_empty());
+        } else {
+            panic!("Esperava Statement::While, encontrou {:?}", ast[0]);
+        }
+    }
+
+    #[test]
+    fn test_parse_native_block() {
+        let code = "native \"js\" { console.log('ola'); }";
+        let ast = parse_code(code);
+
+        if let Statement::NativeBlock { lang, code: native_code } = &ast[0] {
+            assert_eq!(lang, "js");
+            // native_code é Vec<String>
+            let full_code = native_code.join("");
+            assert!(full_code.contains("console.log"));
+        } else {
+            panic!("Esperava Statement::NativeBlock, encontrou {:?}", ast[0]);
         }
     }
 }

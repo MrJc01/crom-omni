@@ -1,0 +1,207 @@
+import "token.omni";
+
+// Native helper to access characters in a string
+fn char_at(s: string, i: i64) -> string {
+    native "js" {
+        if (i >= s.length) return "\0";
+        return s.charAt(i);
+    }
+}
+
+// Native helper to check if a char is alphanumeric/underscore
+fn is_letter(ch: string) -> bool {
+    native "js" {
+        return /[a-zA-Z_]/.test(ch);
+    }
+}
+
+// Native helper to check if a char is digit
+fn is_digit(ch: string) -> bool {
+    native "js" {
+        return /\d/.test(ch);
+    }
+}
+
+struct Lexer {
+    input: string,
+    position: i64,      // current position in input (points to current char)
+    read_position: i64, // current reading position in input (after current char)
+    ch: string,         // current char under examination
+    line: i64
+}
+
+fn new_lexer(input: string) -> Lexer {
+    let l = Lexer {
+        input: input,
+        position: 0,
+        read_position: 0,
+        ch: "\0",
+        line: 1
+    };
+    l.read_char();
+    return l;
+}
+
+impl Lexer {
+    fn read_char(self) {
+        if (self.read_position >= 999999) { // TODO: Use length check when available or char_at handles EOF
+             self.ch = "\0";
+        } else {
+             self.ch = char_at(self.input, self.read_position);
+        }
+        
+        // Native check for EOF from char_at
+        let is_eof = false;
+        native "js" {
+            is_eof = self.ch === "\0";
+        }
+
+        if (is_eof) {
+            self.ch = "\0";
+        } else {
+            self.position = self.read_position;
+            self.read_position = self.read_position + 1;
+        }
+    }
+    
+    fn skip_whitespace(self) {
+        let is_ws = false;
+        native "js" {
+            is_ws = self.ch === ' ' || self.ch === '\t' || self.ch === '\n' || self.ch === '\r';
+        }
+        while (is_ws) {
+            if (self.ch == "\n") {
+                self.line = self.line + 1;
+            }
+            self.read_char();
+            native "js" {
+                 is_ws = self.ch === ' ' || self.ch === '\t' || self.ch === '\n' || self.ch === '\r';
+            }
+        }
+    }
+
+    fn read_identifier(self) -> string {
+        let start_pos = self.position;
+        while (is_letter(self.ch)) {
+            self.read_char();
+        }
+        // Slice string - implementing native slice helper for now
+        let ident = "";
+        let len = self.position - start_pos;
+        native "js" {
+            ident = self.input.substring(Number(start_pos), Number(self.position));
+        }
+        return ident;
+    }
+
+    fn read_number(self) -> string {
+        let start_pos = self.position;
+        while (is_digit(self.ch)) {
+            self.read_char();
+        }
+        let num_str = "";
+        native "js" {
+            num_str = self.input.substring(Number(start_pos), Number(self.position));
+        }
+        return num_str;
+    }
+
+    fn lookup_ident(ident: string) -> i64 {
+        if (ident == "fn") return TOKEN_FN;
+        if (ident == "let") return TOKEN_LET;
+        if (ident == "true") return TOKEN_TRUE;
+        if (ident == "false") return TOKEN_FALSE;
+        if (ident == "if") return TOKEN_IF;
+        if (ident == "else") return TOKEN_ELSE;
+        if (ident == "return") return TOKEN_RETURN;
+        return TOKEN_IDENTIFIER;
+    }
+
+    fn next_token(self) -> Token {
+        self.skip_whitespace();
+
+        let tok = new_token(TOKEN_ILLEGAL, self.ch, self.line);
+
+        if (self.ch == "\0") {
+            tok.kind = TOKEN_EOF;
+            tok.lexeme = "";
+            return tok;
+        }
+
+        if (self.ch == "=") {
+            // Check for ==
+            let next_char = char_at(self.input, self.read_position);
+            if (next_char == "=") {
+                self.read_char();
+                tok.kind = TOKEN_EQ;
+                tok.lexeme = "==";
+            } else {
+                tok.kind = TOKEN_ASSIGN;
+                tok.lexeme = "=";
+            }
+        } else if (self.ch == "+") {
+            tok.kind = TOKEN_PLUS;
+            tok.lexeme = "+";
+        } else if (self.ch == "-") {
+            tok.kind = TOKEN_MINUS;
+            tok.lexeme = "-";
+        } else if (self.ch == "!") {
+             let next_char = char_at(self.input, self.read_position);
+             if (next_char == "=") {
+                 self.read_char();
+                 tok.kind = TOKEN_NOT_EQ;
+                 tok.lexeme = "!=";
+             } else {
+                 tok.kind = TOKEN_BANG;
+                 tok.lexeme = "!";
+             }
+        } else if (self.ch == "*") {
+            tok.kind = TOKEN_ASTERISK;
+            tok.lexeme = "*";
+        } else if (self.ch == "/") {
+            tok.kind = TOKEN_SLASH;
+            tok.lexeme = "/";
+        } else if (self.ch == "<") {
+            tok.kind = TOKEN_LT;
+            tok.lexeme = "<";
+        } else if (self.ch == ">") {
+            tok.kind = TOKEN_GT;
+            tok.lexeme = ">";
+        } else if (self.ch == ";") {
+            tok.kind = TOKEN_SEMICOLON;
+            tok.lexeme = ";";
+        } else if (self.ch == ",") {
+            tok.kind = TOKEN_COMMA;
+            tok.lexeme = ",";
+        } else if (self.ch == "{") {
+            tok.kind = TOKEN_LBRACE;
+            tok.lexeme = "{";
+        } else if (self.ch == "}") {
+            tok.kind = TOKEN_RBRACE;
+            tok.lexeme = "}";
+        } else if (self.ch == "(") {
+            tok.kind = TOKEN_LPAREN;
+            tok.lexeme = "(";
+        } else if (self.ch == ")") {
+            tok.kind = TOKEN_RPAREN;
+            tok.lexeme = ")";
+        } else {
+            if (is_letter(self.ch)) {
+                let literal = self.read_identifier();
+                tok.kind = Lexer.lookup_ident(literal);
+                tok.lexeme = literal;
+                return tok; // read_identifier already advanced position
+            } else if (is_digit(self.ch)) {
+                tok.kind = TOKEN_INT;
+                tok.lexeme = self.read_number();
+                return tok; // read_number already advanced position
+            } else {
+                tok.kind = TOKEN_ILLEGAL;
+                tok.lexeme = self.ch;
+            }
+        }
+
+        self.read_char();
+        return tok;
+    }
+}
