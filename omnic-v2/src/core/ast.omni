@@ -1,25 +1,42 @@
-// Node Types
+// Node Constants
 let NODE_PROGRAM = 1;
 let NODE_LET = 2;
 let NODE_LITERAL = 3;
 let NODE_FUNCTION = 4;
-let NODE_CALL = 5;
-let NODE_BLOCK = 6;
+let NODE_BLOCK = 5;
+let NODE_CALL = 6;
 let NODE_RETURN = 7;
 let NODE_STRUCT = 70;
-let NODE_STRUCT_LITERAL = 71;
+let NODE_BINARY = 8;
+let NODE_MEMBER = 9;
+let NODE_IMPORT = 10;
+let NODE_NATIVE = 80;
 
-// We use Duck Typing essentially, but defining structs helps with clarity
-// In JS backend, these just become objects.
-
+// Structures
 struct Program {
-    statements: any // Array of statements
+    statements: any // List<Statement>
+}
+
+struct NativeStmt {
+    kind: i64,
+    lang: string,
+    code: string
 }
 
 struct LetStmt {
     kind: i64,
     name: string,
-    value: any // Expression node
+    value: any // Expression
+}
+
+struct ImportDecl {
+    kind: i64,
+    path: string
+}
+
+struct ExpressionStmt {
+    kind: i64,
+    expr: any // Expression
 }
 
 struct IntegerLiteral {
@@ -27,17 +44,25 @@ struct IntegerLiteral {
     value: i64
 }
 
+struct BinaryExpr {
+    kind: i64,
+    left: any,
+    op: string,
+    right: any
+}
+
+struct MemberExpr {
+    kind: i64,
+    target: any,
+    property: string
+}
+
+// Function Support
 struct FunctionDecl {
     kind: i64,
     name: string,
-    params: any, // Array of strings
-    body: any // Block node
-}
-
-struct CallExpr {
-    kind: i64,
-    name: string,
-    args: any // Array of expressions
+    params: any, // List<string>
+    body: any // Block
 }
 
 struct Block {
@@ -45,43 +70,33 @@ struct Block {
     statements: any
 }
 
+struct CallExpr {
+    kind: i64,
+    function: any, // Expression (Identifier)
+    args: any // List<Expression>
+}
+
 struct ReturnStmt {
     kind: i64,
     value: any
 }
 
+// Struct Support (Novo)
 struct StructDecl {
     kind: i64,
     name: string,
-    fields: any // Array of strings (names) or objects {name, type}
+    fields: any // List<StructField>
 }
 
-// Note: For instantiation, we can use CallExpr if we treat it as a constructor call,
-// or we can add a specific StructLiteral node. 
-// For simplicity in JS generation (new Class(obj)), let's use CallExpr or a new node if needed.
-// If we parse `Ponto { x: 1, y: 2 }` we want strict control.
-// Let's add StructLiteral for clarity.
-
-struct StructLiteral {
-    kind: i64,
+struct StructField {
     name: string,
-    fields: any // Array of {name, value} keys
+    typename: string
 }
 
-// Helpers to construct nodes
-fn new_program() -> Program {
-    // Native array creation helper
-    let stmts = 0;
-    native "js" {
-        stmts = [];
-    }
-    return Program {
-        statements: stmts
+// Helper para instanciar struct field
+fn new_struct_field(name: string, typename: string) -> StructField {
+    return StructField {
+        name: name,
+        typename: typename
     };
-}
-
-fn add_statement(prog: Program, stmt: any) {
-    native "js" {
-        prog.statements.push(stmt);
-    }
 }

@@ -1,202 +1,120 @@
-import "core/ast.omni";
+import "ast.omni";
 
 struct CodeGenerator {
-    empty: i64 // Placeholder to ensure struct is valid
 }
 
-fn new_codegen() -> CodeGenerator {
-    return CodeGenerator {
-        empty: 0
-    };
+fn new_code_generator() -> CodeGenerator {
+    return CodeGenerator {};
 }
 
-impl CodeGenerator {
-    fn generate(self, prog: Program) -> string {
-        let output = "";
-        
-        let i = 0;
-        let stmts_len = 0;
-        let stmts = prog.statements;
-        
+fn CodeGenerator_generate(self: CodeGenerator, program: Program) -> string {
+    let output = "";
+    // Native loop over statements
+    native "js" {
+        for (const stmt of program.statements) {
+            output += CodeGenerator_gen_statement(self, stmt) + "\n";
+        }
+    }
+    return output;
+}
+
+fn CodeGenerator_gen_statement(self: CodeGenerator, stmt: any) -> string {
+    if (stmt.kind == NODE_LET) {
+        return "let " + stmt.name + " = " + CodeGenerator_gen_expression(self, stmt.value) + ";";
+    }
+    if (stmt.kind == NODE_RETURN) {
+        return "return " + CodeGenerator_gen_expression(self, stmt.value) + ";";
+    }
+    if (stmt.kind == NODE_FUNCTION) {
+        let params = "";
+        native "js" { params = stmt.params.join(", "); }
+        let body = CodeGenerator_gen_block(self, stmt.body);
+        return "function " + stmt.name + "(" + params + ") " + body;
+    }
+    if (stmt.kind == NODE_STRUCT) {
+        return CodeGenerator_gen_struct(self, stmt);
+    }
+    if (stmt.kind == NODE_NATIVE) {
+        return stmt.code;
+    }
+    if (stmt.kind == NODE_IMPORT) {
+        // import "path/to/file.omni"; -> const file = require("./path/to/file.js");
+        let path = stmt.path;
+        let name = "";
         native "js" {
-            stmts_len = stmts.length;
-        }
-
-        while (i < stmts_len) {
-            let stmt = 0;
-            native "js" {
-                stmt = stmts[i];
+            path = path.replace(".omni", ".js");
+            if (!path.startsWith(".") && !path.startsWith("/")) {
+                 path = "./" + path;
             }
-            output = output + self.gen_statement(stmt);
-            i = i + 1;
+            // Extract basename
+            const parts = path.split('/');
+            const filename = parts[parts.length - 1];
+            name = filename.split('.')[0];
         }
+        return "const " + name + " = require(\"" + path + "\");";
+    }
+    // Expression Statement
+    return CodeGenerator_gen_expression(self, stmt.expr) + ";";
+}
 
-        return output;
+fn CodeGenerator_gen_struct(self: CodeGenerator, stmt: StructDecl) -> string {
+    let name = stmt.name;
+    let assignments = "";
+    
+    // Gera: this.field = data.field;
+    native "js" {
+        for (const field of stmt.fields) {
+            assignments += `        this.${field.name} = data.${field.name};\n`;
+        }
     }
 
-    fn gen_statement(self, stmt: any) -> string {
-        // NODE_LET = 2
-        if (stmt.kind == 2) {
-            let name = stmt.name;
-            let val = self.gen_expression(stmt.value);
-            return "const " + name + " = " + val + ";";
-        }
-        // NODE_FUNCTION = 4
-        if (stmt.kind == 4) {
-             let name = stmt.name;
-             let body = self.gen_statement(stmt.body); // Generate Block
-             
-             let params_str = "";
-             let params = stmt.params;
-             let len = 0;
-             native "js" {
-                 len = params.length;
-             }
-             
-             let i = 0;
-             while (i < len) {
-                 let p = "";
-                 native "js" {
-                     p = params[i];
-                 }
-                 params_str = params_str + p;
-                 if (i < len - 1) {
-                     params_str = params_str + ", ";
-                 }
-                 i = i + 1;
-             }
+    return "class " + name + " {\n" +
+           "    constructor(data = {}) {\n" +
+           assignments +
+           "    }\n" +
+           "}";
+}
 
-             return "function " + name + "(" + params_str + ") " + body;
+fn CodeGenerator_gen_block(self: CodeGenerator, block: Block) -> string {
+    let out = "{\n";
+    native "js" {
+        for (const s of block.statements) {
+            out += "    " + CodeGenerator_gen_statement(self, s) + "\n";
         }
-        // NODE_BLOCK = 6
-        if (stmt.kind == 6) {
-             let block_code = "{ ";
-             let stmts = stmt.statements;
-             let len = 0;
-             native "js" {
-                 len = stmts.length;
-             }
-             
-             let i = 0;
-             while (i < len) {
-                 let s = 0;
-                 native "js" {
-                     s = stmts[i];
-                 }
-                 block_code = block_code + self.gen_statement(s) + " ";
-                 i = i + 1;
-             }
-             block_code = block_code + "}";
-             return block_code;
-        }
-        // NODE_RETURN = 7
-        if (stmt.kind == 7) {
-            let val = self.gen_expression(stmt.value);
-            return "return " + val + ";";
-        }
-        // NODE_STRUCT = 70
-        if (stmt.kind == 70) {
-            let name = stmt.name;
-            let fields = stmt.fields;
-            let len = 0;
-            native "js" { len = fields.length; }
-
-            let assignments = "";
-            let i = 0;
-            while (i < len) {
-                let f = 0;
-                let fname = "";
-                native "js" {
-                    f = fields[i];
-                    fname = f.name; // struct declaration fields are {name, type}
-                }
-                
-                // this.fname = data.fname;
-                assignments = assignments + "this." + fname + " = data." + fname + "; ";
-                i = i + 1;
-            }
-
-            return "class " + name + " { constructor(data) { " + assignments + " } }";
-        }
-
-        return "";
     }
+    out += "}";
+    return out;
+}
 
-    fn gen_expression(self, expr: any) -> string {
-        // NODE_LITERAL = 3
-        if (expr.kind == 3) {
-            let val_str = "";
-            let val = expr.value;
-            native "js" {
-                val_str = val.toString();
-            }
-            return val_str;
+fn CodeGenerator_gen_expression(self: CodeGenerator, expr: any) -> string {
+    if (expr.kind == NODE_LITERAL) {
+        return expr.value; // JS auto-converts int to string
+    }
+    if (expr.kind == NODE_CALL) {
+        let args = "";
+        native "js" { 
+            let argList = [];
+            for(let a of expr.args) argList.push(CodeGenerator_gen_expression(self, a));
+            args = argList.join(", ");
         }
-        // NODE_CALL = 5
-        if (expr.kind == 5) {
-            let name = expr.name;
-            let args_str = "";
-            let args = expr.args;
-            let len = 0;
-            native "js" {
-                 len = args.length;
-            }
-            let i = 0;
-            while (i < len) {
-                let arg = 0;
-                native "js" {
-                    arg = args[i];
-                }
-                args_str = args_str + self.gen_expression(arg);
-                if (i < len - 1) {
-                    args_str = args_str + ", ";
-                }
-                i = i + 1;
-            }
-            return name + "(" + args_str + ")";
-        }
-        // NODE_STRUCT_LITERAL = 71
-        if (expr.kind == 71) {
-            let name = expr.name;
-            let fields = expr.fields; // Array of {name, value: expr}
-            let len = 0;
-            native "js" { len = fields.length; }
-            
-            let obj_str = "{ ";
-            let i = 0;
-            while (i < len) {
-                let f = 0;
-                let fname = "";
-                let fval = 0;
-                native "js" {
-                    f = fields[i];
-                    fname = f.name;
-                    fval = f.value;
-                }
-                
-                obj_str = obj_str + fname + ": " + self.gen_expression(fval);
-                
-                if (i < len - 1) {
-                    obj_str = obj_str + ", ";
-                }
-                i = i + 1;
-            }
-            obj_str = obj_str + " }";
-
-            return "new " + name + "(" + obj_str + ")";
-        }
-
         
-        // Handle raw string (identifiers/variables)
-        // Since we are returning strings for variables in parser, we need to check type
-        let is_string = false;
-        native "js" {
-            is_string = typeof expr === 'string';
+        let is_class = false;
+        native "js" { is_class = /^[A-Z]/.test(expr.function); }
+        
+        if (is_class) {
+            return "new " + expr.function + "(" + args + ")";
         }
-        if (is_string) {
-            return expr;
-        }
-
-        return "";
+        return expr.function + "(" + args + ")";
     }
+    if (expr.kind == NODE_BINARY) {
+         let left = CodeGenerator_gen_expression(self, expr.left);
+         let right = CodeGenerator_gen_expression(self, expr.right);
+         return "(" + left + " " + expr.op + " " + right + ")";
+    }
+    if (expr.kind == NODE_MEMBER) {
+         let target = CodeGenerator_gen_expression(self, expr.target);
+         return target + "." + expr.property;
+    }
+    
+    return expr; // Identifier string
 }

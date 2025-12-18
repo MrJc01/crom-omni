@@ -37,17 +37,25 @@ let TOKEN_IF = 64;
 let TOKEN_ELSE = 65;
 let TOKEN_RETURN = 66;
 let TOKEN_STRUCT = 70;
+let TOKEN_IMPORT = 80;
+let TOKEN_NATIVE = 90;
+
+let TOKEN_DOT = 47;
 
 struct Token {
     kind: i64,
     lexeme: string,
-    line: i64
+    line: i64,
+    start: i64,
+    end: i64
 }
 
 fn new_token(kind: i64, lexeme: string, line: i64) -> Token {
     return Token {
         kind: kind,
         lexeme: lexeme,
-        line: line
+        line: line,
+        start: 0,
+        end: 0
     };
 }

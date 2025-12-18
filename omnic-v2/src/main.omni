@@ -2,32 +2,44 @@ import "core/token.omni";
 import "core/lexer.omni";
 import "core/parser.omni";
 import "core/codegen.omni";
+import "core/io.omni";
 
 fn main() {
-    let input = "
-    struct Ponto {
-        x: i64,
-        y: i64
+    let args_len = 0;
+    native "js" {
+        args_len = process.argv.length;
     }
-    let p = Ponto { x: 10, y: 20 };
-    ";
 
+    if (args_len < 4) {
+        print("Usage: node main.js <input_file> <output_file>");
+        return;
+    }
 
-    print("--- Starting Compiler Pipeline ---");
-    print("Input Code:");
-    print(input);
+    let input_path = "";
+    let output_path = "";
+
+    native "js" {
+        input_path = process.argv[2];
+        output_path = process.argv[3];
+    }
+
+    print("Compiling: " + input_path);
+
+    let source = read_file(input_path);
     
-    // 1. Lexer
-    let l = new_lexer(input);
+    // Lexer
+    let l = new_lexer(source);
     
-    // 2. Parser
+    // Parser
     let p = new_parser(l);
-    let ast = p.parse_program();
+    let program = Parser_parse_program(p);
 
-    // 3. Codegen
-    let g = new_codegen();
-    let code = g.generate(ast);
+    // Code Generation
+    let gen = new_code_generator();
+    let code = CodeGenerator_generate(gen, program);
 
-    print("Generated JS Code:");
-    print(code);
+    // Output
+    write_file(output_path, code);
+    
+    print("Compiled successfully to: " + output_path);
 }

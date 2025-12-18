@@ -1,359 +1,375 @@
-import "core/token.omni";
-import "core/lexer.omni";
-import "core/ast.omni";
+import "lexer.omni";
+import "token.omni";
+import "ast.omni";
 
 struct Parser {
     lexer: Lexer,
-    cur: Token,
-    peek: Token
+    cur_token: Token,
+    peek_token: Token
+}
+
+fn Lexer_next_token_wrapper(l: Lexer) -> Token {
+    return Lexer_next_token(l);
 }
 
 fn new_parser(l: Lexer) -> Parser {
     let p = Parser {
         lexer: l,
-        cur: new_token(0, "", 0),
-        peek: new_token(0, "", 0)
+        cur_token: new_token(TOKEN_EOF, "", 0),
+        peek_token: new_token(TOKEN_EOF, "", 0)
     };
-    // Read two tokens to setup cur and peek
-    p.next();
-    p.next();
+    Parser_next_token(p);
+    Parser_next_token(p);
     return p;
 }
 
-impl Parser {
-    fn next(self) {
-        self.cur = self.peek;
-        self.peek = self.lexer.next_token();
-    }
+fn Parser_next_token(self: Parser) {
+    self.cur_token = self.peek_token;
+    self.peek_token = Lexer_next_token(self.lexer);
+}
 
-    fn parse_program(self) -> Program {
-        let prog = new_program();
-        while (self.cur.kind != TOKEN_EOF) {
-            let stmt = self.parse_statement();
-            if (stmt != 0) { // Assuming 0 check for null/invalid for now, though logic should ensure valid return
-                 add_statement(prog, stmt);
+fn Parser_parse_program(self: Parser) -> Program {
+    let stmts = []; // Array nativo (suporte JS)
+    while (self.cur_token.kind != TOKEN_EOF) {
+        if (self.cur_token.kind == TOKEN_IMPORT) {
+             let imp = Parser_parse_import(self);
+             native "js" { stmts.push(imp); }
+        } else {
+            let stmt = Parser_parse_statement(self);
+            if (stmt.kind != 0) { // Check valid
+                native "js" { stmts.push(stmt); }
             }
-            self.next();
         }
-        return prog;
+        Parser_next_token(self);
+    }
+    return Program { statements: stmts };
+}
+
+fn Parser_parse_import(self: Parser) -> ImportDecl {
+    Parser_next_token(self); // eat import
+    
+    let path = "";
+    if (self.cur_token.kind == TOKEN_STRING) {
+        path = self.cur_token.lexeme;
+    }
+    Parser_next_token(self); // eat string
+    
+    if (self.cur_token.kind == TOKEN_SEMICOLON) {
+        Parser_next_token(self); // eat ;
+    }
+    return ImportDecl { kind: NODE_IMPORT, path: path };
+}
+
+fn Parser_parse_statement(self: Parser) -> any {
+    if (self.cur_token.kind == TOKEN_LET) {
+        return Parser_parse_let_statement(self);
+    }
+    if (self.cur_token.kind == TOKEN_FN) {
+        return Parser_parse_function(self);
+    }
+    if (self.cur_token.kind == TOKEN_RETURN) {
+        return Parser_parse_return(self);
+    }
+    if (self.cur_token.kind == TOKEN_STRUCT) { 
+        return Parser_parse_struct(self);
+    }
+    if (self.cur_token.kind == TOKEN_NATIVE) {
+        return Parser_parse_native_block(self);
+    }
+    return Parser_parse_expression_statement(self);
+}
+
+// --- Native Block Parsing ---
+fn Parser_parse_native_block(self: Parser) -> NativeStmt {
+    // native "js" { ... }
+    Parser_next_token(self); // skip native
+    
+    let lang = "js"; 
+    if (self.cur_token.kind == TOKEN_STRING) {
+        lang = self.cur_token.lexeme;
+        Parser_next_token(self); // skip string
     }
 
-    fn parse_statement(self) -> any {
-        if (self.cur.kind == TOKEN_LET) {
-            return self.parse_let_statement();
-        }
-        if (self.cur.kind == TOKEN_FN) {
-            return self.parse_function();
-        }
-        if (self.cur.kind == TOKEN_RETURN) {
-            return self.parse_return();
-        }
-        if (self.cur.kind == TOKEN_STRUCT) {
-            return self.parse_struct();
-        }
-        return 0; // Skip or Error
+    // Now current token should be {
+    if (self.cur_token.kind != TOKEN_LBRACE) {
+        print("Error: Expected { after native");
+        return NativeStmt { kind: 0, lang: "", code: "" };
     }
-
-    fn parse_let_statement(self) -> LetStmt {
-        // let <name> = <expr>;
+    
+    let start_pos = self.cur_token.start;
+    
+    // Use native JS to extract content logic
+    let code = "";
+    let end_pos = 0;
+    
+    native "js" {
+        // Logic to extract block
+        const input = self.lexer.input;
+        let pos = Number(start_pos) + 1; // After {
+        let brace_count = 1;
+        let start_extract = pos;
         
-        // Expect Identifier
-        if (self.peek.kind != TOKEN_IDENTIFIER) {
-            return 0; // Error
-        }
-        self.next();
-        let name = self.cur.lexeme;
-
-        // Expect Assign
-        if (self.peek.kind != TOKEN_ASSIGN) {
-            return 0; // Error
-        }
-        self.next();
-
-        // Advance to expression
-        self.next();
-        
-        let expr = self.parse_expression();
-
-        // Expect Semicolon
-        if (self.peek.kind == TOKEN_SEMICOLON) {
-            self.next();
-        }
-
-        return LetStmt {
-            kind: NODE_LET,
-            name: name,
-            value: expr
-        };
-    }
-
-    fn parse_struct(self) -> StructDecl {
-         // struct Name { name: type, ... }
-         
-         if (self.peek.kind != TOKEN_IDENTIFIER) { return 0; }
-         self.next();
-         let name = self.cur.lexeme;
-
-         if (self.peek.kind != TOKEN_LBRACE) { return 0; }
-         self.next();
-
-         let fields = 0;
-         native "js" { fields = []; }
-
-         // Parse fields
-         if (self.peek.kind != TOKEN_RBRACE) {
-             self.next(); // first field name
-             let fname = self.cur.lexeme;
-             
-             if (self.peek.kind != TOKEN_COLON) { return 0; }
-             self.next(); // eat colon
-             
-             if (self.peek.kind != TOKEN_IDENTIFIER) { return 0; } // Expect type identifier
-             self.next(); // eat type
-             let ftype = self.cur.lexeme;
-
-             native "js" { fields.push({name: fname, type: ftype}); } // Using JS object for field def
-
-             while (self.peek.kind == TOKEN_COMMA) {
-                 self.next(); // skip comma
-                 if (self.peek.kind == TOKEN_RBRACE) { break; } // trailing comma check
-                 
-                 self.next(); // field name
-                 let fname2 = self.cur.lexeme;
-
-                 if (self.peek.kind != TOKEN_COLON) { return 0; }
-                 self.next();
-                 
-                 if (self.peek.kind != TOKEN_IDENTIFIER) { return 0; }
-                 self.next();
-                 let ftype2 = self.cur.lexeme;
-
-                 native "js" { fields.push({name: fname2, type: ftype2}); }
-             }
-         }
-
-         if (self.peek.kind != TOKEN_RBRACE) { return 0; }
-         self.next();
-
-         return StructDecl {
-             kind: NODE_STRUCT,
-             name: name,
-             fields: fields
-         };
-    }
-
-
-    fn parse_function(self) -> FunctionDecl {
-        // fn <name>(<params>) { <body> }
-        
-        // Expect Identifier
-        if (self.peek.kind != TOKEN_IDENTIFIER) {
-            return 0;
-        }
-        self.next();
-        let name = self.cur.lexeme;
-
-        // Expect (
-        if (self.peek.kind != TOKEN_LPAREN) {
-            return 0;
-        }
-        self.next();
-
-        // Parse Params
-        let params = 0;
-        native "js" {
-            params = [];
-        }
-
-        // Check for empty params ')'
-        if (self.peek.kind != TOKEN_RPAREN) {
-            self.next();
-            // First param
-            native "js" {
-                params.push(self.cur.lexeme);
-            }
-            
-            while (self.peek.kind == TOKEN_COMMA) {
-                self.next(); // Skip comma
-                self.next(); // Eat identifier
-                native "js" {
-                    params.push(self.cur.lexeme);
-                }
-            }
-        }
-
-        // Expect )
-        if (self.peek.kind != TOKEN_RPAREN) {
-            return 0;
-        }
-        self.next();
-
-        // Expect {
-        if (self.peek.kind != TOKEN_LBRACE) {
-            return 0; 
-        }
-        self.next();
-
-        let body = self.parse_block();
-
-        return FunctionDecl {
-            kind: NODE_FUNCTION,
-            name: name,
-            params: params,
-            body: body
-        };
-    }
-
-    fn parse_block(self) -> Block {
-        // { <stmts> } - Assumes { is already consumed or current
-        
-        let stmts = 0;
-        native "js" {
-            stmts = [];
-        }
-
-        self.next(); // Move past {
-
-        while (self.cur.kind != TOKEN_RBRACE && self.cur.kind != TOKEN_EOF) {
-            let stmt = self.parse_statement();
-            if (stmt != 0) {
-                 native "js" {
-                     stmts.push(stmt);
-                 }
-            }
-            self.next();
-        }
-
-        return Block {
-            kind: NODE_BLOCK,
-            statements: stmts
-        };
-    }
-
-    fn parse_return(self) -> ReturnStmt {
-        self.next(); // Skip return
-        
-        let expr = self.parse_expression();
-
-        if (self.peek.kind == TOKEN_SEMICOLON) {
-            self.next();
-        }
-
-        return ReturnStmt {
-            kind: NODE_RETURN,
-            value: expr
-        };
-    }
-
-    fn parse_expression(self) -> any {
-        // For now, only support Integer Literals and Identifiers (Variables or Call)
-        if (self.cur.kind == TOKEN_INT) {
-            // Native conversion from string to int
-            let val = 0;
-            native "js" {
-                val = parseInt(self.cur.lexeme);
-            }
-            return IntegerLiteral {
-                kind: NODE_LITERAL,
-                value: val
-            };
-        }
-
-        if (self.cur.kind == TOKEN_IDENTIFIER) {
-            let ident = self.cur.lexeme;
-            // Check for call
-            if (self.peek.kind == TOKEN_LPAREN) {
-                return self.parse_call(ident);
-            }
-            // Check for Struct Literal: Name { ... }
-            if (self.peek.kind == TOKEN_LBRACE) {
-                return self.parse_struct_literal(ident);
-            }
-
-            return ident; 
-        }
-
-        return 0;
-    }
-
-    fn parse_struct_literal(self, name: string) -> StructLiteral {
-        self.next(); // consume {
-        
-        let fields = 0;
-        native "js" { fields = []; }
-
-        if (self.peek.kind != TOKEN_RBRACE) {
-            self.next(); // key
-            let key = self.cur.lexeme;
-
-            if (self.peek.kind != TOKEN_COLON) { return 0; }
-            self.next(); // colon
-            
-            self.next(); // start expr
-            let val = self.parse_expression(); // value
-
-            native "js" { fields.push({name: key, value: val}); }
-
-            while (self.peek.kind == TOKEN_COMMA) {
-                self.next(); // skip comma
-                if (self.peek.kind == TOKEN_RBRACE) { break; }
-
-                self.next(); // key
-                let key2 = self.cur.lexeme;
-
-                if (self.peek.kind != TOKEN_COLON) { return 0; }
-                self.next();
-                
-                self.next();
-                let val2 = self.parse_expression();
-
-                native "js" { fields.push({name: key2, value: val2}); }
-            }
-        }
-
-        if (self.peek.kind != TOKEN_RBRACE) { return 0; }
-        self.next(); // }
-
-        return StructLiteral {
-            kind: NODE_STRUCT_LITERAL,
-            name: name,
-            fields: fields
-        };
-    }
-
-    fn parse_call(self, name: string) -> CallExpr {
-        self.next(); // Consume (
-        
-        let args = 0;
-        native "js" {
-            args = [];
-        }
-
-        if (self.peek.kind != TOKEN_RPAREN) {
-            self.next();
-            let arg = self.parse_expression();
-            native "js" {
-                 args.push(arg);
-            }
-
-            while (self.peek.kind == TOKEN_COMMA) {
-                 self.next();
-                 self.next();
-                 let arg2 = self.parse_expression();
-                 native "js" {
-                     args.push(arg2);
-                 }
-            }
+        while (pos < input.length && brace_count > 0) {
+            const char = input[pos];
+            if (char === '{') brace_count++;
+            if (char === '}') brace_count--;
+            pos++;
         }
         
-        if (self.peek.kind != TOKEN_RPAREN) {
-            return 0; 
+        end_pos = pos;
+        if (brace_count === 0) {
+             code = input.substring(start_extract, pos - 1); // Exclude last }
         }
-        self.next(); // Consume )
-
-        return CallExpr {
-            kind: NODE_CALL,
-            name: name,
-            args: args
-        };
     }
+    
+    // Update Lexer position manually
+    native "js" {
+        self.lexer.position = end_pos;
+        self.lexer.read_position = end_pos + 1;
+        // Check bounds
+        if (self.lexer.read_position > self.lexer.input.length) {
+             self.lexer.ch = "\0";
+        } else {
+             self.lexer.ch = self.lexer.input[end_pos]; // char at current pos
+        }
+        // Force update of peek_token because we jumped ahead
+    }
+    // Note: Parser_next_token relies on peek_token.
+    // peek_token currently holds the token AFTER the { (which we just consumed by raw jumping).
+    // We need to Discard peek_token and fetch the next token from NEW position.
+    
+    // Re-sync lexer
+    Lexer_read_char(self.lexer); // This sets ch to input[read_pos], increments read_pos?
+    // Wait. My manual update did: position = end_pos.
+    // Lexer_read_char expects to read from read_position.
+    // If I set read_position = end_pos. 
+    // Lexer_read_char() -> ch = input[read_pos]. pos = read_pos. read_pos++.
+    // So:
+    native "js" {
+         self.lexer.read_position = end_pos; // Next char to read
+    }
+    Lexer_read_char(self.lexer); // Setup first char after block
+    
+    // Now get the next token (which should be whatever follows })
+    self.peek_token = Lexer_next_token(self.lexer);
+    
+    // Logic check: parse_native_block is called. cur={. Next loop iter in stmt says next_token().
+    // If I return here, caller (parse_statement) returns.
+    // Parser_parse_program loop calls Parser_next_token(self).
+    // That call moves peek (new token) to cur.
+    // So cur becomes correctly the next token.
+    
+    return NativeStmt {
+        kind: NODE_NATIVE,
+        lang: lang,
+        code: code
+    };
+}
+// ----------------------------
+
+fn Parser_parse_struct(self: Parser) -> StructDecl {
+    Parser_next_token(self); // consome 'struct'
+    
+    let name = self.cur_token.lexeme;
+    Parser_next_token(self); // consome Nome
+
+    Parser_next_token(self); // consome '{'
+
+    let fields = [];
+
+    while (self.cur_token.kind != TOKEN_RBRACE && self.cur_token.kind != TOKEN_EOF) {
+        let field_name = self.cur_token.lexeme;
+        Parser_next_token(self); // consome field_name
+
+        Parser_next_token(self); // consome ':'
+        
+        let field_type = self.cur_token.lexeme;
+        Parser_next_token(self); // consome field_type
+
+        let f = new_struct_field(field_name, field_type);
+        native "js" { fields.push(f); }
+
+        if (self.cur_token.kind == TOKEN_COMMA) {
+            Parser_next_token(self);
+        }
+    }
+
+    Parser_next_token(self); // consome '}'
+    
+    return StructDecl {
+        kind: NODE_STRUCT,
+        name: name,
+        fields: fields
+    };
+}
+
+fn Parser_parse_let_statement(self: Parser) -> LetStmt {
+    Parser_next_token(self); // skip let
+    let name = self.cur_token.lexeme;
+    Parser_next_token(self); // skip name
+    Parser_next_token(self); // skip =
+    let val = Parser_parse_expression(self);
+    
+    if (self.cur_token.kind == TOKEN_SEMICOLON) {
+        Parser_next_token(self); // skip ;
+    }
+    return LetStmt { kind: NODE_LET, name: name, value: val };
+}
+
+fn Parser_parse_return(self: Parser) -> ReturnStmt {
+    Parser_next_token(self); // skip return
+    let val = Parser_parse_expression(self);
+    if (self.cur_token.kind == TOKEN_SEMICOLON) {
+        Parser_next_token(self); // skip ;
+    }
+    return ReturnStmt { kind: NODE_RETURN, value: val };
+}
+
+fn Parser_parse_function(self: Parser) -> FunctionDecl {
+    Parser_next_token(self); // fn
+    let name = self.cur_token.lexeme;
+    Parser_next_token(self); // name
+    Parser_next_token(self); // (
+    
+    let params = [];
+    while (self.cur_token.kind != TOKEN_RPAREN) {
+        native "js" { params.push(self.cur_token.lexeme); }
+        Parser_next_token(self);
+        if (self.cur_token.kind == TOKEN_COMMA) {
+            Parser_next_token(self);
+        }
+    }
+    Parser_next_token(self); // )
+    let body = Parser_parse_block(self);
+    return FunctionDecl { kind: NODE_FUNCTION, name: name, params: params, body: body };
+}
+
+fn Parser_parse_block(self: Parser) -> Block {
+    Parser_next_token(self); // {
+    let stmts = [];
+    while (self.cur_token.kind != TOKEN_RBRACE && self.cur_token.kind != TOKEN_EOF) {
+        let stmt = Parser_parse_statement(self);
+        native "js" { stmts.push(stmt); }
+    }
+    Parser_next_token(self); // }
+    return Block { kind: NODE_BLOCK, statements: stmts };
+}
+
+fn Parser_parse_expression_statement(self: Parser) -> ExpressionStmt {
+    let expr = Parser_parse_expression(self);
+    if (self.cur_token.kind == TOKEN_SEMICOLON) {
+        Parser_next_token(self); // skip ;
+    }
+    return ExpressionStmt { kind: 0, expr: expr };
+}
+
+// --- Expression Parsing (Precedence: Equality < Term < Factor) ---
+
+fn Parser_parse_expression(self: Parser) -> any {
+    return Parser_parse_equality(self);
+}
+
+fn Parser_parse_equality(self: Parser) -> any {
+    let left = Parser_parse_term(self);
+    
+    while (self.cur_token.kind == TOKEN_EQ || self.cur_token.kind == TOKEN_NOT_EQ) {
+        let op = self.cur_token.lexeme;
+        Parser_next_token(self);
+        let right = Parser_parse_term(self);
+        left = BinaryExpr { kind: NODE_BINARY, left: left, op: op, right: right };
+    }
+    return left;
+}
+
+fn Parser_parse_term(self: Parser) -> any {
+    let left = Parser_parse_factor(self);
+    
+    while (self.cur_token.kind == TOKEN_PLUS || self.cur_token.kind == TOKEN_MINUS) {
+        let op = self.cur_token.lexeme;
+        Parser_next_token(self);
+        let right = Parser_parse_factor(self);
+        left = BinaryExpr { kind: NODE_BINARY, left: left, op: op, right: right };
+    }
+    return left;
+}
+
+fn Parser_parse_factor(self: Parser) -> any {
+    let node: any = 0;
+
+    if (self.cur_token.kind == TOKEN_INT) {
+        let val = 0;
+        native "js" { val = parseInt(self.cur_token.lexeme); }
+        node = IntegerLiteral { kind: NODE_LITERAL, value: val };
+        Parser_next_token(self);
+    } else if (self.cur_token.kind == TOKEN_IDENTIFIER) {
+        let name = self.cur_token.lexeme;
+        Parser_next_token(self);
+        
+        // Call detection
+        if (self.cur_token.kind == TOKEN_LPAREN) {
+            Parser_next_token(self); // eat (
+            let args = [];
+            while (self.cur_token.kind != TOKEN_RPAREN) {
+                 native "js" { args.push(Parser_parse_expression(self)); }
+                 if (self.cur_token.kind == TOKEN_COMMA) { Parser_next_token(self); }
+            }
+            Parser_next_token(self); // eat )
+            node = CallExpr { kind: NODE_CALL, function: name, args: args };
+        } else {
+            node = name; // just string identifier
+        }
+    } else if (self.cur_token.kind == TOKEN_LPAREN) {
+        Parser_next_token(self); // eat (
+        node = Parser_parse_expression(self);
+        Parser_next_token(self); // eat )
+    } else if (self.cur_token.kind == TOKEN_STRING) {
+         // String literal support
+         node = self.cur_token.lexeme; // Wait, string literal struct? Or just raw string?
+         // Task didn't ask for StringLiteral struct. Let's return raw string or wrap?
+         // AST doesn't define StringLiteral. Let's assume raw string implies NODE_LITERAL (Int) or just use logic.
+         // Let's create an IntegerLiteral placeholder with string value? No type safety issues in JS.
+         // Let's just return the string.
+         // But codegen expects {kind: ...}. 
+         // If I return raw string, gen_expression returns it directly?
+         // See gen_expression line 95: `return expr; // Identifier string`.
+         // So if I return "foo", it generates "foo". Correct for Identifier.
+         // For String "foo", we want "\"foo\"".
+         // The token lexeme for string includes quotes? 
+         // `lexer.omni` `read_string` returns content substring.
+         // Wait, `lexer.omni` logic:
+         // `start_pos = self.position + 1;` (skip quote)
+         // stops at quote.
+         // `str_val = substring(...)`. No quotes.
+         // So if I return `str_val`, I get `foo`. CodeGen outputs `foo`. This looks like identifier `foo`.
+         // I need to wrap it in quotes for JS.
+         // Or update `gen_expression` to handle string inputs differently (heuristic?)
+         // Identifier is also string.
+         // So I MUST use a struct for StringLiteral if I want to disambiguate.
+         // But AST definitions (Turn 1) didn't ask for StringLiteral.
+         // And `lexer.omni` returns TOKEN_STRING.
+         // Prompt says: "Adicione constantes: NODE_BINARY, NODE_MEMBER, NODE_IMPORT...". Nothing about StringLiteral.
+         // But `token.omni` calls `read_identifier` which uses `is_letter`.
+         // `main.omni` example uses string `import "std/io.omni"`.
+         // `Parser_parse_import` handles it and puts it in `ImportDecl`.
+         // But `parse_factor`?
+         // If I have `print("hello")`: `CallExpr` args. ParseExpr -> ParseFactor.
+         // If I support string literals in expressions, I need to handle them.
+         // I'll add `StringLiteral` struct locally in Parser or AST?
+         // I'll reuse NODE_LITERAL and store value as `"string"`.
+         // `node = IntegerLiteral { kind: NODE_LITERAL, value: "\"" + self.cur_token.lexeme + "\"" };` ?
+         // `IntegerLiteral` struct has `value: i64`. JS ignores types, so I can put string.
+         // `codegen` accesses `expr.value`. Returns it.
+         native "js" { node = { kind: NODE_LITERAL, value: `"${self.cur_token.lexeme}"` }; }
+         Parser_next_token(self);
+    }
+
+    // Dot Syntax Loop
+    while (self.cur_token.kind == TOKEN_DOT) {
+        Parser_next_token(self); // eat .
+        let prop = self.cur_token.lexeme;
+        Parser_next_token(self); // eat property name
+        node = MemberExpr { kind: NODE_MEMBER, target: node, property: prop };
+    }
+
+    return node;
+}
