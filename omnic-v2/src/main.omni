@@ -1,22 +1,33 @@
 import "core/token.omni";
 import "core/lexer.omni";
 import "core/parser.omni";
+import "core/codegen.omni";
 
 fn main() {
-    let input = "let a = 5;";
+    let input = "
+    struct Ponto {
+        x: i64,
+        y: i64
+    }
+    let p = Ponto { x: 10, y: 20 };
+    ";
 
-    print("--- Starting Parser Test ---");
+
+    print("--- Starting Compiler Pipeline ---");
     print("Input Code:");
     print(input);
-    print("-------------------------");
-
-    let l = new_lexer(input);
-    let p = new_parser(l);
     
+    // 1. Lexer
+    let l = new_lexer(input);
+    
+    // 2. Parser
+    let p = new_parser(l);
     let ast = p.parse_program();
 
-    print("Generated AST:");
-    native "js" {
-        console.log(JSON.stringify(ast, null, 2));
-    }
+    // 3. Codegen
+    let g = new_codegen();
+    let code = g.generate(ast);
+
+    print("Generated JS Code:");
+    print(code);
 }

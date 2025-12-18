@@ -114,6 +114,7 @@ impl Lexer {
         if (ident == "if") return TOKEN_IF;
         if (ident == "else") return TOKEN_ELSE;
         if (ident == "return") return TOKEN_RETURN;
+        if (ident == "struct") return TOKEN_STRUCT;
         return TOKEN_IDENTIFIER;
     }
 
@@ -170,6 +171,9 @@ impl Lexer {
         } else if (self.ch == ";") {
             tok.kind = TOKEN_SEMICOLON;
             tok.lexeme = ";";
+        } else if (self.ch == ":") {
+            tok.kind = TOKEN_COLON;
+            tok.lexeme = ":";
         } else if (self.ch == ",") {
             tok.kind = TOKEN_COMMA;
             tok.lexeme = ",";

@@ -2,6 +2,12 @@
 let NODE_PROGRAM = 1;
 let NODE_LET = 2;
 let NODE_LITERAL = 3;
+let NODE_FUNCTION = 4;
+let NODE_CALL = 5;
+let NODE_BLOCK = 6;
+let NODE_RETURN = 7;
+let NODE_STRUCT = 70;
+let NODE_STRUCT_LITERAL = 71;
 
 // We use Duck Typing essentially, but defining structs helps with clarity
 // In JS backend, these just become objects.
@@ -19,6 +25,47 @@ struct LetStmt {
 struct IntegerLiteral {
     kind: i64,
     value: i64
+}
+
+struct FunctionDecl {
+    kind: i64,
+    name: string,
+    params: any, // Array of strings
+    body: any // Block node
+}
+
+struct CallExpr {
+    kind: i64,
+    name: string,
+    args: any // Array of expressions
+}
+
+struct Block {
+    kind: i64,
+    statements: any
+}
+
+struct ReturnStmt {
+    kind: i64,
+    value: any
+}
+
+struct StructDecl {
+    kind: i64,
+    name: string,
+    fields: any // Array of strings (names) or objects {name, type}
+}
+
+// Note: For instantiation, we can use CallExpr if we treat it as a constructor call,
+// or we can add a specific StructLiteral node. 
+// For simplicity in JS generation (new Class(obj)), let's use CallExpr or a new node if needed.
+// If we parse `Ponto { x: 1, y: 2 }` we want strict control.
+// Let's add StructLiteral for clarity.
+
+struct StructLiteral {
+    kind: i64,
+    name: string,
+    fields: any // Array of {name, value} keys
 }
 
 // Helpers to construct nodes

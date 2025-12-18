@@ -42,6 +42,15 @@ impl Parser {
         if (self.cur.kind == TOKEN_LET) {
             return self.parse_let_statement();
         }
+        if (self.cur.kind == TOKEN_FN) {
+            return self.parse_function();
+        }
+        if (self.cur.kind == TOKEN_RETURN) {
+            return self.parse_return();
+        }
+        if (self.cur.kind == TOKEN_STRUCT) {
+            return self.parse_struct();
+        }
         return 0; // Skip or Error
     }
 
@@ -78,8 +87,166 @@ impl Parser {
         };
     }
 
+    fn parse_struct(self) -> StructDecl {
+         // struct Name { name: type, ... }
+         
+         if (self.peek.kind != TOKEN_IDENTIFIER) { return 0; }
+         self.next();
+         let name = self.cur.lexeme;
+
+         if (self.peek.kind != TOKEN_LBRACE) { return 0; }
+         self.next();
+
+         let fields = 0;
+         native "js" { fields = []; }
+
+         // Parse fields
+         if (self.peek.kind != TOKEN_RBRACE) {
+             self.next(); // first field name
+             let fname = self.cur.lexeme;
+             
+             if (self.peek.kind != TOKEN_COLON) { return 0; }
+             self.next(); // eat colon
+             
+             if (self.peek.kind != TOKEN_IDENTIFIER) { return 0; } // Expect type identifier
+             self.next(); // eat type
+             let ftype = self.cur.lexeme;
+
+             native "js" { fields.push({name: fname, type: ftype}); } // Using JS object for field def
+
+             while (self.peek.kind == TOKEN_COMMA) {
+                 self.next(); // skip comma
+                 if (self.peek.kind == TOKEN_RBRACE) { break; } // trailing comma check
+                 
+                 self.next(); // field name
+                 let fname2 = self.cur.lexeme;
+
+                 if (self.peek.kind != TOKEN_COLON) { return 0; }
+                 self.next();
+                 
+                 if (self.peek.kind != TOKEN_IDENTIFIER) { return 0; }
+                 self.next();
+                 let ftype2 = self.cur.lexeme;
+
+                 native "js" { fields.push({name: fname2, type: ftype2}); }
+             }
+         }
+
+         if (self.peek.kind != TOKEN_RBRACE) { return 0; }
+         self.next();
+
+         return StructDecl {
+             kind: NODE_STRUCT,
+             name: name,
+             fields: fields
+         };
+    }
+
+
+    fn parse_function(self) -> FunctionDecl {
+        // fn <name>(<params>) { <body> }
+        
+        // Expect Identifier
+        if (self.peek.kind != TOKEN_IDENTIFIER) {
+            return 0;
+        }
+        self.next();
+        let name = self.cur.lexeme;
+
+        // Expect (
+        if (self.peek.kind != TOKEN_LPAREN) {
+            return 0;
+        }
+        self.next();
+
+        // Parse Params
+        let params = 0;
+        native "js" {
+            params = [];
+        }
+
+        // Check for empty params ')'
+        if (self.peek.kind != TOKEN_RPAREN) {
+            self.next();
+            // First param
+            native "js" {
+                params.push(self.cur.lexeme);
+            }
+            
+            while (self.peek.kind == TOKEN_COMMA) {
+                self.next(); // Skip comma
+                self.next(); // Eat identifier
+                native "js" {
+                    params.push(self.cur.lexeme);
+                }
+            }
+        }
+
+        // Expect )
+        if (self.peek.kind != TOKEN_RPAREN) {
+            return 0;
+        }
+        self.next();
+
+        // Expect {
+        if (self.peek.kind != TOKEN_LBRACE) {
+            return 0; 
+        }
+        self.next();
+
+        let body = self.parse_block();
+
+        return FunctionDecl {
+            kind: NODE_FUNCTION,
+            name: name,
+            params: params,
+            body: body
+        };
+    }
+
+    fn parse_block(self) -> Block {
+        // { <stmts> } - Assumes { is already consumed or current
+        
+        let stmts = 0;
+        native "js" {
+            stmts = [];
+        }
+
+        self.next(); // Move past {
+
+        while (self.cur.kind != TOKEN_RBRACE && self.cur.kind != TOKEN_EOF) {
+            let stmt = self.parse_statement();
+            if (stmt != 0) {
+                 native "js" {
+                     stmts.push(stmt);
+                 }
+            }
+            self.next();
+        }
+
+        return Block {
+            kind: NODE_BLOCK,
+            statements: stmts
+        };
+    }
+
+    fn parse_return(self) -> ReturnStmt {
+        self.next(); // Skip return
+        
+        let expr = self.parse_expression();
+
+        if (self.peek.kind == TOKEN_SEMICOLON) {
+            self.next();
+        }
+
+        return ReturnStmt {
+            kind: NODE_RETURN,
+            value: expr
+        };
+    }
+
     fn parse_expression(self) -> any {
-        // For now, only support Integer Literals
+        // For now, only support Integer Literals and Identifiers (Variables or Call)
         if (self.cur.kind == TOKEN_INT) {
             // Native conversion from string to int
             let val = 0;
@@ -91,6 +258,102 @@ impl Parser {
                 value: val
             };
         }
+
+        if (self.cur.kind == TOKEN_IDENTIFIER) {
+            let ident = self.cur.lexeme;
+            // Check for call
+            if (self.peek.kind == TOKEN_LPAREN) {
+                return self.parse_call(ident);
+            }
+            // Check for Struct Literal: Name { ... }
+            if (self.peek.kind == TOKEN_LBRACE) {
+                return self.parse_struct_literal(ident);
+            }
+
+            return ident; 
+        }
+
         return 0;
     }
-}
+
+    fn parse_struct_literal(self, name: string) -> StructLiteral {
+        self.next(); // consume {
+        
+        let fields = 0;
+        native "js" { fields = []; }
+
+        if (self.peek.kind != TOKEN_RBRACE) {
+            self.next(); // key
+            let key = self.cur.lexeme;
+
+            if (self.peek.kind != TOKEN_COLON) { return 0; }
+            self.next(); // colon
+            
+            self.next(); // start expr
+            let val = self.parse_expression(); // value
+
+            native "js" { fields.push({name: key, value: val}); }
+
+            while (self.peek.kind == TOKEN_COMMA) {
+                self.next(); // skip comma
+                if (self.peek.kind == TOKEN_RBRACE) { break; }
+
+                self.next(); // key
+                let key2 = self.cur.lexeme;
+
+                if (self.peek.kind != TOKEN_COLON) { return 0; }
+                self.next();
+                
+                self.next();
+                let val2 = self.parse_expression();
+
+                native "js" { fields.push({name: key2, value: val2}); }
+            }
+        }
+
+        if (self.peek.kind != TOKEN_RBRACE) { return 0; }
+        self.next(); // }
+
+        return StructLiteral {
+            kind: NODE_STRUCT_LITERAL,
+            name: name,
+            fields: fields
+        };
+    }
+
+    fn parse_call(self, name: string) -> CallExpr {
+        self.next(); // Consume (
+        
+        let args = 0;
+        native "js" {
+            args = [];
+        }
+
+        if (self.peek.kind != TOKEN_RPAREN) {
+            self.next();
+            let arg = self.parse_expression();
+            native "js" {
+                 args.push(arg);
+            }
+
+            while (self.peek.kind == TOKEN_COMMA) {
+                 self.next();
+                 self.next();
+                 let arg2 = self.parse_expression();
+                 native "js" {
+                     args.push(arg2);
+                 }
+            }
+        }
+        
+        if (self.peek.kind != TOKEN_RPAREN) {
+            return 0; 
+        }
+        self.next(); // Consume )
+
+        return CallExpr {
+            kind: NODE_CALL,
+            name: name,
+            args: args
+        };
+    }

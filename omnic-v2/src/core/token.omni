@@ -26,6 +26,7 @@ let TOKEN_LPAREN = 42;
 let TOKEN_RPAREN = 43;
 let TOKEN_LBRACE = 44;
 let TOKEN_RBRACE = 45;
+let TOKEN_COLON = 46;
 
 // Keywords
 let TOKEN_FN = 60;
@@ -35,6 +36,7 @@ let TOKEN_FALSE = 63;
 let TOKEN_IF = 64;
 let TOKEN_ELSE = 65;
 let TOKEN_RETURN = 66;
+let TOKEN_STRUCT = 70;
 
 struct Token {
     kind: i64,
