@@ -1,29 +1,22 @@
 import "core/token.omni";
 import "core/lexer.omni";
+import "core/parser.omni";
 
 fn main() {
-    let input = "
-        let five = 5;
-        let ten = 10;
-        fn add(x, y) {
-            x + y;
-        }
-        let result = add(five, ten);
-    ";
+    let input = "let a = 5;";
 
-    print("--- Starting Lexer Test ---");
+    print("--- Starting Parser Test ---");
     print("Input Code:");
     print(input);
     print("-------------------------");
 
     let l = new_lexer(input);
+    let p = new_parser(l);
     
-    let tok = l.next_token();
-    while (tok.kind != TOKEN_EOF) {
-        // Native print to see details nicely formatted
-        native "js" {
-            console.log("Type: " + tok.kind + ", Literal: " + tok.lexeme);
-        }
-        tok = l.next_token();
+    let ast = p.parse_program();
+
+    print("Generated AST:");
+    native "js" {
+        console.log(JSON.stringify(ast, null, 2));
     }
 }

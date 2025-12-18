@@ -1,0 +1,40 @@
+// Node Types
+let NODE_PROGRAM = 1;
+let NODE_LET = 2;
+let NODE_LITERAL = 3;
+
+// We use Duck Typing essentially, but defining structs helps with clarity
+// In JS backend, these just become objects.
+
+struct Program {
+    statements: any // Array of statements
+}
+
+struct LetStmt {
+    kind: i64,
+    name: string,
+    value: any // Expression node
+}
+
+struct IntegerLiteral {
+    kind: i64,
+    value: i64
+}
+
+// Helpers to construct nodes
+fn new_program() -> Program {
+    // Native array creation helper
+    let stmts = 0;
+    native "js" {
+        stmts = [];
+    }
+    return Program {
+        statements: stmts
+    };
+}
+
+fn add_statement(prog: Program, stmt: any) {
+    native "js" {
+        prog.statements.push(stmt);
+    }
+}

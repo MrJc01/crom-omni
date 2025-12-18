@@ -1,0 +1,96 @@
+import "core/token.omni";
+import "core/lexer.omni";
+import "core/ast.omni";
+
+struct Parser {
+    lexer: Lexer,
+    cur: Token,
+    peek: Token
+}
+
+fn new_parser(l: Lexer) -> Parser {
+    let p = Parser {
+        lexer: l,
+        cur: new_token(0, "", 0),
+        peek: new_token(0, "", 0)
+    };
+    // Read two tokens to setup cur and peek
+    p.next();
+    p.next();
+    return p;
+}
+
+impl Parser {
+    fn next(self) {
+        self.cur = self.peek;
+        self.peek = self.lexer.next_token();
+    }
+
+    fn parse_program(self) -> Program {
+        let prog = new_program();
+        while (self.cur.kind != TOKEN_EOF) {
+            let stmt = self.parse_statement();
+            if (stmt != 0) { // Assuming 0 check for null/invalid for now, though logic should ensure valid return
+                 add_statement(prog, stmt);
+            }
+            self.next();
+        }
+        return prog;
+    }
+
+    fn parse_statement(self) -> any {
+        if (self.cur.kind == TOKEN_LET) {
+            return self.parse_let_statement();
+        }
+        return 0; // Skip or Error
+    }
+
+    fn parse_let_statement(self) -> LetStmt {
+        // let <name> = <expr>;
+        
+        // Expect Identifier
+        if (self.peek.kind != TOKEN_IDENTIFIER) {
+            return 0; // Error
+        }
+        self.next();
+        let name = self.cur.lexeme;
+
+        // Expect Assign
+        if (self.peek.kind != TOKEN_ASSIGN) {
+            return 0; // Error
+        }
+        self.next();
+
+        // Advance to expression
+        self.next();
+        
+        let expr = self.parse_expression();
+
+        // Expect Semicolon
+        if (self.peek.kind == TOKEN_SEMICOLON) {
+            self.next();
+        }
+
+        return LetStmt {
+            kind: NODE_LET,
+            name: name,
+            value: expr
+        };
+    }
+
+    fn parse_expression(self) -> any {
+        // For now, only support Integer Literals
+        if (self.cur.kind == TOKEN_INT) {
+            // Native conversion from string to int
+            let val = 0;
+            native "js" {
+                val = parseInt(self.cur.lexeme);
+            }
+            return IntegerLiteral {
+                kind: NODE_LITERAL,
+                value: val
+            };
+        }
+        return 0;
+    }
+}
