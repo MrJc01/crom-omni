@@ -38,7 +38,7 @@ impl CodeGenerator for JsBackend {
         }
         buffer.push('\n');
 
-        // 2. Items (Structs e Functions)
+        // 2. Items (Structs, Functions, and Let bindings)
         for item in &program.items {
             match item {
                 TopLevelItem::Struct(s) => {
@@ -46,6 +46,10 @@ impl CodeGenerator for JsBackend {
                 }
                 TopLevelItem::Function(f) => {
                     buffer.push_str(&self.gen_function(f));
+                }
+                TopLevelItem::LetBinding { name, value, is_mut, .. } => {
+                    let keyword = if *is_mut { "let" } else { "const" };
+                    buffer.push_str(&format!("{} {} = {};\n", keyword, name, self.gen_expression(value)));
                 }
             }
             buffer.push('\n');
@@ -204,6 +208,14 @@ impl JsBackend {
                 }
                 
                 format!("{}({})", func_name, args_str)
+            }
+            Expression::StructInit { name, fields } => {
+                // Struct instantiation: Token { kind: 1 } -> new Token({ kind: 1 })
+                let fields_str = fields.iter()
+                    .map(|f| format!("{}: {}", f.name, self.gen_expression(&f.value)))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                format!("new {}({{ {} }})", name, fields_str)
             }
         }
     }

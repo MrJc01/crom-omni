@@ -1,3 +1,13 @@
 {
-  "target": "js"
+  "project": {
+    "name": "omnic-v2",
+    "version": "0.1.0"
+  },
+  "targets": {
+    "main": {
+      "format": "js",
+      "output": "dist",
+      "source": "src/main.omni"
+    }
+  }
 }

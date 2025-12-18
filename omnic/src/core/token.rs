@@ -4,7 +4,7 @@ use std::fmt;
 /// Definição completa dos Tokens da linguagem Omni (Estilo A+C)
 /// Usamos a crate `logos` para gerar o lexer automaticamente via Regex.
 #[derive(Logos, Debug, PartialEq, Clone)]
-#[logos(skip r"[ \t\n\f]+")] // Ignora espaços em branco
+#[logos(skip r"[ \t\n\r\f]+")] // Ignora espaços em branco (incluindo \r de CRLF)
 #[logos(skip r"//[^\n]*")]   // Ignora comentários de linha //
 #[logos(skip r"/\*([^*]|\*[^/])*\*/")] // Ignora comentários de bloco /* */
 pub enum Token {
@@ -51,6 +51,21 @@ pub enum Token {
 
     #[token("spawn")]
     Spawn, // Concorrência
+
+    #[token("while")]
+    While,
+
+    #[token("for")]
+    For,
+
+    #[token("in")]
+    In,
+
+    #[token("break")]
+    Break,
+
+    #[token("continue")]
+    Continue,
 
     // --- Símbolos e Pontuação ---
 
@@ -108,6 +123,12 @@ pub enum Token {
     #[token("/")]
     Slash,
 
+    #[token("<")]
+    LessThan,
+
+    #[token(">")]
+    GreaterThan,
+
     // --- Literais e Identificadores ---
 
     // Identificadores: Começa com letra/_ e segue com alfanumérico
@@ -119,8 +140,8 @@ pub enum Token {
     #[regex("@[a-zA-Z_][a-zA-Z0-9_]*", |lex| lex.slice().to_string())]
     Attribute(String),
 
-    // Strings: Aspas duplas
-    #[regex(r#""([^"\\]|\\["\\bnfrt]|u[a-fA-F0-9]{4})*""#, |lex| lex.slice().trim_matches('"').to_string())]
+    // Strings: Aspas duplas com escapes
+    #[regex(r#""([^"\\]|\\.)*""#, |lex| lex.slice().trim_matches('"').to_string())]
     StringLiteral(String),
 
     // Inteiros: 123, 0xFF

@@ -14,11 +14,17 @@ pub struct Import {
     pub alias: Option<String>,
 }
 
-/// Itens de Nível Superior (Funções, Structs)
+/// Itens de Nível Superior (Funções, Structs, Let)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum TopLevelItem {
     Function(FunctionDeclaration),
     Struct(StructDeclaration),
+    LetBinding {
+        name: String,
+        ty: Option<Type>,
+        value: Expression,
+        is_mut: bool,
+    },
 }
 
 /// Declaração de Função
@@ -155,6 +161,19 @@ pub enum Expression {
         target: Box<Expression>,
         index: Box<Expression>,
     },
+    
+    /// Struct Instantiation: Token { kind: 1, lexeme: "foo" }
+    StructInit {
+        name: String,
+        fields: Vec<StructInitField>,
+    },
+}
+
+/// Field in a struct instantiation
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct StructInitField {
+    pub name: String,
+    pub value: Expression,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

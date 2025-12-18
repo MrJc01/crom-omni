@@ -42,6 +42,10 @@ impl CodeGenerator for PythonBackend {
                 TopLevelItem::Function(f) => {
                     buffer.push_str(&self.gen_function(f, 0));
                 }
+                TopLevelItem::LetBinding { name, value, .. } => {
+                    // Python doesn't have const, just use variable assignment
+                    buffer.push_str(&format!("{} = {}\n", name, self.gen_expression(value)));
+                }
             }
             buffer.push('\n');
         }
@@ -166,6 +170,15 @@ impl PythonBackend {
                 }
                 code.trim_end().to_string() 
             }
+            Statement::NativeBlock { lang, code } => {
+                // For Python, only output if lang is "python" or "py"
+                if lang == "python" || lang == "py" {
+                    let code_str = code.join("\n");
+                    format!("{}{}", prefix, code_str.trim())
+                } else {
+                    format!("{}# native \"{}\" block not supported", prefix, lang)
+                }
+            }
         }
     }
 
@@ -218,6 +231,14 @@ impl PythonBackend {
                 }
                 
                 format!("{}({})", func_name, args_str)
+            }
+            Expression::StructInit { name, fields } => {
+                // Struct instantiation: Token { kind: 1 } -> Token(kind=1)
+                let fields_str = fields.iter()
+                    .map(|f| format!("{}={}", f.name, self.gen_expression(&f.value)))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                format!("{}({})", name, fields_str)
             }
         }
     }

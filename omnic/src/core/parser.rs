@@ -67,10 +67,11 @@ impl<'a> Parser<'a> {
 
     fn parse_import(&mut self) -> Result<Import> {
         self.expect(Token::Import)?;
-        // Pode ser @std/foo ou identifier
+        // Pode ser @std/foo, identifier, ou string literal "path/to/file.omni"
         let path = match self.peek_token()? {
             Token::Attribute(s) => { self.consume()?; s } // @std...
             Token::Identifier(_) => self.parse_identifier()?,
+            Token::StringLiteral(s) => { self.consume()?; s } // "path/to/file.omni"
             _ => return Err(anyhow!("Esperado caminho de importação")),
         };
         self.expect(Token::Semicolon)?;
@@ -84,7 +85,7 @@ impl<'a> Parser<'a> {
              attributes.push(self.parse_attribute()?);
         }
 
-        // 2. Identificar Struct ou Function
+        // 2. Identificar Struct, Function, ou Let
         let token = self.peek_token()?;
         match token {
             Token::Struct => {
@@ -97,7 +98,16 @@ impl<'a> Parser<'a> {
                 decl.attributes = attributes;
                 Ok(TopLevelItem::Function(decl))
             }
-            _ => Err(anyhow!("Esperado 'struct' ou 'fn' no nível superior (encontrado {:?})", token)),
+            Token::Let | Token::Mut => {
+                // Parse top-level let binding
+                let stmt = self.parse_let_binding()?;
+                if let Statement::LetBinding { name, ty, value, is_mut } = stmt {
+                    Ok(TopLevelItem::LetBinding { name, ty, value, is_mut })
+                } else {
+                    Err(anyhow!("Erro interno parsing let"))
+                }
+            }
+            _ => Err(anyhow!("Esperado 'struct', 'fn' ou 'let' no nível superior (encontrado {:?})", token)),
         }
     }
 
@@ -263,12 +273,23 @@ impl<'a> Parser<'a> {
 
     fn parse_native_block(&mut self) -> Result<Statement> {
          self.expect(Token::Native)?;
-         self.expect(Token::ParenOpen)?;
-         let lang = match self.next_token()? {
-             Token::StringLiteral(s) => s,
-             t => return Err(anyhow!("Esperado string literal, achou {:?}", t)),
+         
+         // Accept both native("js") {} and native "js" {} syntaxes
+         let lang = if let Ok(Token::ParenOpen) = self.peek_token() {
+             self.consume()?; // eat (
+             let lang = match self.next_token()? {
+                 Token::StringLiteral(s) => s,
+                 t => return Err(anyhow!("Esperado string literal, achou {:?}", t)),
+             };
+             self.expect(Token::ParenClose)?;
+             lang
+         } else if let Ok(Token::StringLiteral(s)) = self.peek_token() {
+             self.consume()?; // eat string
+             s
+         } else {
+             return Err(anyhow!("Esperado '(' ou string literal após 'native'"));
          };
-         self.expect(Token::ParenClose)?;
+         
          self.expect(Token::BraceOpen)?;
          
          let mut code_lines = Vec::new();
@@ -469,6 +490,26 @@ impl<'a> Parser<'a> {
                     }
                     self.expect(Token::ParenClose)?;
                     expr = Expression::Call { function: Box::new(expr), args };
+                },
+                Ok(Token::BraceOpen) => {
+                    // Struct instantiation: StructName { field: value, ... }
+                    if let Expression::Identifier(name) = expr.clone() {
+                        self.consume()?; // eat {
+                        let mut fields = Vec::new();
+                        while self.peek_token()? != Token::BraceClose {
+                            let field_name = self.parse_identifier()?;
+                            self.expect(Token::Colon)?;
+                            let value = self.parse_expression()?;
+                            fields.push(StructInitField { name: field_name, value });
+                            if let Ok(Token::Comma) = self.peek_token() {
+                                self.consume()?;
+                            }
+                        }
+                        self.expect(Token::BraceClose)?;
+                        expr = Expression::StructInit { name, fields };
+                    } else {
+                        break; // Not an identifier, can't be struct init
+                    }
                 },
                 _ => break,
             }

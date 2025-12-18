@@ -3,7 +3,8 @@ use std::io::{Write, Read, Seek};
 use std::path::Path;
 use anyhow::{Result, Context};
 use zip::write::FileOptions;
-use std::os::unix::fs::PermissionsExt; // Para chmod (ignorável no Windows, mas boa prática)
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt; // Para chmod (apenas Unix)
 
 /// Cria um executável compactado (ZipApp)
 /// Adiciona um shebang header + uncompressed/compressed zip
