@@ -124,6 +124,18 @@ impl JsBackend {
             Statement::Expression(expr) => {
                  format!("    {};", self.gen_expression(expr))
             }
+            Statement::While { condition, body } => {
+                let cond = self.gen_expression(condition);
+                let body_code = self.gen_block(body);
+                format!("    while ({}) {}", cond, body_code)
+            }
+            Statement::For { var, iterator, body } => {
+                let iter = self.gen_expression(iterator);
+                let body_code = self.gen_block(body);
+                format!("    for (const {} of {}) {}", var, iter, body_code)
+            }
+            Statement::Break => "    break;".to_string(),
+            Statement::Continue => "    continue;".to_string(),
             Statement::If { condition, then_branch, else_branch } => {
                 let cond = self.gen_expression(condition);
                 let then_code = self.gen_block(then_branch);
@@ -134,6 +146,13 @@ impl JsBackend {
                     code.push_str(&self.gen_block(else_b));
                 }
                 code
+            }
+            Statement::NativeBlock { lang, code } => {
+                if lang == "js" {
+                    code.join("\n")
+                } else {
+                    String::new()
+                }
             }
         }
     }
@@ -147,6 +166,18 @@ impl JsBackend {
                 Literal::Bool(b) => b.to_string(),
             },
             Expression::Identifier(s) => s.clone(),
+            Expression::Array(items) => {
+                let inner = items.iter()
+                    .map(|e| self.gen_expression(e))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                format!("[{}]", inner)
+            },
+            Expression::Index { target, index } => {
+                let t = self.gen_expression(target);
+                let i = self.gen_expression(index);
+                format!("{}[{}]", t, i)
+            },
             Expression::BinaryOp { left, op, right } => {
                 let l = self.gen_expression(left);
                 let r = self.gen_expression(right);
@@ -167,10 +198,7 @@ impl JsBackend {
                     .collect::<Vec<_>>()
                     .join(", ");
                 
-                // Mapeamento de STD (Polyfills básicos)
-                if func_name == "print" {
-                    return format!("console.log({})", args_str);
-                }
+                // Print removido (agora via std)
                 if func_name == "String" {
                     return format!("String({})", args_str);
                 }

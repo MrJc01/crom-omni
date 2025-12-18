@@ -1,0 +1,11 @@
+// Standard Library: IO
+// Prelude do Omni.
+
+fn print(msg: String) {
+    native("js") {
+        console.log(msg);
+    }
+    native("python") {
+        print(msg)
+    }
+}

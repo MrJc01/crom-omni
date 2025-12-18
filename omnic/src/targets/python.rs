@@ -135,6 +135,20 @@ impl PythonBackend {
                     format!("{}return", prefix)
                 }
             }
+            Statement::While { condition, body } => {
+                let cond = self.gen_expression(condition);
+                let mut code = format!("{}while {}:\n", prefix, cond);
+                code.push_str(&self.gen_block(body, indent + 1));
+                code
+            },
+            Statement::For { var, iterator, body } => {
+                let iter = self.gen_expression(iterator);
+                let mut code = format!("{}for {} in {}:\n", prefix, var, iter);
+                code.push_str(&self.gen_block(body, indent + 1));
+                code
+            },
+            Statement::Break => format!("{}break", prefix),
+            Statement::Continue => format!("{}continue", prefix),
             Statement::Expression(expr) => {
                  format!("{}{}", prefix, self.gen_expression(expr))
             }
@@ -150,7 +164,7 @@ impl PythonBackend {
                     code.push_str(&format!("{}else:\n", prefix));
                     code.push_str(&self.gen_block(else_b, indent + 1));
                 }
-                code.trim_end().to_string() // Remove newline extra pra não ficar buraco
+                code.trim_end().to_string() 
             }
         }
     }
@@ -161,9 +175,21 @@ impl PythonBackend {
                 Literal::String(s) => format!("\"{}\"", s), 
                 Literal::Integer(i) => i.to_string(),
                 Literal::Float(f) => f.to_string(),
-                Literal::Bool(b) => if *b { "True".to_string() } else { "False".to_string() }, // Python True/False
+                Literal::Bool(b) => if *b { "True".to_string() } else { "False".to_string() }, 
             },
             Expression::Identifier(s) => s.clone(),
+            Expression::Array(items) => {
+                let inner = items.iter()
+                    .map(|e| self.gen_expression(e))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                format!("[{}]", inner)
+            },
+            Expression::Index { target, index } => {
+                let t = self.gen_expression(target);
+                let i = self.gen_expression(index);
+                format!("{}[{}]", t, i)
+            },
             Expression::BinaryOp { left, op, right } => {
                 let l = self.gen_expression(left);
                 let r = self.gen_expression(right);
@@ -184,13 +210,11 @@ impl PythonBackend {
                     .collect::<Vec<_>>()
                     .join(", ");
                 
-                // Mapeamento STD
                 if func_name == "print" {
-                    // Python print é igual, mas 'console.log' era JS.
                     return format!("print({})", args_str);
                 }
                 if func_name == "String" {
-                    return format!("str({})", args_str); // JS String -> Python str
+                    return format!("str({})", args_str); 
                 }
                 
                 format!("{}({})", func_name, args_str)

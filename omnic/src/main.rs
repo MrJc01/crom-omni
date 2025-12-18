@@ -83,13 +83,11 @@ fn main() -> Result<()> {
                 for (target_name, target_cfg) in config.targets {
                     println!("\n>> Construindo target '{}' ({})", target_name.yellow(), target_cfg.format);
 
-                    // Determinar Output Dir
                     let out_dir = PathBuf::from(&target_cfg.output);
                     if !out_dir.exists() {
                         fs::create_dir_all(&out_dir)?;
                     }
 
-                    // Determinar Source
                     let source_path = target_cfg.source.clone()
                         .map(PathBuf::from)
                         .unwrap_or_else(|| PathBuf::from("src/main.omni"));
@@ -99,7 +97,6 @@ fn main() -> Result<()> {
                         continue;
                     }
 
-                    // Identificar Lang
                     let lang_enum = match target_cfg.format.as_str().parse::<TargetLang>() {
                         Ok(l) => l,
                         Err(_) => {
@@ -108,24 +105,20 @@ fn main() -> Result<()> {
                         }
                     };
 
-                    // Processar e Salvar
                     let generated_files_result = process_single_file(&source_path, lang_enum.clone(), *tokens, *ast, Some(&out_dir));
                     if let Err(e) = generated_files_result {
                         println!("{} {}", "ERRO:".red(), e);
                         continue;
                     }
 
-                    // 5. Packaging / Bundling (Phase 6)
                     if target_cfg.bundle == Some(true) {
-                         // Define Shebang based on Lang
-                         // TODO: Node support requires some tricks, doing only Python for MVP ZipApp as requested
                          let (shebang, ext) = match lang_enum {
                              TargetLang::Python => ("#!/usr/bin/env python3", "run"),
-                             TargetLang::Js => ("#!/usr/bin/env node", "run"), // Try simple concat for JS or Zip if node supports
+                             TargetLang::Js => ("#!/usr/bin/env node", "run"),
                          };
 
                          let bundle_name = format!("{}.{}", target_name, ext);
-                         let bundle_path = out_dir.join(bundle_name); // Salva dentro da dist
+                         let bundle_path = out_dir.join(bundle_name);
                          
                          println!("   📦 Empacotando para: {}", bundle_path.display());
                          
@@ -150,18 +143,26 @@ fn process_single_file(
     debug_ast: bool, 
     out_dir: Option<&Path>
 ) -> Result<()> {
-    // 1. Read
-    let content = fs::read_to_string(path)
-        .with_context(|| format!("Erro lendo {}", path.display()))?;
-
-    // 2. Lex / Parse
-    let lexer = core::lexer::Lexer::new(&content);
-    let mut parser = OmniParser::new(lexer);
-    
-    if debug_tokens {
-        // ... (código de debug simplificado)
+    // 0. Carregar Prelude/Std Lib
+    // Simplificação: Assume que está em "lib/std/io.omni" relativo ao executável ou cwd
+    let std_path = Path::new("lib/std/io.omni");
+    let mut std_content = String::new();
+    if std_path.exists() {
+         std_content = fs::read_to_string(std_path).unwrap_or_default();
+         std_content.push('\n'); // Separador
     }
 
+    // 1. Read
+    let user_content = fs::read_to_string(path)
+        .with_context(|| format!("Erro lendo {}", path.display()))?;
+    
+    // Concatenar Std + User (Prelude injection)
+    let full_content = format!("{}{}", std_content, user_content);
+
+    // 2. Lex / Parse
+    let lexer = core::lexer::Lexer::new(&full_content);
+    let mut parser = OmniParser::new(lexer, &full_content);
+    
     let program = match parser.parse_program() {
         Ok(p) => p,
         Err(e) => return Err(anyhow!("Erro de Parsing em {}: {}", path.display(), e)),
@@ -181,10 +182,9 @@ fn process_single_file(
 
     // 4. Output
     if let Some(dir) = out_dir {
-        // Para Python ZipApp, precisamos de um __main__.py
         let filename = match lang {
-            TargetLang::Js => "index.js", // Main JS entry
-            TargetLang::Python => "__main__.py", // Main Python ZipApp entry
+            TargetLang::Js => "index.js",
+            TargetLang::Python => "__main__.py",
         };
         
         let out_path = dir.join(filename);

@@ -101,6 +101,29 @@ pub enum Statement {
         else_branch: Option<Block>,
     },
     
+    /// while (cond) { ... }
+    While {
+        condition: Expression,
+        body: Block,
+    },
+
+    /// for (item in lista) { ... }
+    For {
+        var: String,
+        iterator: Expression,
+        body: Block,
+    },
+
+    /// Bloco Nativo para Fuga de Abstração
+    /// native("js") { console.log(x); }
+    NativeBlock {
+        lang: String,
+        code: Vec<String>, // Linhas de código
+    },
+
+    Break,
+    Continue,
+    
     /// Chamada solta ou expressão como statement
     Expression(Expression),
 }
@@ -122,6 +145,15 @@ pub enum Expression {
     Call {
         function: Box<Expression>, // Pode ser identificador ou acesso (obj.method)
         args: Vec<Expression>,
+    },
+    
+    /// Array Literal [1, 2, 3]
+    Array(Vec<Expression>),
+
+    /// Index Access target[index]
+    Index {
+        target: Box<Expression>,
+        index: Box<Expression>,
     },
 }
 

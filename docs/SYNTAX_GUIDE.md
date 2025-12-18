@@ -81,6 +81,39 @@ fn processar(db: StorageInterface) {
 
 ---
 
+## Coleções
+
+### Arrays
+
+Listas de tamanho dinâmico (no MVP).
+
+```rust
+let lista = [1, 2, 3];
+let item = lista[0]; // Acesso por índice
+```
+
+## Estruturas de Controle
+
+### Loops
+
+Suporte a iteração definida e indefinida.
+
+```rust
+// For-In (Iteração sobre arrays)
+let users = ["Ana", "Bob"];
+for (user in users) {
+    print(user);
+}
+
+// While (Iteração condicional)
+mut i = 0;
+while (i < 10) {
+    i = i + 1;
+}
+```
+
+---
+
 ## Túneis Nativos (`native {}`)
 
 O Omni segue a filosofia "Core Oco", incentivando o uso de bibliotecas. Porém, para necessidades extremas (drivers, otimização crítica), permitimos "furar" a abstração.
