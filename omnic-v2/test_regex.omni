@@ -1,0 +1,1 @@
+fn is_digit(ch: string) -> bool { native "js" { return /\d/.test(ch); } }

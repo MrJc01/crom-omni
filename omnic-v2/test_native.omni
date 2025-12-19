@@ -1,0 +1,1 @@
+fn test() { native "js" { console.log("hello"); } }

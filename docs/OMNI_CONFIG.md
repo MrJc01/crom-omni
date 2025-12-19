@@ -172,3 +172,49 @@ Neste cenário, um único comando `omnic build` gera:
 | **JS (Node/Web)** | UI, IO-bound services, Serverless              | `.js` (ES6 Modules) |
 | **Python**        | Data Science, Scripts de Automação, Backend AI | `.py` (Type Hinted) |
 | **C++ / Rust**    | (Futuro) Systems Programming, Games            | Binário Nativo      |
+
+---
+
+## Easy Polyglot: Frontend & Backend Unificados
+
+Com o Omni, dividir seu sistema não significa dividir seu repositório. Use um único config para gerar um **Frontend React (JS)** e um **Backend API (Python)** que compartilham as mesmas regras de negócio.
+
+### Configuração Simples
+
+```json
+// omni.config.json
+{
+  "targets": {
+    "website": {
+      "format": "js",
+      "source": "src/ui/main.omni",
+      "output": "dist/website"
+    },
+    "api": {
+      "format": "python",
+      "source": "src/server/api.omni",
+      "output": "dist/api"
+    }
+  }
+}
+```
+
+Execute `omnic build` e veja as pastas `dist/website` e `dist/api` nascerem juntas. 🚀
+
+### O Poder do Código Compartilhado
+
+```
+src/
+├── shared/
+│   └── models.omni    ← Struct User, Struct Order (uma vez só!)
+├── ui/
+│   └── main.omni      ← Frontend React usa models
+└── server/
+    └── api.omni       ← Backend Python usa os mesmos models
+```
+
+O compilador garante que `User` em JS e `User` em Python tenham **exatamente os mesmos campos**. Acabaram os bugs de "o frontend espera `user_name` mas o backend manda `userName`".
+
+```
+
+```

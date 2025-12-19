@@ -129,6 +129,56 @@ pub enum Token {
     #[token(">")]
     GreaterThan,
 
+    #[token("<=")]
+    LessEquals,
+
+    #[token(">=")]
+    GreaterEquals,
+
+    #[token("&&")]
+    LogicalAnd,
+
+    #[token("||")]
+    LogicalOr,
+
+    // --- Additional ASCII Symbols (for native block support) ---
+
+    #[token("\\")]
+    Backslash,
+
+    #[token("?")]
+    Question,
+
+    #[token("!")]
+    Bang,
+
+    #[token("^")]
+    Caret,
+
+    #[token("$")]
+    Dollar,
+
+    #[token("|")]
+    Pipe,
+
+    #[token("&")]
+    Ampersand,
+
+    #[token("%")]
+    Percent,
+
+    #[token("#")]
+    Hash,
+
+    #[token("~")]
+    Tilde,
+
+    #[token("`")]
+    Backtick,
+
+    #[token("'")]
+    SingleQuote,
+
     // --- Literais e Identificadores ---
 
     // Identificadores: Começa com letra/_ e segue com alfanumérico

@@ -130,7 +130,7 @@ impl PythonBackend {
                 format!("{}{} = {}", prefix, name, self.gen_expression(value))
             }
             Statement::Assignment { target, value } => {
-                format!("{}{} = {}", prefix, target, self.gen_expression(value))
+                format!("{}{} = {}", prefix, self.gen_expression(target), self.gen_expression(value))
             }
             Statement::Return(opt_expr) => {
                 if let Some(expr) = opt_expr {
@@ -213,6 +213,12 @@ impl PythonBackend {
                     BinaryOperator::Divide => "/",
                     BinaryOperator::Equals => "==",
                     BinaryOperator::NotEquals => "!=",
+                    BinaryOperator::LessThan => "<",
+                    BinaryOperator::GreaterThan => ">",
+                    BinaryOperator::LessEquals => "<=",
+                    BinaryOperator::GreaterEquals => ">=",
+                    BinaryOperator::LogicalAnd => "and",
+                    BinaryOperator::LogicalOr => "or",
                 };
                 format!("({} {} {})", l, op_str, r)
             },
@@ -239,6 +245,10 @@ impl PythonBackend {
                     .collect::<Vec<_>>()
                     .join(", ");
                 format!("{}({})", name, fields_str)
+            }
+            Expression::MemberAccess { object, member } => {
+                // Member access: obj.field -> obj.field
+                format!("{}.{}", self.gen_expression(object), member)
             }
         }
     }

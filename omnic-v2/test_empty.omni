@@ -1,0 +1,6 @@
+struct CodeGenerator {
+}
+
+fn new_code_generator() -> CodeGenerator {
+    return CodeGenerator {};
+}

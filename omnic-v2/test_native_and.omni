@@ -1,0 +1,9 @@
+fn test() -> string {
+    let path = "";
+    native "js" {
+        if (!path.startsWith(".") && !path.startsWith("/")) {
+             path = "./" + path;
+        }
+    }
+    return path;
+}

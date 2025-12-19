@@ -22,18 +22,30 @@ impl CodeGenerator for JsBackend {
         // Omni: package com.foo; -> ignorado no JS simples ou vira namespace
         // Omni: import std; -> const std = require('std');
         for import in &program.imports {
-             // Tratamento especial para std no futuro, por enquanto gera require simples
+             // Convert .omni extension to .js for requires
+             let mut path = import.path.clone();
+             if path.ends_with(".omni") {
+                 path = path.replace(".omni", ".js");
+             }
+             
+             // Extract variable name from path
              let var_name = import.alias.clone().unwrap_or_else(|| {
-                 // std/http -> http
-                 import.path.split('/').last().unwrap_or(&import.path).to_string()
+                 // std/http -> http, token.js -> token
+                 let base = path.split('/').last().unwrap_or(&path);
+                 base.trim_end_matches(".js").to_string()
              });
-             // Se for 'std', o JS nativo não precisa de require para coisas básicas como console.log, 
-             // mas se fosse um módulo real:
-             if import.path.starts_with("std") {
-                 // Ignora imports da stdlib do Omni que são built-in no JS (como print/console)
-                 // Ou mapeia para polyfills. Vamos ignorar std puro por enquanto.
+             
+             // Handle std imports specially (built-in)
+             if path.starts_with("std") {
+                 // Ignora imports da stdlib do Omni que são built-in no JS
              } else {
-                buffer.push_str(&format!("const {} = require('{}');\n", var_name, import.path));
+                 // Ensure relative path starts with ./
+                 let require_path = if !path.starts_with("./") && !path.starts_with("../") && !path.starts_with("/") {
+                     format!("./{}", path)
+                 } else {
+                     path
+                 };
+                 buffer.push_str(&format!("const {} = require('{}');\n", var_name, require_path));
              }
         }
         buffer.push('\n');
@@ -116,7 +128,7 @@ impl JsBackend {
                 format!("    {} {} = {};", keyword, name, self.gen_expression(value))
             }
             Statement::Assignment { target, value } => {
-                format!("    {} = {};", target, self.gen_expression(value))
+                format!("    {} = {};", self.gen_expression(target), self.gen_expression(value))
             }
             Statement::Return(opt_expr) => {
                 if let Some(expr) = opt_expr {
@@ -192,6 +204,12 @@ impl JsBackend {
                     BinaryOperator::Divide => "/",
                     BinaryOperator::Equals => "===",
                     BinaryOperator::NotEquals => "!==",
+                    BinaryOperator::LessThan => "<",
+                    BinaryOperator::GreaterThan => ">",
+                    BinaryOperator::LessEquals => "<=",
+                    BinaryOperator::GreaterEquals => ">=",
+                    BinaryOperator::LogicalAnd => "&&",
+                    BinaryOperator::LogicalOr => "||",
                 };
                 format!("({} {} {})", l, op_str, r)
             },
@@ -216,6 +234,10 @@ impl JsBackend {
                     .collect::<Vec<_>>()
                     .join(", ");
                 format!("new {}({{ {} }})", name, fields_str)
+            }
+            Expression::MemberAccess { object, member } => {
+                // Member access: obj.field -> obj.field
+                format!("{}.{}", self.gen_expression(object), member)
             }
         }
     }

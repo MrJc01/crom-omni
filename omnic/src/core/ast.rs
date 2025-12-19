@@ -92,9 +92,9 @@ pub enum Statement {
         value: Expression,
         is_mut: bool,
     },
-    /// x = x + 1;
+    /// x = x + 1; or l.ch = value;
     Assignment {
-        target: String,
+        target: Expression,  // Changed from String to Expression for member access support
         value: Expression,
     },
     /// return x;
@@ -167,6 +167,12 @@ pub enum Expression {
         name: String,
         fields: Vec<StructInitField>,
     },
+    
+    /// Member Access: obj.field
+    MemberAccess {
+        object: Box<Expression>,
+        member: String,
+    },
 }
 
 /// Field in a struct instantiation
@@ -186,11 +192,16 @@ pub enum Literal {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum BinaryOperator {
-    Add,       // +
-    Subtract,  // -
-    Multiply,  // *
-    Divide,    // /
-    Equals,    // ==
-    NotEquals, // !=
-    // ...
+    Add,           // +
+    Subtract,      // -
+    Multiply,      // *
+    Divide,        // /
+    Equals,        // ==
+    NotEquals,     // !=
+    LessThan,      // <
+    GreaterThan,   // >
+    LessEquals,    // <=
+    GreaterEquals, // >=
+    LogicalAnd,    // &&
+    LogicalOr,     // ||
 }

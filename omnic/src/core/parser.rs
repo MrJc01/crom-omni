@@ -253,16 +253,13 @@ impl<'a> Parser<'a> {
                     let val = self.parse_expression()?;
                     self.expect(Token::Semicolon)?;
                     
-                    let target_str = match &expr {
-                         Expression::Identifier(s) => s.clone(),
-                         Expression::Index { .. } => {
-                             // Hack MVP para Assignment em array
-                             return Err(anyhow!("Atribuição complexa não suportada no MVP (IndexAssign)"));
-                         },
-                         _ => return Err(anyhow!("Alvo de atribuição inválido")),
+                    // Verify target is valid (Identifier or MemberAccess)
+                    match &expr {
+                        Expression::Identifier(_) | Expression::MemberAccess { .. } | Expression::Index { .. } => {},
+                        _ => return Err(anyhow!("Alvo de atribuição inválido")),
                     };
 
-                    return Ok(Statement::Assignment { target: target_str, value: val });
+                    return Ok(Statement::Assignment { target: expr, value: val });
                 }
                 
                 self.expect(Token::Semicolon)?;
@@ -290,52 +287,60 @@ impl<'a> Parser<'a> {
              return Err(anyhow!("Esperado '(' ou string literal após 'native'"));
          };
          
+         // Consume opening brace and get its end position
          self.expect(Token::BraceOpen)?;
          
-         let mut code_lines = Vec::new();
-         let mut current_line = String::new();
+         // Get start position by looking at current lexer position
+         // We need to find where the content starts (after the {)
+         let start_pos = self.get_current_position();
+         
+         // Count braces to find matching close
          let mut depth = 1;
+         let mut end_pos = start_pos;
          
-         while let Some(res) = self.tokens.peek() {
-             let token = match res {
-                 Ok((t, _)) => t.clone(),
-                 _ => break,
-             };
-             
-             if token == Token::BraceClose {
-                 depth -= 1;
-                 if depth == 0 {
-                     self.consume()?; // Consome o fecha bloco final
-                     break;
+         while let Some(res) = self.tokens.next() {
+             match res {
+                 Ok((Token::BraceOpen, span)) => {
+                     depth += 1;
+                     end_pos = span.end;
                  }
-             } else if token == Token::BraceOpen {
-                 depth += 1;
-             }
-             
-             let consumed = self.consume()?;
-             
-             let s = match consumed {
-                 Token::StringLiteral(s) => format!("\"{}\"", s), 
-                 Token::Semicolon => ";\n".to_string(), 
-                 Token::BraceOpen => "{\n".to_string(),
-                 Token::BraceClose => "}\n".to_string(),
-                 _ => format!("{}", consumed),
-             };
-             
-             current_line.push_str(&s);
-             current_line.push(' ');
-             
-             if s.contains('\n') {
-                 code_lines.push(current_line);
-                 current_line = String::new();
+                 Ok((Token::BraceClose, span)) => {
+                     depth -= 1;
+                     if depth == 0 {
+                         // Don't include the closing brace in the content
+                         end_pos = span.start;
+                         break;
+                     }
+                     end_pos = span.end;
+                 }
+                 Ok((_, span)) => {
+                     end_pos = span.end;
+                 }
+                 Err(e) => {
+                     // Continue even on lexer errors - we want raw content
+                     // Just update position if we can get it from error
+                     end_pos = e.span.end;
+                 }
              }
          }
          
-         if !current_line.is_empty() {
-             code_lines.push(current_line);
-         }
+         // Extract raw source code between braces
+         let raw_code = if start_pos < end_pos && end_pos <= self.source.len() {
+             self.source[start_pos..end_pos].trim().to_string()
+         } else {
+             String::new()
+         };
          
-         Ok(Statement::NativeBlock { lang, code: code_lines })
+         Ok(Statement::NativeBlock { lang, code: vec![raw_code] })
+    }
+    
+    /// Get current position in source (byte offset after last consumed token)
+    fn get_current_position(&mut self) -> usize {
+        // Peek at current token to get its start position
+        match self.tokens.peek() {
+            Some(Ok((_, span))) => span.start,
+            _ => 0,
+        }
     }
 
     fn parse_let_binding(&mut self) -> Result<Statement> {
@@ -368,12 +373,25 @@ impl<'a> Parser<'a> {
         let condition = self.parse_expression()?;
         self.expect(Token::ParenClose)?;
         
-        let then_branch = self.parse_block()?;
+        // Support both `if (cond) { block }` and `if (cond) statement;`
+        let then_branch = if self.peek_token()? == Token::BraceOpen {
+            self.parse_block()?
+        } else {
+            // Single statement form
+            let stmt = self.parse_statement()?;
+            Block { statements: vec![stmt] }
+        };
+        
         let mut else_branch = None;
         
         if let Ok(Token::Else) = self.peek_token() {
             self.consume()?;
-            else_branch = Some(self.parse_block()?);
+            else_branch = Some(if self.peek_token()? == Token::BraceOpen {
+                self.parse_block()?
+            } else {
+                let stmt = self.parse_statement()?;
+                Block { statements: vec![stmt] }
+            });
         }
 
         Ok(Statement::If { condition, then_branch, else_branch })
@@ -415,6 +433,36 @@ impl<'a> Parser<'a> {
                     self.consume()?;
                     let right = self.parse_term()?;
                     left = Expression::BinaryOp { left: Box::new(left), op: BinaryOperator::NotEquals, right: Box::new(right) };
+                },
+                Token::LessThan => {
+                    self.consume()?;
+                    let right = self.parse_term()?;
+                    left = Expression::BinaryOp { left: Box::new(left), op: BinaryOperator::LessThan, right: Box::new(right) };
+                },
+                Token::GreaterThan => {
+                    self.consume()?;
+                    let right = self.parse_term()?;
+                    left = Expression::BinaryOp { left: Box::new(left), op: BinaryOperator::GreaterThan, right: Box::new(right) };
+                },
+                Token::LessEquals => {
+                    self.consume()?;
+                    let right = self.parse_term()?;
+                    left = Expression::BinaryOp { left: Box::new(left), op: BinaryOperator::LessEquals, right: Box::new(right) };
+                },
+                Token::GreaterEquals => {
+                    self.consume()?;
+                    let right = self.parse_term()?;
+                    left = Expression::BinaryOp { left: Box::new(left), op: BinaryOperator::GreaterEquals, right: Box::new(right) };
+                },
+                Token::LogicalAnd => {
+                    self.consume()?;
+                    let right = self.parse_term()?;
+                    left = Expression::BinaryOp { left: Box::new(left), op: BinaryOperator::LogicalAnd, right: Box::new(right) };
+                },
+                Token::LogicalOr => {
+                    self.consume()?;
+                    let right = self.parse_term()?;
+                    left = Expression::BinaryOp { left: Box::new(left), op: BinaryOperator::LogicalOr, right: Box::new(right) };
                 },
                 _ => break,
             }
@@ -510,6 +558,15 @@ impl<'a> Parser<'a> {
                     } else {
                         break; // Not an identifier, can't be struct init
                     }
+                },
+                Ok(Token::Dot) => {
+                    // Member access: obj.field
+                    self.consume()?; // eat .
+                    let member = self.parse_identifier()?;
+                    expr = Expression::MemberAccess { 
+                        object: Box::new(expr), 
+                        member 
+                    };
                 },
                 _ => break,
             }
