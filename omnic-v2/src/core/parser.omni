@@ -316,11 +316,14 @@ fn Parser_parse_factor(p: Parser) -> any {
     }
     
     // Member access loop
-    while (p.cur_token.kind == 31) { // TOKEN_DOT
+    // Member access loop
+    let kind = p.cur_token.kind;
+    while (kind == TOKEN_DOT) { // TOKEN_DOT
         Parser_next_token(p); // skip .
         let prop = p.cur_token.lexeme;
         Parser_next_token(p); // skip property
         node = MemberExpr { kind: NODE_MEMBER, target: node, property: prop };
+        kind = p.cur_token.kind;
     }
     
     return node;

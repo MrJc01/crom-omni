@@ -60,7 +60,7 @@ impl CodeGenerator for JsBackend {
                     buffer.push_str(&self.gen_function(f));
                 }
                 TopLevelItem::LetBinding { name, value, is_mut, .. } => {
-                    let keyword = if *is_mut { "let" } else { "const" };
+                    let keyword = "let";
                     buffer.push_str(&format!("{} {} = {};\n", keyword, name, self.gen_expression(value)));
                 }
             }
@@ -124,7 +124,7 @@ impl JsBackend {
         match stmt {
             Statement::LetBinding { name, value, is_mut, .. } => {
                 // JS usa let/const. Omni 'let' é imutável -> const. Omni 'mut' -> let.
-                let keyword = if *is_mut { "let" } else { "const" };
+                let keyword = "let";
                 format!("    {} {} = {};", keyword, name, self.gen_expression(value))
             }
             Statement::Assignment { target, value } => {
@@ -176,7 +176,7 @@ impl JsBackend {
     fn gen_expression(&self, expr: &Expression) -> String {
         match expr {
             Expression::Literal(l) => match l {
-                Literal::String(s) => format!("\"{}\"", s), // TODO: Escape chars
+                Literal::String(s) => format!("\"{}\"", s.replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r")),
                 Literal::Integer(i) => i.to_string(),
                 Literal::Float(f) => f.to_string(),
                 Literal::Bool(b) => b.to_string(),

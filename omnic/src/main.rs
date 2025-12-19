@@ -63,7 +63,7 @@ fn main() -> Result<()> {
         Commands::Build { file, tokens, ast, target } => {
             // Modo 1: Arquivo Único
             if let Some(source_file) = file {
-                println!("{} {} -> {:?}", "Compilando Arquivo:".green(), source_file.display(), target);
+                eprintln!("{} {} -> {:?}", "Compilando Arquivo:".green(), source_file.display(), target);
                 process_single_file(source_file, target.clone(), *tokens, *ast, None)?;
             } 
             // Modo 2: Projeto (omni.config.json)

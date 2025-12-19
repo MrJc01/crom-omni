@@ -10,7 +10,10 @@ fn main() {
         args_len = process.argv.length;
     }
 
-    if (args_len < 4) {
+    let check_args = false;
+    native "js" { check_args = args_len < 4; }
+
+    if (check_args) {
         print("Usage: node main.js <input_file> <output_file>");
         return;
     }
