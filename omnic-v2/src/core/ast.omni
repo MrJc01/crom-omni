@@ -11,6 +11,9 @@ let NODE_MEMBER = 9;
 let NODE_IMPORT = 10;
 let NODE_ARRAY = 11;
 let NODE_STRUCT_INIT = 12;
+let NODE_IF = 13;
+let NODE_WHILE = 14;
+let NODE_IDENTIFIER = 15;
 let NODE_STRUCT = 70;
 let NODE_NATIVE = 80;
 
@@ -83,6 +86,20 @@ struct ReturnStmt {
     value: any
 }
 
+struct IfStmt {
+    kind: i64,
+    condition: any,
+    consequence: any,
+    alternative: any
+}
+
+struct WhileStmt {
+    kind: i64,
+    condition: any,
+    body: any
+}
+
+
 // Struct Support
 struct StructDecl {
     kind: i64,
@@ -101,4 +118,9 @@ fn new_struct_field(name: string, typename: string) -> StructField {
         name: name,
         typename: typename
     };
+}
+
+struct Identifier {
+    kind: i64,
+    value: string
 }

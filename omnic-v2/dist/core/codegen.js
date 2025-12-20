@@ -23,7 +23,7 @@ function CodeGenerator_generate(self, program) {
 }
 
 function CodeGenerator_gen_statement(self, stmt) {
-  if (stmt.kind === 90) {
+  if (stmt.kind === 10) {
     return CodeGenerator_gen_import(self, stmt);
   }
 
@@ -65,6 +65,12 @@ function CodeGenerator_gen_statement(self, stmt) {
     }
 
     return "if (" + cond + ") " + cons + alt;
+  }
+
+  if (stmt.kind === 14) { // NODE_WHILE
+    const cond = CodeGenerator_gen_expression(self, stmt.condition);
+    const body = CodeGenerator_gen_block(self, stmt.body);
+    return "while (" + cond + ") " + body;
   }
 
   if (stmt.expr) {
@@ -157,8 +163,14 @@ function CodeGenerator_gen_expression(self, expr) {
     );
   }
 
-  if (expr.kind === 95) {
+  if (expr.kind === 12) {
     return "{}";
+  }
+
+  if (expr.kind === 11) {
+    let elems = [];
+    for (let e of expr.elements) elems.push(CodeGenerator_gen_expression(self, e));
+    return "[" + elems.join(", ") + "]";
   }
 
   if (typeof expr == "string") return expr;

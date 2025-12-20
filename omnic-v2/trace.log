@@ -1,0 +1,122 @@
+Expr 11
+Factor 11 0
+Expr Logic Returned
+Expr 11
+Factor 11 1
+Expr Logic Returned
+Expr 11
+Factor 11 10
+Expr Logic Returned
+Expr 11
+Factor 11 11
+Expr Logic Returned
+Expr 11
+Factor 11 12
+Expr Logic Returned
+Expr 11
+Factor 11 20
+Expr Logic Returned
+Expr 11
+Factor 11 21
+Expr Logic Returned
+Expr 11
+Factor 11 22
+Expr Logic Returned
+Expr 11
+Factor 11 23
+Expr Logic Returned
+Expr 11
+Factor 11 24
+Expr Logic Returned
+Expr 11
+Factor 11 25
+Expr Logic Returned
+Expr 11
+Factor 11 26
+Expr Logic Returned
+Expr 11
+Factor 11 27
+Expr Logic Returned
+Expr 11
+Factor 11 28
+Expr Logic Returned
+Expr 11
+Factor 11 29
+Expr Logic Returned
+Expr 11
+Factor 11 30
+Expr Logic Returned
+Expr 11
+Factor 11 31
+Expr Logic Returned
+Expr 11
+Factor 11 32
+Expr Logic Returned
+Expr 11
+Factor 11 33
+Expr Logic Returned
+Expr 11
+Factor 11 40
+Expr Logic Returned
+Expr 11
+Factor 11 41
+Expr Logic Returned
+Expr 11
+Factor 11 42
+Expr Logic Returned
+Expr 11
+Factor 11 43
+Expr Logic Returned
+Expr 11
+Factor 11 44
+Expr Logic Returned
+Expr 11
+Factor 11 45
+Expr Logic Returned
+Expr 11
+Factor 11 46
+Expr Logic Returned
+Expr 11
+Factor 11 47
+Expr Logic Returned
+Expr 11
+Factor 11 60
+Expr Logic Returned
+Expr 11
+Factor 11 61
+Expr Logic Returned
+Expr 11
+Factor 11 62
+Expr Logic Returned
+Expr 11
+Factor 11 63
+Expr Logic Returned
+Expr 11
+Factor 11 64
+Expr Logic Returned
+Expr 11
+Factor 11 65
+Expr Logic Returned
+Expr 11
+Factor 11 66
+Expr Logic Returned
+Expr 11
+Factor 11 67
+Expr Logic Returned
+Expr 11
+Factor 11 70
+Expr Logic Returned
+Expr 11
+Factor 11 80
+Expr Logic Returned
+Expr 11
+Factor 11 90
+Expr Logic Returned
+Expr 10
+Factor 10 Token
+Id Name: Token Next kind: 44
+Struct Init Start for: Token
+Loop cur: 10
+Expr 10
+Factor 10 kind
+Id Name: kind Next kind: 40

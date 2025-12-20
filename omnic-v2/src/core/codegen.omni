@@ -21,9 +21,10 @@ fn CodeGenerator_generate(self: CodeGenerator, program: Program) -> string {
 }
 
 fn CodeGenerator_gen_statement(self: CodeGenerator, stmt: any) -> string {
-    if (stmt.kind == 90) { // IMPORT
+    if (stmt.kind == NODE_IMPORT) { // IMPORT
         return CodeGenerator_gen_import(self, stmt);
     }
+
     if (stmt.kind == 80) { // NATIVE
         return stmt.code;
     }
@@ -50,6 +51,11 @@ fn CodeGenerator_gen_statement(self: CodeGenerator, stmt: any) -> string {
             alt = " else " + CodeGenerator_gen_block(self, stmt.alternative);
         }
         return "if (" + cond + ") " + cons + alt;
+    }
+    if (stmt.kind == NODE_WHILE) { // WHILE
+         let cond = CodeGenerator_gen_expression(self, stmt.condition);
+         let body = CodeGenerator_gen_block(self, stmt.body);
+         return "while (" + cond + ") " + body;
     }
     // Expression Stmt (default)
     if (stmt.expr) {
@@ -126,9 +132,21 @@ fn CodeGenerator_gen_expression(self: CodeGenerator, expr: any) -> string {
         return CodeGenerator_gen_expression(self, expr.target) + "." + expr.property;
     }
 
-    if (expr.kind == 95) { // STRUCT_INIT (se houver)
+    if (expr.kind == NODE_STRUCT_INIT) { // STRUCT_INIT (se houver)
          // Simplificado como call por enquanto se o parser tratar assim
          return "{}"; 
+    }
+
+    if (expr.kind == NODE_ARRAY) {
+        let elems = "";
+        native "js" {
+            let list = [];
+            for (let e of expr.elements) {
+                list.push(CodeGenerator_gen_expression(self, e));
+            }
+            elems = list.join(", ");
+        }
+        return "[" + elems + "]";
     }
 
     // Identifier (string)

@@ -8,6 +8,7 @@ const NODE_PROGRAM = 1;
 const NODE_LET = 2;
 
 const NODE_LITERAL = 3;
+const NODE_IDENTIFIER = 15;
 
 const NODE_FUNCTION = 4;
 
@@ -27,6 +28,9 @@ const NODE_ARRAY = 11;
 
 const NODE_STRUCT_INIT = 12;
 
+const NODE_IF = 13;
+const NODE_WHILE = 14;
+
 const NODE_STRUCT = 70;
 
 const NODE_NATIVE = 80;
@@ -34,6 +38,23 @@ const NODE_NATIVE = 80;
 class Program {
     constructor(data = {}) {
         this.statements = data.statements;
+    }
+}
+
+class WhileStmt {
+    constructor(data = {}) {
+        this.kind = data.kind;
+        this.condition = data.condition;
+        this.body = data.body;
+    }
+}
+
+class IfStmt {
+    constructor(data = {}) {
+        this.kind = data.kind;
+        this.condition = data.condition;
+        this.consequence = data.consequence;
+        this.alternative = data.alternative;
     }
 }
 
@@ -146,4 +167,11 @@ function new_struct_field(name, typename) {
 
 
 
-module.exports = { NODE_PROGRAM, NODE_LET, NODE_LITERAL, NODE_FUNCTION, NODE_BLOCK, NODE_CALL, NODE_RETURN, NODE_BINARY, NODE_MEMBER, NODE_IMPORT, NODE_ARRAY, NODE_STRUCT_INIT, NODE_STRUCT, NODE_NATIVE, new_struct_field, Program, NativeStmt, LetStmt, ImportDecl, ExpressionStmt, IntegerLiteral, BinaryExpr, MemberExpr, FunctionDecl, Block, CallExpr, ReturnStmt, StructDecl, StructField };
+class Identifier {
+    constructor(data = {}) {
+        this.kind = data.kind;
+        this.value = data.value;
+    }
+}
+
+module.exports = { NODE_PROGRAM, NODE_LET, NODE_LITERAL, NODE_IDENTIFIER, NODE_FUNCTION, NODE_BLOCK, NODE_CALL, NODE_RETURN, NODE_BINARY, NODE_MEMBER, NODE_IMPORT, NODE_ARRAY, NODE_STRUCT_INIT, NODE_IF, NODE_WHILE, NODE_STRUCT, NODE_NATIVE, new_struct_field, Program, NativeStmt, LetStmt, ImportDecl, ExpressionStmt, IntegerLiteral, BinaryExpr, MemberExpr, FunctionDecl, Block, CallExpr, ReturnStmt, StructDecl, StructField, IfStmt, WhileStmt, Identifier };

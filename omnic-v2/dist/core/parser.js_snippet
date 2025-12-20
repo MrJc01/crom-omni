@@ -1,0 +1,32 @@
+
+function Parser_parse_if(p) {
+    Parser_next_token(p); // skip if
+    
+    const cond = Parser_parse_expression(p);
+    
+    // Consequence must be a block usually.
+    // But `if (x) return;` ?
+    // Omni `parser.rs` usually enforces block for `if`.
+    // `src/core/parser.omni` lines 130 `Parser_parse_block` usage suggests blocks are common.
+    // `codegen.omni` logic suggests `consequence` is passed to `gen_block`.
+    // So it MUST be a block.
+    // `Parser_parse_block` parsing `{ ... }`.
+    
+    const cons = Parser_parse_block(p);
+    
+    let alt = null;
+    if (p.cur_token.kind === 65) { // TOKEN_ELSE
+        Parser_next_token(p); // skip else
+        
+        if (p.cur_token.kind === 64) { // else if ...
+             // Parse the 'if' statement
+             const if_stmt = Parser_parse_if(p);
+             // Wrap in Block
+             alt = new Block({ kind: NODE_BLOCK, statements: [if_stmt] });
+        } else {
+             alt = Parser_parse_block(p);
+        }
+    }
+    
+    return new IfStmt({ kind: NODE_IF, condition: cond, consequence: cons, alternative: alt });
+}

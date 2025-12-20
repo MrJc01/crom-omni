@@ -1,0 +1,4 @@
+Struct Init Start for: Token
+Field Loop cur: 10 kind
+After name: 30 :
+After colon: 10 kind
