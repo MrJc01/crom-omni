@@ -39,6 +39,12 @@ fn Parser_parse_statement(p: Parser) -> any {
     if (p.cur_token.kind == 90) { // TOKEN_IMPORT
         return Parser_parse_import(p);
     }
+    // Fix: Handle unexpected } cleanly
+    if (p.cur_token.kind == TOKEN_RBRACE) {
+       // Just consume it to avoid infinite loop
+       Parser_next_token(p);
+       return 0;
+    }
     if (p.cur_token.kind == TOKEN_IF) {
         return Parser_parse_if(p);
     }
@@ -157,7 +163,7 @@ fn Parser_parse_struct(p: Parser) -> StructDecl {
             Parser_next_token(p);
         }
     }
-    // Don't consume } here, let main loop handle it
+    Parser_next_token(p); // consume }
     
     return StructDecl { kind: NODE_STRUCT, name: name, fields: fields };
 }
@@ -196,24 +202,29 @@ fn Parser_parse_native_block(p: Parser) -> NativeStmt {
         if (brace_count == 0) {
             code = input.substring(start_extract, pos - 1);
         }
-        native "js" {
-            p.lexer.read_position = end_pos;
-            Lexer_read_char(p.lexer);
-            p.cur_token = Lexer_next_token(p.lexer);
-            p.peek_token = Lexer_next_token(p.lexer);
-        }
+        p.lexer.read_position = end_pos;
+        Lexer_read_char(p.lexer);
+        p.cur_token = Lexer_next_token(p.lexer);
+        p.peek_token = Lexer_next_token(p.lexer);
     }
     return NativeStmt { kind: NODE_NATIVE, lang: lang, code: code };
 }
 
 fn Parser_parse_block(p: Parser) -> Block {
-    Parser_next_token(p); // skip {
     let stmts = [];
-    while (p.cur_token.kind != TOKEN_RBRACE && p.cur_token.kind != TOKEN_EOF) {
+    if (p.cur_token.kind == TOKEN_LBRACE) {
+        Parser_next_token(p); // skip {
+        while (p.cur_token.kind != TOKEN_RBRACE && p.cur_token.kind != TOKEN_EOF) {
+            native "js" { console.log("BlockLoop: " + p.cur_token.kind + " (" + p.cur_token.lexeme + ")"); }
+            let stmt = Parser_parse_statement(p);
+            native "js" { stmts.push(stmt); }
+        }
+        Parser_next_token(p); // consume }
+    } else {
+        // Single statement block (e.g. if (cond) return; without braces)
         let stmt = Parser_parse_statement(p);
         native "js" { stmts.push(stmt); }
     }
-    Parser_next_token(p); // consume }
     return Block { kind: NODE_BLOCK, statements: stmts };
 }
 
@@ -227,13 +238,29 @@ fn Parser_parse_expr_stmt(p: Parser) -> ExpressionStmt {
 
 // Expression Parsing with Precedence
 fn Parser_parse_expression(p: Parser) -> any {
-    return Parser_parse_logic(p);
+    return Parser_parse_assignment(p); // Precedence: Assignment is lowest (binds loosest)
+}
+
+fn Parser_parse_assignment(p: Parser) -> any {
+    let left = Parser_parse_logic(p);
+    
+    if (p.cur_token.kind == TOKEN_ASSIGN) {
+        Parser_next_token(p); // skip =
+        let right = Parser_parse_assignment(p); // Right-associative
+        return AssignmentExpr { kind: NODE_ASSIGNMENT, left: left, right: right };
+    }
+    
+    return left;
 }
 
 fn Parser_parse_equality(p: Parser) -> any {
     let left = Parser_parse_relational(p);
     
-    while (p.cur_token.kind == TOKEN_EQ || p.cur_token.kind == TOKEN_NOT_EQ) {
+    while (true) {
+        let k = p.cur_token.kind;
+        if (k != TOKEN_EQ && k != TOKEN_NOT_EQ) {
+            break;
+        }
         let op = p.cur_token.lexeme;
         Parser_next_token(p);
         let right = Parser_parse_relational(p);
@@ -245,7 +272,11 @@ fn Parser_parse_equality(p: Parser) -> any {
 fn Parser_parse_relational(p: Parser) -> any {
     let left = Parser_parse_term(p);
     
-    while (p.cur_token.kind == TOKEN_LT || p.cur_token.kind == TOKEN_GT) {
+    while (true) {
+        let k = p.cur_token.kind;
+        if (k != TOKEN_LT && k != TOKEN_GT && k != TOKEN_LE && k != TOKEN_GE) {
+             break;
+        }
         let op = p.cur_token.lexeme;
         Parser_next_token(p);
         let right = Parser_parse_term(p);
@@ -257,7 +288,11 @@ fn Parser_parse_relational(p: Parser) -> any {
 fn Parser_parse_logic(p: Parser) -> any {
     let left = Parser_parse_equality(p);
     
-    while (p.cur_token.kind == TOKEN_AND || p.cur_token.kind == TOKEN_OR) {
+    while (true) {
+        let k = p.cur_token.kind;
+        if (k != TOKEN_AND && k != TOKEN_OR) {
+            break;
+        }
         let op = p.cur_token.lexeme;
         Parser_next_token(p);
         let right = Parser_parse_equality(p);
@@ -269,7 +304,11 @@ fn Parser_parse_logic(p: Parser) -> any {
 fn Parser_parse_term(p: Parser) -> any {
     let left = Parser_parse_factor(p);
     
-    while (p.cur_token.kind == TOKEN_PLUS || p.cur_token.kind == TOKEN_MINUS) {
+    while (true) {
+        let k = p.cur_token.kind;
+        if (k != TOKEN_PLUS && k != TOKEN_MINUS) {
+            break;
+        }
         let op = p.cur_token.lexeme;
         Parser_next_token(p);
         let right = Parser_parse_factor(p);
@@ -281,6 +320,7 @@ fn Parser_parse_term(p: Parser) -> any {
 fn Parser_parse_factor(p: Parser) -> any {
     let node: any = 0;
     
+    // 1. Primary Expressions
     if (p.cur_token.kind == TOKEN_INT) {
         let val = 0;
         native "js" { val = parseInt(p.cur_token.lexeme); }
@@ -290,24 +330,13 @@ fn Parser_parse_factor(p: Parser) -> any {
         let name = p.cur_token.lexeme;
         Parser_next_token(p);
         
-        if (p.cur_token.kind == TOKEN_LPAREN) {
-            Parser_next_token(p); // skip (
-            let args = [];
-            while (p.cur_token.kind != TOKEN_RPAREN) {
-                native "js" { args.push(Parser_parse_expression(p)); }
-                if (p.cur_token.kind == TOKEN_COMMA) {
-                    Parser_next_token(p);
-                }
-            }
-            Parser_next_token(p); // skip )
-            node = CallExpr { kind: NODE_CALL, function: name, args: args };
-        } else if (p.cur_token.kind == TOKEN_LBRACE) {
-            // Struct instantiation: Name { field: value }
+        // Struct Init
+        if (p.cur_token.kind == TOKEN_LBRACE) {
             Parser_next_token(p); // skip {
             let init_fields = [];
             while (p.cur_token.kind != TOKEN_RBRACE && p.cur_token.kind != TOKEN_EOF) {
                 let field_name = p.cur_token.lexeme;
-                Parser_next_token(p); // skip field name
+                Parser_next_token(p); // skip name
                 Parser_next_token(p); // skip :
                 let field_val = Parser_parse_expression(p);
                 native "js" { init_fields.push({ name: field_name, value: field_val }); }
@@ -342,17 +371,34 @@ fn Parser_parse_factor(p: Parser) -> any {
         }
         Parser_next_token(p); // skip ]
         native "js" { node = { kind: NODE_ARRAY, elements: elements }; }
+    } else {
+        native "js" { console.error("Unexpected token in expression: Kind " + p.cur_token.kind + ", Lexeme: " + p.cur_token.lexeme); }
+        Parser_next_token(p);
+        return 0;
     }
-    
-    // Member access loop
-    // Member access loop
-    let kind = p.cur_token.kind;
-    while (kind == TOKEN_DOT) { // TOKEN_DOT
-        Parser_next_token(p); // skip .
-        let prop = p.cur_token.lexeme;
-        Parser_next_token(p); // skip property
-        node = MemberExpr { kind: NODE_MEMBER, target: node, property: prop };
-        kind = p.cur_token.kind;
+
+    // 2. Postfix Loop
+    let continue_loop = true;
+    while (continue_loop) {
+        if (p.cur_token.kind == 31) { // TOKEN_DOT
+            Parser_next_token(p); // skip .
+            let prop = p.cur_token.lexeme;
+            Parser_next_token(p); // skip property
+            node = MemberExpr { kind: NODE_MEMBER, target: node, property: prop };
+        } else if (p.cur_token.kind == TOKEN_LPAREN) { // Call
+            Parser_next_token(p); // skip (
+            let args = [];
+            while (p.cur_token.kind != TOKEN_RPAREN && p.cur_token.kind != TOKEN_EOF) {
+                native "js" { args.push(Parser_parse_expression(p)); }
+                if (p.cur_token.kind == TOKEN_COMMA) {
+                    Parser_next_token(p);
+                }
+            }
+            Parser_next_token(p); // skip )
+            node = CallExpr { kind: NODE_CALL, function: node, args: args };
+        } else {
+            continue_loop = false;
+        }
     }
     
     return node;

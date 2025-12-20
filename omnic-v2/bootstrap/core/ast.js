@@ -12,11 +12,20 @@ const NODE_ARRAY = 11;
 const NODE_STRUCT_INIT = 12;
 const NODE_IF = 13;
 const NODE_WHILE = 14;
+const NODE_IDENTIFIER = 15;
+const NODE_ASSIGNMENT = 16;
 const NODE_STRUCT = 70;
 const NODE_NATIVE = 80;
 class Program {
     constructor(data = {}) {
         this.statements = data.statements;
+    }
+}
+class AssignmentExpr {
+    constructor(data = {}) {
+        this.kind = data.kind;
+        this.left = data.left;
+        this.right = data.right;
     }
 }
 class NativeStmt {
@@ -122,5 +131,18 @@ class StructField {
     }
 }
 function new_struct_field(name, typename) {
-    return {};
+    return new StructField({ name: name, typename: typename });
 }
+class Identifier {
+    constructor(data = {}) {
+        this.kind = data.kind;
+        this.value = data.value;
+    }
+}
+
+// --- [Bootstrap Auto-Patch] ---
+// Exporta símbolos para require()
+module.exports = { Program, AssignmentExpr, NativeStmt, LetStmt, ImportDecl, ExpressionStmt, IntegerLiteral, BinaryExpr, MemberExpr, FunctionDecl, Block, CallExpr, ReturnStmt, IfStmt, WhileStmt, StructDecl, StructField, Identifier, new_struct_field, NODE_PROGRAM, NODE_LET, NODE_LITERAL, NODE_FUNCTION, NODE_BLOCK, NODE_CALL, NODE_RETURN, NODE_BINARY, NODE_MEMBER, NODE_IMPORT, NODE_ARRAY, NODE_STRUCT_INIT, NODE_IF, NODE_WHILE, NODE_IDENTIFIER, NODE_ASSIGNMENT, NODE_STRUCT, NODE_NATIVE };
+
+// Injeta no Global para simular o namespace plano do Omni
+Object.assign(global, module.exports);

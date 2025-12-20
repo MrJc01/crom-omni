@@ -1,0 +1,9 @@
+fn main() {
+    native "js" {
+        console.log("Singularity reached: Generation 3 is online.");
+    }
+}
+
+native "js" {
+    main();
+}

@@ -14,12 +14,19 @@ let NODE_STRUCT_INIT = 12;
 let NODE_IF = 13;
 let NODE_WHILE = 14;
 let NODE_IDENTIFIER = 15;
+let NODE_ASSIGNMENT = 16;
 let NODE_STRUCT = 70;
 let NODE_NATIVE = 80;
 
 // Structures
 struct Program {
     statements: any // List<Statement>
+}
+
+struct AssignmentExpr {
+    kind: i64,
+    left: any,
+    right: any
 }
 
 struct NativeStmt {

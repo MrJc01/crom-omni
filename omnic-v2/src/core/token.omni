@@ -24,6 +24,8 @@ let TOKEN_COLON = 30;
 let TOKEN_DOT = 31;
 let TOKEN_AND = 32;
 let TOKEN_OR = 33;
+let TOKEN_LE = 34; // <=
+let TOKEN_GE = 35; // >=
 let TOKEN_COMMA = 40;
 let TOKEN_SEMICOLON = 41;
 let TOKEN_LPAREN = 42;

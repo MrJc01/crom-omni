@@ -18,6 +18,14 @@ function patchFile(filePath) {
     content = content.replace(/module\.exports\s*=\s*\{[^}]+\};\s*/g, '');
     content = content.replace(/Object\.assign\(global,\s*\w+\);\s*/g, '');
     content = content.replace("function print(s) { console.log(s); }\n", "");
+    
+    // Fix: Replace const with let for variables (V1 compiler generates const for let, but we need mutability)
+    // We target lowercase identifiers (variables) and leave UPPERCASE (constants) as const.
+    content = content.replace(/const\s+([a-z][a-zA-Z0-9_]*)\s*=/g, 'let $1 =');
+
+    // Fix: Correct broken V1 loop logic generation: (((A !== B) && A) !== C) -> (A !== B && A !== C)
+    // We use \1 to ensure the variable (A) matches exactly in both places.
+    content = content.replace(/\(\(\(([^)]+) !== ([^)]+)\) && \1\) !== ([^)]+)\)/g, '($1 !== $2 && $1 !== $3)');
 
     // Handle Entry Point for main.js (strip it)
     let entryPoint = "";

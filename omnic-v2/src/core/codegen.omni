@@ -118,23 +118,38 @@ fn CodeGenerator_gen_expression(self: CodeGenerator, expr: any) -> string {
              for(let a of expr.args) list.push(CodeGenerator_gen_expression(self, a));
              args = list.join(", ");
          }
-         // Hack para instanciar classe
+         
+         // Generate callee code first
+         let callee = CodeGenerator_gen_expression(self, expr.function);
+         
+         // Heuristic for Class Instantiation (New): 
+         // Check if callee starts with Uppercase letter (only if simple identifier)
          let is_class = false;
          native "js" {
-             let first = expr.function.charAt(0);
-             is_class = (first >= "A" && first <= "Z");
+             if (typeof expr.function.value === 'string') {
+                 let val = expr.function.value;
+                 let first = val.charAt(0);
+                 is_class = (first >= "A" && first <= "Z") && (val.indexOf("_") == -1);
+             }
          }
-         if (is_class) return "new " + expr.function + "(" + args + ")";
-         return expr.function + "(" + args + ")";
+         if (is_class) return "new " + callee + "(" + args + ")";
+         return callee + "(" + args + ")";
     }
 
     if (expr.kind == NODE_MEMBER) {
         return CodeGenerator_gen_expression(self, expr.target) + "." + expr.property;
     }
 
-    if (expr.kind == NODE_STRUCT_INIT) { // STRUCT_INIT (se houver)
-         // Simplificado como call por enquanto se o parser tratar assim
-         return "{}"; 
+    if (expr.kind == NODE_STRUCT_INIT) {
+        let fields = "";
+        native "js" {
+            let list = [];
+            for(let f of expr.fields) {
+                list.push(f.name + ": " + CodeGenerator_gen_expression(self, f.value));
+            }
+            fields = list.join(", ");
+        }
+        return "new " + expr.name + "({ " + fields + " })";
     }
 
     if (expr.kind == NODE_ARRAY) {
@@ -147,6 +162,18 @@ fn CodeGenerator_gen_expression(self: CodeGenerator, expr: any) -> string {
             elems = list.join(", ");
         }
         return "[" + elems + "]";
+    }
+    
+    if (expr.kind == NODE_IDENTIFIER) {
+         return expr.value;
+    }
+
+    if (expr.kind == NODE_ASSIGNMENT) {
+        let left = CodeGenerator_gen_expression(self, expr.left);
+        let right = CodeGenerator_gen_expression(self, expr.right);
+        let code = "";
+        native "js" { code = left + " = " + right; }
+        return code;
     }
 
     // Identifier (string)
