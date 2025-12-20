@@ -38,7 +38,8 @@ struct NativeStmt {
 struct LetStmt {
     kind: i64,
     name: string,
-    value: any // Expression
+    value: any,
+    is_exported: bool
 }
 
 struct ImportDecl {
@@ -73,8 +74,9 @@ struct MemberExpr {
 struct FunctionDecl {
     kind: i64,
     name: string,
-    params: any, // List<string>
-    body: any // Block
+    params: any,
+    body: any,
+    is_exported: bool
 }
 
 struct Block {
@@ -111,7 +113,8 @@ struct WhileStmt {
 struct StructDecl {
     kind: i64,
     name: string,
-    fields: any // List<StructField>
+    fields: any,
+    is_exported: bool
 }
 
 struct StructField {

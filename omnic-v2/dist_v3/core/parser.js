@@ -34,6 +34,12 @@ function Parser_parse_program(p) {
     return new Program({ statements: stmts });
 }
 function Parser_parse_statement(p) {
+    if (p.cur_token.kind == 92) {
+    Parser_next_token(p);
+    let stmt = Parser_parse_statement(p);
+     if (stmt) stmt.is_exported = true; 
+    return stmt;
+}
     if (p.cur_token.kind == 91) {
     return Parser_parse_package(p);
 }
@@ -99,7 +105,7 @@ function Parser_parse_let(p) {
     if (p.cur_token.kind == TOKEN_SEMICOLON) {
     Parser_next_token(p);
 }
-    return new LetStmt({ kind: NODE_LET, name: name, value: val });
+    return new LetStmt({ kind: NODE_LET, name: name, value: val, is_exported: false });
 }
 function Parser_parse_return(p) {
     Parser_next_token(p);
@@ -133,7 +139,7 @@ function Parser_parse_fn(p) {
     Parser_next_token(p);
 }
     let body = Parser_parse_block(p);
-    return new FunctionDecl({ kind: NODE_FUNCTION, name: name, params: params, body: body });
+    return new FunctionDecl({ kind: NODE_FUNCTION, name: name, params: params, body: body, is_exported: false });
 }
 function Parser_parse_struct(p) {
     Parser_next_token(p);
@@ -157,7 +163,7 @@ function Parser_parse_struct(p) {
 }
 }
     Parser_next_token(p);
-    return new StructDecl({ kind: NODE_STRUCT, name: name, fields: fields });
+    return new StructDecl({ kind: NODE_STRUCT, name: name, fields: fields, is_exported: false });
 }
 function Parser_parse_native_block(p) {
     Parser_next_token(p);

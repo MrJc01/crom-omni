@@ -27,9 +27,9 @@ function CodeGenerator_generate(self, program) {
     
         if (program && program.statements) {
              for (const stmt of program.statements) {
-                 if (stmt.kind == 60) exports.push(stmt.name); // FN
-                 if (stmt.kind == 70) exports.push(stmt.name); // STRUCT
-                 if (stmt.kind == 61) exports.push(stmt.name); // LET
+                 if (stmt.is_exported && stmt.name) {
+                     exports.push(stmt.name);
+                 }
              }
         }
         if (exports.length > 0) {
@@ -43,8 +43,22 @@ function CodeGenerator_generate_python(self, program) {
     
         if (program && program.statements) {
             for (const stmt of program.statements) {
+                self.indent = 0; // Reset indent for each top-level statement
                 output = output + CodeGenerator_gen_stmt_py(self, stmt) + "\n";
             }
+        }
+    
+    let py_exports = [];
+    
+        if (program && program.statements) {
+             for (const stmt of program.statements) {
+                 if (stmt.is_exported && stmt.name) {
+                     py_exports.push("'" + stmt.name + "'");
+                 }
+             }
+        }
+        if (py_exports.length > 0) {
+            output += "\n__all__ = [" + py_exports.join(", ") + "]\n";
         }
     
     return output;

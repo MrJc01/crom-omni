@@ -115,6 +115,9 @@ function Lexer_lookup_ident(ident) {
     if (ident == "package") {
     return 91;
 }
+    if (ident == "export") {
+    return 92;
+}
     if (ident == "while") {
     return TOKEN_WHILE;
 }

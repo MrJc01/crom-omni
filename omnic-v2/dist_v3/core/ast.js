@@ -40,6 +40,7 @@ class LetStmt {
         this.kind = data.kind;
         this.name = data.name;
         this.value = data.value;
+        this.is_exported = data.is_exported;
     }
 }
 class ImportDecl {
@@ -81,6 +82,7 @@ class FunctionDecl {
         this.name = data.name;
         this.params = data.params;
         this.body = data.body;
+        this.is_exported = data.is_exported;
     }
 }
 class Block {
@@ -122,6 +124,7 @@ class StructDecl {
         this.kind = data.kind;
         this.name = data.name;
         this.fields = data.fields;
+        this.is_exported = data.is_exported;
     }
 }
 class StructField {
