@@ -249,7 +249,10 @@ function CodeGenerator_gen_statement(self, stmt) {
     return CodeGenerator_gen_import(self, stmt);
 }
     if (stmt.kind == 80) {
+    if (stmt.lang == "js" || stmt.lang == "javascript") {
     return stmt.code;
+}
+    return "";
 }
     if (stmt.kind == NODE_LET) {
     return "let " + stmt.name + " = " + CodeGenerator_gen_expression(self, stmt.value) + ";";

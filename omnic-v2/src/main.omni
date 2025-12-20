@@ -2,7 +2,7 @@ import "core/token.omni";
 import "core/lexer.omni";
 import "core/parser.omni";
 import "core/codegen.omni";
-import "core/io.omni";
+import "lib/std.omni";
 
 fn main() {
     let args_len = 0;

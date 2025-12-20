@@ -266,7 +266,11 @@ fn CodeGenerator_gen_statement(self: CodeGenerator, stmt: any) -> string {
     }
 
     if (stmt.kind == 80) { // NATIVE
-        return stmt.code;
+        // Only emit native blocks that match JS target
+        if (stmt.lang == "js" || stmt.lang == "javascript") {
+            return stmt.code;
+        }
+        return ""; // Skip non-JS native blocks
     }
     if (stmt.kind == NODE_LET) { // LET
         return "let " + stmt.name + " = " + CodeGenerator_gen_expression(self, stmt.value) + ";";

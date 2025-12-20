@@ -6,8 +6,8 @@ const parser = require("./core/parser.js");
 if (typeof global !== 'undefined') Object.assign(global, parser);
 const codegen = require("./core/codegen.js");
 if (typeof global !== 'undefined') Object.assign(global, codegen);
-const io = require("./core/io.js");
-if (typeof global !== 'undefined') Object.assign(global, io);
+const std = require("./lib/std.js");
+if (typeof global !== 'undefined') Object.assign(global, std);
 function main() {
     let args_len = 0;
     

@@ -43,7 +43,11 @@ function CodeGenerator_gen_statement(self, stmt) {
 }
 
     if ((stmt.kind === 80)) {
-    return stmt.code;
+    // Only emit JS native blocks
+    if (stmt.lang === "js" || stmt.lang === "javascript") {
+        return stmt.code;
+    }
+    return "";
 }
 
     if ((stmt.kind === NODE_LET)) {
