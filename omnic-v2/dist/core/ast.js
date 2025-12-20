@@ -42,6 +42,10 @@ const NODE_STRUCT = 70;
 
 const NODE_NATIVE = 80;
 
+const NODE_INTERFACE = 90;
+
+const NODE_IMPL = 91;
+
 class Program {
     constructor(data = {}) {
         this.statements = data.statements;
@@ -183,4 +187,31 @@ class Identifier {
         this.value = data.value;
     }
 }
-module.exports = { NODE_PROGRAM, NODE_LET, NODE_LITERAL, NODE_FUNCTION, NODE_BLOCK, NODE_CALL, NODE_RETURN, NODE_BINARY, NODE_MEMBER, NODE_IMPORT, NODE_ARRAY, NODE_STRUCT_INIT, NODE_IF, NODE_WHILE, NODE_IDENTIFIER, NODE_ASSIGNMENT, NODE_STRING, NODE_BOOL, NODE_STRUCT, NODE_NATIVE, new_struct_field, Program, AssignmentExpr, NativeStmt, LetStmt, ImportDecl, ExpressionStmt, IntegerLiteral, BinaryExpr, MemberExpr, FunctionDecl, Block, CallExpr, ReturnStmt, IfStmt, WhileStmt, StructDecl, StructField, Identifier };
+
+class InterfaceDecl {
+    constructor(data = {}) {
+        this.kind = data.kind;
+        this.name = data.name;
+        this.methods = data.methods;
+        this.is_exported = data.is_exported;
+    }
+}
+
+class ImplDecl {
+    constructor(data = {}) {
+        this.kind = data.kind;
+        this.interface_name = data.interface_name;
+        this.struct_name = data.struct_name;
+        this.methods = data.methods;
+    }
+}
+
+class MethodSignature {
+    constructor(data = {}) {
+        this.name = data.name;
+        this.params = data.params;
+        this.return_type = data.return_type;
+    }
+}
+
+module.exports = { NODE_PROGRAM, NODE_LET, NODE_LITERAL, NODE_FUNCTION, NODE_BLOCK, NODE_CALL, NODE_RETURN, NODE_BINARY, NODE_MEMBER, NODE_IMPORT, NODE_ARRAY, NODE_STRUCT_INIT, NODE_IF, NODE_WHILE, NODE_IDENTIFIER, NODE_ASSIGNMENT, NODE_STRING, NODE_BOOL, NODE_STRUCT, NODE_NATIVE, NODE_INTERFACE, NODE_IMPL, new_struct_field, Program, AssignmentExpr, NativeStmt, LetStmt, ImportDecl, ExpressionStmt, IntegerLiteral, BinaryExpr, MemberExpr, FunctionDecl, Block, CallExpr, ReturnStmt, IfStmt, WhileStmt, StructDecl, StructField, Identifier, InterfaceDecl, ImplDecl, MethodSignature };

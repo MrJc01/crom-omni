@@ -141,6 +141,18 @@ function Lexer_lookup_ident(ident) {
     return 92; // TOKEN_EXPORT
 }
 
+    if ((ident === "interface")) {
+    return 93; // TOKEN_INTERFACE
+}
+
+    if ((ident === "impl")) {
+    return 94; // TOKEN_IMPL
+}
+
+    if ((ident === "for")) {
+    return 95; // TOKEN_FOR
+}
+
     return TOKEN_IDENTIFIER;
 }
 

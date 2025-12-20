@@ -1,0 +1,27 @@
+// LocalStorage adapter for JavaScript browsers
+import "shared/storage.omni";
+
+struct LocalStorage {
+    prefix: string
+}
+
+impl Storage for LocalStorage {
+    fn get(key: string) -> string {
+        native "js" {
+            return localStorage.getItem(this.prefix + key);
+        }
+        return "";
+    }
+    
+    fn put(key: string, value: string) {
+        native "js" {
+            localStorage.setItem(this.prefix + key, value);
+        }
+    }
+    
+    fn delete(key: string) {
+        native "js" {
+            localStorage.removeItem(this.prefix + key);
+        }
+    }
+}

@@ -83,6 +83,14 @@ function Parser_parse_statement(p) {
     return Parser_parse_native_block(p);
 }
 
+    if ((p.cur_token.kind === 93)) { // TOKEN_INTERFACE
+    return Parser_parse_interface(p);
+}
+
+    if ((p.cur_token.kind === 94)) { // TOKEN_IMPL
+    return Parser_parse_impl(p);
+}
+
     return Parser_parse_expr_stmt(p);
 }
 
@@ -491,7 +499,85 @@ function Parser_parse_while(p) {
     let body = Parser_parse_block(p);
     return new WhileStmt({ kind: NODE_WHILE, condition: cond, body: body });
 }
-module.exports = { new_parser, Parser_next_token, Parser_parse_program, Parser_parse_statement, Parser_parse_import, Parser_parse_let, Parser_parse_return, Parser_parse_fn, Parser_parse_struct, Parser_parse_native_block, Parser_parse_block, Parser_parse_expr_stmt, Parser_parse_expression, Parser_parse_assignment, Parser_parse_equality, Parser_parse_relational, Parser_parse_logic, Parser_parse_term, Parser_parse_multiplication, Parser_parse_factor, Parser_parse_if, Parser_parse_while, Parser };
+
+// Parse interface declaration
+// interface Name { fn method(param: type) -> return_type; }
+function Parser_parse_interface(p) {
+    Parser_next_token(p); // skip 'interface'
+    let name = p.cur_token.lexeme;
+    Parser_next_token(p); // skip name
+    Parser_next_token(p); // skip {
+    
+    let methods = [];
+    while (p.cur_token.kind !== TOKEN_RBRACE && p.cur_token.kind !== TOKEN_EOF) {
+        if (p.cur_token.kind === TOKEN_FN) {
+            Parser_next_token(p); // skip 'fn'
+            let method_name = p.cur_token.lexeme;
+            Parser_next_token(p); // skip method name
+            Parser_next_token(p); // skip (
+            
+            let params = [];
+            while (p.cur_token.kind !== TOKEN_RPAREN && p.cur_token.kind !== TOKEN_EOF) {
+                let param_name = p.cur_token.lexeme;
+                Parser_next_token(p); // skip param name
+                Parser_next_token(p); // skip :
+                let param_type = p.cur_token.lexeme;
+                Parser_next_token(p); // skip type
+                params.push({ name: param_name, type: param_type });
+                if (p.cur_token.kind === TOKEN_COMMA) {
+                    Parser_next_token(p);
+                }
+            }
+            Parser_next_token(p); // skip )
+            
+            let return_type = "void";
+            if (p.cur_token.lexeme === "-") {
+                Parser_next_token(p); // skip -
+                Parser_next_token(p); // skip >
+                return_type = p.cur_token.lexeme;
+                Parser_next_token(p); // skip return type
+            }
+            
+            if (p.cur_token.kind === TOKEN_SEMICOLON) {
+                Parser_next_token(p);
+            }
+            
+            methods.push(new MethodSignature({ name: method_name, params: params, return_type: return_type }));
+        } else {
+            Parser_next_token(p); // skip unknown token
+        }
+    }
+    Parser_next_token(p); // skip }
+    
+    return new InterfaceDecl({ kind: NODE_INTERFACE, name: name, methods: methods, is_exported: false });
+}
+
+// Parse impl declaration
+// impl InterfaceName for StructName { fn method(...) { ... } }
+function Parser_parse_impl(p) {
+    Parser_next_token(p); // skip 'impl'
+    let interface_name = p.cur_token.lexeme;
+    Parser_next_token(p); // skip interface name
+    Parser_next_token(p); // skip 'for' (token 95)
+    let struct_name = p.cur_token.lexeme;
+    Parser_next_token(p); // skip struct name
+    Parser_next_token(p); // skip {
+    
+    let methods = [];
+    while (p.cur_token.kind !== TOKEN_RBRACE && p.cur_token.kind !== TOKEN_EOF) {
+        if (p.cur_token.kind === TOKEN_FN) {
+            let fn_decl = Parser_parse_fn(p);
+            methods.push(fn_decl);
+        } else {
+            Parser_next_token(p);
+        }
+    }
+    Parser_next_token(p); // skip }
+    
+    return new ImplDecl({ kind: NODE_IMPL, interface_name: interface_name, struct_name: struct_name, methods: methods });
+}
+
+module.exports = { new_parser, Parser_next_token, Parser_parse_program, Parser_parse_statement, Parser_parse_import, Parser_parse_let, Parser_parse_return, Parser_parse_fn, Parser_parse_struct, Parser_parse_native_block, Parser_parse_block, Parser_parse_expr_stmt, Parser_parse_expression, Parser_parse_assignment, Parser_parse_equality, Parser_parse_relational, Parser_parse_logic, Parser_parse_term, Parser_parse_multiplication, Parser_parse_factor, Parser_parse_if, Parser_parse_while, Parser_parse_interface, Parser_parse_impl, Parser };
 
 Object.assign(global, lexer);
 Object.assign(global, token);

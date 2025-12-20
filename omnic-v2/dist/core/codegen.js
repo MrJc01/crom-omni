@@ -90,6 +90,32 @@ params = stmt.params.join(", ");
     return (CodeGenerator_gen_expression(self, stmt.expr) + ";");
 }
 
+    // Interface declarations generate JSDoc comments
+    if (stmt.kind === NODE_INTERFACE) {
+        let methods_doc = "";
+        if (stmt.methods) {
+            for (const m of stmt.methods) {
+                let params_str = m.params ? m.params.map(p => p.name + ": " + p.type).join(", ") : "";
+                methods_doc += " * @method " + m.name + "(" + params_str + ") -> " + m.return_type + "\n";
+            }
+        }
+        return "/**\n * @interface " + stmt.name + "\n" + methods_doc + " */";
+    }
+
+    // Impl generates methods attached to struct prototype
+    if (stmt.kind === NODE_IMPL) {
+        let out = "// impl " + stmt.interface_name + " for " + stmt.struct_name + "\n";
+        if (stmt.methods) {
+            for (const m of stmt.methods) {
+                // Generate method as prototype function
+                let params = m.params ? m.params.join(", ") : "";
+                let body = CodeGenerator_gen_block(self, m.body);
+                out += stmt.struct_name + ".prototype." + m.name + " = function(" + params + ") " + body + "\n";
+            }
+        }
+        return out;
+    }
+
     return ("// Unknown stmt kind: " + stmt.kind);
 }
 
@@ -276,6 +302,38 @@ function CodeGenerator_gen_stmt_py(self, stmt) {
     
     if (stmt.expr) {
         return CodeGenerator_gen_expr_py(self, stmt.expr);
+    }
+    
+    // Interface generates ABC in Python
+    if (stmt.kind === NODE_INTERFACE) {
+        let out = "from abc import ABC, abstractmethod\n\n";
+        out += "class " + stmt.name + "(ABC):\n";
+        if (stmt.methods && stmt.methods.length > 0) {
+            for (const m of stmt.methods) {
+                let params_str = m.params ? ", " + m.params.map(p => p.name).join(", ") : "";
+                out += "    @abstractmethod\n";
+                out += "    def " + m.name + "(self" + params_str + "):\n";
+                out += "        pass\n\n";
+            }
+        } else {
+            out += "    pass\n";
+        }
+        return out;
+    }
+    
+    // Impl generates class that inherits from interface
+    if (stmt.kind === NODE_IMPL) {
+        let out = "# impl " + stmt.interface_name + " for " + stmt.struct_name + "\n";
+        if (stmt.methods) {
+            for (const m of stmt.methods) {
+                let params = m.params ? ", " + m.params.join(", ") : "";
+                let body = CodeGenerator_gen_block_py(self, m.body);
+                out += stmt.struct_name + "." + m.name + " = lambda self" + params + ": None\n";
+                out += "def " + stmt.struct_name + "_" + m.name + "(self" + params + "):\n" + body;
+                out += stmt.struct_name + "." + m.name + " = " + stmt.struct_name + "_" + m.name + "\n";
+            }
+        }
+        return out;
     }
     
     return "# Unknown stmt kind: " + stmt.kind;

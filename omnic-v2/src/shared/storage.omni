@@ -1,0 +1,7 @@
+// Storage interface for cross-platform storage adapters
+
+export interface Storage {
+    fn get(key: string) -> string;
+    fn put(key: string, value: string);
+    fn delete(key: string);
+}
