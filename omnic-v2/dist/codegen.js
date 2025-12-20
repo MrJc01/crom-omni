@@ -99,9 +99,7 @@ function CodeGenerator_gen_stmt_py(self, stmt) {
     let decl = indent_str + "def " + stmt.name + "(" + params + "):\n";
     self.indent = self.indent + 1;
     let body = CodeGenerator_gen_block_py(self, stmt.body);
-    self.indent = self.indent;
-    // Unknown stmt kind: 0
-    1;
+    self.indent = self.indent - 1;
     return decl + body;
 }
     if (stmt.kind == NODE_STRUCT) {
@@ -122,9 +120,7 @@ function CodeGenerator_gen_stmt_py(self, stmt) {
     let init_fn = init_indent + "def __init__(self, data=None):\n";
     init_fn = init_fn + init_indent + "    if data is None: data = {}\n";
     init_fn = init_fn + assignments + "\n";
-    self.indent = self.indent;
-    // Unknown stmt kind: 0
-    1;
+    self.indent = self.indent - 1;
     return decl + init_fn;
 }
     if (stmt.kind == NODE_IF) {
@@ -132,16 +128,12 @@ function CodeGenerator_gen_stmt_py(self, stmt) {
     let out = indent_str + "if " + cond + ":\n";
     self.indent = self.indent + 1;
     out = out + CodeGenerator_gen_block_py(self, stmt.consequence);
-    self.indent = self.indent;
-    // Unknown stmt kind: 0
-    1;
+    self.indent = self.indent - 1;
     if (stmt.alternative) {
     out = out + "\n" + indent_str + "else:\n";
     self.indent = self.indent + 1;
     out = out + CodeGenerator_gen_block_py(self, stmt.alternative);
-    self.indent = self.indent;
-    // Unknown stmt kind: 0
-    1;
+    self.indent = self.indent - 1;
 }
     return out;
 }
@@ -150,9 +142,7 @@ function CodeGenerator_gen_stmt_py(self, stmt) {
     let out = indent_str + "while " + cond + ":\n";
     self.indent = self.indent + 1;
     out = out + CodeGenerator_gen_block_py(self, stmt.body);
-    self.indent = self.indent;
-    // Unknown stmt kind: 0
-    1;
+    self.indent = self.indent - 1;
     return out;
 }
     if (stmt.expr) {
@@ -190,7 +180,10 @@ function CodeGenerator_gen_expr_py(self, expr) {
     return expr.value;
 }
     if (expr.kind == NODE_STRING) {
-    return "\"" + expr.value + "\"";
+    return "\";
+    " + expr.value + ";
+    // Unknown stmt kind: 0
+    "";
 }
     if (expr.kind == NODE_BOOL) {
     if (expr.value) {
@@ -340,7 +333,10 @@ function CodeGenerator_gen_expression(self, expr) {
     return expr.value;
 }
     if (expr.kind == NODE_STRING) {
-    return "\"" + expr.value + "\"";
+    return "\";
+    " + expr.value + ";
+    // Unknown stmt kind: 0
+    "";
 }
     if (expr.kind == NODE_BOOL) {
     if (expr.value) {
@@ -410,5 +406,3 @@ function CodeGenerator_gen_expression(self, expr) {
      if (typeof(expr) == "string") return expr; 
     return expr;
 }
-
-module.exports = { CodeGenerator, new_code_generator, CodeGenerator_generate, CodeGenerator_generate_python, CodeGenerator_gen_stmt_py, CodeGenerator_gen_block_py, CodeGenerator_gen_expr_py, CodeGenerator_gen_statement, CodeGenerator_gen_import, CodeGenerator_gen_struct, CodeGenerator_gen_block, CodeGenerator_gen_expression };

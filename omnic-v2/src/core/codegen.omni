@@ -197,6 +197,16 @@ fn CodeGenerator_gen_expr_py(self: CodeGenerator, expr: any) -> string {
          if (expr.value == "null") return "None";
          return expr.value;
     }
+    if (expr.kind == NODE_STRING) {
+        // Add quotes around string value for Python
+        return "\"" + expr.value + "\"";
+    }
+    if (expr.kind == NODE_BOOL) {
+        if (expr.value) {
+            return "True";
+        }
+        return "False";
+    }
     if (expr.kind == NODE_BINARY) {
         let op = expr.op;
         if (op == "&&") op = "and";
@@ -351,6 +361,18 @@ fn CodeGenerator_gen_expression(self: CodeGenerator, expr: any) -> string {
     if (expr == 0) return "null";
 
     if (expr.kind == NODE_LITERAL) return expr.value;
+
+    if (expr.kind == NODE_STRING) {
+        // Add quotes around string value for JS
+        return "\"" + expr.value + "\"";
+    }
+    
+    if (expr.kind == NODE_BOOL) {
+        if (expr.value) {
+            return "true";
+        }
+        return "false";
+    }
 
     if (expr.kind == NODE_BINARY) {
         return CodeGenerator_gen_expression(self, expr.left) + " " + expr.op + " " + CodeGenerator_gen_expression(self, expr.right);

@@ -280,10 +280,24 @@ function Parser_parse_logic(p) {
     return left;
 }
 function Parser_parse_term(p) {
-    let left = Parser_parse_factor(p);
+    let left = Parser_parse_multiplication(p);
     while (null) {
     let k = p.cur_token.kind;
     if (k != TOKEN_PLUS && k != TOKEN_MINUS) {
+    break;
+}
+    let op = p.cur_token.lexeme;
+    Parser_next_token(p);
+    let right = Parser_parse_multiplication(p);
+    left = new BinaryExpr({ kind: NODE_BINARY, left: left, op: op, right: right });
+}
+    return left;
+}
+function Parser_parse_multiplication(p) {
+    let left = Parser_parse_factor(p);
+    while (null) {
+    let k = p.cur_token.kind;
+    if (k != TOKEN_ASTERISK && k != TOKEN_SLASH) {
     break;
 }
     let op = p.cur_token.lexeme;
@@ -312,13 +326,14 @@ function Parser_parse_factor(p) {
     Parser_next_token(p);
     Parser_next_token(p);
     let field_val = Parser_parse_expression(p);
-     init_fields.push({ name: field_name, value: field_val }); 
+    let field = new StructInitField({ name: field_name, value: field_val });
+     init_fields.push(field); 
     if (p.cur_token.kind == TOKEN_COMMA) {
     Parser_next_token(p);
 }
 }
     Parser_next_token(p);
-     node = { kind: NODE_STRUCT_INIT, name: name, fields: init_fields }; 
+    node = new StructInitExpr({ kind: NODE_STRUCT_INIT, name: name, fields: init_fields });
 } else {
     node = new Identifier({ kind: NODE_IDENTIFIER, value: name });
 }
@@ -329,11 +344,16 @@ function Parser_parse_factor(p) {
     Parser_next_token(p);
 } else {
     if (p.cur_token.kind == TOKEN_STRING) {
-     node = { kind: NODE_LITERAL, value: `"${p.cur_token.lexeme}"` }; 
+    let str_val = p.cur_token.lexeme;
+    node = new StringLiteral({ kind: NODE_STRING, value: str_val });
     Parser_next_token(p);
 } else {
-    if (p.cur_token.kind == TOKEN_TRUE || p.cur_token.kind == TOKEN_FALSE) {
-     node = { kind: NODE_LITERAL, value: p.cur_token.lexeme }; 
+    if (p.cur_token.kind == TOKEN_TRUE) {
+    node = new BoolLiteral({ kind: NODE_BOOL, value: true });
+    Parser_next_token(p);
+} else {
+    if (p.cur_token.kind == TOKEN_FALSE) {
+    node = new BoolLiteral({ kind: NODE_BOOL, value: false });
     Parser_next_token(p);
 } else {
     if (p.cur_token.kind == TOKEN_LBRACKET) {
@@ -351,6 +371,7 @@ function Parser_parse_factor(p) {
      console.error("Unexpected token in expression: Kind " + p.cur_token.kind + ", Lexeme: " + p.cur_token.lexeme); 
     Parser_next_token(p);
     return 0;
+}
 }
 }
 }
@@ -408,4 +429,4 @@ function Parser_parse_while(p) {
     return new WhileStmt({ kind: NODE_WHILE, condition: cond, body: body });
 }
 
-module.exports = { Parser, new_parser, Parser_next_token, Parser_parse_program, Parser_parse_statement, Parser_parse_import, Parser_parse_package, Parser_parse_let, Parser_parse_return, Parser_parse_fn, Parser_parse_struct, Parser_parse_native_block, Parser_parse_block, Parser_parse_expr_stmt, Parser_parse_expression, Parser_parse_assignment, Parser_parse_equality, Parser_parse_relational, Parser_parse_logic, Parser_parse_term, Parser_parse_factor, Parser_parse_if, Parser_parse_while };
+module.exports = { Parser, new_parser, Parser_next_token, Parser_parse_program, Parser_parse_statement, Parser_parse_import, Parser_parse_package, Parser_parse_let, Parser_parse_return, Parser_parse_fn, Parser_parse_struct, Parser_parse_native_block, Parser_parse_block, Parser_parse_expr_stmt, Parser_parse_expression, Parser_parse_assignment, Parser_parse_equality, Parser_parse_relational, Parser_parse_logic, Parser_parse_term, Parser_parse_multiplication, Parser_parse_factor, Parser_parse_if, Parser_parse_while };

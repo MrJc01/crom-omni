@@ -4,10 +4,16 @@
     "version": "0.1.0"
   },
   "targets": {
-    "main": {
+    "server": {
+      "format": "python",
+      "output": "dist/python",
+      "source": "src/server.omni"
+    },
+    "client": {
       "format": "js",
-      "output": "dist",
-      "source": "src/main.omni"
+      "output": "dist/js",
+      "source": "src/client.omni"
     }
-  }
+  },
+  "shared": ["src/shared"]
 }

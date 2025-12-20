@@ -21,13 +21,13 @@ if (program && program.statements) {
             }
         }
     
-    // Auto-Export Logic
+    // Auto-Export Logic - based on is_exported flag
     let exports = [];
     if (program && program.statements) {
          for (const stmt of program.statements) {
-             if (stmt.kind == 60) exports.push(stmt.name); // FN (TOKEN_FN=60)
-             if (stmt.kind == 70) exports.push(stmt.name); // STRUCT (TOKEN_STRUCT=70)
-             if (stmt.kind == 61) exports.push(stmt.name); // LET (TOKEN_LET=61)
+             if (stmt.is_exported && stmt.name) {
+                 exports.push(stmt.name);
+             }
          }
     }
     if (exports.length > 0) {
@@ -195,7 +195,161 @@ code = left + " = " + right;
 if (typeof(expr) == "string") return expr;
     return expr;
 }
-module.exports = { new_code_generator, CodeGenerator_generate, CodeGenerator_gen_statement, CodeGenerator_gen_import, CodeGenerator_gen_struct, CodeGenerator_gen_block, CodeGenerator_gen_expression, CodeGenerator };
+
+function CodeGenerator_generate_python(self, program) {
+    let output = "";
+    if (program && program.statements) {
+        for (const stmt of program.statements) {
+            output = output + CodeGenerator_gen_stmt_py(self, stmt) + "\n";
+        }
+    }
+    
+    // Generate __all__ for exports
+    let py_exports = [];
+    if (program && program.statements) {
+        for (const stmt of program.statements) {
+            if (stmt.is_exported && stmt.name) {
+                py_exports.push("'" + stmt.name + "'");
+            }
+        }
+    }
+    if (py_exports.length > 0) {
+        output += "\n__all__ = [" + py_exports.join(", ") + "]\n";
+    }
+    
+    return output;
+}
+
+function CodeGenerator_gen_stmt_py(self, stmt) {
+    if (stmt.kind === NODE_IMPORT) {
+        let path = stmt.path.replace(".omni", "");
+        if (path.includes("/")) {
+            let parts = path.split("/");
+            let name = parts[parts.length - 1];
+            return "import " + name;
+        }
+        return "import " + path;
+    }
+    
+    if (stmt.kind === 80) { // NATIVE
+        if (stmt.lang === "python" || stmt.lang === "py") {
+            return stmt.code;
+        }
+        return "";
+    }
+    
+    if (stmt.kind === NODE_LET) {
+        return stmt.name + " = " + CodeGenerator_gen_expr_py(self, stmt.value);
+    }
+    
+    if (stmt.kind === NODE_RETURN) {
+        return "return " + CodeGenerator_gen_expr_py(self, stmt.value);
+    }
+    
+    if (stmt.kind === NODE_FUNCTION) {
+        let params = stmt.params.join(", ");
+        let body = CodeGenerator_gen_block_py(self, stmt.body);
+        return "def " + stmt.name + "(" + params + "):\n" + body;
+    }
+    
+    if (stmt.kind === NODE_STRUCT) {
+        let fields = [];
+        if (stmt.fields) {
+            for (const f of stmt.fields) {
+                fields.push("self." + f.name + " = " + f.name);
+            }
+        }
+        let params = stmt.fields ? stmt.fields.map(f => f.name + "=None").join(", ") : "";
+        let init_body = fields.length > 0 ? "        " + fields.join("\n        ") : "        pass";
+        return "class " + stmt.name + ":\n    def __init__(self, " + params + "):\n" + init_body;
+    }
+    
+    if (stmt.kind === NODE_IF) {
+        let cond = CodeGenerator_gen_expr_py(self, stmt.condition);
+        let cons = CodeGenerator_gen_block_py(self, stmt.consequence);
+        let result = "if " + cond + ":\n" + cons;
+        if (stmt.alternative) {
+            result += "else:\n" + CodeGenerator_gen_block_py(self, stmt.alternative);
+        }
+        return result;
+    }
+    
+    if (stmt.expr) {
+        return CodeGenerator_gen_expr_py(self, stmt.expr);
+    }
+    
+    return "# Unknown stmt kind: " + stmt.kind;
+}
+
+function CodeGenerator_gen_block_py(self, block) {
+    let out = "";
+    if (!block || !block.statements || block.statements.length === 0) {
+        return "    pass\n";
+    }
+    for (const s of block.statements) {
+        out = out + "    " + CodeGenerator_gen_stmt_py(self, s) + "\n";
+    }
+    return out;
+}
+
+function CodeGenerator_gen_expr_py(self, expr) {
+    if (expr === 0 || expr === null || expr === undefined) return "None";
+    
+    if (expr.kind === NODE_LITERAL) {
+        if (expr.value === "true") return "True";
+        if (expr.value === "false") return "False";
+        if (expr.value === "null") return "None";
+        return expr.value;
+    }
+    
+    if (expr.kind === NODE_STRING) {
+        return '"' + expr.value + '"';
+    }
+    
+    if (expr.kind === NODE_BOOL) {
+        return expr.value ? "True" : "False";
+    }
+    
+    if (expr.kind === NODE_BINARY) {
+        let op = expr.op;
+        if (op === "&&") op = "and";
+        if (op === "||") op = "or";
+        return CodeGenerator_gen_expr_py(self, expr.left) + " " + op + " " + CodeGenerator_gen_expr_py(self, expr.right);
+    }
+    
+    if (expr.kind === NODE_IDENTIFIER) {
+        return expr.value;
+    }
+    
+    if (expr.kind === NODE_CALL) {
+        let args = [];
+        if (expr.args) {
+            for (const a of expr.args) {
+                args.push(CodeGenerator_gen_expr_py(self, a));
+            }
+        }
+        return CodeGenerator_gen_expr_py(self, expr.function) + "(" + args.join(", ") + ")";
+    }
+    
+    if (expr.kind === NODE_STRUCT_INIT) {
+        let args = [];
+        if (expr.fields) {
+            for (const f of expr.fields) {
+                args.push(f.name + "=" + CodeGenerator_gen_expr_py(self, f.value));
+            }
+        }
+        return expr.name + "(" + args.join(", ") + ")";
+    }
+    
+    if (expr.kind === NODE_MEMBER) {
+        return CodeGenerator_gen_expr_py(self, expr.target) + "." + expr.property;
+    }
+    
+    if (typeof expr === "string") return expr;
+    return String(expr);
+}
+
+module.exports = { new_code_generator, CodeGenerator_generate, CodeGenerator_generate_python, CodeGenerator_gen_statement, CodeGenerator_gen_import, CodeGenerator_gen_struct, CodeGenerator_gen_block, CodeGenerator_gen_expression, CodeGenerator_gen_stmt_py, CodeGenerator_gen_block_py, CodeGenerator_gen_expr_py, CodeGenerator };
 
 Object.assign(global, ast);
 Object.assign(global, token);

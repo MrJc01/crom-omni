@@ -329,11 +329,27 @@ fn Parser_parse_logic(p: Parser) -> any {
 }
 
 fn Parser_parse_term(p: Parser) -> any {
-    let left = Parser_parse_factor(p);
+    let left = Parser_parse_multiplication(p);
     
     while (true) {
         let k = p.cur_token.kind;
         if (k != TOKEN_PLUS && k != TOKEN_MINUS) {
+            break;
+        }
+        let op = p.cur_token.lexeme;
+        Parser_next_token(p);
+        let right = Parser_parse_multiplication(p);
+        left = BinaryExpr { kind: NODE_BINARY, left: left, op: op, right: right };
+    }
+    return left;
+}
+
+fn Parser_parse_multiplication(p: Parser) -> any {
+    let left = Parser_parse_factor(p);
+    
+    while (true) {
+        let k = p.cur_token.kind;
+        if (k != TOKEN_ASTERISK && k != TOKEN_SLASH) {
             break;
         }
         let op = p.cur_token.lexeme;
@@ -366,13 +382,14 @@ fn Parser_parse_factor(p: Parser) -> any {
                 Parser_next_token(p); // skip name
                 Parser_next_token(p); // skip :
                 let field_val = Parser_parse_expression(p);
-                native "js" { init_fields.push({ name: field_name, value: field_val }); }
+                let field = StructInitField { name: field_name, value: field_val };
+                native "js" { init_fields.push(field); }
                 if (p.cur_token.kind == TOKEN_COMMA) {
                     Parser_next_token(p);
                 }
             }
             Parser_next_token(p); // skip }
-            native "js" { node = { kind: NODE_STRUCT_INIT, name: name, fields: init_fields }; }
+            node = StructInitExpr { kind: NODE_STRUCT_INIT, name: name, fields: init_fields };
         } else {
             node = Identifier { kind: NODE_IDENTIFIER, value: name };
         }
@@ -381,11 +398,15 @@ fn Parser_parse_factor(p: Parser) -> any {
         node = Parser_parse_expression(p);
         Parser_next_token(p); // skip )
     } else if (p.cur_token.kind == TOKEN_STRING) {
-        native "js" { node = { kind: NODE_LITERAL, value: `"${p.cur_token.lexeme}"` }; }
+        let str_val = p.cur_token.lexeme;
+        node = StringLiteral { kind: NODE_STRING, value: str_val };
         Parser_next_token(p);
-    } else if (p.cur_token.kind == TOKEN_TRUE || p.cur_token.kind == TOKEN_FALSE) {
-         native "js" { node = { kind: NODE_LITERAL, value: p.cur_token.lexeme }; }
-         Parser_next_token(p);
+    } else if (p.cur_token.kind == TOKEN_TRUE) {
+        node = BoolLiteral { kind: NODE_BOOL, value: true };
+        Parser_next_token(p);
+    } else if (p.cur_token.kind == TOKEN_FALSE) {
+        node = BoolLiteral { kind: NODE_BOOL, value: false };
+        Parser_next_token(p);
     } else if (p.cur_token.kind == TOKEN_LBRACKET) {
         // Array literal: []
         Parser_next_token(p); // skip [

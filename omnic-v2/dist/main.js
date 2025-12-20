@@ -7,30 +7,131 @@ let lexer = require('./core/lexer.js');
 let parser = require('./core/parser.js');
 let codegen = require('./core/codegen.js');
 let io = require('./core/io.js');
+const path = require('path');
+const fs = require('fs');
 
-function main() {
-    let args_len = 0;
-args_len = process.argv.length;
-    let check_args = false;
-check_args = args_len < 4;
-    if (check_args) {
-    print("Usage: node main.js <input_file> <output_file>");
-    return;
-}
+// Track compiled files per target to avoid recompilation
+let compiledFiles = new Set();
 
-    let input_path = "";
-    let output_path = "";
-input_path = process.argv[2];
-        output_path = process.argv[3];
-    print(("Compiling: " + input_path));
+function compile_file(input_path, output_path, language, base_dir) {
+    // Create unique key for file+language
+    const cache_key = path.resolve(input_path) + ':' + language;
+    if (compiledFiles.has(cache_key)) {
+        return;
+    }
+    compiledFiles.add(cache_key);
+    
+    print("[" + language + "] Compiling: " + input_path);
+    
     let source = read_file(input_path);
     let l = new_lexer(source);
     let p = new_parser(l);
     let program = Parser_parse_program(p);
+    
+    // Extract and compile dependencies first
+    if (program && program.statements) {
+        for (const stmt of program.statements) {
+            if (stmt.kind === NODE_IMPORT) {
+                let dep_path = stmt.path;
+                dep_path = dep_path.replace(/^["']|["']$/g, '');
+                
+                const input_dir = path.dirname(input_path);
+                const full_dep_path = path.join(input_dir, dep_path);
+                
+                // Calculate output based on language
+                const ext = language === 'python' ? '.py' : '.js';
+                const dep_output_dir = path.dirname(output_path);
+                const dep_basename = path.basename(dep_path, '.omni') + ext;
+                const dep_output = path.join(dep_output_dir, dep_basename);
+                
+                if (fs.existsSync(full_dep_path)) {
+                    compile_file(full_dep_path, dep_output, language, base_dir);
+                }
+            }
+        }
+    }
+    
+    // Generate code based on language
     let gen = new_code_generator();
-    let code = CodeGenerator_generate(gen, program);
+    let code;
+    if (language === 'python') {
+        code = CodeGenerator_generate_python(gen, program);
+    } else {
+        code = CodeGenerator_generate(gen, program);
+    }
+    
+    // Ensure output directory exists
+    const output_dir = path.dirname(output_path);
+    if (!fs.existsSync(output_dir)) {
+        fs.mkdirSync(output_dir, { recursive: true });
+    }
+    
     write_file(output_path, code);
-    print(("Compiled successfully to: " + output_path));
+    print("[" + language + "] Compiled to: " + output_path);
+}
+
+function build_from_config() {
+    const config_path = path.join(process.cwd(), 'omni.config.json');
+    if (!fs.existsSync(config_path)) {
+        print("Error: omni.config.json not found in current directory");
+        return;
+    }
+    
+    print("Reading omni.config.json...");
+    const config_content = fs.readFileSync(config_path, 'utf-8');
+    const config = JSON.parse(config_content);
+    
+    print("Project: " + config.project.name + " v" + config.project.version);
+    print("");
+    
+    // Compile each target
+    for (const [target_name, target] of Object.entries(config.targets)) {
+        print("=== Building target: " + target_name + " ===");
+        
+        // Reset compiled files for each target
+        compiledFiles = new Set();
+        
+        const language = target.format === 'python' ? 'python' : 'js';
+        const source = target.source;
+        const output_dir = target.output;
+        
+        // Calculate output path
+        const ext = language === 'python' ? '.py' : '.js';
+        const basename = path.basename(source, '.omni') + ext;
+        const output_path = path.join(output_dir, basename);
+        
+        if (fs.existsSync(source)) {
+            compile_file(source, output_path, language, path.dirname(source));
+        } else {
+            print("Warning: Source file not found: " + source);
+        }
+        print("");
+    }
+    
+    print("Build complete!");
+}
+
+function main() {
+    let args_len = process.argv.length;
+    
+    // Check for 'build' command
+    if (args_len >= 3 && process.argv[2] === 'build') {
+        build_from_config();
+        return;
+    }
+    
+    if (args_len < 4) {
+        print("Usage:");
+        print("  node main.js <input_file> <output_file>  - Compile single file");
+        print("  node main.js build                        - Build from omni.config.json");
+        return;
+    }
+
+    let input_path = process.argv[2];
+    let output_path = process.argv[3];
+    let base_dir = path.dirname(input_path);
+    
+    compile_file(input_path, output_path, 'js', base_dir);
 }
 
 

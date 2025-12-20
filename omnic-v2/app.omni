@@ -1,0 +1,11 @@
+// Application module that uses lib.omni
+import "lib.omni";
+
+fn main() {
+    let result = add(10, 20);
+    let product = multiply(5, 6);
+    print("Sum: " + result);
+    print("Product: " + product);
+}
+
+main();

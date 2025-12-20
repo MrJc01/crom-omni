@@ -1,0 +1,15 @@
+// Server module - compiles to Python
+import "shared/models.omni";
+
+fn handle_request(user_id: i64) -> User {
+    let user = create_user(user_id, "John", "john@example.com");
+    return user;
+}
+
+fn main() {
+    print("Server starting...");
+    let user = handle_request(1);
+    print("Created user: " + user.name);
+}
+
+main();

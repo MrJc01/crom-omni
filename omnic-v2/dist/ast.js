@@ -169,5 +169,3 @@ class Identifier {
         this.value = data.value;
     }
 }
-
-module.exports = { Program, AssignmentExpr, NativeStmt, LetStmt, ImportDecl, ExpressionStmt, IntegerLiteral, StringLiteral, BoolLiteral, StructInitExpr, StructInitField, BinaryExpr, MemberExpr, FunctionDecl, Block, CallExpr, ReturnStmt, IfStmt, WhileStmt, StructDecl, StructField, Identifier, new_struct_field, NODE_PROGRAM, NODE_LET, NODE_LITERAL, NODE_FUNCTION, NODE_BLOCK, NODE_CALL, NODE_RETURN, NODE_BINARY, NODE_MEMBER, NODE_IMPORT, NODE_ARRAY, NODE_STRUCT_INIT, NODE_IF, NODE_WHILE, NODE_IDENTIFIER, NODE_ASSIGNMENT, NODE_STRING, NODE_BOOL, NODE_STRUCT, NODE_NATIVE };

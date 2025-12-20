@@ -15,6 +15,8 @@ let NODE_IF = 13;
 let NODE_WHILE = 14;
 let NODE_IDENTIFIER = 15;
 let NODE_ASSIGNMENT = 16;
+let NODE_STRING = 17;
+let NODE_BOOL = 18;
 let NODE_STRUCT = 70;
 let NODE_NATIVE = 80;
 
@@ -55,6 +57,27 @@ struct ExpressionStmt {
 struct IntegerLiteral {
     kind: i64,
     value: i64
+}
+
+struct StringLiteral {
+    kind: i64,
+    value: string
+}
+
+struct BoolLiteral {
+    kind: i64,
+    value: bool
+}
+
+struct StructInitExpr {
+    kind: i64,
+    name: string,
+    fields: any
+}
+
+struct StructInitField {
+    name: string,
+    value: any
 }
 
 struct BinaryExpr {
