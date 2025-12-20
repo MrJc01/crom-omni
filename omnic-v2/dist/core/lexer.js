@@ -256,6 +256,11 @@ function Lexer_next_token(l) {
     tok.lexeme = "]";
 }
  else {
+    if ((l.ch === "@")) {
+    tok.kind = 96; // TOKEN_AT
+    tok.lexeme = "@";
+}
+ else {
     if ((l.ch === "+")) {
     tok.kind = TOKEN_PLUS;
     tok.lexeme = "+";
@@ -374,6 +379,8 @@ str_val = l.input.substring(Number(start), Number(end));
  else {
     tok.kind = TOKEN_ILLEGAL;
     tok.lexeme = l.ch;
+}
+
 }
 
 }

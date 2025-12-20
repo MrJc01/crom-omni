@@ -1,0 +1,8 @@
+// PaymentGateway service interface for distributed RPC
+
+@service(url: "http://payment-api:3000")
+interface PaymentGateway {
+    fn process(amount: f64, currency: string) -> bool;
+    fn refund(transaction_id: string) -> bool;
+    fn get_balance(account_id: string) -> f64;
+}

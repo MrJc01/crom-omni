@@ -91,6 +91,17 @@ function Parser_parse_statement(p) {
     return Parser_parse_impl(p);
 }
 
+    if ((p.cur_token.kind === 96)) { // TOKEN_AT - attribute
+    let attribute = Parser_parse_attribute(p);
+    // Attach attribute to next statement (interface, struct, fn)
+    let stmt = Parser_parse_statement(p);
+    if (stmt) {
+        if (!stmt.attributes) stmt.attributes = [];
+        stmt.attributes.push(attribute);
+    }
+    return stmt;
+}
+
     return Parser_parse_expr_stmt(p);
 }
 
@@ -577,7 +588,37 @@ function Parser_parse_impl(p) {
     return new ImplDecl({ kind: NODE_IMPL, interface_name: interface_name, struct_name: struct_name, methods: methods });
 }
 
-module.exports = { new_parser, Parser_next_token, Parser_parse_program, Parser_parse_statement, Parser_parse_import, Parser_parse_let, Parser_parse_return, Parser_parse_fn, Parser_parse_struct, Parser_parse_native_block, Parser_parse_block, Parser_parse_expr_stmt, Parser_parse_expression, Parser_parse_assignment, Parser_parse_equality, Parser_parse_relational, Parser_parse_logic, Parser_parse_term, Parser_parse_multiplication, Parser_parse_factor, Parser_parse_if, Parser_parse_while, Parser_parse_interface, Parser_parse_impl, Parser };
+// Parse @attribute(param: value, ...)
+function Parser_parse_attribute(p) {
+    Parser_next_token(p); // skip @
+    let name = p.cur_token.lexeme;
+    Parser_next_token(p); // skip attribute name
+    
+    let params = {};
+    if (p.cur_token.kind === TOKEN_LPAREN) {
+        Parser_next_token(p); // skip (
+        while (p.cur_token.kind !== TOKEN_RPAREN && p.cur_token.kind !== TOKEN_EOF) {
+            let param_name = p.cur_token.lexeme;
+            Parser_next_token(p); // skip param name
+            Parser_next_token(p); // skip :
+            let param_value = p.cur_token.lexeme;
+            // Remove quotes if string
+            if (param_value.startsWith('"') || param_value.startsWith("'")) {
+                param_value = param_value.slice(1, -1);
+            }
+            params[param_name] = param_value;
+            Parser_next_token(p); // skip value
+            if (p.cur_token.kind === TOKEN_COMMA) {
+                Parser_next_token(p);
+            }
+        }
+        Parser_next_token(p); // skip )
+    }
+    
+    return { name: name, params: params };
+}
+
+module.exports = { new_parser, Parser_next_token, Parser_parse_program, Parser_parse_statement, Parser_parse_import, Parser_parse_let, Parser_parse_return, Parser_parse_fn, Parser_parse_struct, Parser_parse_native_block, Parser_parse_block, Parser_parse_expr_stmt, Parser_parse_expression, Parser_parse_assignment, Parser_parse_equality, Parser_parse_relational, Parser_parse_logic, Parser_parse_term, Parser_parse_multiplication, Parser_parse_factor, Parser_parse_if, Parser_parse_while, Parser_parse_interface, Parser_parse_impl, Parser_parse_attribute, Parser };
 
 Object.assign(global, lexer);
 Object.assign(global, token);

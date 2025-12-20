@@ -90,16 +90,51 @@ params = stmt.params.join(", ");
     return (CodeGenerator_gen_expression(self, stmt.expr) + ";");
 }
 
-    // Interface declarations generate JSDoc comments
+    // Interface declarations - check for @service attribute
     if (stmt.kind === NODE_INTERFACE) {
-        let methods_doc = "";
-        if (stmt.methods) {
-            for (const m of stmt.methods) {
-                let params_str = m.params ? m.params.map(p => p.name + ": " + p.type).join(", ") : "";
-                methods_doc += " * @method " + m.name + "(" + params_str + ") -> " + m.return_type + "\n";
+        // Check if this is a @service interface
+        let is_service = false;
+        let service_url = "";
+        if (stmt.attributes) {
+            for (const attr of stmt.attributes) {
+                if (attr.name === "service") {
+                    is_service = true;
+                    service_url = attr.params.url || "";
+                }
             }
         }
-        return "/**\n * @interface " + stmt.name + "\n" + methods_doc + " */";
+        
+        if (is_service && service_url) {
+            // Generate RPC client proxy
+            let out = "// @service interface: " + stmt.name + " - RPC Client Proxy\n";
+            out += "const " + stmt.name + " = {\n";
+            if (stmt.methods) {
+                for (const m of stmt.methods) {
+                    let params_str = m.params ? m.params.map(p => p.name).join(", ") : "";
+                    let args_obj = m.params ? m.params.map(p => p.name + ": " + p.name).join(", ") : "";
+                    out += "    async " + m.name + "(" + params_str + ") {\n";
+                    out += "        const response = await fetch(\"" + service_url + "/" + stmt.name + "/" + m.name + "\", {\n";
+                    out += "            method: \"POST\",\n";
+                    out += "            headers: { \"Content-Type\": \"application/json\" },\n";
+                    out += "            body: JSON.stringify({ " + args_obj + " })\n";
+                    out += "        });\n";
+                    out += "        return await response.json();\n";
+                    out += "    },\n";
+                }
+            }
+            out += "};\n";
+            return out;
+        } else {
+            // Generate JSDoc comments (normal interface)
+            let methods_doc = "";
+            if (stmt.methods) {
+                for (const m of stmt.methods) {
+                    let params_str = m.params ? m.params.map(p => p.name + ": " + p.type).join(", ") : "";
+                    methods_doc += " * @method " + m.name + "(" + params_str + ") -> " + m.return_type + "\n";
+                }
+            }
+            return "/**\n * @interface " + stmt.name + "\n" + methods_doc + " */";
+        }
     }
 
     // Impl generates methods attached to struct prototype
