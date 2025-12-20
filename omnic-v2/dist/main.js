@@ -111,12 +111,159 @@ function build_from_config() {
     print("Build complete!");
 }
 
+// Generate omni-report.html from flight_recorder.json
+function generate_report() {
+    const recorder_path = path.join(process.cwd(), 'flight_recorder.json');
+    if (!fs.existsSync(recorder_path)) {
+        print("Error: flight_recorder.json not found");
+        print("Run your server first and make some requests to generate traces.");
+        return;
+    }
+    
+    const events = JSON.parse(fs.readFileSync(recorder_path, 'utf-8'));
+    
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Omni Flight Recorder Report</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #eee; min-height: 100vh; padding: 2rem; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { text-align: center; margin-bottom: 2rem; font-size: 2.5rem; background: linear-gradient(90deg, #00d4ff, #7c3aed); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 12px; padding: 1.5rem; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
+        .stat-value { font-size: 2rem; font-weight: bold; color: #00d4ff; }
+        .stat-label { color: #888; margin-top: 0.5rem; }
+        .timeline { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 1.5rem; }
+        .event { display: flex; align-items: center; padding: 1rem; margin: 0.5rem 0; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 4px solid #00d4ff; transition: transform 0.2s; }
+        .event:hover { transform: translateX(5px); }
+        .event.error { border-left-color: #ff4757; background: rgba(255,71,87,0.1); }
+        .event-name { flex: 1; font-weight: 600; }
+        .event-duration { color: #00d4ff; font-family: monospace; }
+        .event-time { color: #888; font-size: 0.85rem; margin-left: 1rem; }
+        .event.error .event-duration { color: #ff4757; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Omni Flight Recorder</h1>
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value">${events.length}</div>
+                <div class="stat-label">Total Events</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${events.filter(e => e.status === 'complete').length}</div>
+                <div class="stat-label">Successful</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${events.filter(e => e.status === 'error').length}</div>
+                <div class="stat-label">Errors</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">${events.reduce((acc, e) => acc + (e.duration || 0), 0).toFixed(0)}ms</div>
+                <div class="stat-label">Total Time</div>
+            </div>
+        </div>
+        <h2 style="margin-bottom: 1rem;">📊 Event Timeline</h2>
+        <div class="timeline">
+            ${events.map(e => `
+            <div class="event ${e.status === 'error' ? 'error' : ''}">
+                <span class="event-name">${e.name || 'Unknown'}</span>
+                <span class="event-duration">${e.duration ? e.duration.toFixed(2) + 'ms' : '-'}</span>
+                <span class="event-time">${e.startISO || ''}</span>
+            </div>
+            `).join('')}
+        </div>
+    </div>
+</body>
+</html>`;
+    
+    fs.writeFileSync('omni-report.html', html);
+    print("Generated: omni-report.html");
+    print("Open in browser to view your service telemetry!");
+}
+
+// Generate Dockerfiles for targets
+function generate_dockerfiles() {
+    const config_path = path.join(process.cwd(), 'omni.config.json');
+    if (!fs.existsSync(config_path)) {
+        print("Error: omni.config.json not found");
+        return;
+    }
+    
+    const config = JSON.parse(fs.readFileSync(config_path, 'utf-8'));
+    
+    if (!config.docker) {
+        print("No 'docker' section in omni.config.json");
+        return;
+    }
+    
+    for (const [target_name, docker_config] of Object.entries(config.docker)) {
+        const target = config.targets?.[target_name];
+        if (!target) continue;
+        
+        const is_python = target.format === 'python';
+        const output_dir = target.output;
+        const port = docker_config.port || 3000;
+        const base = docker_config.base || (is_python ? 'python:3.11-slim' : 'node:18-alpine');
+        
+        let dockerfile;
+        if (is_python) {
+            dockerfile = `# Generated by Omni Compiler
+FROM ${base}
+WORKDIR /app
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt || true
+COPY ${output_dir}/ ./
+EXPOSE ${port}
+CMD ["python", "server.py"]
+`;
+        } else {
+            dockerfile = `# Generated by Omni Compiler
+FROM ${base}
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --production || true
+COPY ${output_dir}/ ./
+EXPOSE ${port}
+CMD ["node", "server.js"]
+`;
+        }
+        
+        const dockerfile_path = path.join(output_dir, 'Dockerfile');
+        if (!fs.existsSync(output_dir)) {
+            fs.mkdirSync(output_dir, { recursive: true });
+        }
+        fs.writeFileSync(dockerfile_path, dockerfile);
+        print("Generated: " + dockerfile_path);
+    }
+    
+    print("Dockerfiles generated!");
+}
+
 function main() {
     let args_len = process.argv.length;
     
     // Check for 'build' command
     if (args_len >= 3 && process.argv[2] === 'build') {
         build_from_config();
+        generate_dockerfiles();
+        return;
+    }
+    
+    // Check for 'report' command
+    if (args_len >= 3 && process.argv[2] === 'report') {
+        generate_report();
+        return;
+    }
+    
+    // Check for 'docker' command
+    if (args_len >= 3 && process.argv[2] === 'docker') {
+        generate_dockerfiles();
         return;
     }
     
@@ -124,6 +271,8 @@ function main() {
         print("Usage:");
         print("  node main.js <input_file> <output_file>  - Compile single file");
         print("  node main.js build                        - Build from omni.config.json");
+        print("  node main.js report                       - Generate HTML report from flight_recorder.json");
+        print("  node main.js docker                       - Generate Dockerfiles for targets");
         return;
     }
 

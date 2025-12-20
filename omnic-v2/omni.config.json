@@ -15,5 +15,27 @@
       "source": "src/client.omni"
     }
   },
-  "shared": ["src/shared"]
+  "shared": ["src/shared"],
+  "topology": {
+    "PaymentGateway": {
+      "host": "payment-api",
+      "port": 3001,
+      "protocol": "http"
+    },
+    "Storage": {
+      "host": "storage-api",
+      "port": 3002,
+      "protocol": "http"
+    }
+  },
+  "docker": {
+    "server": {
+      "base": "python:3.11-slim",
+      "port": 3001
+    },
+    "client": {
+      "base": "node:18-alpine",
+      "port": 3000
+    }
+  }
 }

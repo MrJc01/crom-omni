@@ -1,0 +1,35 @@
+[
+  {
+    "id": "m0abc123",
+    "name": "PaymentGateway.process",
+    "start": 1703100000000,
+    "startISO": "2024-12-20T12:00:00.000Z",
+    "end": 1703100000015,
+    "endISO": "2024-12-20T12:00:00.015Z",
+    "duration": 15,
+    "status": "complete",
+    "success": true
+  },
+  {
+    "id": "m0abc124",
+    "name": "PaymentGateway.refund",
+    "start": 1703100001000,
+    "startISO": "2024-12-20T12:00:01.000Z",
+    "end": 1703100001200,
+    "endISO": "2024-12-20T12:00:01.200Z",
+    "duration": 200,
+    "status": "error",
+    "error": "Insufficient funds"
+  },
+  {
+    "id": "m0abc125",
+    "name": "Storage.get",
+    "start": 1703100002000,
+    "startISO": "2024-12-20T12:00:02.000Z",
+    "end": 1703100002005,
+    "endISO": "2024-12-20T12:00:02.005Z",
+    "duration": 5,
+    "status": "complete",
+    "success": true
+  }
+]
