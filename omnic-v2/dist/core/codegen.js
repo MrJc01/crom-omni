@@ -58,6 +58,83 @@ function CodeGenerator_gen_statement(self, stmt) {
     return (("return " + CodeGenerator_gen_expression(self, stmt.value)) + ";");
 }
 
+    // NODE_SPAWN - parallel execution
+    if (stmt.kind === 92) { // NODE_SPAWN
+        const call = stmt.call;
+        // Call expression might be NODE_CALL with callee or have name directly
+        let fn_name = "unknown";
+        let args = "";
+        
+        if (call) {
+            // Try different ways to get function name
+            if (call.name) fn_name = call.name;
+            else if (call.callee && call.callee.value) fn_name = call.callee.value;
+            else if (call.callee && call.callee.name) fn_name = call.callee.name;
+            else if (call.value) fn_name = call.value;
+            
+            // Get arguments
+            if (call.args) {
+                args = call.args.map(a => CodeGenerator_gen_expression(self, a)).join(", ");
+            } else if (call.arguments) {
+                args = call.arguments.map(a => CodeGenerator_gen_expression(self, a)).join(", ");
+            }
+        }
+        
+        // Generate worker_threads spawn
+        let out = "(() => {\n";
+        out += "    const { Worker, isMainThread } = require('worker_threads');\n";
+        out += "    const worker = new Worker(__filename, {\n";
+        out += "        workerData: { fn: '" + fn_name + "', args: [" + args + "] }\n";
+        out += "    });\n";
+        out += "    worker.on('message', result => console.log('[spawn] " + fn_name + " done:', result));\n";
+        out += "    worker.on('error', err => console.error('[spawn] " + fn_name + " error:', err));\n";
+        out += "})()";
+        return out;
+    }
+
+    // NODE_CAPSULE - Logic Container with topology-based routing
+    if (stmt.kind === 93) { // NODE_CAPSULE
+        const capsule_name = stmt.name;
+        const flows = stmt.flows || [];
+        
+        let out = "// Capsule: " + capsule_name + "\n";
+        out += "const " + capsule_name + " = {\n";
+        out += "    _name: '" + capsule_name + "',\n";
+        out += "    _flows: [" + flows.map(f => "'" + f.name + "'").join(", ") + "],\n\n";
+        
+        for (const flow of flows) {
+            const params = flow.params.map(p => p.name).join(", ");
+            
+            // Generate dynamic bridge (will resolve at runtime based on topology)
+            out += "    async " + flow.name + "(" + params + ") {\n";
+            out += "        // Dynamic topology routing\n";
+            out += "        const resolver = global.TopologyResolver || require('./runtime.js').TopologyResolver;\n";
+            out += "        const route = resolver.resolve('" + capsule_name + "');\n";
+            out += "        \n";
+            out += "        if (route.local) {\n";
+            out += "            // Same node - direct call to implementation\n";
+            out += "            return this._impl_" + flow.name + "(" + params + ");\n";
+            out += "        } else {\n";
+            out += "            // Different node - RPC call\n";
+            out += "            const response = await fetch(route.url + '/" + capsule_name + "/" + flow.name + "', {\n";
+            out += "                method: 'POST',\n";
+            out += "                headers: { 'Content-Type': 'application/json' },\n";
+            out += "                body: JSON.stringify({ " + flow.params.map(p => p.name + ": " + p.name).join(", ") + " })\n";
+            out += "            });\n";
+            out += "            return await response.json();\n";
+            out += "        }\n";
+            out += "    },\n\n";
+            
+            // Placeholder for implementation
+            out += "    _impl_" + flow.name + "(" + params + ") {\n";
+            out += "        throw new Error('" + capsule_name + "." + flow.name + " not implemented');\n";
+            out += "    },\n\n";
+        }
+        
+        out += "};\n";
+        return out;
+    }
+
     if ((stmt.kind === NODE_FUNCTION)) {
     let params = "";
 params = stmt.params.join(", ");
@@ -245,17 +322,64 @@ function CodeGenerator_gen_struct(self, stmt) {
     }
     
     if (is_entity) {
-        const fieldNames = stmt.fields.filter(f => f.name !== 'id').map(f => f.name);
+        // Detect FK relationships (fields with uppercase type = entity reference)
+        const primitives = ['i64', 'i32', 'f64', 'f32', 'string', 'bool'];
+        const fkFields = stmt.fields.filter(f => !primitives.includes(f.typename) && f.name !== 'id');
+        const regularFields = stmt.fields.filter(f => primitives.includes(f.typename) && f.name !== 'id');
+        const allNonIdFields = stmt.fields.filter(f => f.name !== 'id');
+        
+        // For FK fields, use field_name as column (e.g., user_id stays user_id)
+        const fieldNames = allNonIdFields.map(f => f.name);
         const placeholders = fieldNames.map(() => '?').join(', ');
         const updateSet = fieldNames.map(f => f + '=?').join(', ');
         
         out += "\n// @entity Repository: " + name + "\n";
-        out += name + ".find = async (id) => {\n";
+        
+        // Store FK metadata
+        if (fkFields.length > 0) {
+            out += name + "._relations = {\n";
+            for (const fk of fkFields) {
+                out += "    " + fk.name + ": { entity: '" + fk.typename + "', column: '" + fk.name + "' },\n";
+            }
+            out += "};\n\n";
+        }
+        
+        // find(id) with eager loading option
+        out += name + ".find = async (id, options = {}) => {\n";
         out += "    const db = await Database.get('" + storage_name + "');\n";
         out += "    const row = await db.get('SELECT * FROM " + name + " WHERE id = ?', [id]);\n";
-        out += "    return row ? new " + name + "(row) : null;\n";
+        out += "    if (!row) return null;\n";
+        out += "    const obj = new " + name + "(row);\n";
+        // Add lazy loading getters for FK fields
+        for (const fk of fkFields) {
+            const relName = fk.name.replace('_id', '');
+            out += "    // Lazy load " + relName + "\n";
+            out += "    Object.defineProperty(obj, '" + relName + "', {\n";
+            out += "        get: async function() {\n";
+            out += "            if (!this._" + relName + ") this._" + relName + " = await " + fk.typename + ".find(this." + fk.name + ");\n";
+            out += "            return this._" + relName + ";\n";
+            out += "        }\n";
+            out += "    });\n";
+        }
+        out += "    return obj;\n";
         out += "};\n\n";
         
+        // findWith - eager loading
+        if (fkFields.length > 0) {
+            out += name + ".findWith = async (id, includes = []) => {\n";
+            out += "    const obj = await " + name + ".find(id);\n";
+            out += "    if (!obj) return null;\n";
+            out += "    for (const rel of includes) {\n";
+            for (const fk of fkFields) {
+                const relName = fk.name.replace('_id', '');
+                out += "        if (rel === '" + relName + "') obj._" + relName + " = await " + fk.typename + ".find(obj." + fk.name + ");\n";
+            }
+            out += "    }\n";
+            out += "    return obj;\n";
+            out += "};\n\n";
+        }
+        
+        // save
         out += name + ".save = async (obj) => {\n";
         out += "    const db = await Database.get('" + storage_name + "');\n";
         out += "    if (obj.id) {\n";
@@ -267,11 +391,22 @@ function CodeGenerator_gen_struct(self, stmt) {
         out += "    return obj;\n";
         out += "};\n\n";
         
+        // all
         out += name + ".all = async () => {\n";
         out += "    const db = await Database.get('" + storage_name + "');\n";
         out += "    return (await db.all('SELECT * FROM " + name + "')).map(r => new " + name + "(r));\n";
         out += "};\n\n";
         
+        // where (basic query builder)
+        out += name + ".where = async (conditions) => {\n";
+        out += "    const db = await Database.get('" + storage_name + "');\n";
+        out += "    const keys = Object.keys(conditions);\n";
+        out += "    const where = keys.map(k => k + ' = ?').join(' AND ');\n";
+        out += "    const values = Object.values(conditions);\n";
+        out += "    return (await db.all('SELECT * FROM " + name + " WHERE ' + where, values)).map(r => new " + name + "(r));\n";
+        out += "};\n\n";
+        
+        // delete
         out += name + ".delete = async (id) => {\n";
         out += "    const db = await Database.get('" + storage_name + "');\n";
         out += "    await db.run('DELETE FROM " + name + " WHERE id = ?', [id]);\n";
@@ -421,15 +556,83 @@ function CodeGenerator_gen_stmt_py(self, stmt) {
     }
     
     if (stmt.kind === NODE_STRUCT) {
-        let fields = [];
-        if (stmt.fields) {
-            for (const f of stmt.fields) {
-                fields.push("self." + f.name + " = " + f.name);
+        // Check for @entity attribute
+        let is_entity = false;
+        let storage_name = "main_db";
+        if (stmt.attributes) {
+            for (const attr of stmt.attributes) {
+                if (attr.name === "entity") {
+                    is_entity = true;
+                    storage_name = attr.params.storage || "main_db";
+                }
             }
         }
-        let params = stmt.fields ? stmt.fields.map(f => f.name + "=None").join(", ") : "";
-        let init_body = fields.length > 0 ? "        " + fields.join("\n        ") : "        pass";
-        return "class " + stmt.name + ":\n    def __init__(self, " + params + "):\n" + init_body;
+        
+        if (is_entity) {
+            // Generate SQLAlchemy model
+            const primitives = ['i64', 'i32', 'f64', 'f32', 'string', 'bool'];
+            const typeMapPy = {
+                'i64': 'Integer',
+                'i32': 'Integer',
+                'f64': 'Float',
+                'f32': 'Float',
+                'string': 'String(255)',
+                'bool': 'Boolean'
+            };
+            
+            let out = "from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey\n";
+            out += "from sqlalchemy.orm import relationship\n\n";
+            out += "class " + stmt.name + "(Base):\n";
+            out += "    __tablename__ = '" + stmt.name.toLowerCase() + "'\n";
+            
+            for (const field of stmt.fields) {
+                if (field.name === 'id') {
+                    out += "    id = Column(Integer, primary_key=True, autoincrement=True)\n";
+                } else if (!primitives.includes(field.typename)) {
+                    // Foreign key
+                    out += "    " + field.name + " = Column(Integer, ForeignKey('" + field.typename.toLowerCase() + ".id'))\n";
+                    const relName = field.name.replace('_id', '');
+                    out += "    " + relName + " = relationship('" + field.typename + "')\n";
+                } else {
+                    const pyType = typeMapPy[field.typename] || 'String(255)';
+                    out += "    " + field.name + " = Column(" + pyType + ")\n";
+                }
+            }
+            
+            // Add class methods for repository pattern
+            out += "\n    @classmethod\n";
+            out += "    def find(cls, session, id):\n";
+            out += "        return session.query(cls).filter(cls.id == id).first()\n";
+            out += "\n    @classmethod\n";
+            out += "    def all(cls, session):\n";
+            out += "        return session.query(cls).all()\n";
+            out += "\n    @classmethod\n";
+            out += "    def where(cls, session, **conditions):\n";
+            out += "        q = session.query(cls)\n";
+            out += "        for k, v in conditions.items():\n";
+            out += "            q = q.filter(getattr(cls, k) == v)\n";
+            out += "        return q.all()\n";
+            out += "\n    def save(self, session):\n";
+            out += "        session.add(self)\n";
+            out += "        session.commit()\n";
+            out += "        return self\n";
+            out += "\n    def delete(self, session):\n";
+            out += "        session.delete(self)\n";
+            out += "        session.commit()\n";
+            
+            return out;
+        } else {
+            // Regular class (non-entity)
+            let fields = [];
+            if (stmt.fields) {
+                for (const f of stmt.fields) {
+                    fields.push("self." + f.name + " = " + f.name);
+                }
+            }
+            let params = stmt.fields ? stmt.fields.map(f => f.name + "=None").join(", ") : "";
+            let init_body = fields.length > 0 ? "        " + fields.join("\n        ") : "        pass";
+            return "class " + stmt.name + ":\n    def __init__(self, " + params + "):\n" + init_body;
+        }
     }
     
     if (stmt.kind === NODE_IF) {

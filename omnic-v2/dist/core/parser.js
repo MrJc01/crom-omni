@@ -102,6 +102,17 @@ function Parser_parse_statement(p) {
     return stmt;
 }
 
+    if ((p.cur_token.kind === 97)) { // TOKEN_SPAWN
+    Parser_next_token(p); // skip 'spawn'
+    // Parse the function call that follows
+    let call = Parser_parse_expression(p);
+    return { kind: 92, call: call }; // NODE_SPAWN = 92
+}
+
+    if ((p.cur_token.kind === 98)) { // TOKEN_CAPSULE
+    return Parser_parse_capsule(p);
+}
+
     return Parser_parse_expr_stmt(p);
 }
 
@@ -618,7 +629,66 @@ function Parser_parse_attribute(p) {
     return { name: name, params: params };
 }
 
-module.exports = { new_parser, Parser_next_token, Parser_parse_program, Parser_parse_statement, Parser_parse_import, Parser_parse_let, Parser_parse_return, Parser_parse_fn, Parser_parse_struct, Parser_parse_native_block, Parser_parse_block, Parser_parse_expr_stmt, Parser_parse_expression, Parser_parse_assignment, Parser_parse_equality, Parser_parse_relational, Parser_parse_logic, Parser_parse_term, Parser_parse_multiplication, Parser_parse_factor, Parser_parse_if, Parser_parse_while, Parser_parse_interface, Parser_parse_impl, Parser_parse_attribute, Parser };
+function Parser_parse_capsule(p) {
+    Parser_next_token(p); // skip 'capsule'
+    
+    let name = p.cur_token.lexeme;
+    Parser_next_token(p); // skip name
+    
+    Parser_next_token(p); // skip {
+    
+    let flows = [];
+    
+    // Parse flows inside capsule
+    while (p.cur_token.kind !== TOKEN_RBRACE && p.cur_token.kind !== TOKEN_EOF) {
+        if (p.cur_token.kind === 99) { // TOKEN_FLOW
+            Parser_next_token(p); // skip 'flow'
+            
+            let flow_name = p.cur_token.lexeme;
+            Parser_next_token(p); // skip flow name
+            Parser_next_token(p); // skip (
+            
+            // Parse parameters
+            let params = [];
+            while (p.cur_token.kind !== TOKEN_RPAREN && p.cur_token.kind !== TOKEN_EOF) {
+                let param_name = p.cur_token.lexeme;
+                Parser_next_token(p); // skip param name
+                Parser_next_token(p); // skip :
+                let param_type = p.cur_token.lexeme;
+                Parser_next_token(p); // skip type
+                params.push({ name: param_name, typename: param_type });
+                if (p.cur_token.kind === TOKEN_COMMA) {
+                    Parser_next_token(p);
+                }
+            }
+            Parser_next_token(p); // skip )
+            
+            // Parse return type
+            let return_type = "void";
+            if (p.cur_token.lexeme === "-" && p.peek_token.lexeme === ">") {
+                Parser_next_token(p); // skip -
+                Parser_next_token(p); // skip >
+                return_type = p.cur_token.lexeme;
+                Parser_next_token(p); // skip return type
+            }
+            
+            // Skip semicolon
+            if (p.cur_token.kind === TOKEN_SEMICOLON) {
+                Parser_next_token(p);
+            }
+            
+            flows.push({ name: flow_name, params: params, return_type: return_type });
+        } else {
+            Parser_next_token(p); // skip unknown
+        }
+    }
+    
+    Parser_next_token(p); // skip }
+    
+    return { kind: 93, name: name, flows: flows }; // NODE_CAPSULE = 93
+}
+
+module.exports = { new_parser, Parser_next_token, Parser_parse_program, Parser_parse_statement, Parser_parse_import, Parser_parse_let, Parser_parse_return, Parser_parse_fn, Parser_parse_struct, Parser_parse_native_block, Parser_parse_block, Parser_parse_expr_stmt, Parser_parse_expression, Parser_parse_assignment, Parser_parse_equality, Parser_parse_relational, Parser_parse_logic, Parser_parse_term, Parser_parse_multiplication, Parser_parse_factor, Parser_parse_if, Parser_parse_while, Parser_parse_interface, Parser_parse_impl, Parser_parse_attribute, Parser_parse_capsule, Parser };
 
 Object.assign(global, lexer);
 Object.assign(global, token);

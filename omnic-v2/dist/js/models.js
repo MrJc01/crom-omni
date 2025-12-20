@@ -5,6 +5,7 @@ class User {
         this.email = data.email;
     }
 }
+
 class Message {
     constructor(data = {}) {
         this.id = data.id;
@@ -12,6 +13,7 @@ class Message {
         this.content = data.content;
     }
 }
+
 function create_user(id, name, email) {
     return new User({ id: id, name: name, email: email });
 }

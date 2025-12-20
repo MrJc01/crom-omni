@@ -1,0 +1,18 @@
+// Spawn concurrency test
+
+fn heavy_task(n: i64) -> i64 {
+    print("Processing task: " + n);
+    return n * n;
+}
+
+fn main() {
+    print("Starting parallel tasks...");
+    
+    spawn heavy_task(1);
+    spawn heavy_task(2);
+    spawn heavy_task(3);
+    spawn heavy_task(4);
+    spawn heavy_task(5);
+    
+    print("All tasks spawned!");
+}

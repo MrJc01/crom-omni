@@ -46,6 +46,10 @@ const NODE_INTERFACE = 90;
 
 const NODE_IMPL = 91;
 
+const NODE_SPAWN = 92;
+
+const NODE_CAPSULE = 93;
+
 class Program {
     constructor(data = {}) {
         this.statements = data.statements;

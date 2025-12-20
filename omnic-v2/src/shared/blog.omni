@@ -1,0 +1,24 @@
+// Enterprise entities with relationships
+
+@entity(storage: "main_db")
+struct User {
+    id: i64,
+    name: string,
+    email: string
+}
+
+@entity(storage: "main_db")
+struct Post {
+    id: i64,
+    user_id: User,
+    title: string,
+    content: string
+}
+
+@entity(storage: "main_db")
+struct Comment {
+    id: i64,
+    post_id: Post,
+    user_id: User,
+    text: string
+}

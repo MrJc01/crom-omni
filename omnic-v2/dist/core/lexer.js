@@ -153,6 +153,18 @@ function Lexer_lookup_ident(ident) {
     return 95; // TOKEN_FOR
 }
 
+    if ((ident === "spawn")) {
+    return 97; // TOKEN_SPAWN
+}
+
+    if ((ident === "capsule")) {
+    return 98; // TOKEN_CAPSULE
+}
+
+    if ((ident === "flow")) {
+    return 99; // TOKEN_FLOW
+}
+
     return TOKEN_IDENTIFIER;
 }
 

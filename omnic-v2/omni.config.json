@@ -16,16 +16,34 @@
     }
   },
   "shared": ["src/shared"],
+  "nodes": {
+    "app-monolith": {
+      "host": "localhost",
+      "port": 3000,
+      "capsules": ["Pedidos", "Estoque", "Pagamentos"]
+    },
+    "backend-orders": {
+      "host": "orders-api",
+      "port": 3001,
+      "capsules": ["Pedidos", "Estoque"]
+    },
+    "backend-payments": {
+      "host": "payments-api",
+      "port": 3002,
+      "capsules": ["Pagamentos"]
+    }
+  },
   "topology": {
     "PaymentGateway": {
       "host": "payment-api",
       "port": 3001,
       "protocol": "http"
-    },
-    "Storage": {
-      "host": "storage-api",
-      "port": 3002,
-      "protocol": "http"
+    }
+  },
+  "databases": {
+    "main_db": {
+      "driver": "sqlite",
+      "path": "./data/app.db"
     }
   },
   "docker": {
@@ -36,15 +54,6 @@
     "client": {
       "base": "node:18-alpine",
       "port": 3000
-    }
-  },
-  "databases": {
-    "main_db": {
-      "driver": "sqlite",
-      "path": "./data/app.db"
-    },
-    "cache_db": {
-      "driver": "memory"
     }
   }
 }
