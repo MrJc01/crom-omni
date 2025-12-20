@@ -32,8 +32,63 @@ graph TD
 
 1.  **Frontend:** Lê o código Omni (Sintaxe A+C), realiza checagem de tipos estática e validação de "Interfaces Canônicas".
 2.  **IR (Intermediate Representation):** O coração agnóstico. Transforma loops e estruturas em grafos de lógica pura, desconectados de qualquer linguagem específica.
-3.  **Backend (Geradores):** Módulos plugáveis (Plugins) que traduzem a IR para a linguagem final.
+3.  **Adapter Layer:** Camada de abstração de frameworks que traduz anotações (`@ui`, `@server`, `@entity`) em padrões específicos de bibliotecas.
+4.  **Language Profiles:** Templates externos (`targets/*.json`) que definem a sintaxe de cada linguagem alvo.
+5.  **Backend (Geradores):** Módulos plugáveis (Plugins) que traduzem a IR para a linguagem final.
     - _Exemplo:_ Um `loop` na IR vira `for(...)` em C, `foreach` em PHP, ou recursão em Elixir.
+
+---
+
+## 1.1 Camada de Adapters (Framework Abstraction)
+
+O Omni não compila apenas "para uma linguagem", mas "para um ecossistema". A camada de Adapters traduz intenções abstratas em padrões de frameworks específicos:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        CÓDIGO OMNI                              │
+│  @ui.button("Click") | @server.get("/api") | @entity User      │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     ADAPTER LAYER                               │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐             │
+│  │ UI Adapter  │  │Server Adapt │  │ Data Adapt  │             │
+│  │ React/Vue   │  │ Express/    │  │ Prisma/     │             │
+│  │ Flutter     │  │ FastAPI     │  │ SQLAlchemy  │             │
+│  └─────────────┘  └─────────────┘  └─────────────┘             │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   LANGUAGE PROFILES                             │
+│  targets/js.json | targets/python.json | targets/lua.json      │
+└───────────────────────────┬─────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     CÓDIGO GERADO                               │
+│  React Components | API Routes | Models | Migrations           │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Troca de Framework via Configuração
+
+```json
+{
+  "targets": {
+    "web": {
+      "language": "typescript",
+      "framework": "nextjs", // Mude para "react-vite" ou "angular"
+      "ui_adapter": "tailwind" // Mude para "material" ou "chakra"
+    }
+  }
+}
+```
+
+**O código Omni permanece idêntico. Apenas recompile.**
+
+Veja [ADAPTERS_SYSTEM.md](./ADAPTERS_SYSTEM.md) para documentação completa.
 
 ---
 

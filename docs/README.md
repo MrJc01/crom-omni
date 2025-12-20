@@ -74,6 +74,8 @@ O Omni suporta **Blueprints de Tradução de Interfaces** para trocar frameworks
 
 A mesma lógica `@ui` gera componentes React, Vue ou Svelte automaticamente.
 
+Veja [ADAPTERS_SYSTEM.md](./ADAPTERS_SYSTEM.md) para documentação completa do sistema de Adapters.
+
 ---
 
 ## O Compromisso
