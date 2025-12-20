@@ -20,6 +20,20 @@ if (program && program.statements) {
                 output = output + CodeGenerator_gen_statement(self, stmt) + "\n";
             }
         }
+    
+    // Auto-Export Logic
+    let exports = [];
+    if (program && program.statements) {
+         for (const stmt of program.statements) {
+             if (stmt.kind == 60) exports.push(stmt.name); // FN (TOKEN_FN=60)
+             if (stmt.kind == 70) exports.push(stmt.name); // STRUCT (TOKEN_STRUCT=70)
+             if (stmt.kind == 61) exports.push(stmt.name); // LET (TOKEN_LET=61)
+         }
+    }
+    if (exports.length > 0) {
+        output += "\nmodule.exports = { " + exports.join(", ") + " };\n";
+    }
+
     return output;
 }
 
@@ -82,7 +96,7 @@ path = path.replace(".omni", ".js");
         // Extrai nome do arquivo para variável: "./core/token.js" -> "token"
         let name = path.split("/").pop().replace(".js", "");
         // Gera: let token = require("./token.js");
-        return "const " + name + " = require(\"" + path + "\");";
+        return "const " + name + " = require(\"" + path + "\");\nif (typeof global !== 'undefined') Object.assign(global, " + name + ");";
     return "";
 }
 

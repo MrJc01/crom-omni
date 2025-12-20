@@ -28,14 +28,19 @@ fn Parser_parse_program(p: Parser) -> Program {
     let stmts = [];
     while (p.cur_token.kind != TOKEN_EOF) {
         let stmt = Parser_parse_statement(p);
-        if (stmt.kind != 0) {
-            native "js" { stmts.push(stmt); }
+        if (stmt != 0) {
+            if (stmt.kind != 0) {
+                native "js" { stmts.push(stmt); }
+            }
         }
     }
     return Program { statements: stmts };
 }
 
 fn Parser_parse_statement(p: Parser) -> any {
+    if (p.cur_token.kind == 91) { // TOKEN_PACKAGE
+        return Parser_parse_package(p);
+    }
     if (p.cur_token.kind == 90) { // TOKEN_IMPORT
         return Parser_parse_import(p);
     }
@@ -79,6 +84,18 @@ fn Parser_parse_import(p: Parser) -> ImportDecl {
         Parser_next_token(p);
     }
     return ImportDecl { kind: NODE_IMPORT, path: path };
+}
+
+fn Parser_parse_package(p: Parser) -> any {
+    Parser_next_token(p); // skip package
+    // consume until semicolon
+    while (p.cur_token.kind != TOKEN_SEMICOLON && p.cur_token.kind != TOKEN_EOF) {
+        Parser_next_token(p);
+    }
+    if (p.cur_token.kind == TOKEN_SEMICOLON) {
+        Parser_next_token(p);
+    }
+    return 0;
 }
 
 fn Parser_parse_let(p: Parser) -> LetStmt {
@@ -150,6 +167,10 @@ fn Parser_parse_struct(p: Parser) -> StructDecl {
     
     let fields = [];
     while (p.cur_token.kind != TOKEN_RBRACE && p.cur_token.kind != TOKEN_EOF) {
+        if (p.cur_token.kind == TOKEN_RBRACE) {
+            break;
+        }
+
         let field_name = p.cur_token.lexeme;
         Parser_next_token(p); // skip field_name
         Parser_next_token(p); // skip :

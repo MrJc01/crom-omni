@@ -15,7 +15,11 @@ fn main() {
 
     if (check_args) {
         print("Usage: node main.js <input_file> <output_file>");
-        return;
+        // return; // Removed because of dist/main.js parsing issue with empty return expression
+        // Replacing with return null; or implicit return if at end?
+        // But main() continues if I don't return.
+        // Try return 0; which works with old compiler.
+        return 0;
     }
 
     let input_path = "";
@@ -24,6 +28,15 @@ fn main() {
     native "js" {
         input_path = process.argv[2];
         output_path = process.argv[3];
+    }
+    
+    let target_lang = "js";
+    native "js" {
+        for (let i = 4; i < process.argv.length; i++) {
+             if (process.argv[i] == "--target" && (i + 1 < process.argv.length)) {
+                 target_lang = process.argv[i+1];
+             }
+        }
     }
 
     print("Compiling: " + input_path);
@@ -38,7 +51,7 @@ fn main() {
     let program = Parser_parse_program(p);
 
     // Code Generation
-    let gen = new_code_generator();
+    let gen = new_code_generator(target_lang);
     let code = CodeGenerator_generate(gen, program);
 
     // Output
@@ -46,3 +59,5 @@ fn main() {
     
     print("Compiled successfully to: " + output_path);
 }
+
+main();

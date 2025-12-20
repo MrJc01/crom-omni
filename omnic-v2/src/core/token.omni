@@ -47,6 +47,7 @@ let TOKEN_WHILE = 67;
 let TOKEN_STRUCT = 70;
 let TOKEN_NATIVE = 80;
 let TOKEN_IMPORT = 90;
+let TOKEN_PACKAGE = 91;
 
 struct Token {
     kind: i64,

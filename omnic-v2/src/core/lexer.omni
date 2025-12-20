@@ -110,6 +110,7 @@ fn Lexer_lookup_ident(ident: string) -> i64 {
     if (ident == "false") return TOKEN_FALSE;
     if (ident == "native") return TOKEN_NATIVE;
     if (ident == "import") return 90; // TOKEN_IMPORT
+    if (ident == "package") return 91; // TOKEN_PACKAGE
     if (ident == "while") return TOKEN_WHILE;
     return TOKEN_IDENTIFIER;
 }

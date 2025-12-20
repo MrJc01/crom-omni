@@ -1,6 +1,6 @@
-fn read_file(path: string) -> string {
+function read_file(path) {
     let content = "";
-    native "js" {
+    
         const fs = require("fs");
         try {
             content = fs.readFileSync(path, "utf8");
@@ -8,12 +8,11 @@ fn read_file(path: string) -> string {
             console.error("Error reading file " + path + ": " + e.message);
             process.exit(1);
         }
-    }
+    
     return content;
 }
-
-fn write_file(path: string, content: string) {
-    native "js" {
+function write_file(path, content) {
+    
         const fs = require("fs");
         try {
             fs.writeFileSync(path, content);
@@ -21,11 +20,12 @@ fn write_file(path: string, content: string) {
             console.error("Error writing file " + path + ": " + e.message);
             process.exit(1);
         }
-    }
+    
+}
+function print(msg) {
+    
+        console.log(msg);
+    
 }
 
-fn print(msg: string) {
-    native "js" {
-        console.log(msg);
-    }
-}
+module.exports = { read_file, write_file, print };
