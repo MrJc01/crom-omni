@@ -1,8 +1,0 @@
-﻿Lendo Configuração: omni.config.json...
-Projeto: omnic-v2 v0.1.0
-
->> Construindo target 'main' (js)
-ERRO: Erro de Parsing em src/main.omni: Erro Léxico: Caractere inválido ou desconhecido: '
-'
-
-Build de Projeto Concluído!

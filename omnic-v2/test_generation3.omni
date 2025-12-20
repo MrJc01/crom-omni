@@ -1,8 +1,0 @@
-fn main() {
-    let x = 10;
-    if (x == 10) {
-        print("Generation 3 Works!");
-    } else {
-        print("Failure");
-    }
-}

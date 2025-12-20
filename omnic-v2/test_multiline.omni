@@ -1,6 +1,0 @@
-fn test() -> string {
-    return "class " + "Name" + " {" +
-           "    constructor() {" +
-           "    }" +
-           "}";
-}

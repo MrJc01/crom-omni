@@ -1,9 +1,0 @@
-// Library module for testing cross-file compilation
-
-export fn add(a: i64, b: i64) -> i64 {
-    return a + b;
-}
-
-export fn multiply(a: i64, b: i64) -> i64 {
-    return a * b;
-}
