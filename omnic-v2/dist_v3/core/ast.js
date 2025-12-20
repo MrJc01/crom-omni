@@ -1,21 +1,21 @@
-const NODE_PROGRAM = 1;
-const NODE_LET = 2;
-const NODE_LITERAL = 3;
-const NODE_FUNCTION = 4;
-const NODE_BLOCK = 5;
-const NODE_CALL = 6;
-const NODE_RETURN = 7;
-const NODE_BINARY = 8;
-const NODE_MEMBER = 9;
-const NODE_IMPORT = 10;
-const NODE_ARRAY = 11;
-const NODE_STRUCT_INIT = 12;
-const NODE_IF = 13;
-const NODE_WHILE = 14;
-const NODE_IDENTIFIER = 15;
-const NODE_ASSIGNMENT = 16;
-const NODE_STRUCT = 70;
-const NODE_NATIVE = 80;
+let NODE_PROGRAM = 1;
+let NODE_LET = 2;
+let NODE_LITERAL = 3;
+let NODE_FUNCTION = 4;
+let NODE_BLOCK = 5;
+let NODE_CALL = 6;
+let NODE_RETURN = 7;
+let NODE_BINARY = 8;
+let NODE_MEMBER = 9;
+let NODE_IMPORT = 10;
+let NODE_ARRAY = 11;
+let NODE_STRUCT_INIT = 12;
+let NODE_IF = 13;
+let NODE_WHILE = 14;
+let NODE_IDENTIFIER = 15;
+let NODE_ASSIGNMENT = 16;
+let NODE_STRUCT = 70;
+let NODE_NATIVE = 80;
 class Program {
     constructor(data = {}) {
         this.statements = data.statements;
@@ -140,4 +140,4 @@ class Identifier {
     }
 }
 
-module.exports = { Program, AssignmentExpr, NativeStmt, LetStmt, ImportDecl, ExpressionStmt, IntegerLiteral, BinaryExpr, MemberExpr, FunctionDecl, Block, CallExpr, ReturnStmt, IfStmt, WhileStmt, StructDecl, StructField, Identifier };
+module.exports = { Program, AssignmentExpr, NativeStmt, LetStmt, ImportDecl, ExpressionStmt, IntegerLiteral, BinaryExpr, MemberExpr, FunctionDecl, Block, CallExpr, ReturnStmt, IfStmt, WhileStmt, StructDecl, StructField, Identifier, new_struct_field, NODE_PROGRAM, NODE_LET, NODE_LITERAL, NODE_FUNCTION, NODE_BLOCK, NODE_CALL, NODE_RETURN, NODE_BINARY, NODE_MEMBER, NODE_IMPORT, NODE_ARRAY, NODE_STRUCT_INIT, NODE_IF, NODE_WHILE, NODE_IDENTIFIER, NODE_ASSIGNMENT, NODE_STRUCT, NODE_NATIVE };

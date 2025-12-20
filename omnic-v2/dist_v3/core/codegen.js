@@ -15,7 +15,7 @@ function CodeGenerator_generate(self, program) {
     if (self.target == "python") {
     return CodeGenerator_generate_python(self, program);
 }
-    const output = "";
+    let output = "";
     
         if (program && program.statements) {
             for (const stmt of program.statements) {
@@ -23,7 +23,7 @@ function CodeGenerator_generate(self, program) {
             }
         }
     
-    const exports = [];
+    let exports = [];
     
         if (program && program.statements) {
              for (const stmt of program.statements) {
@@ -39,7 +39,7 @@ function CodeGenerator_generate(self, program) {
     return output;
 }
 function CodeGenerator_generate_python(self, program) {
-    const output = "";
+    let output = "";
     
         if (program && program.statements) {
             for (const stmt of program.statements) {
@@ -50,14 +50,14 @@ function CodeGenerator_generate_python(self, program) {
     return output;
 }
 function CodeGenerator_gen_stmt_py(self, stmt) {
-    const indent_str = "";
+    let indent_str = "";
      indent_str = "    ".repeat(self.indent); 
     if (stmt.kind == 91) {
     return "";
 }
     if (stmt.kind == NODE_IMPORT) {
-    const path = stmt.path;
-    const name = "";
+    let path = stmt.path;
+    let name = "";
     
              path = path.replace(".omni", "");
              path = path.replace(/\//g, "."); // core/token -> core.token
@@ -80,22 +80,22 @@ function CodeGenerator_gen_stmt_py(self, stmt) {
     return indent_str + "return " + CodeGenerator_gen_expr_py(self, stmt.value);
 }
     if (stmt.kind == NODE_FUNCTION) {
-    const params = "";
+    let params = "";
      params = stmt.params.join(", "); 
-    const decl = indent_str + "def " + stmt.name + "(" + params + "):\n";
+    let decl = indent_str + "def " + stmt.name + "(" + params + "):\n";
     self.indent = self.indent + 1;
-    const body = CodeGenerator_gen_block_py(self, stmt.body);
+    let body = CodeGenerator_gen_block_py(self, stmt.body);
     self.indent = self.indent;
     // Unknown stmt kind: 0
     1;
     return decl + body;
 }
     if (stmt.kind == NODE_STRUCT) {
-    const decl = indent_str + "class " + stmt.name + ":\n";
+    let decl = indent_str + "class " + stmt.name + ":\n";
     self.indent = self.indent + 1;
-    const init_indent = "";
+    let init_indent = "";
      init_indent = "    ".repeat(self.indent); 
-    const assignments = "";
+    let assignments = "";
     
              if (stmt.fields.length == 0) {
                  assignments = init_indent + "    pass";
@@ -105,7 +105,7 @@ function CodeGenerator_gen_stmt_py(self, stmt) {
                  }
              }
         
-    const init_fn = init_indent + "def __init__(self, data=None):\n";
+    let init_fn = init_indent + "def __init__(self, data=None):\n";
     init_fn = init_fn + init_indent + "    if data is None: data = {}\n";
     init_fn = init_fn + assignments + "\n";
     self.indent = self.indent;
@@ -114,8 +114,8 @@ function CodeGenerator_gen_stmt_py(self, stmt) {
     return decl + init_fn;
 }
     if (stmt.kind == NODE_IF) {
-    const cond = CodeGenerator_gen_expr_py(self, stmt.condition);
-    const out = indent_str + "if " + cond + ":\n";
+    let cond = CodeGenerator_gen_expr_py(self, stmt.condition);
+    let out = indent_str + "if " + cond + ":\n";
     self.indent = self.indent + 1;
     out = out + CodeGenerator_gen_block_py(self, stmt.consequence);
     self.indent = self.indent;
@@ -132,8 +132,8 @@ function CodeGenerator_gen_stmt_py(self, stmt) {
     return out;
 }
     if (stmt.kind == NODE_WHILE) {
-    const cond = CodeGenerator_gen_expr_py(self, stmt.condition);
-    const out = indent_str + "while " + cond + ":\n";
+    let cond = CodeGenerator_gen_expr_py(self, stmt.condition);
+    let out = indent_str + "while " + cond + ":\n";
     self.indent = self.indent + 1;
     out = out + CodeGenerator_gen_block_py(self, stmt.body);
     self.indent = self.indent;
@@ -147,7 +147,7 @@ function CodeGenerator_gen_stmt_py(self, stmt) {
     return indent_str + "# Unknown stmt: " + stmt.kind;
 }
 function CodeGenerator_gen_block_py(self, block) {
-    const out = "";
+    let out = "";
     
         if (!block.statements || block.statements.length == 0) {
              out = "    ".repeat(self.indent) + "pass";
@@ -176,7 +176,7 @@ function CodeGenerator_gen_expr_py(self, expr) {
     return expr.value;
 }
     if (expr.kind == NODE_BINARY) {
-    const op = expr.op;
+    let op = expr.op;
     if (op == "&&") {
     op = "and";
 }
@@ -189,8 +189,8 @@ function CodeGenerator_gen_expr_py(self, expr) {
     return CodeGenerator_gen_expr_py(self, expr.left) + " " + op + " " + CodeGenerator_gen_expr_py(self, expr.right);
 }
     if (expr.kind == NODE_CALL) {
-    const callee = CodeGenerator_gen_expr_py(self, expr.function);
-    const args = "";
+    let callee = CodeGenerator_gen_expr_py(self, expr.function);
+    let args = "";
     
             let list = [];
             for(let a of expr.args) list.push(CodeGenerator_gen_expr_py(self, a));
@@ -202,7 +202,7 @@ function CodeGenerator_gen_expr_py(self, expr) {
     return CodeGenerator_gen_expr_py(self, expr.target) + "." + expr.property;
 }
     if (expr.kind == NODE_STRUCT_INIT) {
-    const fields = "";
+    let fields = "";
     
               let list = [];
               for(let f of expr.fields) {
@@ -213,7 +213,7 @@ function CodeGenerator_gen_expr_py(self, expr) {
     return expr.name + "({ " + fields + " })";
 }
     if (expr.kind == NODE_ARRAY) {
-    const elems = "";
+    let elems = "";
     
              let list = [];
              for (let e of expr.elements) list.push(CodeGenerator_gen_expr_py(self, e));
@@ -244,26 +244,26 @@ function CodeGenerator_gen_statement(self, stmt) {
     return "return " + CodeGenerator_gen_expression(self, stmt.value) + ";";
 }
     if (stmt.kind == NODE_FUNCTION) {
-    const params = "";
+    let params = "";
      params = stmt.params.join(", "); 
-    const body = CodeGenerator_gen_block(self, stmt.body);
+    let body = CodeGenerator_gen_block(self, stmt.body);
     return "function " + stmt.name + "(" + params + ") " + body;
 }
     if (stmt.kind == NODE_STRUCT) {
     return CodeGenerator_gen_struct(self, stmt);
 }
     if (stmt.kind == NODE_IF) {
-    const cond = CodeGenerator_gen_expression(self, stmt.condition);
-    const cons = CodeGenerator_gen_block(self, stmt.consequence);
-    const alt = "";
+    let cond = CodeGenerator_gen_expression(self, stmt.condition);
+    let cons = CodeGenerator_gen_block(self, stmt.consequence);
+    let alt = "";
     if (stmt.alternative) {
     alt = " else " + CodeGenerator_gen_block(self, stmt.alternative);
 }
     return "if (" + cond + ") " + cons + alt;
 }
     if (stmt.kind == NODE_WHILE) {
-    const cond = CodeGenerator_gen_expression(self, stmt.condition);
-    const body = CodeGenerator_gen_block(self, stmt.body);
+    let cond = CodeGenerator_gen_expression(self, stmt.condition);
+    let body = CodeGenerator_gen_block(self, stmt.body);
     return "while (" + cond + ") " + body;
 }
     if (stmt.expr) {
@@ -272,7 +272,7 @@ function CodeGenerator_gen_statement(self, stmt) {
     return "// Unknown stmt kind: " + stmt.kind;
 }
 function CodeGenerator_gen_import(self, stmt) {
-    const path = stmt.path;
+    let path = stmt.path;
     
         path = path.replace(".omni", ".js");
         if (path.startsWith(".") == false) path = "./" + path;
@@ -285,8 +285,8 @@ function CodeGenerator_gen_import(self, stmt) {
     return "";
 }
 function CodeGenerator_gen_struct(self, stmt) {
-    const name = stmt.name;
-    const assignments = "";
+    let name = stmt.name;
+    let assignments = "";
     
         for (const field of stmt.fields) {
              assignments = assignments + "        this." + field.name + " = data." + field.name + ";\n";
@@ -295,7 +295,7 @@ function CodeGenerator_gen_struct(self, stmt) {
     return "class " + name + " {\n    constructor(data = {}) {\n" + assignments + "    }\n}";
 }
 function CodeGenerator_gen_block(self, block) {
-    const out = "{\n";
+    let out = "{\n";
     
         if (block && block.statements) {
             for (const s of block.statements) {
@@ -317,14 +317,14 @@ function CodeGenerator_gen_expression(self, expr) {
     return CodeGenerator_gen_expression(self, expr.left) + " " + expr.op + " " + CodeGenerator_gen_expression(self, expr.right);
 }
     if (expr.kind == NODE_CALL) {
-    const args = "";
+    let args = "";
     
              let list = [];
              for(let a of expr.args) list.push(CodeGenerator_gen_expression(self, a));
              args = list.join(", ");
          
-    const callee = CodeGenerator_gen_expression(self, expr.function);
-    const is_class = false;
+    let callee = CodeGenerator_gen_expression(self, expr.function);
+    let is_class = false;
     
              if (typeof expr.function.value === 'string') {
                  let val = expr.function.value;
@@ -341,7 +341,7 @@ function CodeGenerator_gen_expression(self, expr) {
     return CodeGenerator_gen_expression(self, expr.target) + "." + expr.property;
 }
     if (expr.kind == NODE_STRUCT_INIT) {
-    const fields = "";
+    let fields = "";
     
             let list = [];
             for(let f of expr.fields) {
@@ -352,7 +352,7 @@ function CodeGenerator_gen_expression(self, expr) {
     return "new " + expr.name + "({ " + fields + " })";
 }
     if (expr.kind == NODE_ARRAY) {
-    const elems = "";
+    let elems = "";
     
             let list = [];
             for (let e of expr.elements) {
@@ -366,9 +366,9 @@ function CodeGenerator_gen_expression(self, expr) {
     return expr.value;
 }
     if (expr.kind == NODE_ASSIGNMENT) {
-    const left = CodeGenerator_gen_expression(self, expr.left);
-    const right = CodeGenerator_gen_expression(self, expr.right);
-    const code = "";
+    let left = CodeGenerator_gen_expression(self, expr.left);
+    let right = CodeGenerator_gen_expression(self, expr.right);
+    let code = "";
      code = left + " = " + right; 
     return code;
 }
@@ -376,4 +376,4 @@ function CodeGenerator_gen_expression(self, expr) {
     return expr;
 }
 
-module.exports = { CodeGenerator };
+module.exports = { CodeGenerator, new_code_generator, CodeGenerator_generate, CodeGenerator_generate_python, CodeGenerator_gen_stmt_py, CodeGenerator_gen_block_py, CodeGenerator_gen_expr_py, CodeGenerator_gen_statement, CodeGenerator_gen_import, CodeGenerator_gen_struct, CodeGenerator_gen_block, CodeGenerator_gen_expression };

@@ -34,12 +34,12 @@ function main() {
         }
     
     print("Compiling: " + input_path);
-    const source = read_file(input_path);
-    const l = new_lexer(source);
-    const p = new_parser(l);
-    const program = Parser_parse_program(p);
-    const gen = new_code_generator(target_lang);
-    const code = CodeGenerator_generate(gen, program);
+    let source = read_file(input_path);
+    let l = new_lexer(source);
+    let p = new_parser(l);
+    let program = Parser_parse_program(p);
+    let gen = new_code_generator(target_lang);
+    let code = CodeGenerator_generate(gen, program);
     write_file(output_path, code);
     print("Compiled successfully to: " + output_path);
 }

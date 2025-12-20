@@ -47,7 +47,7 @@ function CodeGenerator_gen_statement(self, stmt) {
 }
 
     if ((stmt.kind === NODE_LET)) {
-    return (((("const " + stmt.name) + " = ") + CodeGenerator_gen_expression(self, stmt.value)) + ";");
+    return (((("let " + stmt.name) + " = ") + CodeGenerator_gen_expression(self, stmt.value)) + ";");
 }
 
     if ((stmt.kind === NODE_RETURN)) {
