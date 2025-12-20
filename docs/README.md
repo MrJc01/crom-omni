@@ -39,9 +39,40 @@ Rejeitamos a "Standard Library" inchada que envelhece mal. O Omni possui um **Co
 
 Um sistema que não pode ser depurado é um sistema quebrado. No Omni, o **Flight Recorder** (Caixa Preta) e a visualização de fluxo não são plugins; são o padrão. A execução é transparente, auditável e visível desde o primeiro "Hello World". Testar não é uma etapa posterior; é o estado natural da execução.
 
-### 5. O Passado é Combustível (Ingestão Universal)
+### 5. O Passado é Combustível (Ingestão por Mapeamento Semântico)
 
-Não acreditamos em deixar ninguém para trás. O código legado do mundo — em COBOL, Java, PHP ou C++ — não é lixo; é conhecimento cristalizado. Através da **Ingestão via IA e AST**, o Omni transforma sistemas legados em lógica moderna. Nós não apenas reescrevemos; nós libertamos a lógica antiga das amarras de suas linguagens mortas.
+Não acreditamos em deixar ninguém para trás. O código legado do mundo — em COBOL, Java, PHP ou C++ — não é lixo; é conhecimento cristalizado. Através do **Motor de Mapeamento Semântico e AST**, o Omni transforma sistemas legados em lógica moderna. Nós não apenas reescrevemos; nós libertamos a lógica antiga das amarras de suas linguagens mortas.
+
+---
+
+## O Tradutor Universal de Lógica
+
+O Omni é o **Tradutor Universal de Lógica**. Não geramos código; **mapeamos grafos de AST** entre linguagens usando regras de equivalência determinísticas:
+
+```
+   Código Legado          Omni IR            Código Alvo
+   ┌──────────┐       ┌───────────┐       ┌──────────┐
+   │  Java    │──────▶│   AST     │──────▶│  Python  │
+   │  PHP     │  AST  │  Canônica │ Rules │  JS/TS   │
+   │  C#      │──────▶│  Omni     │──────▶│  Rust    │
+   └──────────┘       └───────────┘       └──────────┘
+```
+
+---
+
+## Ponte de Frameworks
+
+O Omni suporta **Blueprints de Tradução de Interfaces** para trocar frameworks com uma linha de configuração:
+
+```json
+{
+  "ui_framework": "react", // ou "vue", "svelte", "htmx"
+  "backend_framework": "fastapi", // ou "express", "laravel", "gin"
+  "orm": "sqlalchemy" // ou "sequelize", "eloquent", "diesel"
+}
+```
+
+A mesma lógica `@ui` gera componentes React, Vue ou Svelte automaticamente.
 
 ---
 
