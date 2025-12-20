@@ -226,10 +226,59 @@ path = path.replace(".omni", ".js");
 function CodeGenerator_gen_struct(self, stmt) {
     let name = stmt.name;
     let assignments = "";
-for (const field of stmt.fields) {
-             assignments = assignments + "        this." + field.name + " = data." + field.name + ";\n";
+    for (const field of stmt.fields) {
+        assignments = assignments + "        this." + field.name + " = data." + field.name + ";\n";
+    }
+    
+    let out = "class " + name + " {\n    constructor(data = {}) {\n" + assignments + "    }\n}\n";
+    
+    // Check for @entity attribute
+    let is_entity = false;
+    let storage_name = "main_db";
+    if (stmt.attributes) {
+        for (const attr of stmt.attributes) {
+            if (attr.name === "entity") {
+                is_entity = true;
+                storage_name = attr.params.storage || "main_db";
+            }
         }
-    return (((("class " + name) + " {\n    constructor(data = {}) {\n") + assignments) + "    }\n}");
+    }
+    
+    if (is_entity) {
+        const fieldNames = stmt.fields.filter(f => f.name !== 'id').map(f => f.name);
+        const placeholders = fieldNames.map(() => '?').join(', ');
+        const updateSet = fieldNames.map(f => f + '=?').join(', ');
+        
+        out += "\n// @entity Repository: " + name + "\n";
+        out += name + ".find = async (id) => {\n";
+        out += "    const db = await Database.get('" + storage_name + "');\n";
+        out += "    const row = await db.get('SELECT * FROM " + name + " WHERE id = ?', [id]);\n";
+        out += "    return row ? new " + name + "(row) : null;\n";
+        out += "};\n\n";
+        
+        out += name + ".save = async (obj) => {\n";
+        out += "    const db = await Database.get('" + storage_name + "');\n";
+        out += "    if (obj.id) {\n";
+        out += "        await db.run('UPDATE " + name + " SET " + updateSet + " WHERE id=?', [" + fieldNames.map(f => 'obj.' + f).join(', ') + ", obj.id]);\n";
+        out += "    } else {\n";
+        out += "        const r = await db.run('INSERT INTO " + name + " (" + fieldNames.join(', ') + ") VALUES (" + placeholders + ")', [" + fieldNames.map(f => 'obj.' + f).join(', ') + "]);\n";
+        out += "        obj.id = r.lastID;\n";
+        out += "    }\n";
+        out += "    return obj;\n";
+        out += "};\n\n";
+        
+        out += name + ".all = async () => {\n";
+        out += "    const db = await Database.get('" + storage_name + "');\n";
+        out += "    return (await db.all('SELECT * FROM " + name + "')).map(r => new " + name + "(r));\n";
+        out += "};\n\n";
+        
+        out += name + ".delete = async (id) => {\n";
+        out += "    const db = await Database.get('" + storage_name + "');\n";
+        out += "    await db.run('DELETE FROM " + name + " WHERE id = ?', [id]);\n";
+        out += "};\n";
+    }
+    
+    return out;
 }
 
 function CodeGenerator_gen_block(self, block) {

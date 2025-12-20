@@ -37,5 +37,14 @@
       "base": "node:18-alpine",
       "port": 3000
     }
+  },
+  "databases": {
+    "main_db": {
+      "driver": "sqlite",
+      "path": "./data/app.db"
+    },
+    "cache_db": {
+      "driver": "memory"
+    }
   }
 }
