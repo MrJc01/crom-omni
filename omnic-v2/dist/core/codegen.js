@@ -139,15 +139,73 @@ params = stmt.params.join(", ");
 
     // Impl generates methods attached to struct prototype
     if (stmt.kind === NODE_IMPL) {
+        // Check for @server attribute
+        let is_server = false;
+        let server_port = 3000;
+        if (stmt.attributes) {
+            for (const attr of stmt.attributes) {
+                if (attr.name === "server") {
+                    is_server = true;
+                    server_port = attr.params.port || 3000;
+                }
+            }
+        }
+        
         let out = "// impl " + stmt.interface_name + " for " + stmt.struct_name + "\n";
+        
+        // Generate methods as prototype functions
         if (stmt.methods) {
             for (const m of stmt.methods) {
-                // Generate method as prototype function
                 let params = m.params ? m.params.join(", ") : "";
                 let body = CodeGenerator_gen_block(self, m.body);
                 out += stmt.struct_name + ".prototype." + m.name + " = function(" + params + ") " + body + "\n";
             }
         }
+        
+        // Generate server skeleton if @server
+        if (is_server) {
+            out += "\n// === Server Skeleton with FlightRecorder ===\n";
+            out += "const http = require('http');\n";
+            out += "const FlightRecorder = global.FlightRecorder || require('./lib/debug.js').FlightRecorder;\n\n";
+            out += "const " + stmt.struct_name + "Instance = new " + stmt.struct_name + "();\n\n";
+            out += "const server = http.createServer(async (req, res) => {\n";
+            out += "    const url = new URL(req.url, `http://${req.headers.host}`);\n";
+            out += "    const [, iface, method] = url.pathname.split('/');\n";
+            out += "    \n";
+            out += "    let body = '';\n";
+            out += "    req.on('data', chunk => body += chunk);\n";
+            out += "    req.on('end', async () => {\n";
+            out += "        const traceId = FlightRecorder.start(iface + '.' + method);\n";
+            out += "        try {\n";
+            out += "            const args = JSON.parse(body || '{}');\n";
+            out += "            const impl = " + stmt.struct_name + "Instance;\n";
+            out += "            if (impl[method]) {\n";
+            out += "                const result = await impl[method](...Object.values(args));\n";
+            out += "                FlightRecorder.stop(traceId, { success: true });\n";
+            out += "                res.writeHead(200, { 'Content-Type': 'application/json' });\n";
+            out += "                res.end(JSON.stringify(result));\n";
+            out += "            } else {\n";
+            out += "                FlightRecorder.stop(traceId, { error: 'Method not found' });\n";
+            out += "                res.writeHead(404);\n";
+            out += "                res.end(JSON.stringify({ error: 'Method not found' }));\n";
+            out += "            }\n";
+            out += "        } catch (e) {\n";
+            out += "            FlightRecorder.stop(traceId, { error: e.message });\n";
+            out += "            res.writeHead(500);\n";
+            out += "            res.end(JSON.stringify({ error: e.message }));\n";
+            out += "        }\n";
+            out += "    });\n";
+            out += "});\n\n";
+            out += "server.listen(" + server_port + ", () => {\n";
+            out += "    console.log('[" + stmt.interface_name + " Server] Listening on port " + server_port + "');\n";
+            out += "});\n\n";
+            out += "// Save flight recorder on exit\n";
+            out += "process.on('SIGINT', () => {\n";
+            out += "    FlightRecorder.saveReport();\n";
+            out += "    process.exit();\n";
+            out += "});\n";
+        }
+        
         return out;
     }
 

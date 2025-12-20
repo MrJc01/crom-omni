@@ -1,0 +1,128 @@
+// Flight Recorder - Omni StdLib Debug Module
+// Automatic tracing and performance monitoring
+
+native "js" {
+const FlightRecorder = {
+    events: [],
+    
+    start(name) {
+        const id = Date.now().toString(36) + Math.random().toString(36).substr(2);
+        this.events.push({ 
+            id, 
+            name, 
+            start: Date.now(), 
+            startISO: new Date().toISOString(),
+            status: 'running' 
+        });
+        console.log(`[FlightRecorder] START ${name} (${id})`);
+        return id;
+    },
+    
+    stop(id, meta = {}) {
+        const event = this.events.find(e => e.id === id);
+        if (event) {
+            event.end = Date.now();
+            event.endISO = new Date().toISOString();
+            event.duration = event.end - event.start;
+            event.status = meta.error ? 'error' : 'complete';
+            Object.assign(event, meta);
+            console.log(`[FlightRecorder] STOP ${event.name} (${event.duration}ms) ${event.status}`);
+        }
+    },
+    
+    log(name, data) {
+        this.events.push({
+            id: Date.now().toString(36) + Math.random().toString(36).substr(2),
+            name,
+            type: 'log',
+            timestamp: Date.now(),
+            timestampISO: new Date().toISOString(),
+            data
+        });
+    },
+    
+    report() {
+        return JSON.stringify(this.events, null, 2);
+    },
+    
+    saveReport(filename) {
+        const fs = require('fs');
+        fs.writeFileSync(filename || 'flight_recorder.json', this.report());
+        console.log('[FlightRecorder] Report saved to ' + (filename || 'flight_recorder.json'));
+    },
+    
+    clear() {
+        this.events = [];
+    }
+};
+
+// Export for Node.js
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { FlightRecorder };
+}
+
+// Make globally available
+if (typeof global !== 'undefined') {
+    global.FlightRecorder = FlightRecorder;
+}
+}
+
+native "python" {
+import json
+import time
+from datetime import datetime
+
+class FlightRecorder:
+    events = []
+    
+    @classmethod
+    def start(cls, name):
+        id = f"{int(time.time()*1000)}{hash(name)}"
+        cls.events.append({
+            'id': id,
+            'name': name,
+            'start': time.time() * 1000,
+            'startISO': datetime.now().isoformat(),
+            'status': 'running'
+        })
+        print(f"[FlightRecorder] START {name} ({id})")
+        return id
+    
+    @classmethod
+    def stop(cls, id, meta=None):
+        if meta is None:
+            meta = {}
+        event = next((e for e in cls.events if e['id'] == id), None)
+        if event:
+            event['end'] = time.time() * 1000
+            event['endISO'] = datetime.now().isoformat()
+            event['duration'] = event['end'] - event['start']
+            event['status'] = 'error' if meta.get('error') else 'complete'
+            event.update(meta)
+            print(f"[FlightRecorder] STOP {event['name']} ({event['duration']:.2f}ms) {event['status']}")
+    
+    @classmethod
+    def log(cls, name, data):
+        cls.events.append({
+            'id': f"{int(time.time()*1000)}{hash(name)}",
+            'name': name,
+            'type': 'log',
+            'timestamp': time.time() * 1000,
+            'timestampISO': datetime.now().isoformat(),
+            'data': data
+        })
+    
+    @classmethod
+    def report(cls):
+        return json.dumps(cls.events, indent=2)
+    
+    @classmethod
+    def save_report(cls, filename='flight_recorder.json'):
+        with open(filename, 'w') as f:
+            f.write(cls.report())
+        print(f"[FlightRecorder] Report saved to {filename}")
+    
+    @classmethod
+    def clear(cls):
+        cls.events = []
+}
