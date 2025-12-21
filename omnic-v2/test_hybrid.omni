@@ -1,0 +1,12 @@
+// Hybrid test - Basic constructs
+
+fn somar(a: i64, b: i64) -> i64 {
+    return a + b;
+}
+
+fn main() {
+    let x = 10;
+    let y = 20;
+    let result = somar(x, y);
+    print("Result: " + result);
+}

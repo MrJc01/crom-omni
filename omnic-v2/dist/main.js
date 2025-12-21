@@ -10,6 +10,16 @@ let io = require('./core/io.js');
 const path = require('path');
 const fs = require('fs');
 
+// Hybrid Metamorphosis CodeGen
+let HybridCodeGenerator;
+try {
+    const hybrid = require('./hybrid_codegen.js');
+    HybridCodeGenerator = hybrid.HybridCodeGenerator;
+} catch (e) {
+    // Fallback if hybrid codegen not available
+    HybridCodeGenerator = null;
+}
+
 // Track compiled files per target to avoid recompilation
 let compiledFiles = new Set();
 
@@ -520,6 +530,63 @@ function main() {
     // Check for 'migrate' command
     if (args_len >= 3 && process.argv[2] === 'migrate') {
         generate_migrations();
+        return;
+    }
+    
+    // Check for 'compile' command with --target flag (Hybrid Metamorphosis)
+    if (args_len >= 3 && process.argv[2] === 'compile') {
+        let targetLang = 'js';
+        let inputFile = null;
+        let outputFile = null;
+        let framework = null;
+        
+        for (let i = 3; i < args_len; i++) {
+            const arg = process.argv[i];
+            if (arg === '--target' && i + 1 < args_len) {
+                targetLang = process.argv[++i];
+            } else if (arg === '--framework' && i + 1 < args_len) {
+                framework = process.argv[++i];
+            } else if (arg === '-o' && i + 1 < args_len) {
+                outputFile = process.argv[++i];
+            } else if (!arg.startsWith('-')) {
+                inputFile = arg;
+            }
+        }
+        
+        if (!inputFile) {
+            print("Usage: omni compile <input.omni> --target <lang> [-o output]");
+            print("  --target  Target language (js, python, lua, c)");
+            print("  --framework  Framework adapter (nextjs, laravel, fastapi)");
+            return;
+        }
+        
+        // Use Hybrid CodeGenerator
+        if (HybridCodeGenerator) {
+            print("[hybrid] Compiling: " + inputFile + " -> " + targetLang);
+            
+            const source = read_file(inputFile);
+            const l = new_lexer(source);
+            const p = new_parser(l);
+            const program = Parser_parse_program(p);
+            
+            const gen = new HybridCodeGenerator({
+                target: targetLang,
+                framework: framework
+            });
+            
+            const code = gen.generate(program);
+            
+            // Determine output file
+            const extMap = { js: '.js', python: '.py', lua: '.lua', c: '.c' };
+            const ext = extMap[targetLang] || '.txt';
+            outputFile = outputFile || path.basename(inputFile, '.omni') + ext;
+            
+            write_file(outputFile, code);
+            print("[hybrid] Generated: " + outputFile);
+            print("[hybrid] Target: " + targetLang + (framework ? " + " + framework : ""));
+        } else {
+            print("Error: HybridCodeGenerator not available");
+        }
         return;
     }
     
