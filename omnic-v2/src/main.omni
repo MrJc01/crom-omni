@@ -23,6 +23,87 @@ import "lib/std.omni";
 import "lib/cli.omni";
 
 // ============================================================================
+// RESOURCE PATH RESOLUTION (Local-First)
+// ============================================================================
+
+fn get_omni_home() -> string {
+    let home = "";
+    native "js" {
+        const path = require('path');
+        const os = require('os');
+        
+        // Priority 1: OMNI_HOME environment variable
+        if (process.env.OMNI_HOME) {
+            home = process.env.OMNI_HOME;
+        }
+        // Priority 2: Executable directory
+        else if (__dirname) {
+            home = path.dirname(__dirname);
+        }
+        // Priority 3: User's home directory
+        else {
+            const platform = os.platform();
+            if (platform === 'win32') {
+                home = path.join(os.homedir(), 'AppData', 'Local', 'Omni');
+            } else {
+                home = path.join(os.homedir(), '.local', 'share', 'omni');
+            }
+        }
+    }
+    return home;
+}
+
+fn resolve_resource_path(name: string) -> string {
+    let resolved = "";
+    native "js" {
+        const fs = require('fs');
+        const path = require('path');
+        
+        // Strategy 1: Local project path (./targets/, ./packages/, ./patterns/)
+        const localPath = path.join(process.cwd(), name);
+        if (fs.existsSync(localPath)) {
+            resolved = localPath;
+            return;
+        }
+        
+        // Strategy 2: Relative to executable (dist/../)
+        const execPath = path.join(__dirname, '..', name);
+        if (fs.existsSync(execPath)) {
+            resolved = execPath;
+            return;
+        }
+        
+        // Strategy 3: OMNI_HOME
+        const omniHome = get_omni_home();
+        const homePath = path.join(omniHome, name);
+        if (fs.existsSync(homePath)) {
+            resolved = homePath;
+            return;
+        }
+        
+        // Strategy 4: Global installation
+        const os = require('os');
+        const platform = os.platform();
+        let globalPath;
+        
+        if (platform === 'win32') {
+            globalPath = path.join(os.homedir(), 'AppData', 'Local', 'Omni', name);
+        } else {
+            globalPath = path.join(os.homedir(), '.local', 'share', 'omni', name);
+        }
+        
+        if (fs.existsSync(globalPath)) {
+            resolved = globalPath;
+            return;
+        }
+        
+        // Not found - return local path for error messages
+        resolved = localPath;
+    }
+    return resolved;
+}
+
+// ============================================================================
 // GLOBAL INSTALLATION COMMAND
 // ============================================================================
 
@@ -606,7 +687,14 @@ fn main() {
     // Show help
     let show_help = false;
     native "js" { 
-        show_help = args_len < 4 || command === 'help' || command === '--help' || command === '-h'; 
+        show_help = command === 'help' || command === '--help' || command === '-h'; 
+    }
+    
+    // Default: Launch TUI when no command given
+    if (command == "" || args_len < 3) {
+        CLI_info("Launching interactive mode...");
+        cmd_tui();
+        return 0;
     }
 
     if (show_help) {
@@ -744,4 +832,5 @@ fn main() {
     CLI_success("Compiled successfully!");
 }
 
-main();
+// Entry point - wrapped for Rust parser compatibility
+let _ = main();
