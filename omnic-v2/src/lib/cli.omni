@@ -1,5 +1,6 @@
 // ============================================================================
 // OMNI CLI LIBRARY - Terminal Colors, Spinners, and Argument Parsing
+// Version: 1.2.0 - Rust Parser Compatible
 // ============================================================================
 
 // ============================================================================
@@ -92,8 +93,38 @@ fn Colors_new() -> Colors {
     return c;
 }
 
-// Global colors instance
-let CLI_COLORS = Colors_new();
+// Global colors instance - initialized lazily
+let CLI_COLORS_INIT = false;
+let CLI_COLORS_CACHE = Colors {
+    reset: "",
+    bold: "",
+    dim: "",
+    underline: "",
+    black: "",
+    red: "",
+    green: "",
+    yellow: "",
+    blue: "",
+    magenta: "",
+    cyan: "",
+    white: "",
+    bg_black: "",
+    bg_red: "",
+    bg_green: "",
+    bg_yellow: "",
+    bg_blue: "",
+    bg_magenta: "",
+    bg_cyan: "",
+    bg_white: ""
+};
+
+fn CLI_COLORS() -> Colors {
+    if (CLI_COLORS_INIT == false) {
+        CLI_COLORS_CACHE = Colors_new();
+        CLI_COLORS_INIT = true;
+    }
+    return CLI_COLORS_CACHE;
+}
 
 // ============================================================================
 // CLI OUTPUT HELPERS
@@ -101,39 +132,45 @@ let CLI_COLORS = Colors_new();
 
 fn CLI_success(msg: string) {
     native "js" {
-        console.log(CLI_COLORS.green + '✓' + CLI_COLORS.reset + ' ' + msg);
+        const c = CLI_COLORS();
+        console.log(c.green + 'âœ“' + c.reset + ' ' + msg);
     }
 }
 
 fn CLI_error(msg: string) {
     native "js" {
-        console.error(CLI_COLORS.red + '✗' + CLI_COLORS.reset + ' ' + msg);
+        const c = CLI_COLORS();
+        console.error(c.red + 'âœ—' + c.reset + ' ' + msg);
     }
 }
 
 fn CLI_warning(msg: string) {
     native "js" {
-        console.log(CLI_COLORS.yellow + '⚠' + CLI_COLORS.reset + ' ' + msg);
+        const c = CLI_COLORS();
+        console.log(c.yellow + 'âš ' + c.reset + ' ' + msg);
     }
 }
 
 fn CLI_info(msg: string) {
     native "js" {
-        console.log(CLI_COLORS.blue + 'ℹ' + CLI_COLORS.reset + ' ' + msg);
+        const c = CLI_COLORS();
+        console.log(c.blue + 'â„¹' + c.reset + ' ' + msg);
     }
 }
 
 fn CLI_step(step: i64, total: i64, msg: string) {
     native "js" {
-        const prefix = CLI_COLORS.cyan + '[' + step + '/' + total + ']' + CLI_COLORS.reset;
+        const c = CLI_COLORS();
+        const prefix = c.cyan + '[' + step + '/' + total + ']' + c.reset;
         console.log(prefix + ' ' + msg);
     }
 }
 
 fn CLI_header(title: string) {
     native "js" {
+        const c = CLI_COLORS();
         console.log('');
-        console.log(CLI_COLORS.bold + CLI_COLORS.cyan + '═══ ' + title + ' ═══' + CLI_COLORS.reset);
+        console.log(c.bold + c.cyan + 'â•â•â• ' + title + ' â•â•â•' + c.reset);
         console.log('');
     }
 }
@@ -141,7 +178,8 @@ fn CLI_header(title: string) {
 fn CLI_dim(msg: string) -> string {
     let result = "";
     native "js" {
-        result = CLI_COLORS.dim + msg + CLI_COLORS.reset;
+        const c = CLI_COLORS();
+        result = c.dim + msg + c.reset;
     }
     return result;
 }
@@ -149,7 +187,8 @@ fn CLI_dim(msg: string) -> string {
 fn CLI_bold(msg: string) -> string {
     let result = "";
     native "js" {
-        result = CLI_COLORS.bold + msg + CLI_COLORS.reset;
+        const c = CLI_COLORS();
+        result = c.bold + msg + c.reset;
     }
     return result;
 }
@@ -157,7 +196,8 @@ fn CLI_bold(msg: string) -> string {
 fn CLI_green(msg: string) -> string {
     let result = "";
     native "js" {
-        result = CLI_COLORS.green + msg + CLI_COLORS.reset;
+        const c = CLI_COLORS();
+        result = c.green + msg + c.reset;
     }
     return result;
 }
@@ -165,7 +205,8 @@ fn CLI_green(msg: string) -> string {
 fn CLI_red(msg: string) -> string {
     let result = "";
     native "js" {
-        result = CLI_COLORS.red + msg + CLI_COLORS.reset;
+        const c = CLI_COLORS();
+        result = c.red + msg + c.reset;
     }
     return result;
 }
@@ -173,7 +214,8 @@ fn CLI_red(msg: string) -> string {
 fn CLI_yellow(msg: string) -> string {
     let result = "";
     native "js" {
-        result = CLI_COLORS.yellow + msg + CLI_COLORS.reset;
+        const c = CLI_COLORS();
+        result = c.yellow + msg + c.reset;
     }
     return result;
 }
@@ -181,7 +223,8 @@ fn CLI_yellow(msg: string) -> string {
 fn CLI_cyan(msg: string) -> string {
     let result = "";
     native "js" {
-        result = CLI_COLORS.cyan + msg + CLI_COLORS.reset;
+        const c = CLI_COLORS();
+        result = c.cyan + msg + c.reset;
     }
     return result;
 }
@@ -191,26 +234,21 @@ fn CLI_cyan(msg: string) -> string {
 // ============================================================================
 
 struct Spinner {
-    frames: any,
+    frames: string,
     current: i64,
-    interval: any,
+    interval: i64,
     message: string,
     running: bool
 }
 
 fn Spinner_new(message: string) -> Spinner {
     let spinner = Spinner {
-        frames: [],
+        frames: "â ‹â ™â ¹â ¸â ¼â ´â ¦â §â ‡â ",
         current: 0,
         interval: 0,
         message: message,
         running: false
     };
-    
-    native "js" {
-        spinner.frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
-    }
-    
     return spinner;
 }
 
@@ -218,12 +256,14 @@ fn Spinner_start(self: Spinner) {
     native "js" {
         if (self.running) return;
         self.running = true;
+        const frames = self.frames.split('');
+        const c = CLI_COLORS();
         
         self.interval = setInterval(() => {
-            process.stdout.write('\r' + CLI_COLORS.cyan + 
-                self.frames[self.current] + CLI_COLORS.reset + 
+            process.stdout.write('\r' + c.cyan + 
+                frames[self.current % frames.length] + c.reset + 
                 ' ' + self.message);
-            self.current = (self.current + 1) % self.frames.length;
+            self.current = (self.current + 1) % frames.length;
         }, 80);
     }
 }
@@ -234,10 +274,11 @@ fn Spinner_stop(self: Spinner, success: bool) {
         
         clearInterval(self.interval);
         self.running = false;
+        const c = CLI_COLORS();
         
         const icon = success 
-            ? CLI_COLORS.green + '✓' + CLI_COLORS.reset 
-            : CLI_COLORS.red + '✗' + CLI_COLORS.reset;
+            ? c.green + 'âœ“' + c.reset 
+            : c.red + 'âœ—' + c.reset;
         
         process.stdout.write('\r' + icon + ' ' + self.message + '\n');
     }
@@ -250,12 +291,13 @@ fn Spinner_stop(self: Spinner, success: bool) {
 fn CLI_progress_bar(current: i64, total: i64, width: i64) -> string {
     let result = "";
     native "js" {
+        const c = CLI_COLORS();
         const percent = Math.floor((current / total) * 100);
         const filled = Math.floor((current / total) * width);
         const empty = width - filled;
         
-        const bar = CLI_COLORS.green + '█'.repeat(filled) + 
-                    CLI_COLORS.dim + '░'.repeat(empty) + CLI_COLORS.reset;
+        const bar = c.green + 'â–ˆ'.repeat(filled) + 
+                    c.dim + 'â–‘'.repeat(empty) + c.reset;
         
         result = bar + ' ' + percent + '%';
     }
@@ -263,121 +305,98 @@ fn CLI_progress_bar(current: i64, total: i64, width: i64) -> string {
 }
 
 // ============================================================================
-// ARGUMENT PARSER
+// ARGUMENT PARSER (Simplified - uses native JS for complex parsing)
 // ============================================================================
 
-struct ArgParser {
-    args: any,
-    flags: any,
-    commands: any,
-    positional: any
+struct ParsedArgs {
+    command: string,
+    arg1: string,
+    arg2: string,
+    arg3: string,
+    flag_help: bool,
+    flag_version: bool,
+    flag_verbose: bool,
+    flag_global: bool,
+    flag_app: bool,
+    flag_tui: bool,
+    opt_target: string,
+    opt_port: string,
+    opt_framework: string
 }
 
-fn ArgParser_new() -> ArgParser {
-    let parser = ArgParser {
-        args: [],
-        flags: {},
-        commands: [],
-        positional: []
+fn ParsedArgs_new() -> ParsedArgs {
+    let args = ParsedArgs {
+        command: "",
+        arg1: "",
+        arg2: "",
+        arg3: "",
+        flag_help: false,
+        flag_version: false,
+        flag_verbose: false,
+        flag_global: false,
+        flag_app: false,
+        flag_tui: false,
+        opt_target: "js",
+        opt_port: "3000",
+        opt_framework: ""
     };
     
     native "js" {
-        parser.args = process.argv.slice(2);
+        const argv = process.argv.slice(2);
         
-        for (let i = 0; i < parser.args.length; i++) {
-            const arg = parser.args[i];
+        let positional = [];
+        for (let i = 0; i < argv.length; i++) {
+            const arg = argv[i];
             
-            if (arg.startsWith('--')) {
-                // Long flag: --name value or --flag
-                const key = arg.substring(2);
-                if (i + 1 < parser.args.length && !parser.args[i + 1].startsWith('-')) {
-                    parser.flags[key] = parser.args[++i];
-                } else {
-                    parser.flags[key] = true;
-                }
-            } else if (arg.startsWith('-') && arg.length === 2) {
-                // Short flag: -n value or -f
-                const key = arg.substring(1);
-                if (i + 1 < parser.args.length && !parser.args[i + 1].startsWith('-')) {
-                    parser.flags[key] = parser.args[++i];
-                } else {
-                    parser.flags[key] = true;
-                }
-            } else {
-                // Positional argument or command
-                if (parser.commands.length === 0 && !arg.includes('.')) {
-                    parser.commands.push(arg);
-                } else {
-                    parser.positional.push(arg);
-                }
+            if (arg === '--help' || arg === '-h') {
+                args.flag_help = true;
+            } else if (arg === '--version' || arg === '-v') {
+                args.flag_version = true;
+            } else if (arg === '--verbose' || arg === '-V') {
+                args.flag_verbose = true;
+            } else if (arg === '--global' || arg === '-g') {
+                args.flag_global = true;
+            } else if (arg === '--app') {
+                args.flag_app = true;
+            } else if (arg === '--tui') {
+                args.flag_tui = true;
+            } else if (arg === '--target' && argv[i + 1]) {
+                args.opt_target = argv[++i];
+            } else if (arg === '--port' && argv[i + 1]) {
+                args.opt_port = argv[++i];
+            } else if (arg === '--framework' && argv[i + 1]) {
+                args.opt_framework = argv[++i];
+            } else if (!arg.startsWith('-')) {
+                positional.push(arg);
             }
         }
+        
+        args.command = positional[0] || '';
+        args.arg1 = positional[1] || '';
+        args.arg2 = positional[2] || '';
+        args.arg3 = positional[3] || '';
     }
     
-    return parser;
-}
-
-fn ArgParser_has_flag(self: ArgParser, name: string) -> bool {
-    let result = false;
-    native "js" {
-        result = self.flags.hasOwnProperty(name) && self.flags[name] !== false;
-    }
-    return result;
-}
-
-fn ArgParser_get_flag(self: ArgParser, name: string, default_val: string) -> string {
-    let result = default_val;
-    native "js" {
-        if (self.flags.hasOwnProperty(name) && typeof self.flags[name] === 'string') {
-            result = self.flags[name];
-        }
-    }
-    return result;
-}
-
-fn ArgParser_get_command(self: ArgParser) -> string {
-    let result = "";
-    native "js" {
-        result = self.commands[0] || '';
-    }
-    return result;
-}
-
-fn ArgParser_get_positional(self: ArgParser, index: i64) -> string {
-    let result = "";
-    native "js" {
-        result = self.positional[index] || '';
-    }
-    return result;
+    return args;
 }
 
 // ============================================================================
 // TABLE FORMATTER
 // ============================================================================
 
-fn CLI_table(headers: any, rows: any) {
+fn CLI_table_simple(col1: string, col2: string) {
     native "js" {
-        if (!headers || headers.length === 0) return;
-        
-        // Calculate column widths
-        const widths = headers.map((h, i) => {
-            const colValues = [h, ...rows.map(r => String(r[i] || ''))];
-            return Math.max(...colValues.map(v => v.length));
-        });
-        
-        // Print header
-        const headerRow = headers.map((h, i) => h.padEnd(widths[i])).join(' │ ');
-        console.log(CLI_COLORS.bold + headerRow + CLI_COLORS.reset);
-        
-        // Print separator
-        const separator = widths.map(w => '─'.repeat(w)).join('─┼─');
-        console.log(separator);
-        
-        // Print rows
-        for (const row of rows) {
-            const rowStr = row.map((cell, i) => String(cell || '').padEnd(widths[i])).join(' │ ');
-            console.log(rowStr);
-        }
+        const c = CLI_COLORS();
+        console.log('  ' + c.cyan + col1.padEnd(20) + c.reset + col2);
+    }
+}
+
+fn CLI_table_header(title: string) {
+    native "js" {
+        const c = CLI_COLORS();
+        console.log('');
+        console.log(c.bold + title + c.reset);
+        console.log('â”€'.repeat(50));
     }
 }
 
@@ -387,58 +406,25 @@ fn CLI_table(headers: any, rows: any) {
 
 fn CLI_banner() {
     native "js" {
+        const c = CLI_COLORS();
         console.log('');
-        console.log(CLI_COLORS.cyan + CLI_COLORS.bold + 
-            '   ____  __  __ _   _ ___ ' + CLI_COLORS.reset);
-        console.log(CLI_COLORS.cyan + 
-            '  / __ \\|  \\/  | \\ | |_ _|' + CLI_COLORS.reset);
-        console.log(CLI_COLORS.cyan + 
-            ' | |  | | |\\/| |  \\| || | ' + CLI_COLORS.reset);
-        console.log(CLI_COLORS.cyan + 
-            ' | |__| | |  | | |\\  || | ' + CLI_COLORS.reset);
-        console.log(CLI_COLORS.cyan + 
-            '  \\____/|_|  |_|_| \\_|___|' + CLI_COLORS.reset);
+        console.log(c.cyan + c.bold + 
+            '   ____  __  __ _   _ ___ ' + c.reset);
+        console.log(c.cyan + 
+            '  / __ \\|  \\/  | \\ | |_ _|' + c.reset);
+        console.log(c.cyan + 
+            ' | |  | | |\\/| |  \\| || | ' + c.reset);
+        console.log(c.cyan + 
+            ' | |__| | |  | | |\\  || | ' + c.reset);
+        console.log(c.cyan + 
+            '  \\____/|_|  |_|_| \\_|___|' + c.reset);
         console.log('');
-        console.log(CLI_COLORS.dim + 
-            '  Hybrid Metamorphosis Compiler' + CLI_COLORS.reset);
+        console.log(c.dim + 
+            '  Hybrid Metamorphosis Compiler' + c.reset);
         console.log('');
     }
 }
 
 fn CLI_version() -> string {
-    return "0.6.0";
+    return "1.2.0";
 }
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
-
-export Colors;
-export Colors_new;
-export CLI_COLORS;
-export CLI_success;
-export CLI_error;
-export CLI_warning;
-export CLI_info;
-export CLI_step;
-export CLI_header;
-export CLI_dim;
-export CLI_bold;
-export CLI_green;
-export CLI_red;
-export CLI_yellow;
-export CLI_cyan;
-export CLI_progress_bar;
-export Spinner;
-export Spinner_new;
-export Spinner_start;
-export Spinner_stop;
-export ArgParser;
-export ArgParser_new;
-export ArgParser_has_flag;
-export ArgParser_get_flag;
-export ArgParser_get_command;
-export ArgParser_get_positional;
-export CLI_table;
-export CLI_banner;
-export CLI_version;
