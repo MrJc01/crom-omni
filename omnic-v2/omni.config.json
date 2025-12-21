@@ -55,5 +55,30 @@
       "base": "node:18-alpine",
       "port": 3000
     }
+  },
+  "adapters": {
+    "ui": "react-tailwind",
+    "server": "express-prisma",
+    "auth": "next-auth",
+    "database": "prisma"
+  },
+  "frameworks": {
+    "web": {
+      "language": "typescript",
+      "framework": "nextjs",
+      "ui_adapter": "tailwind-shadcn",
+      "output": "dist/web"
+    },
+    "api": {
+      "language": "python",
+      "framework": "fastapi",
+      "output": "dist/api"
+    },
+    "mobile": {
+      "language": "kotlin",
+      "framework": "android",
+      "ui_adapter": "material",
+      "output": "dist/mobile"
+    }
   }
 }

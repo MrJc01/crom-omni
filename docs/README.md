@@ -2,6 +2,58 @@
 
 > **Soberania da Lógica. Fluidez da Arquitetura. Universalidade da Execução.**
 
+---
+
+## 🚀 Quick Start
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/your-org/crom-omni.git
+cd crom-omni/omnic-v2
+
+# Install globally
+node dist/main.js setup
+```
+
+### Basic Usage
+
+```bash
+# Execute instantly via VM (no compilation)
+omni run app.omni
+
+# Compile to JavaScript
+omni app.omni app.js
+
+# Compile to Python
+omni app.omni app.py --target python
+
+# Generate Next.js project
+omni app.omni dist/ --framework nextjs
+
+# Generate Laravel project
+omni app.omni dist/ --framework laravel
+
+# Show version
+omni --version
+```
+
+### Hello World
+
+```omni
+fn main() {
+    print("Hello, Omni!");
+}
+```
+
+```bash
+omni run hello.omni
+# Output: Hello, Omni!
+```
+
+---
+
 ## O Manifesto Omni
 
 ### O Problema: A Torre de Babel Digital

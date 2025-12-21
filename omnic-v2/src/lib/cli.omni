@@ -1,0 +1,444 @@
+// ============================================================================
+// OMNI CLI LIBRARY - Terminal Colors, Spinners, and Argument Parsing
+// ============================================================================
+
+// ============================================================================
+// ANSI COLOR CODES
+// ============================================================================
+
+struct Colors {
+    reset: string,
+    bold: string,
+    dim: string,
+    underline: string,
+    
+    // Foreground colors
+    black: string,
+    red: string,
+    green: string,
+    yellow: string,
+    blue: string,
+    magenta: string,
+    cyan: string,
+    white: string,
+    
+    // Background colors
+    bg_black: string,
+    bg_red: string,
+    bg_green: string,
+    bg_yellow: string,
+    bg_blue: string,
+    bg_magenta: string,
+    bg_cyan: string,
+    bg_white: string
+}
+
+fn Colors_new() -> Colors {
+    let c = Colors {
+        reset: "",
+        bold: "",
+        dim: "",
+        underline: "",
+        black: "",
+        red: "",
+        green: "",
+        yellow: "",
+        blue: "",
+        magenta: "",
+        cyan: "",
+        white: "",
+        bg_black: "",
+        bg_red: "",
+        bg_green: "",
+        bg_yellow: "",
+        bg_blue: "",
+        bg_magenta: "",
+        bg_cyan: "",
+        bg_white: ""
+    };
+    
+    native "js" {
+        // Check if terminal supports colors
+        const supportsColor = process.stdout.isTTY && 
+            (process.env.TERM !== 'dumb') && 
+            !process.env.NO_COLOR;
+        
+        if (supportsColor) {
+            c.reset = '\x1b[0m';
+            c.bold = '\x1b[1m';
+            c.dim = '\x1b[2m';
+            c.underline = '\x1b[4m';
+            
+            c.black = '\x1b[30m';
+            c.red = '\x1b[31m';
+            c.green = '\x1b[32m';
+            c.yellow = '\x1b[33m';
+            c.blue = '\x1b[34m';
+            c.magenta = '\x1b[35m';
+            c.cyan = '\x1b[36m';
+            c.white = '\x1b[37m';
+            
+            c.bg_black = '\x1b[40m';
+            c.bg_red = '\x1b[41m';
+            c.bg_green = '\x1b[42m';
+            c.bg_yellow = '\x1b[43m';
+            c.bg_blue = '\x1b[44m';
+            c.bg_magenta = '\x1b[45m';
+            c.bg_cyan = '\x1b[46m';
+            c.bg_white = '\x1b[47m';
+        }
+    }
+    
+    return c;
+}
+
+// Global colors instance
+let CLI_COLORS = Colors_new();
+
+// ============================================================================
+// CLI OUTPUT HELPERS
+// ============================================================================
+
+fn CLI_success(msg: string) {
+    native "js" {
+        console.log(CLI_COLORS.green + '✓' + CLI_COLORS.reset + ' ' + msg);
+    }
+}
+
+fn CLI_error(msg: string) {
+    native "js" {
+        console.error(CLI_COLORS.red + '✗' + CLI_COLORS.reset + ' ' + msg);
+    }
+}
+
+fn CLI_warning(msg: string) {
+    native "js" {
+        console.log(CLI_COLORS.yellow + '⚠' + CLI_COLORS.reset + ' ' + msg);
+    }
+}
+
+fn CLI_info(msg: string) {
+    native "js" {
+        console.log(CLI_COLORS.blue + 'ℹ' + CLI_COLORS.reset + ' ' + msg);
+    }
+}
+
+fn CLI_step(step: i64, total: i64, msg: string) {
+    native "js" {
+        const prefix = CLI_COLORS.cyan + '[' + step + '/' + total + ']' + CLI_COLORS.reset;
+        console.log(prefix + ' ' + msg);
+    }
+}
+
+fn CLI_header(title: string) {
+    native "js" {
+        console.log('');
+        console.log(CLI_COLORS.bold + CLI_COLORS.cyan + '═══ ' + title + ' ═══' + CLI_COLORS.reset);
+        console.log('');
+    }
+}
+
+fn CLI_dim(msg: string) -> string {
+    let result = "";
+    native "js" {
+        result = CLI_COLORS.dim + msg + CLI_COLORS.reset;
+    }
+    return result;
+}
+
+fn CLI_bold(msg: string) -> string {
+    let result = "";
+    native "js" {
+        result = CLI_COLORS.bold + msg + CLI_COLORS.reset;
+    }
+    return result;
+}
+
+fn CLI_green(msg: string) -> string {
+    let result = "";
+    native "js" {
+        result = CLI_COLORS.green + msg + CLI_COLORS.reset;
+    }
+    return result;
+}
+
+fn CLI_red(msg: string) -> string {
+    let result = "";
+    native "js" {
+        result = CLI_COLORS.red + msg + CLI_COLORS.reset;
+    }
+    return result;
+}
+
+fn CLI_yellow(msg: string) -> string {
+    let result = "";
+    native "js" {
+        result = CLI_COLORS.yellow + msg + CLI_COLORS.reset;
+    }
+    return result;
+}
+
+fn CLI_cyan(msg: string) -> string {
+    let result = "";
+    native "js" {
+        result = CLI_COLORS.cyan + msg + CLI_COLORS.reset;
+    }
+    return result;
+}
+
+// ============================================================================
+// PROGRESS SPINNER
+// ============================================================================
+
+struct Spinner {
+    frames: any,
+    current: i64,
+    interval: any,
+    message: string,
+    running: bool
+}
+
+fn Spinner_new(message: string) -> Spinner {
+    let spinner = Spinner {
+        frames: [],
+        current: 0,
+        interval: 0,
+        message: message,
+        running: false
+    };
+    
+    native "js" {
+        spinner.frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+    }
+    
+    return spinner;
+}
+
+fn Spinner_start(self: Spinner) {
+    native "js" {
+        if (self.running) return;
+        self.running = true;
+        
+        self.interval = setInterval(() => {
+            process.stdout.write('\r' + CLI_COLORS.cyan + 
+                self.frames[self.current] + CLI_COLORS.reset + 
+                ' ' + self.message);
+            self.current = (self.current + 1) % self.frames.length;
+        }, 80);
+    }
+}
+
+fn Spinner_stop(self: Spinner, success: bool) {
+    native "js" {
+        if (!self.running) return;
+        
+        clearInterval(self.interval);
+        self.running = false;
+        
+        const icon = success 
+            ? CLI_COLORS.green + '✓' + CLI_COLORS.reset 
+            : CLI_COLORS.red + '✗' + CLI_COLORS.reset;
+        
+        process.stdout.write('\r' + icon + ' ' + self.message + '\n');
+    }
+}
+
+// ============================================================================
+// PROGRESS BAR
+// ============================================================================
+
+fn CLI_progress_bar(current: i64, total: i64, width: i64) -> string {
+    let result = "";
+    native "js" {
+        const percent = Math.floor((current / total) * 100);
+        const filled = Math.floor((current / total) * width);
+        const empty = width - filled;
+        
+        const bar = CLI_COLORS.green + '█'.repeat(filled) + 
+                    CLI_COLORS.dim + '░'.repeat(empty) + CLI_COLORS.reset;
+        
+        result = bar + ' ' + percent + '%';
+    }
+    return result;
+}
+
+// ============================================================================
+// ARGUMENT PARSER
+// ============================================================================
+
+struct ArgParser {
+    args: any,
+    flags: any,
+    commands: any,
+    positional: any
+}
+
+fn ArgParser_new() -> ArgParser {
+    let parser = ArgParser {
+        args: [],
+        flags: {},
+        commands: [],
+        positional: []
+    };
+    
+    native "js" {
+        parser.args = process.argv.slice(2);
+        
+        for (let i = 0; i < parser.args.length; i++) {
+            const arg = parser.args[i];
+            
+            if (arg.startsWith('--')) {
+                // Long flag: --name value or --flag
+                const key = arg.substring(2);
+                if (i + 1 < parser.args.length && !parser.args[i + 1].startsWith('-')) {
+                    parser.flags[key] = parser.args[++i];
+                } else {
+                    parser.flags[key] = true;
+                }
+            } else if (arg.startsWith('-') && arg.length === 2) {
+                // Short flag: -n value or -f
+                const key = arg.substring(1);
+                if (i + 1 < parser.args.length && !parser.args[i + 1].startsWith('-')) {
+                    parser.flags[key] = parser.args[++i];
+                } else {
+                    parser.flags[key] = true;
+                }
+            } else {
+                // Positional argument or command
+                if (parser.commands.length === 0 && !arg.includes('.')) {
+                    parser.commands.push(arg);
+                } else {
+                    parser.positional.push(arg);
+                }
+            }
+        }
+    }
+    
+    return parser;
+}
+
+fn ArgParser_has_flag(self: ArgParser, name: string) -> bool {
+    let result = false;
+    native "js" {
+        result = self.flags.hasOwnProperty(name) && self.flags[name] !== false;
+    }
+    return result;
+}
+
+fn ArgParser_get_flag(self: ArgParser, name: string, default_val: string) -> string {
+    let result = default_val;
+    native "js" {
+        if (self.flags.hasOwnProperty(name) && typeof self.flags[name] === 'string') {
+            result = self.flags[name];
+        }
+    }
+    return result;
+}
+
+fn ArgParser_get_command(self: ArgParser) -> string {
+    let result = "";
+    native "js" {
+        result = self.commands[0] || '';
+    }
+    return result;
+}
+
+fn ArgParser_get_positional(self: ArgParser, index: i64) -> string {
+    let result = "";
+    native "js" {
+        result = self.positional[index] || '';
+    }
+    return result;
+}
+
+// ============================================================================
+// TABLE FORMATTER
+// ============================================================================
+
+fn CLI_table(headers: any, rows: any) {
+    native "js" {
+        if (!headers || headers.length === 0) return;
+        
+        // Calculate column widths
+        const widths = headers.map((h, i) => {
+            const colValues = [h, ...rows.map(r => String(r[i] || ''))];
+            return Math.max(...colValues.map(v => v.length));
+        });
+        
+        // Print header
+        const headerRow = headers.map((h, i) => h.padEnd(widths[i])).join(' │ ');
+        console.log(CLI_COLORS.bold + headerRow + CLI_COLORS.reset);
+        
+        // Print separator
+        const separator = widths.map(w => '─'.repeat(w)).join('─┼─');
+        console.log(separator);
+        
+        // Print rows
+        for (const row of rows) {
+            const rowStr = row.map((cell, i) => String(cell || '').padEnd(widths[i])).join(' │ ');
+            console.log(rowStr);
+        }
+    }
+}
+
+// ============================================================================
+// VERSION AND BANNER
+// ============================================================================
+
+fn CLI_banner() {
+    native "js" {
+        console.log('');
+        console.log(CLI_COLORS.cyan + CLI_COLORS.bold + 
+            '   ____  __  __ _   _ ___ ' + CLI_COLORS.reset);
+        console.log(CLI_COLORS.cyan + 
+            '  / __ \\|  \\/  | \\ | |_ _|' + CLI_COLORS.reset);
+        console.log(CLI_COLORS.cyan + 
+            ' | |  | | |\\/| |  \\| || | ' + CLI_COLORS.reset);
+        console.log(CLI_COLORS.cyan + 
+            ' | |__| | |  | | |\\  || | ' + CLI_COLORS.reset);
+        console.log(CLI_COLORS.cyan + 
+            '  \\____/|_|  |_|_| \\_|___|' + CLI_COLORS.reset);
+        console.log('');
+        console.log(CLI_COLORS.dim + 
+            '  Hybrid Metamorphosis Compiler' + CLI_COLORS.reset);
+        console.log('');
+    }
+}
+
+fn CLI_version() -> string {
+    return "0.6.0";
+}
+
+// ============================================================================
+// EXPORTS
+// ============================================================================
+
+export Colors;
+export Colors_new;
+export CLI_COLORS;
+export CLI_success;
+export CLI_error;
+export CLI_warning;
+export CLI_info;
+export CLI_step;
+export CLI_header;
+export CLI_dim;
+export CLI_bold;
+export CLI_green;
+export CLI_red;
+export CLI_yellow;
+export CLI_cyan;
+export CLI_progress_bar;
+export Spinner;
+export Spinner_new;
+export Spinner_start;
+export Spinner_stop;
+export ArgParser;
+export ArgParser_new;
+export ArgParser_has_flag;
+export ArgParser_get_flag;
+export ArgParser_get_command;
+export ArgParser_get_positional;
+export CLI_table;
+export CLI_banner;
+export CLI_version;
