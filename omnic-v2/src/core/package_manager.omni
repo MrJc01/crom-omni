@@ -176,7 +176,7 @@ fn LockFile_save(lock: LockFile, project_dir: string) {
             packages: lock.packages
         }, null, 2));
         
-        console.log(CLI_COLORS.green + '✓' + CLI_COLORS.reset + ' Updated omni.lock');
+        console.log(CLI_COLORS.green + 'ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“' + CLI_COLORS.reset + ' Updated omni.lock');
     }
 }
 
@@ -501,7 +501,7 @@ fn cmd_list() {
         
         for (const pkg of packages) {
             const commit = pkg.commit ? pkg.commit.substring(0, 8) : 'HEAD';
-            console.log("  📦 " + CLI_COLORS.bold + pkg.name + CLI_COLORS.reset + 
+            console.log("  ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¦ " + CLI_COLORS.bold + pkg.name + CLI_COLORS.reset + 
                         CLI_COLORS.dim + " @ " + commit + CLI_COLORS.reset);
             console.log("     " + CLI_COLORS.dim + pkg.url + CLI_COLORS.reset);
         }
@@ -549,7 +549,7 @@ fn cmd_update(package_name: string) {
             const newCommit = git_get_latest_commit(pkg);
             
             if (newCommit && newCommit !== entry.commit) {
-                console.log(CLI_COLORS.dim + "    " + entry.commit.substring(0, 8) + " → " + newCommit.substring(0, 8) + CLI_COLORS.reset);
+                console.log(CLI_COLORS.dim + "    " + entry.commit.substring(0, 8) + " ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ " + newCommit.substring(0, 8) + CLI_COLORS.reset);
                 
                 pkg.commit = newCommit;
                 const target = path.join(cwd, pkg.local_path);
@@ -594,9 +594,9 @@ fn cmd_doctor() {
         for (const tool of tools) {
             try {
                 const version = execSync(tool.cmd, { encoding: 'utf-8' }).trim().split('\n')[0];
-                console.log("  " + CLI_COLORS.green + "✓" + CLI_COLORS.reset + " " + tool.name + ": " + CLI_COLORS.dim + version + CLI_COLORS.reset);
+                console.log("  " + CLI_COLORS.green + "ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“" + CLI_COLORS.reset + " " + tool.name + ": " + CLI_COLORS.dim + version + CLI_COLORS.reset);
             } catch (e) {
-                console.log("  " + CLI_COLORS.red + "✗" + CLI_COLORS.reset + " " + tool.name + ": not found");
+                console.log("  " + CLI_COLORS.red + "ÃƒÂ¢Ã…â€œÃ¢â‚¬â€" + CLI_COLORS.reset + " " + tool.name + ": not found");
                 allOk = false;
             }
         }
@@ -614,9 +614,9 @@ fn cmd_doctor() {
         
         for (const file of files) {
             if (fs.existsSync(file.path)) {
-                console.log("  " + CLI_COLORS.green + "✓" + CLI_COLORS.reset + " " + file.name);
+                console.log("  " + CLI_COLORS.green + "ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“" + CLI_COLORS.reset + " " + file.name);
             } else {
-                console.log("  " + CLI_COLORS.yellow + "○" + CLI_COLORS.reset + " " + file.name + CLI_COLORS.dim + " (optional)" + CLI_COLORS.reset);
+                console.log("  " + CLI_COLORS.yellow + "ÃƒÂ¢Ã¢â‚¬â€Ã¢â‚¬Â¹" + CLI_COLORS.reset + " " + file.name + CLI_COLORS.dim + " (optional)" + CLI_COLORS.reset);
             }
         }
         
@@ -667,7 +667,7 @@ fn cmd_search(query: string) {
             console.log("");
             
             for (const pkg of results.slice(0, 20)) {
-                console.log("  📦 " + CLI_COLORS.bold + pkg.name + CLI_COLORS.reset);
+                console.log("  ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¦ " + CLI_COLORS.bold + pkg.name + CLI_COLORS.reset);
                 if (pkg.description) {
                     console.log("     " + CLI_COLORS.dim + pkg.description + CLI_COLORS.reset);
                 }
@@ -685,22 +685,22 @@ fn cmd_search(query: string) {
 // EXPORTS
 // ============================================================================
 
-export GitPackage;
-export GitPackage_parse;
-export GitPackage_get_zip_url;
-export LockEntry;
-export LockFile;
-export LockFile_load;
-export LockFile_save;
-export LockFile_add;
-export LockFile_get;
-export LockFile_remove;
-export git_get_latest_commit;
-export git_clone;
-export cmd_install;
-export cmd_install_from_lock;
-export cmd_uninstall;
-export cmd_list;
-export cmd_update;
-export cmd_doctor;
-export cmd_search;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

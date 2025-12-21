@@ -486,7 +486,7 @@ fn code_to_graph(source: string, program: any) -> VisualGraph {
         
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
-            const match = line.match(/@visual:position\((\d+),\s*(\d+)\)/);
+            const match = line.match(new RegExp("@visual:position\\((\\d+),\\s*(\\d+)\\)"));
             if (match) {
                 // Position applies to next non-comment line
                 const x = parseInt(match[1]);
@@ -675,7 +675,7 @@ fn get_installed_package_nodes() -> any {
                         const source = fs.readFileSync(fullPath, 'utf-8');
                         
                         // Simple regex to find capsules and functions
-                        const capsuleMatches = source.matchAll(/capsule\s+(\w+)\s*\{/g);
+                        const capsuleMatches = source.matchAll(new RegExp("capsule\\s+(\\w+)\\s*\\{", "g"));
                         for (const match of capsuleMatches) {
                             nodes.push({
                                 type: 'package_capsule',
@@ -686,7 +686,7 @@ fn get_installed_package_nodes() -> any {
                             });
                         }
                         
-                        const fnMatches = source.matchAll(/fn\s+(\w+)\s*\(/g);
+                        const fnMatches = source.matchAll(new RegExp("fn\\s+(\\w+)\\s*\\(", "g"));
                         for (const match of fnMatches) {
                             // Skip private functions (starting with _)
                             if (!match[1].startsWith('_')) {

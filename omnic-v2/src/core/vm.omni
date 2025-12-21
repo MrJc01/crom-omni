@@ -87,9 +87,9 @@ fn VMEnvironment_get_function(self: VMEnvironment, name: string) -> any {
     return result;
 }
 
-fn VMEnvironment_set_function(self: VMEnvironment, name: string, fn: any) {
+fn VMEnvironment_set_function(self: VMEnvironment, name: string, func: any) {
     native "js" {
-        self.functions[name] = fn;
+        self.functions[name] = func;
     }
 }
 
@@ -386,7 +386,7 @@ fn OmniVM_eval_expression(self: OmniVM, expr: any) -> any {
     return result;
 }
 
-fn OmniVM_call_function(self: OmniVM, fn: any, args: any) -> any {
+fn OmniVM_call_function(self: OmniVM, func: any, args: any) -> any {
     let result = 0;
     
     native "js" {
@@ -395,13 +395,13 @@ fn OmniVM_call_function(self: OmniVM, fn: any, args: any) -> any {
         self.env = VMEnvironment_new(prevEnv);
         
         // Bind parameters
-        for (let i = 0; i < fn.params.length; i++) {
-            const paramName = typeof fn.params[i] === 'string' ? fn.params[i] : fn.params[i].name;
+        for (let i = 0; i < func.params.length; i++) {
+            const paramName = typeof func.params[i] === 'string' ? func.params[i] : func.params[i].name;
             VMEnvironment_set(self.env, paramName, args[i]);
         }
         
         try {
-            result = OmniVM_exec_block(self, fn.body);
+            result = OmniVM_exec_block(self, func.body);
         } catch (e) {
             if (e._omni_return) {
                 result = e.value;

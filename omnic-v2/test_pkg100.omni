@@ -1,0 +1,100 @@
+// ============================================================================
+// OMNI PACKAGE MANAGER - Git-Native Package Resolution
+// Downloads packages directly from Git repositories (GitHub, GitLab, etc.)
+// Security via omni.lock with commit hash verification
+// ============================================================================
+
+import "lib/cli.omni";
+
+// ============================================================================
+// GIT RESOLVER
+// Parses package URLs: github:user/repo, gitlab:user/repo, or full URL
+// ============================================================================
+
+struct GitPackage {
+    name: string,           // "crom/utils"
+    provider: string,       // "github", "gitlab", "url"
+    owner: string,          // "crom"
+    repo: string,           // "utils"
+    full_url: string,       // "https://github.com/crom/utils"
+    commit: string,         // Locked commit hash
+    branch: string,         // Default branch
+    local_path: string      // "packages/crom/utils"
+}
+
+fn GitPackage_parse(spec: string) -> GitPackage {
+    let pkg = GitPackage {
+        name: "",
+        provider: "github",
+        owner: "",
+        repo: "",
+        full_url: "",
+        commit: "",
+        branch: "main",
+        local_path: ""
+    };
+    
+    native "js" {
+        const path = require('path');
+        
+        // Parse different formats:
+        // github:user/repo
+        // gitlab:user/repo
+        // https://github.com/user/repo
+        // user/repo (default to github)
+        
+        let input = spec.trim();
+        
+        if (input.startsWith('github:')) {
+            pkg.provider = 'github';
+            input = input.substring(7);
+        } else if (input.startsWith('gitlab:')) {
+            pkg.provider = 'gitlab';
+            input = input.substring(7);
+        } else if (input.startsWith('https://github.com/')) {
+            pkg.provider = 'github';
+            input = input.substring(19);
+        } else if (input.startsWith('https://gitlab.com/')) {
+            pkg.provider = 'gitlab';
+            input = input.substring(19);
+        } else if (input.startsWith('http://') || input.startsWith('https://')) {
+            pkg.provider = 'url';
+            pkg.full_url = input;
+            // Extract name from URL
+            const parts = input.split('/');
+            pkg.name = parts.slice(-2).join('/');
+            pkg.owner = parts[parts.length - 2];
+            pkg.repo = parts[parts.length - 1].replace('.git', '');
+        }
+        
+        // Parse owner/repo format
+        if (!pkg.full_url && input.includes('/')) {
+            const parts = input.split('/');
+            pkg.owner = parts[0];
+            pkg.repo = parts[1].replace('.git', '');
+            pkg.name = pkg.owner + '/' + pkg.repo;
+            
+            if (pkg.provider === 'github') {
+                pkg.full_url = 'https://github.com/' + pkg.owner + '/' + pkg.repo;
+            } else if (pkg.provider === 'gitlab') {
+                pkg.full_url = 'https://gitlab.com/' + pkg.owner + '/' + pkg.repo;
+            }
+        }
+        
+        // Set local path
+        pkg.local_path = path.join('packages', pkg.owner, pkg.repo);
+    }
+    
+    return pkg;
+}
+
+fn GitPackage_get_zip_url(pkg: GitPackage) -> string {
+    let url = "";
+    
+    native "js" {
+        if (pkg.provider === 'github') {
+            // GitHub archive URL (no git required)
+            const branch = pkg.commit || pkg.branch || 'main';
+            url = pkg.full_url + '/archive/refs/heads/' + branch + '.zip';
+        } else if (pkg.provider === 'gitlab') {
+            const branch = pkg.commit || pkg.branch || 'main';

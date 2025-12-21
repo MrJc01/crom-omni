@@ -82,6 +82,22 @@ impl CodeGenerator for JsBackend {
 }
 
 impl JsBackend {
+    fn gen_attributes(&self, attributes: &[Attribute], target_name: &str) -> String {
+        if attributes.is_empty() {
+            return String::new();
+        }
+        
+        let attrs_str = attributes.iter().map(|attr| {
+            let args = attr.args.iter()
+                .map(|arg| self.gen_expression(arg))
+                .collect::<Vec<_>>()
+                .join(", ");
+            format!("{{ name: '{}', args: [{}] }}", attr.name, args)
+        }).collect::<Vec<_>>().join(", ");
+        
+        format!("{}.__attributes = [{}];\n", target_name, attrs_str)
+    }
+
     fn gen_struct(&self, s: &StructDeclaration) -> String {
         // Omni struct -> JS Class data-only
         let mut code = format!("class {} {{\n", s.name);
@@ -94,6 +110,7 @@ impl JsBackend {
         }
         code.push_str("    }\n");
         code.push_str("}\n");
+        code.push_str(&self.gen_attributes(&s.attributes, &s.name));
         code
     }
 
@@ -107,7 +124,9 @@ impl JsBackend {
         let header = format!("function {}({}) ", f.name, params);
         let body = self.gen_block(&f.body);
         
-        format!("{}{}", header, body)
+        let mut code = format!("{}{}", header, body);
+        code.push_str(&self.gen_attributes(&f.attributes, &f.name));
+        code
     }
 
     fn gen_block(&self, b: &Block) -> String {
@@ -238,6 +257,13 @@ impl JsBackend {
             Expression::MemberAccess { object, member } => {
                 // Member access: obj.field -> obj.field
                 format!("{}.{}", self.gen_expression(object), member)
+            },
+            Expression::ObjectLiteral(fields) => {
+                let fields_str = fields.iter()
+                    .map(|f| format!("{}: {}", f.name, self.gen_expression(&f.value)))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                format!("{{ {} }}", fields_str)
             }
         }
     }

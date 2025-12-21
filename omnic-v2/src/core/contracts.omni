@@ -106,6 +106,34 @@ fn ContractRegistry_new() -> ContractRegistry {
             },
             
             // ============================================================
+            // std.3d - 3D Visual Sandbox
+            // ============================================================
+            'std.3d': {
+                name: 'std.3d',
+                category: '3d',
+                version: '1.0.0',
+                methods: {
+                    Scene_new: { signature: 'fn Scene_new() -> Scene', params: [], return_type: 'Scene' },
+                    Mesh_create_cube: { signature: 'fn Mesh_create_cube(size: f64) -> Mesh', params: ['size'], return_type: 'Mesh' },
+                    Scene_add: { signature: 'fn Scene_add(scene: Scene, mesh: Mesh)', params: ['scene', 'mesh'], return_type: 'void' },
+                    Mesh_set_position: { signature: 'fn Mesh_set_position(mesh: Mesh, x: f64, y: f64, z: f64)', params: ['mesh', 'x', 'y', 'z'], return_type: 'void' }
+                }
+            },
+
+            // ============================================================
+            // std.gui - Native App Windowing
+            // ============================================================
+            'std.gui': {
+                name: 'std.gui',
+                category: 'gui',
+                version: '1.0.0',
+                methods: {
+                    Window_create: { signature: 'fn Window_create(title: string, width: i32, height: i32) -> Window', params: ['title', 'width', 'height'], return_type: 'Window' },
+                    App_run: { signature: 'fn App_run()', params: [], return_type: 'void' }
+                }
+            },
+            
+            // ============================================================
             // std.json - JSON operations
             // ============================================================
             'std.json': {

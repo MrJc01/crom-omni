@@ -9,6 +9,7 @@ const vm = require('./core/vm.js');
 const framework_adapter = require('./core/framework_adapter.js');
 const ingestion = require('./core/ingestion.js');
 const package_manager = require('./core/package_manager.js');
+Object.assign(global, package_manager);
 const contracts = require('./core/contracts.js');
 const ghost_writer = require('./core/ghost_writer.js');
 const bootstrap = require('./core/bootstrap.js');
@@ -16,8 +17,11 @@ const studio_engine = require('./core/studio_engine.js');
 const studio_graph = require('./core/studio_graph.js');
 const app_packager = require('./core/app_packager.js');
 const tui = require('./core/tui.js');
+Object.assign(global, tui);
 const std = require('./lib/std.js');
+Object.assign(global, std);
 const cli = require('./lib/cli.js');
+Object.assign(global, cli);
 
 function get_omni_home() {
     let home = "";

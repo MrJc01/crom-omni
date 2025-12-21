@@ -296,3 +296,6 @@ function CLI_version() {
     return "1.2.0";
 }
 
+
+module.exports = { Colors, Colors_new, CLI_COLORS, CLI_success, CLI_error, CLI_warning, CLI_info, CLI_step, CLI_header, CLI_dim, CLI_bold, CLI_green, CLI_red, CLI_yellow, CLI_cyan, CLI_progress_bar, Spinner, Spinner_new, Spinner_start, Spinner_stop, ParsedArgs, ParsedArgs_new, CLI_table_simple, CLI_table_header, CLI_banner, CLI_version };
+

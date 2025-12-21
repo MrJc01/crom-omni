@@ -1,0 +1,16 @@
+// Test file for native block parsing
+fn test_native() {
+    let x = 0;
+    
+    native "js" {
+        if (x === 1) {
+            console.log("one");
+        } else if (x === 2) {
+            console.log("two");
+        } else {
+            console.log("other");
+        }
+    }
+    
+    return x;
+}

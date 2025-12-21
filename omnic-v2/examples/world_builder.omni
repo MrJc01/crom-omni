@@ -1,0 +1,22 @@
+import "../src/lib/std/3d.omni";
+
+@visual(100.0, 100.0)
+fn CreateLeftCube() -> Mesh {
+    let m = Mesh_create_cube(1.0);
+    Mesh_set_position(m, -2.0, 0.0, 0.0);
+    return m;
+}
+
+@visual(300.0, 100.0)
+fn CreateRightCube() -> Mesh {
+    let m = Mesh_create_cube(1.0);
+    Mesh_set_position(m, 2.0, 0.0, 0.0);
+    return m;
+}
+
+fn main() {
+    let s = Scene_new();
+    Scene_add(s, CreateLeftCube());
+    Scene_add(s, CreateRightCube());
+    native "js" { console.log("Scene Constructed. Nodes have visual metadata!"); }
+}

@@ -173,6 +173,9 @@ pub enum Expression {
         object: Box<Expression>,
         member: String,
     },
+
+    /// Object Literal { key: value }
+    ObjectLiteral(Vec<StructInitField>),
 }
 
 /// Field in a struct instantiation

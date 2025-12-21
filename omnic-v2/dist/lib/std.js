@@ -31,3 +31,6 @@ const fs = require("fs");
 
 }
 
+
+module.exports = { print, read_file, write_file };
+

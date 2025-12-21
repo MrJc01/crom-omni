@@ -83,16 +83,16 @@ fn tui_show_cursor() {
 fn tui_render_header(title: string, subtitle: string) {
     native "js" {
         const width = process.stdout.columns || 80;
-        const line = '═'.repeat(width - 2);
+        const line = 'â•'.repeat(width - 2);
         
-        console.log(CLI_COLORS.cyan + '╔' + line + '╗' + CLI_COLORS.reset);
-        console.log(CLI_COLORS.cyan + '║' + CLI_COLORS.reset + 
-                    CLI_COLORS.bold + ' ◊ OMNI ' + title.padEnd(width - 12) + 
-                    CLI_COLORS.reset + CLI_COLORS.cyan + '║' + CLI_COLORS.reset);
-        console.log(CLI_COLORS.cyan + '║' + CLI_COLORS.reset + 
+        console.log(CLI_COLORS.cyan + 'â•”' + line + 'â•—' + CLI_COLORS.reset);
+        console.log(CLI_COLORS.cyan + 'â•‘' + CLI_COLORS.reset + 
+                    CLI_COLORS.bold + ' â—Š OMNI ' + title.padEnd(width - 12) + 
+                    CLI_COLORS.reset + CLI_COLORS.cyan + 'â•‘' + CLI_COLORS.reset);
+        console.log(CLI_COLORS.cyan + 'â•‘' + CLI_COLORS.reset + 
                     CLI_COLORS.dim + '   ' + subtitle.padEnd(width - 6) + 
-                    CLI_COLORS.reset + CLI_COLORS.cyan + '║' + CLI_COLORS.reset);
-        console.log(CLI_COLORS.cyan + '╠' + line + '╣' + CLI_COLORS.reset);
+                    CLI_COLORS.reset + CLI_COLORS.cyan + 'â•‘' + CLI_COLORS.reset);
+        console.log(CLI_COLORS.cyan + 'â• ' + line + 'â•£' + CLI_COLORS.reset);
     }
 }
 
@@ -101,7 +101,7 @@ fn tui_render_menu(state: TUIState) {
         for (let i = 0; i < state.items.length; i++) {
             const item = state.items[i];
             const selected = i === state.cursor;
-            const prefix = selected ? CLI_COLORS.cyan + ' ▶ ' : '   ';
+            const prefix = selected ? CLI_COLORS.cyan + ' â–¶ ' : '   ';
             const suffix = CLI_COLORS.reset;
             
             if (selected) {
@@ -116,20 +116,20 @@ fn tui_render_menu(state: TUIState) {
 fn tui_render_footer(state: TUIState) {
     native "js" {
         const width = process.stdout.columns || 80;
-        const line = '─'.repeat(width - 2);
+        const line = 'â”€'.repeat(width - 2);
         
         console.log('');
-        console.log(CLI_COLORS.dim + '┌' + line + '┐' + CLI_COLORS.reset);
+        console.log(CLI_COLORS.dim + 'â”Œ' + line + 'â”' + CLI_COLORS.reset);
         
         if (state.message) {
-            console.log(CLI_COLORS.dim + '│ ' + CLI_COLORS.reset + 
+            console.log(CLI_COLORS.dim + 'â”‚ ' + CLI_COLORS.reset + 
                         state.message.padEnd(width - 4) + 
-                        CLI_COLORS.dim + ' │' + CLI_COLORS.reset);
+                        CLI_COLORS.dim + ' â”‚' + CLI_COLORS.reset);
         }
         
-        console.log(CLI_COLORS.dim + '│ ↑/↓ Navigate   Enter Select   q Quit' + 
-                    ''.padEnd(width - 42) + ' │' + CLI_COLORS.reset);
-        console.log(CLI_COLORS.dim + '└' + line + '┘' + CLI_COLORS.reset);
+        console.log(CLI_COLORS.dim + 'â”‚ â†‘/â†“ Navigate   Enter Select   q Quit' + 
+                    ''.padEnd(width - 42) + ' â”‚' + CLI_COLORS.reset);
+        console.log(CLI_COLORS.dim + 'â””' + line + 'â”˜' + CLI_COLORS.reset);
     }
 }
 
@@ -144,8 +144,8 @@ fn tui_render_file_list(state: TUIState) {
             const isSelected = state.selected.includes(i);
             const isCursor = i === state.cursor;
             
-            const checkbox = isSelected ? CLI_COLORS.green + '[✓]' : CLI_COLORS.dim + '[ ]';
-            const prefix = isCursor ? CLI_COLORS.cyan + ' ▶ ' : '   ';
+            const checkbox = isSelected ? CLI_COLORS.green + '[âœ“]' : CLI_COLORS.dim + '[ ]';
+            const prefix = isCursor ? CLI_COLORS.cyan + ' â–¶ ' : '   ';
             
             console.log(prefix + checkbox + CLI_COLORS.reset + ' ' + 
                         (isCursor ? CLI_COLORS.bold : CLI_COLORS.dim) + 
@@ -164,8 +164,8 @@ fn tui_render_target_select(state: TUIState) {
             const item = state.items[i];
             const isCursor = i === state.cursor;
             
-            const prefix = isCursor ? CLI_COLORS.cyan + ' ▶ ' : '   ';
-            const icon = item.icon || '🎯';
+            const prefix = isCursor ? CLI_COLORS.cyan + ' â–¶ ' : '   ';
+            const icon = item.icon || 'ðŸŽ¯';
             
             console.log(prefix + icon + ' ' + 
                         (isCursor ? CLI_COLORS.bold : '') + 
@@ -184,24 +184,24 @@ fn tui_render_target_select(state: TUIState) {
 
 fn tui_main_menu() -> any {
     return [
-        { id: "convert", label: "🔄 Convert Legacy Code", description: "Transform PHP, Java, Python to Omni" },
-        { id: "install", label: "📦 Install Package", description: "Install from GitHub" },
-        { id: "studio", label: "🎨 Open Studio", description: "Visual programming environment" },
-        { id: "build", label: "🔨 Build Project", description: "Compile current project" },
-        { id: "run", label: "▶️  Run Project", description: "Execute main file" },
-        { id: "doctor", label: "🩺 System Doctor", description: "Check installation health" },
-        { id: "quit", label: "❌ Quit", description: "" }
+        { id: "convert", label: "ðŸ”„ Convert Legacy Code", description: "Transform PHP, Java, Python to Omni" },
+        { id: "install", label: "ðŸ“¦ Install Package", description: "Install from GitHub" },
+        { id: "studio", label: "ðŸŽ¨ Open Studio", description: "Visual programming environment" },
+        { id: "build", label: "ðŸ”¨ Build Project", description: "Compile current project" },
+        { id: "run", label: "â–¶ï¸  Run Project", description: "Execute main file" },
+        { id: "doctor", label: "ðŸ©º System Doctor", description: "Check installation health" },
+        { id: "quit", label: "âŒ Quit", description: "" }
     ];
 }
 
 fn tui_target_menu() -> any {
     return [
-        { id: "js", label: "JavaScript (Node.js)", icon: "🟨", description: "CommonJS module" },
-        { id: "python", label: "Python 3", icon: "🐍", description: "Python 3.8+ compatible" },
-        { id: "c", label: "C Native", icon: "⚡", description: "Portable C99 code" },
-        { id: "lua", label: "Lua 5.4", icon: "🌙", description: "Lua script" },
-        { id: "wasm", label: "WebAssembly", icon: "🕸️", description: "WASM binary" },
-        { id: "back", label: "← Back", icon: "◀️", description: "" }
+        { id: "js", label: "JavaScript (Node.js)", icon: "ðŸŸ¨", description: "CommonJS module" },
+        { id: "python", label: "Python 3", icon: "ðŸ", description: "Python 3.8+ compatible" },
+        { id: "c", label: "C Native", icon: "âš¡", description: "Portable C99 code" },
+        { id: "lua", label: "Lua 5.4", icon: "ðŸŒ™", description: "Lua script" },
+        { id: "wasm", label: "WebAssembly", icon: "ðŸ•¸ï¸", description: "WASM binary" },
+        { id: "back", label: "â† Back", icon: "â—€ï¸", description: "" }
     ];
 }
 
@@ -376,7 +376,7 @@ fn cmd_tui() {
             } else {
                 tui_show_cursor();
                 tui_disable_raw_mode();
-                console.log('\nGoodbye! 👋');
+                console.log('\nGoodbye! ðŸ‘‹');
                 process.exit(0);
             }
         });
@@ -392,7 +392,7 @@ fn cmd_tui() {
 
 fn tui_quick_convert(files: any, target: string) {
     native "js" {
-        console.log(CLI_COLORS.cyan + '◊ Quick Convert' + CLI_COLORS.reset);
+        console.log(CLI_COLORS.cyan + 'â—Š Quick Convert' + CLI_COLORS.reset);
         console.log('');
         
         for (const file of files) {
@@ -408,16 +408,16 @@ fn tui_quick_convert(files: any, target: string) {
 // EXPORTS
 // ============================================================================
 
-export TUIState;
-export TUIState_new;
-export tui_enable_raw_mode;
-export tui_disable_raw_mode;
-export tui_clear_screen;
-export tui_render_header;
-export tui_render_menu;
-export tui_render_footer;
-export tui_main_menu;
-export tui_target_menu;
-export tui_scan_legacy_files;
-export cmd_tui;
-export tui_quick_convert;
+
+
+
+
+
+
+
+
+
+
+
+
+

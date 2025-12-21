@@ -244,6 +244,11 @@ impl<'a> Parser<'a> {
                 self.expect(Token::Semicolon)?;
                 Ok(Statement::Continue)
             },
+            Token::Else => {
+                // This should only happen if there's a mismatched else, 
+                // since else-if chains are handled in parse_if
+                return Err(anyhow!("'else' inesperado sem 'if' correspondente"));
+            },
             _ => {
                 // Pode ser Assignment ou ExpressionStmt
                 let expr = self.parse_expression()?;
@@ -386,12 +391,18 @@ impl<'a> Parser<'a> {
         
         if let Ok(Token::Else) = self.peek_token() {
             self.consume()?;
-            else_branch = Some(if self.peek_token()? == Token::BraceOpen {
-                self.parse_block()?
+            
+            // Check for else-if chain
+            if let Ok(Token::If) = self.peek_token() {
+                // Recursively parse the else-if as a nested if statement
+                let nested_if = self.parse_if()?;
+                else_branch = Some(Block { statements: vec![nested_if] });
+            } else if self.peek_token()? == Token::BraceOpen {
+                else_branch = Some(self.parse_block()?);
             } else {
                 let stmt = self.parse_statement()?;
-                Block { statements: vec![stmt] }
-            });
+                else_branch = Some(Block { statements: vec![stmt] });
+            }
         }
 
         Ok(Statement::If { condition, then_branch, else_branch })
@@ -580,6 +591,10 @@ impl<'a> Parser<'a> {
                 self.consume()?;
                 Ok(Expression::Literal(Literal::Integer(i)))
             },
+            Token::FloatLiteral(f) => {
+                self.consume()?;
+                Ok(Expression::Literal(Literal::Float(f)))
+            },
             Token::StringLiteral(s) => {
                 self.consume()?;
                 Ok(Expression::Literal(Literal::String(s)))
@@ -599,8 +614,41 @@ impl<'a> Parser<'a> {
             Token::BracketOpen => {
                 self.parse_array_literal()
             },
+            Token::BraceOpen => {
+                self.parse_object_literal()
+            },
+            Token::Minus => {
+                // Unary minus: -expression
+                self.consume()?;
+                let expr = self.parse_base()?;
+                Ok(Expression::BinaryOp {
+                    left: Box::new(Expression::Literal(Literal::Integer(0))),
+                    op: BinaryOperator::Subtract,
+                    right: Box::new(expr),
+                })
+            },
             t => Err(anyhow!("Token inesperado em expressão: {:?}", t)),
         }
+    }
+
+    fn parse_object_literal(&mut self) -> Result<Expression> {
+        self.expect(Token::BraceOpen)?;
+        let mut fields = Vec::new();
+
+        while self.peek_token()? != Token::BraceClose {
+            let name = self.parse_identifier()?;
+            self.expect(Token::Colon)?;
+            let value = self.parse_expression()?;
+            
+            fields.push(StructInitField { name, value });
+
+            if self.peek_token()? == Token::Comma {
+                self.consume()?;
+            }
+        }
+
+        self.expect(Token::BraceClose)?;
+        Ok(Expression::ObjectLiteral(fields))
     }
 
     fn parse_array_literal(&mut self) -> Result<Expression> {

@@ -249,6 +249,13 @@ impl PythonBackend {
             Expression::MemberAccess { object, member } => {
                 // Member access: obj.field -> obj.field
                 format!("{}.{}", self.gen_expression(object), member)
+            },
+            Expression::ObjectLiteral(fields) => {
+                let fields_str = fields.iter()
+                    .map(|f| format!("\"{}\": {}", f.name, self.gen_expression(&f.value)))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                format!("{{ {} }}", fields_str)
             }
         }
     }

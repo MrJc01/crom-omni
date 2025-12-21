@@ -102,6 +102,9 @@ pub enum Token {
     #[token("->")]
     Arrow,
 
+    #[token("=>")]
+    FatArrow, // JavaScript arrow functions
+
     #[token("=")]
     Assign,
 
@@ -176,8 +179,9 @@ pub enum Token {
     #[token("`")]
     Backtick,
 
-    #[token("'")]
-    SingleQuote,
+    // Note: SingleQuote now handled by SingleQuotedString regex
+    // #[token("'")]
+    // SingleQuote,
 
     // --- Literais e Identificadores ---
 
@@ -193,6 +197,14 @@ pub enum Token {
     // Strings: Aspas duplas com escapes
     #[regex(r#""([^"\\]|\\.)*""#, |lex| lex.slice().trim_matches('"').to_string())]
     StringLiteral(String),
+
+    // Strings com aspas simples (para native blocks com JS)
+    #[regex(r#"'([^'\\]|\\.)*'"#, |lex| lex.slice().trim_matches('\'').to_string())]
+    SingleQuotedString(String),
+
+    // Template Literals (JS): `foo`
+    #[regex(r#"`([^`\\]|\\.)*`"#, |lex| lex.slice().trim_matches('`').to_string())]
+    TemplateStringLiteral(String),
 
     // Inteiros: 123, 0xFF
     #[regex(r"[0-9]+", |lex| lex.slice().parse().ok())]
