@@ -1,7 +1,7 @@
 // ============================================================================
 // OMNI COMPILER - MAIN ENTRY POINT
 // Supports Hybrid Metamorphosis with external language packages
-// Version 1.0.0 - Omni Studio + Visual Programming
+// Version 1.1.0 - Visual Core + Native Bridge
 // ============================================================================
 
 import "core/token.omni";
@@ -16,6 +16,8 @@ import "core/contracts.omni";
 import "core/ghost_writer.omni";
 import "core/bootstrap.omni";
 import "core/studio_engine.omni";
+import "core/studio_graph.omni";
+import "core/app_packager.omni";
 import "lib/std.omni";
 import "lib/cli.omni";
 
@@ -362,6 +364,49 @@ fn main() {
         }
         
         cmd_studio(port, open_app);
+        return 0;
+    }
+    
+    // Check for 'package' command (App Packager)
+    if (command == "package") {
+        let target = "";
+        native "js" {
+            // Parse arguments
+            for (let i = 3; i < process.argv.length; i++) {
+                if (process.argv[i] === '--app' && process.argv[i + 1]) {
+                    target = process.argv[i + 1];
+                }
+            }
+            
+            // Default to current platform
+            if (!target) {
+                const platform = process.platform;
+                if (platform === 'win32') target = 'windows';
+                else if (platform === 'darwin') target = 'macos';
+                else if (platform === 'linux') target = 'linux';
+                else target = 'windows';
+            }
+        }
+        
+        let config = AppConfig_default();
+        native "js" {
+            // Try to read omni.config.json for app config
+            const fs = require('fs');
+            const path = require('path');
+            const configPath = path.join(process.cwd(), 'omni.config.json');
+            
+            if (fs.existsSync(configPath)) {
+                const cfg = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+                if (cfg.app) {
+                    config.name = cfg.app.name || config.name;
+                    config.version = cfg.app.version || config.version;
+                    config.bundle_id = cfg.app.bundle_id || config.bundle_id;
+                    config.description = cfg.app.description || config.description;
+                }
+            }
+        }
+        
+        cmd_package_app(target, config);
         return 0;
     }
     

@@ -144,6 +144,23 @@ fn ContractRegistry_new() -> ContractRegistry {
                     sleep: { signature: 'fn sleep(ms: i64)', params: ['ms'], return_type: 'void' },
                     format: { signature: 'fn format(timestamp: i64, fmt: string) -> string', params: ['timestamp', 'fmt'], return_type: 'string' }
                 }
+            },
+            
+            // ============================================================
+            // std.gui - Native GUI operations
+            // ============================================================
+            'std.gui': {
+                name: 'std.gui',
+                category: 'gui',
+                version: '1.0.0',
+                methods: {
+                    create_window: { signature: 'fn create_window(title: string, width: i64, height: i64) -> Window', params: ['title', 'width', 'height'], return_type: 'Window' },
+                    open_webview: { signature: 'fn open_webview(url: string, width: i64, height: i64)', params: ['url', 'width', 'height'], return_type: 'void' },
+                    file_dialog: { signature: 'fn file_dialog(title: string, filter: string) -> string', params: ['title', 'filter'], return_type: 'string' },
+                    folder_dialog: { signature: 'fn folder_dialog(title: string) -> string', params: ['title'], return_type: 'string' },
+                    message_box: { signature: 'fn message_box(title: string, message: string, type: string)', params: ['title', 'message', 'type'], return_type: 'void' },
+                    notification: { signature: 'fn notification(title: string, message: string)', params: ['title', 'message'], return_type: 'void' }
+                }
             }
         };
         
@@ -179,7 +196,14 @@ fn ContractRegistry_new() -> ContractRegistry {
                 
                 'std.time.now': 'Date.now()',
                 'std.time.sleep': 'await new Promise(r => setTimeout(r, {0}))',
-                'std.time.format': 'new Date({0}).toLocaleString()'
+                'std.time.format': 'new Date({0}).toLocaleString()',
+                
+                'std.gui.create_window': '(console.log("[gui] Window not supported in Node.js"), null)',
+                'std.gui.open_webview': 'require("open")({0})',
+                'std.gui.file_dialog': '(console.log("[gui] File dialog not supported in Node.js"), "")',
+                'std.gui.folder_dialog': '(console.log("[gui] Folder dialog not supported in Node.js"), "")',
+                'std.gui.message_box': 'console.log("[" + {0} + "] " + {1})',
+                'std.gui.notification': 'console.log("🔔 " + {0} + ": " + {1})'
             },
             
             // ============================================================
@@ -212,7 +236,14 @@ fn ContractRegistry_new() -> ContractRegistry {
                 
                 'std.time.now': 'int(time.time() * 1000)',
                 'std.time.sleep': 'time.sleep({0} / 1000)',
-                'std.time.format': 'datetime.fromtimestamp({0} / 1000).strftime({1})'
+                'std.time.format': 'datetime.fromtimestamp({0} / 1000).strftime({1})',
+                
+                'std.gui.create_window': 'webview.create_window({0}, width={1}, height={2})',
+                'std.gui.open_webview': 'webbrowser.open({0})',
+                'std.gui.file_dialog': 'tkinter.filedialog.askopenfilename(title={0}, filetypes={1})',
+                'std.gui.folder_dialog': 'tkinter.filedialog.askdirectory(title={0})',
+                'std.gui.message_box': 'tkinter.messagebox.showinfo({0}, {1})',
+                'std.gui.notification': 'plyer.notification.notify(title={0}, message={1})'
             },
             
             // ============================================================
@@ -245,7 +276,14 @@ fn ContractRegistry_new() -> ContractRegistry {
                 
                 'std.time.now': '(long long)(time(NULL) * 1000)',
                 'std.time.sleep': 'usleep({0} * 1000)',
-                'std.time.format': 'strftime(buffer, sizeof(buffer), {1}, localtime(&{0}))'
+                'std.time.format': 'strftime(buffer, sizeof(buffer), {1}, localtime(&{0}))',
+                
+                'std.gui.create_window': 'webview_create({1}, {2}, {0})',
+                'std.gui.open_webview': 'webview_navigate(wv, {0})',
+                'std.gui.file_dialog': 'nfd_open_dialog({0}, {1})',
+                'std.gui.folder_dialog': 'nfd_pick_folder({0})',
+                'std.gui.message_box': 'MessageBox(NULL, {1}, {0}, MB_OK)',
+                'std.gui.notification': 'omni_notify({0}, {1})'
             },
             
             // ============================================================
