@@ -1,46 +1,39 @@
-// ============================================================================
-// OMNI CONTRACT REGISTRY - Hollow Core Implementation
-// Maps canonical interfaces to target-specific implementations
-// ============================================================================
-
-// ============================================================================
-// CANONICAL INTERFACE DEFINITIONS
-// These are the abstract contracts that all targets must implement
-// ============================================================================
-
-struct CanonicalInterface {
-    name: string,
-    category: string,        // "io", "http", "sql", "fs", "crypto", "async"
-    methods: any,
-    version: string
+class CanonicalInterface {
+    constructor(data = {}) {
+        this.name = data.name;
+        this.category = data.category;
+        this.methods = data.methods;
+        this.version = data.version;
+    }
 }
 
-struct ContractMethod {
-    name: string,
-    signature: string,
-    params: any,
-    return_type: string,
-    description: string
+class ContractMethod {
+    constructor(data = {}) {
+        this.name = data.name;
+        this.signature = data.signature;
+        this.params = data.params;
+        this.return_type = data.return_type;
+        this.description = data.description;
+    }
 }
 
-// ============================================================================
-// CONTRACT REGISTRY
-// ============================================================================
-
-struct ContractRegistry {
-    interfaces: any,
-    implementations: any,
-    active_target: string
+class ContractRegistry {
+    constructor(data = {}) {
+        this.interfaces = data.interfaces;
+        this.implementations = data.implementations;
+        this.active_target = data.active_target;
+    }
 }
 
-fn ContractRegistry_new() -> ContractRegistry {
-    let registry = ContractRegistry {
-        interfaces: {},
-        implementations: {},
-        active_target: "js"
-    };
-    
-    native "js" {
+function ContractRegistry_new() {
+    let registry = new ContractRegistry({ interfaces: null });
+    // Unknown stmt kind: 0
+    implementations;
+    // Unknown stmt kind: 0
+    // Unknown stmt kind: 0
+}
+// Unknown stmt kind: undefined
+
         // Define canonical interfaces
         registry.interfaces = {
             // ============================================================
@@ -400,22 +393,18 @@ fn ContractRegistry_new() -> ContractRegistry {
                 'std.time.sleep': 'os.execute("sleep " .. ({0} / 1000))'
             }
         };
-    }
     
-    return registry;
-}
-
-fn ContractRegistry_set_target(self: ContractRegistry, target: string) {
-    native "js" {
+return registry;
+// Unknown stmt kind: undefined
+function ContractRegistry_set_target(self, target) {
+    
         self.active_target = target;
         console.log("[contract] Active target: " + target);
-    }
+    
 }
-
-fn ContractRegistry_resolve(self: ContractRegistry, contract_path: string, args: any) -> string {
+function ContractRegistry_resolve(self, contract_path, args) {
     let result = "";
     
-    native "js" {
         const impl = self.implementations[self.active_target];
         if (!impl) {
             result = "/* UNKNOWN TARGET: " + self.active_target + " */";
@@ -437,13 +426,11 @@ fn ContractRegistry_resolve(self: ContractRegistry, contract_path: string, args:
         for (let i = 0; i < args.length; i++) {
             result = result.replace(new RegExp('\\{' + i + '\\}', 'g'), args[i]);
         }
-    }
     
     return result;
 }
-
-fn ContractRegistry_list_interfaces(self: ContractRegistry) {
-    native "js" {
+function ContractRegistry_list_interfaces(self) {
+    
         console.log("\n┌─────────────────────────────────────────────────────────────┐");
         console.log("│              CANONICAL INTERFACES (Hollow Core)             │");
         console.log("├─────────────────────────────────────────────────────────────┤");
@@ -456,14 +443,12 @@ fn ContractRegistry_list_interfaces(self: ContractRegistry) {
         }
         
         console.log("└─────────────────────────────────────────────────────────────┘");
-    }
+    
 }
-
-fn ContractRegistry_verify_target(self: ContractRegistry, target: string) -> bool {
+function ContractRegistry_verify_target(self, target) {
     let is_complete = true;
     let missing = 0;
     
-    native "js" {
         const impl = self.implementations[target];
         if (!impl) {
             CLI_error("Target '" + target + "' has no implementations");
@@ -485,27 +470,7 @@ fn ContractRegistry_verify_target(self: ContractRegistry, target: string) -> boo
             CLI_warning("Target '" + target + "' has " + missing + " missing implementations");
             is_complete = false;
         }
-    }
     
     return is_complete;
 }
-
-// ============================================================================
-// GLOBAL REGISTRY INSTANCE
-// ============================================================================
-
 let GLOBAL_CONTRACTS = ContractRegistry_new();
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
-
-export CanonicalInterface;
-export ContractMethod;
-export ContractRegistry;
-export ContractRegistry_new;
-export ContractRegistry_set_target;
-export ContractRegistry_resolve;
-export ContractRegistry_list_interfaces;
-export ContractRegistry_verify_target;
-export GLOBAL_CONTRACTS;

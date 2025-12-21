@@ -49,6 +49,7 @@ class Token {
         this.end = data.end;
     }
 }
+
 function new_token(kind, lexeme, line) {
     return new Token({ kind: kind, lexeme: lexeme, line: line, start: 0, end: 0 });
 }

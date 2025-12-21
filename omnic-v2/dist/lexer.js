@@ -24,6 +24,7 @@ class Lexer {
         this.line = data.line;
     }
 }
+
 function new_lexer(input) {
     let l = new Lexer({ input: input, position: 0, read_position: 0, ch: "\0", line: 1 });
     Lexer_read_char(l);

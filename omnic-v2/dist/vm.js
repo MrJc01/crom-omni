@@ -1,0 +1,384 @@
+const ast = require("./ast.js");
+if (typeof global !== 'undefined') Object.assign(global, ast);
+const token = require("./token.js");
+if (typeof global !== 'undefined') Object.assign(global, token);
+class VMEnvironment {
+    constructor(data = {}) {
+        this.variables = data.variables;
+        this.functions = data.functions;
+        this.parent = data.parent;
+        this.call_stack = data.call_stack;
+    }
+}
+
+function VMEnvironment_new(parent) {
+    let env = new VMEnvironment({ variables: null });
+    // Unknown stmt kind: 0
+    functions;
+    // Unknown stmt kind: 0
+    // Unknown stmt kind: 0
+}
+// Unknown stmt kind: undefined
+
+        env.functions['print'] = (...args) => { console.log(...args); return null; };
+        env.functions['read_file'] = (path) => {
+            const fs = require('fs');
+            return fs.existsSync(path) ? fs.readFileSync(path, 'utf-8') : '';
+        };
+        env.functions['write_file'] = (path, content) => {
+            const fs = require('fs');
+            fs.writeFileSync(path, content);
+            return null;
+        };
+        env.functions['len'] = (arr) => Array.isArray(arr) ? arr.length : 0;
+        env.functions['push'] = (arr, val) => { arr.push(val); return arr; };
+        env.functions['pop'] = (arr) => arr.pop();
+        env.functions['keys'] = (obj) => Object.keys(obj);
+        env.functions['values'] = (obj) => Object.values(obj);
+        env.functions['typeof'] = (val) => typeof val;
+        env.functions['parseInt'] = (s) => parseInt(s, 10);
+        env.functions['parseFloat'] = (s) => parseFloat(s);
+        env.functions['toString'] = (val) => String(val);
+        env.functions['JSON_parse'] = (s) => JSON.parse(s);
+        env.functions['JSON_stringify'] = (obj) => JSON.stringify(obj);
+    
+return env;
+// Unknown stmt kind: undefined
+function VMEnvironment_get(self, name) {
+    let result = 0;
+    
+        if (self.variables.hasOwnProperty(name)) {
+            result = self.variables[name];
+        } else if (self.parent) {
+            result = VMEnvironment_get(self.parent, name);
+        } else {
+            result = undefined;
+        }
+    
+    return result;
+}
+function VMEnvironment_set(self, name, value) {
+    
+        self.variables[name] = value;
+    
+}
+function VMEnvironment_get_function(self, name) {
+    let result = 0;
+    
+        if (self.functions.hasOwnProperty(name)) {
+            result = self.functions[name];
+        } else if (self.parent) {
+            result = VMEnvironment_get_function(self.parent, name);
+        } else {
+            result = null;
+        }
+    
+    return result;
+}
+function VMEnvironment_set_function(self, name, fn) {
+    
+        self.functions[name] = fn;
+    
+}
+class OmniVM {
+    constructor(data = {}) {
+        this.env = data.env;
+        this.trace = data.trace;
+        this.step_count = data.step_count;
+    }
+}
+
+function OmniVM_new() {
+    let env = VMEnvironment_new(0);
+    return new OmniVM({ env: env, trace: false, step_count: 0 });
+}
+function OmniVM_run(self, program) {
+    let result = 0;
+    
+        if (!program || !program.statements) {
+            console.error("[vm] Invalid program");
+            return null;
+        }
+        
+        console.log("[vm] Starting execution...");
+        const startTime = Date.now();
+        
+        try {
+            // Execute all statements
+            for (const stmt of program.statements) {
+                self.step_count++;
+                result = OmniVM_exec_statement(self, stmt);
+            }
+            
+            // Call main() if exists
+            const mainFn = VMEnvironment_get_function(self.env, 'main');
+            if (mainFn && typeof mainFn === 'object' && mainFn._omni_fn) {
+                result = OmniVM_call_function(self, mainFn, []);
+            }
+            
+            const elapsed = Date.now() - startTime;
+            console.log("[vm] Execution completed in " + elapsed + "ms");
+            console.log("[vm] Steps executed: " + self.step_count);
+            
+        } catch (e) {
+            console.error("[vm] Runtime error:", e.message);
+            if (self.trace) {
+                console.error(e.stack);
+            }
+        }
+    
+    return result;
+}
+function OmniVM_exec_statement(self, stmt) {
+    let result = 0;
+    
+        if (self.trace) {
+            console.log("[vm:trace] Executing stmt kind:", stmt.kind);
+        }
+        
+        // Function declaration
+        if (stmt.kind === 4) { // NODE_FUNCTION
+            const fn = {
+                _omni_fn: true,
+                name: stmt.name,
+                params: stmt.params || [],
+                body: stmt.body
+            };
+            VMEnvironment_set_function(self.env, stmt.name, fn);
+            return null;
+        }
+        
+        // Struct declaration
+        if (stmt.kind === 70) { // NODE_STRUCT
+            const structDef = {
+                _omni_struct: true,
+                name: stmt.name,
+                fields: stmt.fields || []
+            };
+            VMEnvironment_set(self.env, stmt.name, structDef);
+            return null;
+        }
+        
+        // Let declaration
+        if (stmt.kind === 2) { // NODE_LET
+            const value = OmniVM_eval_expression(self, stmt.value);
+            VMEnvironment_set(self.env, stmt.name, value);
+            return null;
+        }
+        
+        // Return statement
+        if (stmt.kind === 7) { // NODE_RETURN
+            const value = OmniVM_eval_expression(self, stmt.value);
+            throw { _omni_return: true, value: value };
+        }
+        
+        // If statement
+        if (stmt.kind === 13) { // NODE_IF
+            const condition = OmniVM_eval_expression(self, stmt.condition);
+            if (condition) {
+                return OmniVM_exec_block(self, stmt.consequence);
+            } else if (stmt.alternative) {
+                return OmniVM_exec_block(self, stmt.alternative);
+            }
+            return null;
+        }
+        
+        // While statement
+        if (stmt.kind === 14) { // NODE_WHILE
+            let loopResult = null;
+            while (OmniVM_eval_expression(self, stmt.condition)) {
+                loopResult = OmniVM_exec_block(self, stmt.body);
+                self.step_count++;
+                // Safety limit
+                if (self.step_count > 1000000) {
+                    throw new Error("Infinite loop detected");
+                }
+            }
+            return loopResult;
+        }
+        
+        // Assignment
+        if (stmt.kind === 16) { // NODE_ASSIGNMENT
+            const value = OmniVM_eval_expression(self, stmt.value);
+            VMEnvironment_set(self.env, stmt.name, value);
+            return null;
+        }
+        
+        // Call as statement
+        if (stmt.kind === 6) { // NODE_CALL
+            return OmniVM_eval_expression(self, stmt);
+        }
+        
+        // Import (skip for VM)
+        if (stmt.kind === 10) { // NODE_IMPORT
+            return null;
+        }
+        
+        // Native block (skip for VM)
+        if (stmt.kind === 80) { // NODE_NATIVE
+            return null;
+        }
+        
+        // Capsule (register flows)
+        if (stmt.kind === 93) { // NODE_CAPSULE
+            const capsule = {
+                _omni_capsule: true,
+                name: stmt.name,
+                flows: {}
+            };
+            for (const flow of (stmt.flows || [])) {
+                capsule.flows[flow.name] = {
+                    params: flow.params,
+                    body: flow.body
+                };
+            }
+            VMEnvironment_set(self.env, stmt.name, capsule);
+            return null;
+        }
+        
+        console.warn("[vm] Unknown statement kind:", stmt.kind);
+        return null;
+    
+    return result;
+}
+function OmniVM_exec_block(self, block) {
+    let result = 0;
+    
+        if (!block) return null;
+        
+        const statements = Array.isArray(block) ? block : (block.statements || []);
+        
+        for (const stmt of statements) {
+            self.step_count++;
+            result = OmniVM_exec_statement(self, stmt);
+        }
+    
+    return result;
+}
+function OmniVM_eval_expression(self, expr) {
+    let result = 0;
+    
+        if (!expr) return null;
+        
+        // Literal
+        if (expr.kind === 3) { // NODE_LITERAL
+            const val = expr.value;
+            if (val === 'true') return true;
+            if (val === 'false') return false;
+            if (val === 'null') return null;
+            return isNaN(Number(val)) ? val : Number(val);
+        }
+        
+        // String
+        if (expr.kind === 17) { // NODE_STRING
+            return expr.value;
+        }
+        
+        // Boolean
+        if (expr.kind === 18) { // NODE_BOOL
+            return expr.value;
+        }
+        
+        // Identifier
+        if (expr.kind === 15) { // NODE_IDENTIFIER
+            const name = expr.value || expr.name;
+            return VMEnvironment_get(self.env, name);
+        }
+        
+        // Binary expression
+        if (expr.kind === 8) { // NODE_BINARY
+            const left = OmniVM_eval_expression(self, expr.left);
+            const right = OmniVM_eval_expression(self, expr.right);
+            const op = expr.op;
+            
+            switch (op) {
+                case '+': return left + right;
+                case '-': return left - right;
+                case '*': return left * right;
+                case '/': return left / right;
+                case '%': return left % right;
+                case '==': return left === right;
+                case '!=': return left !== right;
+                case '<': return left < right;
+                case '<=': return left <= right;
+                case '>': return left > right;
+                case '>=': return left >= right;
+                case '&&': return left && right;
+                case '||': return left || right;
+                default: throw new Error("Unknown operator: " + op);
+            }
+        }
+        
+        // Call expression
+        if (expr.kind === 6) { // NODE_CALL
+            const fnName = expr.name || (expr.callee ? expr.callee.value : '');
+            const args = (expr.args || []).map(a => OmniVM_eval_expression(self, a));
+            
+            // Check builtin
+            const builtin = VMEnvironment_get_function(self.env, fnName);
+            if (builtin && typeof builtin === 'function') {
+                return builtin(...args);
+            }
+            
+            // Check user function
+            if (builtin && builtin._omni_fn) {
+                return OmniVM_call_function(self, builtin, args);
+            }
+            
+            throw new Error("Function not found: " + fnName);
+        }
+        
+        // Member access
+        if (expr.kind === 9) { // NODE_MEMBER
+            const obj = OmniVM_eval_expression(self, expr.object);
+            return obj ? obj[expr.member] : undefined;
+        }
+        
+        // Array literal
+        if (expr.kind === 11) { // NODE_ARRAY
+            return (expr.elements || []).map(e => OmniVM_eval_expression(self, e));
+        }
+        
+        // Struct init
+        if (expr.kind === 12) { // NODE_STRUCT_INIT
+            const obj = {};
+            if (expr.fields) {
+                for (const [k, v] of Object.entries(expr.fields)) {
+                    obj[k] = OmniVM_eval_expression(self, v);
+                }
+            }
+            return obj;
+        }
+        
+        return expr.value;
+    
+    return result;
+}
+function OmniVM_call_function(self, fn, args) {
+    let result = 0;
+    
+        // Create new environment for function scope
+        const prevEnv = self.env;
+        self.env = VMEnvironment_new(prevEnv);
+        
+        // Bind parameters
+        for (let i = 0; i < fn.params.length; i++) {
+            const paramName = typeof fn.params[i] === 'string' ? fn.params[i] : fn.params[i].name;
+            VMEnvironment_set(self.env, paramName, args[i]);
+        }
+        
+        try {
+            result = OmniVM_exec_block(self, fn.body);
+        } catch (e) {
+            if (e._omni_return) {
+                result = e.value;
+            } else {
+                throw e;
+            }
+        }
+        
+        // Restore environment
+        self.env = prevEnv;
+    
+    return result;
+}

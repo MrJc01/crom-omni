@@ -11,6 +11,7 @@ class Parser {
         this.peek_token = data.peek_token;
     }
 }
+
 function new_parser(l) {
     let p = new Parser({ lexer: l, cur_token: new_token(0, "", 0), peek_token: new_token(0, "", 0) });
     Parser_next_token(p);

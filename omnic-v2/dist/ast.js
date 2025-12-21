@@ -23,6 +23,7 @@ class Program {
         this.statements = data.statements;
     }
 }
+
 class AssignmentExpr {
     constructor(data = {}) {
         this.kind = data.kind;
@@ -30,6 +31,7 @@ class AssignmentExpr {
         this.right = data.right;
     }
 }
+
 class NativeStmt {
     constructor(data = {}) {
         this.kind = data.kind;
@@ -37,6 +39,7 @@ class NativeStmt {
         this.code = data.code;
     }
 }
+
 class LetStmt {
     constructor(data = {}) {
         this.kind = data.kind;
@@ -45,36 +48,42 @@ class LetStmt {
         this.is_exported = data.is_exported;
     }
 }
+
 class ImportDecl {
     constructor(data = {}) {
         this.kind = data.kind;
         this.path = data.path;
     }
 }
+
 class ExpressionStmt {
     constructor(data = {}) {
         this.kind = data.kind;
         this.expr = data.expr;
     }
 }
+
 class IntegerLiteral {
     constructor(data = {}) {
         this.kind = data.kind;
         this.value = data.value;
     }
 }
+
 class StringLiteral {
     constructor(data = {}) {
         this.kind = data.kind;
         this.value = data.value;
     }
 }
+
 class BoolLiteral {
     constructor(data = {}) {
         this.kind = data.kind;
         this.value = data.value;
     }
 }
+
 class StructInitExpr {
     constructor(data = {}) {
         this.kind = data.kind;
@@ -82,12 +91,14 @@ class StructInitExpr {
         this.fields = data.fields;
     }
 }
+
 class StructInitField {
     constructor(data = {}) {
         this.name = data.name;
         this.value = data.value;
     }
 }
+
 class BinaryExpr {
     constructor(data = {}) {
         this.kind = data.kind;
@@ -96,6 +107,7 @@ class BinaryExpr {
         this.right = data.right;
     }
 }
+
 class MemberExpr {
     constructor(data = {}) {
         this.kind = data.kind;
@@ -103,6 +115,7 @@ class MemberExpr {
         this.property = data.property;
     }
 }
+
 class FunctionDecl {
     constructor(data = {}) {
         this.kind = data.kind;
@@ -112,12 +125,14 @@ class FunctionDecl {
         this.is_exported = data.is_exported;
     }
 }
+
 class Block {
     constructor(data = {}) {
         this.kind = data.kind;
         this.statements = data.statements;
     }
 }
+
 class CallExpr {
     constructor(data = {}) {
         this.kind = data.kind;
@@ -125,12 +140,14 @@ class CallExpr {
         this.args = data.args;
     }
 }
+
 class ReturnStmt {
     constructor(data = {}) {
         this.kind = data.kind;
         this.value = data.value;
     }
 }
+
 class IfStmt {
     constructor(data = {}) {
         this.kind = data.kind;
@@ -139,6 +156,7 @@ class IfStmt {
         this.alternative = data.alternative;
     }
 }
+
 class WhileStmt {
     constructor(data = {}) {
         this.kind = data.kind;
@@ -146,6 +164,7 @@ class WhileStmt {
         this.body = data.body;
     }
 }
+
 class StructDecl {
     constructor(data = {}) {
         this.kind = data.kind;
@@ -154,12 +173,14 @@ class StructDecl {
         this.is_exported = data.is_exported;
     }
 }
+
 class StructField {
     constructor(data = {}) {
         this.name = data.name;
         this.typename = data.typename;
     }
 }
+
 function new_struct_field(name, typename) {
     return new StructField({ name: name, typename: typename });
 }
@@ -169,3 +190,4 @@ class Identifier {
         this.value = data.value;
     }
 }
+
