@@ -236,8 +236,142 @@ capsule UserService {
 
 ---
 
+## Mapeamento Semântico Detalhado
+
+### Cápsula = Grupo de Nós
+
+Uma cápsula no código se torna um **subgrafo** no visual:
+
+```omni
+capsule UserService {
+    flow list() -> User[]
+    flow create(data: User) -> User
+}
+```
+
+```mermaid
+graph TD
+    subgraph UserService
+        list[list] --> User_List[User[]]
+        create[create] --> User_Single[User]
+    end
+```
+
+### Flow = Nó de Processamento
+
+Um flow é um nó com atributos decoradores visíveis:
+
+```omni
+@server.get("/api/users")
+flow getUsers() -> User[] {
+    return Database.findAll("users");
+}
+```
+
+Representação visual:
+
+```
+┌─────────────────────────────────┐
+│  ⬡ getUsers                     │
+│  └─ @server.get("/api/users")   │
+├─────────────────────────────────┤
+│  → return: User[]               │
+└─────────────────────────────────┘
+```
+
+### Let = Nó de Dado
+
+Declarações de variáveis aparecem como nós de dado:
+
+```omni
+let userId = 42;
+let userName = "John";
+```
+
+```
+[42] ──→ [userId: i64]
+["John"] ──→ [userName: string]
+```
+
+---
+
+## Sincronização Bidirecional em Tempo Real
+
+O Studio mantém uma conexão WebSocket entre o Editor (código) e o Canvas (grafo). Qualquer alteração em um é refletida no outro instantaneamente.
+
+### Diagrama de Sincronização
+
+```mermaid
+sequenceDiagram
+    participant Editor as Editor (Monaco)
+    participant State as AST State Manager
+    participant Canvas as Canvas (Cytoscape)
+
+    Note over Editor,Canvas: Cenário 1: Edição de Código
+    Editor->>State: Código alterado
+    State->>State: Re-parse → Nova AST
+    State->>State: AST → GraphState
+    State->>Canvas: Atualiza nós/edges
+
+    Note over Editor,Canvas: Cenário 2: Drag de Nó
+    Canvas->>State: Nó movido
+    State->>State: Atualiza posição
+    State->>State: GraphState → AST (com metadados)
+    State->>Editor: Atualiza comentários de posição
+
+    Note over Editor,Canvas: Cenário 3: Nova Conexão
+    Canvas->>State: Edge criado (A → B)
+    State->>State: Valida tipos
+    State->>State: Gera chamada de função
+    State->>Editor: Insere código no body de A
+```
+
+### Eventos de Sincronização
+
+| Evento no Editor        | Ação no Canvas            |
+| ----------------------- | ------------------------- |
+| Nova função             | Novo nó criado            |
+| Renomear função         | Nome do nó atualizado     |
+| Adicionar parâmetro     | Nova porta de entrada     |
+| Deletar função          | Nó removido + edges       |
+| Alterar tipo de retorno | Porta de saída atualizada |
+
+| Evento no Canvas | Ação no Editor            |
+| ---------------- | ------------------------- |
+| Arrastar nó      | (nenhum - apenas visual)  |
+| Criar conexão    | Inserir chamada de função |
+| Deletar nó       | Remover função do código  |
+| Renomear nó      | Renomear função           |
+| Alterar atributo | Atualizar decorator       |
+
+### Persistência de Posição
+
+Posições dos nós são salvas como comentários especiais no código:
+
+```omni
+// @visual:position(100, 200)
+fn getUserById(id: i64) -> User {
+    return Database.findById(id);
+}
+```
+
+Isso permite que o layout visual seja preservado entre sessões sem poluir a AST.
+
+---
+
 ## Regra de Ouro
 
 > **O grafo é a AST. A AST é o código. O código é o grafo.** > **Qualquer alteração em um é refletida nos outros instantaneamente.** > **Não há tradução. Apenas representação.**
+
+```mermaid
+graph LR
+    A[Código Omni] <--> B[AST]
+    B <--> C[Grafo Visual]
+    A <--> C
+
+    style A fill:#58a6ff
+    style B fill:#7ee787
+    style C fill:#a371f7
+```
 
 _Desenhe seu código. Compile seu grafo. Execute sua visão._

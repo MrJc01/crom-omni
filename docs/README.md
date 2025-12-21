@@ -54,6 +54,66 @@ omni run hello.omni
 
 ---
 
+## 💻 Omni Studio
+
+O Omni Studio é a IDE integrada que permite programar visualmente ou via código.
+
+### Comandos do Studio
+
+```bash
+# Iniciar IDE web
+omni studio
+
+# Abrir com janela nativa (Tauri)
+omni studio --app
+
+# Modo terminal interativo (TUI)
+omni studio --tui
+
+# Porta personalizada
+omni studio --port 8080
+```
+
+### Terminal Interativo (TUI)
+
+Para conversão rápida de arquivos legados:
+
+```bash
+# Conversão interativa
+omni ui ingest
+
+# Seleção de arquivo
+? Arquivo de origem: legacy.php
+? Arquivo de destino: app.omni
+? Target: javascript
+
+✓ Convertido com sucesso!
+```
+
+---
+
+## 📋 Referência Completa de Comandos
+
+| Comando                           | Descrição                       |
+| --------------------------------- | ------------------------------- |
+| `omni run <file>`                 | Executa via VM (sem compilação) |
+| `omni <in> <out>`                 | Compila para target padrão (JS) |
+| `omni <in> <out> --target <t>`    | Compila para target específico  |
+| `omni <in> <out> --framework <f>` | Gera projeto de framework       |
+| `omni studio`                     | Inicia IDE web                  |
+| `omni studio --app`               | IDE com janela nativa           |
+| `omni graph <file> [out]`         | Gera diagrama Mermaid           |
+| `omni ingest <in> [out]`          | Converte código legado          |
+| `omni doctor`                     | Verifica saúde do sistema       |
+| `omni install <pkg>`              | Instala pacote                  |
+| `omni uninstall <pkg>`            | Remove pacote                   |
+| `omni list`                       | Lista pacotes instalados        |
+| `omni contracts`                  | Mostra interfaces canônicas     |
+| `omni bootstrap`                  | Compila para binário nativo     |
+| `omni --version`                  | Mostra versão                   |
+
+---
+
 ## O Manifesto Omni
 
 ### O Problema: A Torre de Babel Digital
