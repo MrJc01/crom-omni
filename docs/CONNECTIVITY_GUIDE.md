@@ -154,16 +154,87 @@ O Omni permite que a tradução falhe em sistemas legados complexos. Se ocorrer 
 
 ---
 
-## 6. Referência de Linguagens Suportadas
+## 6. Ingestão de Código Legado (Reverse Engineering)
 
-| Linguagem  | Profile               | Status       |
-| ---------- | --------------------- | ------------ |
-| JavaScript | `targets/js.json`     | ✅ Completo  |
-| Python     | `targets/python.json` | ✅ Completo  |
-| Lua        | `targets/lua.json`    | ✅ Completo  |
-| C          | `targets/c.json`      | ✅ Base      |
-| Rust       | `targets/rust.json`   | 🚧 Planejado |
-| Go         | `targets/go.json`     | 🚧 Planejado |
-| PHP        | `targets/php.json`    | 🚧 Planejado |
+O Omni pode transformar código legado em Omni puro através do **Motor de Mapeamento Semântico Determinístico**.
 
-_O Omni é extensível por design. Adicione sua linguagem favorita!_
+### Comando de Ingestão
+
+```bash
+# Transformar PHP para Omni
+omni ingest UserController.php user.omni
+
+# Transformar Java para Omni
+omni ingest UserService.java user.omni
+
+# Transformar Python para Omni
+omni ingest app.py app.omni
+```
+
+### Padrões Reconhecidos Automaticamente
+
+| Linguagem | Padrão Original            | Resultado Omni               |
+| --------- | -------------------------- | ---------------------------- |
+| PHP       | `class User extends Model` | `@entity struct User`        |
+| PHP       | `Route::get('/users')`     | `@server.get("/users") flow` |
+| Java      | `@RestController`          | `@server capsule`            |
+| Java      | `@Entity class User`       | `@entity struct User`        |
+| Python    | `@app.get("/users")`       | `@server.get("/users") flow` |
+| Python    | `class User(Base)`         | `@entity struct User`        |
+| JS        | `router.get('/users')`     | `@server.get("/users") flow` |
+| JS        | `function Component()`     | `@ui.component fn`           |
+
+### Princípio da Ingestão
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  CÓDIGO LEGADO                                                  │
+│  (PHP/Java/Python/JS)                                           │
+└───────────────────────────────┬─────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  MOTOR DE MAPEAMENTO SEMÂNTICO DETERMINÍSTICO                  │
+│  • Análise de Padrões Canônicos                                 │
+│  • Sem IA - 100% Determinístico                                 │
+│  • Paridade AST Garantida                                       │
+└───────────────────────────────┬─────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  CÓDIGO OMNI PURO                                               │
+│  (Lógica Universal)                                             │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 7. Referência de Linguagens Suportadas
+
+| Linguagem  | Profile               | Compile | Ingest | Status      |
+| ---------- | --------------------- | ------- | ------ | ----------- |
+| JavaScript | `targets/js.json`     | ✅      | ✅     | Completo    |
+| Python     | `targets/python.json` | ✅      | ✅     | Completo    |
+| Lua        | `targets/lua.json`    | ✅      | ❌     | Compile     |
+| C          | `targets/c.json`      | ✅      | ❌     | Compile     |
+| Rust       | `targets/rust.json`   | ✅      | ❌     | Compile     |
+| PHP        | (via ingest)          | ❌      | ✅     | Ingest Only |
+| Java       | (via ingest)          | ❌      | ✅     | Ingest Only |
+
+---
+
+## 8. A Regra de Ouro
+
+> **A lógica Omni é a única verdade.** > **A infraestrutura (framework, linguagem, SO) é apenas um detalhe de saída.** > **Se o código Omni compilar, a paridade matemática da AST garante 100% de sucesso.**
+
+```
+┌───────────────────────────────────────────────────────────────────┐
+│                                                                   │
+│   OMNI CODE  ──────▶  AST  ──────▶  TARGET CODE                  │
+│                                                                   │
+│   Paridade 100%: Se AST mapeia corretamente, funciona.           │
+│                                                                   │
+└───────────────────────────────────────────────────────────────────┘
+```
+
+_O Omni é o Tradutor Universal. Adicione sua linguagem favorita!_

@@ -1,7 +1,7 @@
 // ============================================================================
 // OMNI COMPILER - MAIN ENTRY POINT
 // Supports Hybrid Metamorphosis with external language packages
-// Version 0.6.0 - Omni VM + Framework Adapters + Global Install
+// Version 0.8.0 - Hollow Core + Contract Registry
 // ============================================================================
 
 import "core/token.omni";
@@ -10,6 +10,9 @@ import "core/parser.omni";
 import "core/codegen_hybrid.omni";
 import "core/vm.omni";
 import "core/framework_adapter.omni";
+import "core/ingestion.omni";
+import "core/package_manager.omni";
+import "core/contracts.omni";
 import "lib/std.omni";
 import "lib/cli.omni";
 
@@ -251,6 +254,83 @@ fn main() {
             cmd_package_self();
             return 0;
         }
+    }
+    
+    // Check for 'install' command (Package Manager)
+    if (command == "install") {
+        let package_path = "";
+        native "js" { package_path = process.argv[3] || ''; }
+        
+        if (package_path == "") {
+            CLI_error("Usage: omni install <package_path>");
+            CLI_info("Install a .omni-pkg for targets, adapters, or patterns");
+            return 1;
+        }
+        
+        cmd_install(package_path);
+        return 0;
+    }
+    
+    // Check for 'uninstall' command
+    if (command == "uninstall") {
+        let package_name = "";
+        native "js" { package_name = process.argv[3] || ''; }
+        
+        if (package_name == "") {
+            CLI_error("Usage: omni uninstall <package_name>");
+            return 1;
+        }
+        
+        cmd_uninstall(package_name);
+        return 0;
+    }
+    
+    // Check for 'list' command
+    if (command == "list") {
+        cmd_list_packages();
+        return 0;
+    }
+    
+    // Check for 'doctor' command (System Health Check)
+    if (command == "doctor") {
+        cmd_doctor();
+        return 0;
+    }
+    
+    // Check for 'contracts' command (Show Canonical Interfaces)
+    if (command == "contracts") {
+        native "js" {
+            const registry = ContractRegistry_new();
+            ContractRegistry_list_interfaces(registry);
+        }
+        return 0;
+    }
+    
+    // Check for 'ingest' command (Legacy Code Transformation)
+    if (command == "ingest") {
+        let input_file = "";
+        let output_file = "";
+        native "js" { 
+            input_file = process.argv[3] || '';
+            output_file = process.argv[4] || '';
+        }
+        
+        if (input_file == "") {
+            CLI_error("Usage: omni ingest <legacy_file> <output.omni>");
+            CLI_info("Transforms PHP, Java, Python, or JS code to Omni");
+            return 1;
+        }
+        
+        if (output_file == "") {
+            // Auto-generate output name
+            native "js" {
+                const path = require('path');
+                output_file = path.basename(input_file).replace(/\.[^.]+$/, '.omni');
+            }
+        }
+        
+        cmd_ingest(input_file, output_file);
+        return 0;
     }
     
     // Check for 'run' command (VM mode)

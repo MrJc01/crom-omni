@@ -1,0 +1,380 @@
+// ============================================================================
+// OMNI CONTRACT REGISTRY - Hollow Core Implementation
+// Maps canonical interfaces to target-specific implementations
+// ============================================================================
+
+// ============================================================================
+// CANONICAL INTERFACE DEFINITIONS
+// These are the abstract contracts that all targets must implement
+// ============================================================================
+
+struct CanonicalInterface {
+    name: string,
+    category: string,        // "io", "http", "sql", "fs", "crypto", "async"
+    methods: any,
+    version: string
+}
+
+struct ContractMethod {
+    name: string,
+    signature: string,
+    params: any,
+    return_type: string,
+    description: string
+}
+
+// ============================================================================
+// CONTRACT REGISTRY
+// ============================================================================
+
+struct ContractRegistry {
+    interfaces: any,
+    implementations: any,
+    active_target: string
+}
+
+fn ContractRegistry_new() -> ContractRegistry {
+    let registry = ContractRegistry {
+        interfaces: {},
+        implementations: {},
+        active_target: "js"
+    };
+    
+    native "js" {
+        // Define canonical interfaces
+        registry.interfaces = {
+            // ============================================================
+            // std.io - Input/Output operations
+            // ============================================================
+            'std.io': {
+                name: 'std.io',
+                category: 'io',
+                version: '1.0.0',
+                methods: {
+                    print: { signature: 'fn print(msg: string)', params: ['msg'], return_type: 'void' },
+                    println: { signature: 'fn println(msg: string)', params: ['msg'], return_type: 'void' },
+                    input: { signature: 'fn input(prompt: string) -> string', params: ['prompt'], return_type: 'string' },
+                    error: { signature: 'fn error(msg: string)', params: ['msg'], return_type: 'void' }
+                }
+            },
+            
+            // ============================================================
+            // std.fs - File System operations
+            // ============================================================
+            'std.fs': {
+                name: 'std.fs',
+                category: 'fs',
+                version: '1.0.0',
+                methods: {
+                    read_file: { signature: 'fn read_file(path: string) -> string', params: ['path'], return_type: 'string' },
+                    write_file: { signature: 'fn write_file(path: string, content: string)', params: ['path', 'content'], return_type: 'void' },
+                    exists: { signature: 'fn exists(path: string) -> bool', params: ['path'], return_type: 'bool' },
+                    delete: { signature: 'fn delete(path: string)', params: ['path'], return_type: 'void' },
+                    list_dir: { signature: 'fn list_dir(path: string) -> string[]', params: ['path'], return_type: 'string[]' },
+                    mkdir: { signature: 'fn mkdir(path: string)', params: ['path'], return_type: 'void' }
+                }
+            },
+            
+            // ============================================================
+            // std.http - HTTP Client operations
+            // ============================================================
+            'std.http': {
+                name: 'std.http',
+                category: 'http',
+                version: '1.0.0',
+                methods: {
+                    get: { signature: 'fn get(url: string) -> HttpResponse', params: ['url'], return_type: 'HttpResponse' },
+                    post: { signature: 'fn post(url: string, body: any) -> HttpResponse', params: ['url', 'body'], return_type: 'HttpResponse' },
+                    put: { signature: 'fn put(url: string, body: any) -> HttpResponse', params: ['url', 'body'], return_type: 'HttpResponse' },
+                    delete: { signature: 'fn delete(url: string) -> HttpResponse', params: ['url'], return_type: 'HttpResponse' }
+                }
+            },
+            
+            // ============================================================
+            // std.sql - Database operations
+            // ============================================================
+            'std.sql': {
+                name: 'std.sql',
+                category: 'sql',
+                version: '1.0.0',
+                methods: {
+                    connect: { signature: 'fn connect(dsn: string) -> Connection', params: ['dsn'], return_type: 'Connection' },
+                    query: { signature: 'fn query(conn: Connection, sql: string) -> Result[]', params: ['conn', 'sql'], return_type: 'Result[]' },
+                    execute: { signature: 'fn execute(conn: Connection, sql: string) -> i64', params: ['conn', 'sql'], return_type: 'i64' },
+                    close: { signature: 'fn close(conn: Connection)', params: ['conn'], return_type: 'void' }
+                }
+            },
+            
+            // ============================================================
+            // std.json - JSON operations
+            // ============================================================
+            'std.json': {
+                name: 'std.json',
+                category: 'json',
+                version: '1.0.0',
+                methods: {
+                    parse: { signature: 'fn parse(json: string) -> any', params: ['json'], return_type: 'any' },
+                    stringify: { signature: 'fn stringify(obj: any) -> string', params: ['obj'], return_type: 'string' }
+                }
+            },
+            
+            // ============================================================
+            // std.crypto - Cryptography operations
+            // ============================================================
+            'std.crypto': {
+                name: 'std.crypto',
+                category: 'crypto',
+                version: '1.0.0',
+                methods: {
+                    hash_sha256: { signature: 'fn hash_sha256(data: string) -> string', params: ['data'], return_type: 'string' },
+                    hash_md5: { signature: 'fn hash_md5(data: string) -> string', params: ['data'], return_type: 'string' },
+                    random_bytes: { signature: 'fn random_bytes(len: i64) -> string', params: ['len'], return_type: 'string' }
+                }
+            },
+            
+            // ============================================================
+            // std.time - Time operations
+            // ============================================================
+            'std.time': {
+                name: 'std.time',
+                category: 'time',
+                version: '1.0.0',
+                methods: {
+                    now: { signature: 'fn now() -> i64', params: [], return_type: 'i64' },
+                    sleep: { signature: 'fn sleep(ms: i64)', params: ['ms'], return_type: 'void' },
+                    format: { signature: 'fn format(timestamp: i64, fmt: string) -> string', params: ['timestamp', 'fmt'], return_type: 'string' }
+                }
+            }
+        };
+        
+        // Define target-specific implementations
+        registry.implementations = {
+            // ============================================================
+            // JAVASCRIPT IMPLEMENTATIONS
+            // ============================================================
+            js: {
+                'std.io.print': 'console.log({0})',
+                'std.io.println': 'console.log({0})',
+                'std.io.input': 'require("readline-sync").question({0})',
+                'std.io.error': 'console.error({0})',
+                
+                'std.fs.read_file': 'require("fs").readFileSync({0}, "utf-8")',
+                'std.fs.write_file': 'require("fs").writeFileSync({0}, {1})',
+                'std.fs.exists': 'require("fs").existsSync({0})',
+                'std.fs.delete': 'require("fs").unlinkSync({0})',
+                'std.fs.list_dir': 'require("fs").readdirSync({0})',
+                'std.fs.mkdir': 'require("fs").mkdirSync({0}, { recursive: true })',
+                
+                'std.http.get': 'await fetch({0}).then(r => r.json())',
+                'std.http.post': 'await fetch({0}, { method: "POST", body: JSON.stringify({1}) }).then(r => r.json())',
+                'std.http.put': 'await fetch({0}, { method: "PUT", body: JSON.stringify({1}) }).then(r => r.json())',
+                'std.http.delete': 'await fetch({0}, { method: "DELETE" }).then(r => r.json())',
+                
+                'std.json.parse': 'JSON.parse({0})',
+                'std.json.stringify': 'JSON.stringify({0})',
+                
+                'std.crypto.hash_sha256': 'require("crypto").createHash("sha256").update({0}).digest("hex")',
+                'std.crypto.hash_md5': 'require("crypto").createHash("md5").update({0}).digest("hex")',
+                'std.crypto.random_bytes': 'require("crypto").randomBytes({0}).toString("hex")',
+                
+                'std.time.now': 'Date.now()',
+                'std.time.sleep': 'await new Promise(r => setTimeout(r, {0}))',
+                'std.time.format': 'new Date({0}).toLocaleString()'
+            },
+            
+            // ============================================================
+            // PYTHON IMPLEMENTATIONS
+            // ============================================================
+            python: {
+                'std.io.print': 'print({0})',
+                'std.io.println': 'print({0})',
+                'std.io.input': 'input({0})',
+                'std.io.error': 'print({0}, file=sys.stderr)',
+                
+                'std.fs.read_file': 'open({0}).read()',
+                'std.fs.write_file': 'open({0}, "w").write({1})',
+                'std.fs.exists': 'os.path.exists({0})',
+                'std.fs.delete': 'os.remove({0})',
+                'std.fs.list_dir': 'os.listdir({0})',
+                'std.fs.mkdir': 'os.makedirs({0}, exist_ok=True)',
+                
+                'std.http.get': 'requests.get({0}).json()',
+                'std.http.post': 'requests.post({0}, json={1}).json()',
+                'std.http.put': 'requests.put({0}, json={1}).json()',
+                'std.http.delete': 'requests.delete({0}).json()',
+                
+                'std.json.parse': 'json.loads({0})',
+                'std.json.stringify': 'json.dumps({0})',
+                
+                'std.crypto.hash_sha256': 'hashlib.sha256({0}.encode()).hexdigest()',
+                'std.crypto.hash_md5': 'hashlib.md5({0}.encode()).hexdigest()',
+                'std.crypto.random_bytes': 'secrets.token_hex({0})',
+                
+                'std.time.now': 'int(time.time() * 1000)',
+                'std.time.sleep': 'time.sleep({0} / 1000)',
+                'std.time.format': 'datetime.fromtimestamp({0} / 1000).strftime({1})'
+            },
+            
+            // ============================================================
+            // C NATIVE IMPLEMENTATIONS
+            // ============================================================
+            c_native: {
+                'std.io.print': 'printf("%s", {0})',
+                'std.io.println': 'printf("%s\\n", {0})',
+                'std.io.input': 'fgets(buffer, sizeof(buffer), stdin)',
+                'std.io.error': 'fprintf(stderr, "%s\\n", {0})',
+                
+                'std.fs.read_file': 'omni_read_file({0})',
+                'std.fs.write_file': 'omni_write_file({0}, {1})',
+                'std.fs.exists': 'access({0}, F_OK) == 0',
+                'std.fs.delete': 'remove({0})',
+                'std.fs.list_dir': 'omni_list_dir({0})',
+                'std.fs.mkdir': 'mkdir({0}, 0755)',
+                
+                'std.http.get': 'curl_get({0})',
+                'std.http.post': 'curl_post({0}, {1})',
+                'std.http.put': 'curl_put({0}, {1})',
+                'std.http.delete': 'curl_delete({0})',
+                
+                'std.json.parse': 'cJSON_Parse({0})',
+                'std.json.stringify': 'cJSON_Print({0})',
+                
+                'std.crypto.hash_sha256': 'openssl_sha256({0})',
+                'std.crypto.hash_md5': 'openssl_md5({0})',
+                'std.crypto.random_bytes': 'omni_random_bytes({0})',
+                
+                'std.time.now': '(long long)(time(NULL) * 1000)',
+                'std.time.sleep': 'usleep({0} * 1000)',
+                'std.time.format': 'strftime(buffer, sizeof(buffer), {1}, localtime(&{0}))'
+            },
+            
+            // ============================================================
+            // LUA IMPLEMENTATIONS
+            // ============================================================
+            lua: {
+                'std.io.print': 'print({0})',
+                'std.io.println': 'print({0})',
+                'std.io.input': 'io.read()',
+                'std.io.error': 'io.stderr:write({0})',
+                
+                'std.fs.read_file': 'io.open({0}, "r"):read("*a")',
+                'std.fs.write_file': 'local f = io.open({0}, "w"); f:write({1}); f:close()',
+                'std.fs.exists': 'io.open({0}, "r") ~= nil',
+                'std.fs.delete': 'os.remove({0})',
+                
+                'std.json.parse': 'cjson.decode({0})',
+                'std.json.stringify': 'cjson.encode({0})',
+                
+                'std.time.now': 'os.time() * 1000',
+                'std.time.sleep': 'os.execute("sleep " .. ({0} / 1000))'
+            }
+        };
+    }
+    
+    return registry;
+}
+
+fn ContractRegistry_set_target(self: ContractRegistry, target: string) {
+    native "js" {
+        self.active_target = target;
+        console.log("[contract] Active target: " + target);
+    }
+}
+
+fn ContractRegistry_resolve(self: ContractRegistry, contract_path: string, args: any) -> string {
+    let result = "";
+    
+    native "js" {
+        const impl = self.implementations[self.active_target];
+        if (!impl) {
+            result = "/* UNKNOWN TARGET: " + self.active_target + " */";
+            return;
+        }
+        
+        let template = impl[contract_path];
+        if (!template) {
+            // Fallback to JS implementation
+            template = self.implementations['js'][contract_path];
+            if (!template) {
+                result = "/* UNIMPLEMENTED: " + contract_path + " */";
+                return;
+            }
+        }
+        
+        // Replace placeholders with arguments
+        result = template;
+        for (let i = 0; i < args.length; i++) {
+            result = result.replace(new RegExp('\\{' + i + '\\}', 'g'), args[i]);
+        }
+    }
+    
+    return result;
+}
+
+fn ContractRegistry_list_interfaces(self: ContractRegistry) {
+    native "js" {
+        console.log("\n┌─────────────────────────────────────────────────────────────┐");
+        console.log("│              CANONICAL INTERFACES (Hollow Core)             │");
+        console.log("├─────────────────────────────────────────────────────────────┤");
+        
+        for (const [name, iface] of Object.entries(self.interfaces)) {
+            const methodCount = Object.keys(iface.methods).length;
+            console.log("│ " + name.padEnd(20) + " │ " + 
+                        iface.category.padEnd(10) + " │ " +
+                        (methodCount + " methods").padEnd(15) + " │");
+        }
+        
+        console.log("└─────────────────────────────────────────────────────────────┘");
+    }
+}
+
+fn ContractRegistry_verify_target(self: ContractRegistry, target: string) -> bool {
+    let is_complete = true;
+    let missing = 0;
+    
+    native "js" {
+        const impl = self.implementations[target];
+        if (!impl) {
+            CLI_error("Target '" + target + "' has no implementations");
+            is_complete = false;
+            return;
+        }
+        
+        // Check all interfaces
+        for (const [ifaceName, iface] of Object.entries(self.interfaces)) {
+            for (const methodName of Object.keys(iface.methods)) {
+                const contractPath = ifaceName + '.' + methodName;
+                if (!impl[contractPath]) {
+                    missing++;
+                }
+            }
+        }
+        
+        if (missing > 0) {
+            CLI_warning("Target '" + target + "' has " + missing + " missing implementations");
+            is_complete = false;
+        }
+    }
+    
+    return is_complete;
+}
+
+// ============================================================================
+// GLOBAL REGISTRY INSTANCE
+// ============================================================================
+
+let GLOBAL_CONTRACTS = ContractRegistry_new();
+
+// ============================================================================
+// EXPORTS
+// ============================================================================
+
+export CanonicalInterface;
+export ContractMethod;
+export ContractRegistry;
+export ContractRegistry_new;
+export ContractRegistry_set_target;
+export ContractRegistry_resolve;
+export ContractRegistry_list_interfaces;
+export ContractRegistry_verify_target;
+export GLOBAL_CONTRACTS;
