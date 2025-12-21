@@ -261,18 +261,13 @@ fn main() {
         }
     }
     
-    // Check for 'install' command (Package Manager)
+    // Check for 'install' command (Git-native package installation)
     if (command == "install") {
-        let package_path = "";
-        native "js" { package_path = process.argv[3] || ''; }
+        let package_spec = "";
+        native "js" { package_spec = process.argv[3] || ''; }
         
-        if (package_path == "") {
-            CLI_error("Usage: omni install <package_path>");
-            CLI_info("Install a .omni-pkg for targets, adapters, or patterns");
-            return 1;
-        }
-        
-        cmd_install(package_path);
+        // Empty spec = install from omni.lock
+        cmd_install(package_spec);
         return 0;
     }
     
@@ -292,7 +287,23 @@ fn main() {
     
     // Check for 'list' command
     if (command == "list") {
-        cmd_list_packages();
+        cmd_list();
+        return 0;
+    }
+    
+    // Check for 'update' command (Update packages)
+    if (command == "update") {
+        let package_name = "";
+        native "js" { package_name = process.argv[3] || ''; }
+        cmd_update(package_name);
+        return 0;
+    }
+    
+    // Check for 'search' command (Search static registry)
+    if (command == "search") {
+        let query = "";
+        native "js" { query = process.argv[3] || ''; }
+        cmd_search(query);
         return 0;
     }
     

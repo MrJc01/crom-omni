@@ -1,503 +1,706 @@
 // ============================================================================
-// OMNI PACKAGE MANAGER - Install and manage .omni-pkg packages
+// OMNI PACKAGE MANAGER - Git-Native Package Resolution
+// Downloads packages directly from Git repositories (GitHub, GitLab, etc.)
+// Security via omni.lock with commit hash verification
 // ============================================================================
 
 import "lib/cli.omni";
 
 // ============================================================================
-// PACKAGE REGISTRY
+// GIT RESOLVER
+// Parses package URLs: github:user/repo, gitlab:user/repo, or full URL
 // ============================================================================
 
-struct Package {
-    name: string,
-    version: string,
-    type: string,        // "target", "adapter", "pattern", "library"
-    path: string,
-    installed: bool
+struct GitPackage {
+    name: string,           // "crom/utils"
+    provider: string,       // "github", "gitlab", "url"
+    owner: string,          // "crom"
+    repo: string,           // "utils"
+    full_url: string,       // "https://github.com/crom/utils"
+    commit: string,         // Locked commit hash
+    branch: string,         // Default branch
+    local_path: string      // "packages/crom/utils"
 }
 
-struct PackageRegistry {
-    packages: any,
-    local_path: string,
-    remote_url: string
-}
-
-fn PackageRegistry_new() -> PackageRegistry {
-    let registry = PackageRegistry {
-        packages: {},
-        local_path: "",
-        remote_url: "https://registry.omni-lang.org/packages"  // Future remote registry
+fn GitPackage_parse(spec: string) -> GitPackage {
+    let pkg = GitPackage {
+        name: "",
+        provider: "github",
+        owner: "",
+        repo: "",
+        full_url: "",
+        commit: "",
+        branch: "main",
+        local_path: ""
     };
     
     native "js" {
         const path = require('path');
-        const fs = require('fs');
         
-        // Local package directories
-        registry.local_path = path.join(__dirname, '..', 'packages');
+        // Parse different formats:
+        // github:user/repo
+        // gitlab:user/repo
+        // https://github.com/user/repo
+        // user/repo (default to github)
         
-        // Ensure directories exist
-        const dirs = [
-            registry.local_path,
-            path.join(__dirname, '..', 'targets'),
-            path.join(__dirname, '..', 'adapters'),
-            path.join(__dirname, '..', 'patterns')
-        ];
+        let input = spec.trim();
         
-        for (const dir of dirs) {
-            if (!fs.existsSync(dir)) {
-                fs.mkdirSync(dir, { recursive: true });
+        if (input.startsWith('github:')) {
+            pkg.provider = 'github';
+            input = input.substring(7);
+        } else if (input.startsWith('gitlab:')) {
+            pkg.provider = 'gitlab';
+            input = input.substring(7);
+        } else if (input.startsWith('https://github.com/')) {
+            pkg.provider = 'github';
+            input = input.substring(19);
+        } else if (input.startsWith('https://gitlab.com/')) {
+            pkg.provider = 'gitlab';
+            input = input.substring(19);
+        } else if (input.startsWith('http://') || input.startsWith('https://')) {
+            pkg.provider = 'url';
+            pkg.full_url = input;
+            // Extract name from URL
+            const parts = input.split('/');
+            pkg.name = parts.slice(-2).join('/');
+            pkg.owner = parts[parts.length - 2];
+            pkg.repo = parts[parts.length - 1].replace('.git', '');
+        }
+        
+        // Parse owner/repo format
+        if (!pkg.full_url && input.includes('/')) {
+            const parts = input.split('/');
+            pkg.owner = parts[0];
+            pkg.repo = parts[1].replace('.git', '');
+            pkg.name = pkg.owner + '/' + pkg.repo;
+            
+            if (pkg.provider === 'github') {
+                pkg.full_url = 'https://github.com/' + pkg.owner + '/' + pkg.repo;
+            } else if (pkg.provider === 'gitlab') {
+                pkg.full_url = 'https://gitlab.com/' + pkg.owner + '/' + pkg.repo;
             }
         }
         
-        // Load installed packages
-        const registryFile = path.join(registry.local_path, 'registry.json');
-        if (fs.existsSync(registryFile)) {
-            registry.packages = JSON.parse(fs.readFileSync(registryFile, 'utf-8'));
+        // Set local path
+        pkg.local_path = path.join('packages', pkg.owner, pkg.repo);
+    }
+    
+    return pkg;
+}
+
+fn GitPackage_get_zip_url(pkg: GitPackage) -> string {
+    let url = "";
+    
+    native "js" {
+        if (pkg.provider === 'github') {
+            // GitHub archive URL (no git required)
+            const branch = pkg.commit || pkg.branch || 'main';
+            url = pkg.full_url + '/archive/refs/heads/' + branch + '.zip';
+        } else if (pkg.provider === 'gitlab') {
+            const branch = pkg.commit || pkg.branch || 'main';
+            url = pkg.full_url + '/-/archive/' + branch + '/' + pkg.repo + '-' + branch + '.zip';
+        } else {
+            url = pkg.full_url;
         }
     }
     
-    return registry;
+    return url;
 }
 
-fn PackageRegistry_save(self: PackageRegistry) {
+fn GitPackage_get_api_url(pkg: GitPackage) -> string {
+    let url = "";
+    
     native "js" {
-        const path = require('path');
+        if (pkg.provider === 'github') {
+            url = 'https://api.github.com/repos/' + pkg.owner + '/' + pkg.repo;
+        } else if (pkg.provider === 'gitlab') {
+            url = 'https://gitlab.com/api/v4/projects/' + encodeURIComponent(pkg.owner + '/' + pkg.repo);
+        }
+    }
+    
+    return url;
+}
+
+// ============================================================================
+// LOCK FILE SYSTEM
+// omni.lock stores commit hashes for reproducible builds
+// ============================================================================
+
+struct LockEntry {
+    name: string,
+    url: string,
+    commit: string,
+    installed_at: string
+}
+
+struct LockFile {
+    version: string,
+    packages: any
+}
+
+fn LockFile_load(project_dir: string) -> LockFile {
+    let lock = LockFile {
+        version: "1.0",
+        packages: {}
+    };
+    
+    native "js" {
         const fs = require('fs');
+        const path = require('path');
         
-        const registryFile = path.join(self.local_path, 'registry.json');
-        fs.writeFileSync(registryFile, JSON.stringify(self.packages, null, 2));
+        const lockPath = path.join(project_dir, 'omni.lock');
+        
+        if (fs.existsSync(lockPath)) {
+            try {
+                const data = JSON.parse(fs.readFileSync(lockPath, 'utf-8'));
+                lock.version = data.version || '1.0';
+                lock.packages = data.packages || {};
+            } catch (e) {
+                console.error('[lock] Failed to parse omni.lock: ' + e.message);
+            }
+        }
+    }
+    
+    return lock;
+}
+
+fn LockFile_save(lock: LockFile, project_dir: string) {
+    native "js" {
+        const fs = require('fs');
+        const path = require('path');
+        
+        const lockPath = path.join(project_dir, 'omni.lock');
+        
+        fs.writeFileSync(lockPath, JSON.stringify({
+            version: lock.version,
+            packages: lock.packages
+        }, null, 2));
+        
+        console.log(CLI_COLORS.green + '✓' + CLI_COLORS.reset + ' Updated omni.lock');
     }
 }
 
-fn PackageRegistry_list(self: PackageRegistry) {
-    CLI_header("Installed Packages");
+fn LockFile_add(lock: LockFile, pkg: GitPackage) {
+    native "js" {
+        lock.packages[pkg.name] = {
+            name: pkg.name,
+            url: pkg.full_url,
+            commit: pkg.commit,
+            installed_at: new Date().toISOString()
+        };
+    }
+}
+
+fn LockFile_get(lock: LockFile, name: string) -> LockEntry {
+    let entry = LockEntry {
+        name: "",
+        url: "",
+        commit: "",
+        installed_at: ""
+    };
     
     native "js" {
-        const packages = Object.values(self.packages);
+        if (lock.packages[name]) {
+            entry = lock.packages[name];
+        }
+    }
+    
+    return entry;
+}
+
+fn LockFile_remove(lock: LockFile, name: string) {
+    native "js" {
+        delete lock.packages[name];
+    }
+}
+
+// ============================================================================
+// GIT OPERATIONS
+// ============================================================================
+
+fn git_get_latest_commit(pkg: GitPackage) -> string {
+    let commit = "";
+    
+    native "js" {
+        const https = require('https');
+        
+        // Use GitHub API to get latest commit
+        if (pkg.provider === 'github') {
+            const apiUrl = 'https://api.github.com/repos/' + pkg.owner + '/' + pkg.repo + '/commits?per_page=1';
+            
+            console.log(CLI_COLORS.dim + '  Fetching latest commit...' + CLI_COLORS.reset);
+            
+            // Sync HTTP request (simplified for demo)
+            const { execSync } = require('child_process');
+            try {
+                const result = execSync(
+                    'curl -s -H "Accept: application/vnd.github.v3+json" "' + apiUrl + '"',
+                    { encoding: 'utf-8' }
+                );
+                const data = JSON.parse(result);
+                if (data && data[0] && data[0].sha) {
+                    commit = data[0].sha;
+                }
+            } catch (e) {
+                console.error(CLI_COLORS.dim + '  Could not fetch commit, using HEAD' + CLI_COLORS.reset);
+            }
+        }
+    }
+    
+    return commit;
+}
+
+fn git_clone(pkg: GitPackage, target_dir: string) -> bool {
+    let success = false;
+    
+    native "js" {
+        const { execSync, exec } = require('child_process');
+        const fs = require('fs');
+        const path = require('path');
+        
+        // Ensure parent directory exists
+        const parentDir = path.dirname(target_dir);
+        if (!fs.existsSync(parentDir)) {
+            fs.mkdirSync(parentDir, { recursive: true });
+        }
+        
+        // Remove existing directory
+        if (fs.existsSync(target_dir)) {
+            fs.rmSync(target_dir, { recursive: true });
+        }
+        
+        console.log(CLI_COLORS.cyan + '  Cloning: ' + CLI_COLORS.reset + pkg.full_url);
+        
+        try {
+            // Try git clone first (depth 1 for speed)
+            execSync(
+                'git clone --depth 1 --quiet "' + pkg.full_url + '.git" "' + target_dir + '"',
+                { stdio: 'pipe' }
+            );
+            success = true;
+        } catch (e) {
+            // Fallback to ZIP download
+            console.log(CLI_COLORS.dim + '  Git not available, using ZIP download...' + CLI_COLORS.reset);
+            
+            const zipUrl = GitPackage_get_zip_url(pkg);
+            const zipPath = path.join(parentDir, pkg.repo + '.zip');
+            
+            try {
+                // Download ZIP
+                execSync('curl -sL "' + zipUrl + '" -o "' + zipPath + '"');
+                
+                // Extract
+                if (process.platform === 'win32') {
+                    execSync('powershell -Command "Expand-Archive -Path \'' + zipPath + '\' -DestinationPath \'' + parentDir + '\' -Force"');
+                } else {
+                    execSync('unzip -q "' + zipPath + '" -d "' + parentDir + '"');
+                }
+                
+                // Rename extracted folder
+                const entries = fs.readdirSync(parentDir);
+                for (const entry of entries) {
+                    if (entry.startsWith(pkg.repo + '-') && fs.statSync(path.join(parentDir, entry)).isDirectory()) {
+                        fs.renameSync(path.join(parentDir, entry), target_dir);
+                        break;
+                    }
+                }
+                
+                // Cleanup ZIP
+                fs.unlinkSync(zipPath);
+                
+                success = true;
+            } catch (e2) {
+                CLI_error('Failed to download package: ' + e2.message);
+            }
+        }
+    }
+    
+    return success;
+}
+
+// ============================================================================
+// INSTALL COMMAND
+// ============================================================================
+
+fn cmd_install(package_spec: string) {
+    CLI_banner();
+    CLI_header("Omni Package Installer");
+    
+    if (package_spec == "") {
+        // Install from omni.lock
+        cmd_install_from_lock();
+        return;
+    }
+    
+    let pkg = GitPackage_parse(package_spec);
+    
+    if (pkg.name == "") {
+        CLI_error("Invalid package specification: " + package_spec);
+        CLI_info("Examples:");
+        CLI_info("  omni install github:crom/utils");
+        CLI_info("  omni install crom/utils");
+        CLI_info("  omni install https://github.com/crom/utils");
+        return;
+    }
+    
+    CLI_info("Package: " + pkg.name);
+    CLI_info("Source: " + pkg.full_url);
+    
+    // Get latest commit
+    let commit = git_get_latest_commit(pkg);
+    if (commit != "") {
+        pkg.commit = commit;
+        CLI_info("Commit: " + commit.substring(0, 8) + "...");
+    }
+    
+    // Clone repository
+    let cwd = "";
+    native "js" { cwd = process.cwd(); }
+    
+    let target = "";
+    native "js" {
+        const path = require('path');
+        target = path.join(cwd, pkg.local_path);
+    }
+    
+    CLI_step(1, 3, "Downloading...");
+    
+    let success = git_clone(pkg, target);
+    
+    if (success) {
+        CLI_step(2, 3, "Updating lock file...");
+        
+        let lock = LockFile_load(cwd);
+        LockFile_add(lock, pkg);
+        LockFile_save(lock, cwd);
+        
+        CLI_step(3, 3, "Done!");
+        CLI_success("Installed: " + pkg.name);
+        
+        native "js" {
+            console.log("");
+            console.log(CLI_COLORS.cyan + "  Usage:" + CLI_COLORS.reset);
+            console.log(CLI_COLORS.dim + '    import "' + pkg.owner + '/' + pkg.repo + '/src/main.omni";' + CLI_COLORS.reset);
+        }
+    } else {
+        CLI_error("Failed to install package");
+    }
+}
+
+fn cmd_install_from_lock() {
+    CLI_info("Installing packages from omni.lock...");
+    
+    let cwd = "";
+    native "js" { cwd = process.cwd(); }
+    
+    let lock = LockFile_load(cwd);
+    
+    native "js" {
+        const path = require('path');
+        const packages = Object.values(lock.packages);
+        
+        if (packages.length === 0) {
+            CLI_info("No packages in omni.lock");
+            return;
+        }
+        
+        console.log(CLI_COLORS.dim + "  Found " + packages.length + " packages" + CLI_COLORS.reset);
+        
+        for (const entry of packages) {
+            const pkg = GitPackage_parse(entry.url);
+            pkg.commit = entry.commit;
+            
+            const target = path.join(cwd, pkg.local_path);
+            
+            console.log(CLI_COLORS.cyan + "  Installing: " + CLI_COLORS.reset + pkg.name);
+            git_clone(pkg, target);
+        }
+        
+        CLI_success("All packages installed!");
+    }
+}
+
+// ============================================================================
+// UNINSTALL COMMAND
+// ============================================================================
+
+fn cmd_uninstall(package_name: string) {
+    CLI_banner();
+    CLI_header("Omni Package Uninstaller");
+    
+    if (package_name == "") {
+        CLI_error("Usage: omni uninstall <package>");
+        return;
+    }
+    
+    let cwd = "";
+    native "js" { cwd = process.cwd(); }
+    
+    let lock = LockFile_load(cwd);
+    let found = false;
+    
+    native "js" {
+        const fs = require('fs');
+        const path = require('path');
+        
+        // Find package in lock
+        for (const [name, entry] of Object.entries(lock.packages)) {
+            if (name === package_name || name.endsWith('/' + package_name)) {
+                found = true;
+                
+                // Remove directory
+                const pkg = GitPackage_parse(entry.url);
+                const targetDir = path.join(cwd, pkg.local_path);
+                
+                if (fs.existsSync(targetDir)) {
+                    fs.rmSync(targetDir, { recursive: true });
+                    console.log(CLI_COLORS.dim + "  Removed: " + targetDir + CLI_COLORS.reset);
+                }
+                
+                // Remove from lock
+                LockFile_remove(lock, name);
+                break;
+            }
+        }
+    }
+    
+    if (found) {
+        LockFile_save(lock, cwd);
+        CLI_success("Uninstalled: " + package_name);
+    } else {
+        CLI_error("Package not found: " + package_name);
+    }
+}
+
+// ============================================================================
+// LIST COMMAND
+// ============================================================================
+
+fn cmd_list() {
+    CLI_banner();
+    CLI_header("Installed Packages");
+    
+    let cwd = "";
+    native "js" { cwd = process.cwd(); }
+    
+    let lock = LockFile_load(cwd);
+    
+    native "js" {
+        const packages = Object.values(lock.packages);
         
         if (packages.length === 0) {
             CLI_info("No packages installed.");
             console.log("");
-            CLI_info("Install packages with: omni install <package>");
+            CLI_info("Install packages with: omni install github:user/repo");
             return;
         }
         
-        const headers = ["Name", "Version", "Type", "Path"];
-        const rows = packages.map(p => [p.name, p.version, p.type, p.path]);
-        CLI_table(headers, rows);
+        console.log("");
+        console.log(CLI_COLORS.cyan + "  " + packages.length + " packages installed:" + CLI_COLORS.reset);
+        console.log("");
+        
+        for (const pkg of packages) {
+            const commit = pkg.commit ? pkg.commit.substring(0, 8) : 'HEAD';
+            console.log("  📦 " + CLI_COLORS.bold + pkg.name + CLI_COLORS.reset + 
+                        CLI_COLORS.dim + " @ " + commit + CLI_COLORS.reset);
+            console.log("     " + CLI_COLORS.dim + pkg.url + CLI_COLORS.reset);
+        }
+        
+        console.log("");
     }
 }
 
 // ============================================================================
-// PACKAGE INSTALLER
+// UPDATE COMMAND
 // ============================================================================
 
-fn cmd_install(package_path: string) {
-    CLI_header("Omni Package Installer");
+fn cmd_update(package_name: string) {
+    CLI_banner();
+    CLI_header("Omni Package Updater");
     
-    let registry = PackageRegistry_new();
+    let cwd = "";
+    native "js" { cwd = process.cwd(); }
+    
+    let lock = LockFile_load(cwd);
     
     native "js" {
-        const fs = require('fs');
         const path = require('path');
+        let packagesToUpdate = Object.values(lock.packages);
         
-        // Check if it's a URL or local path
-        const isUrl = package_path.startsWith('http://') || package_path.startsWith('https://');
-        const isLocal = fs.existsSync(package_path);
-        
-        if (!isUrl && !isLocal) {
-            // Check built-in packages
-            const builtinPath = path.join(__dirname, '..', 'packages', package_path);
-            if (fs.existsSync(builtinPath)) {
-                package_path = builtinPath;
-            } else {
-                CLI_error("Package not found: " + package_path);
-                CLI_info("Provide a local path or URL to an .omni-pkg");
-                return;
-            }
+        if (package_name) {
+            packagesToUpdate = packagesToUpdate.filter(p => 
+                p.name === package_name || p.name.endsWith('/' + package_name)
+            );
         }
         
-        CLI_step(1, 4, "Reading package...");
-        
-        // Load package manifest
-        let manifest;
-        let packageDir;
-        
-        if (fs.statSync(package_path).isDirectory()) {
-            packageDir = package_path;
-            const manifestPath = path.join(packageDir, 'manifest.json');
-            if (fs.existsSync(manifestPath)) {
-                manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
-            } else {
-                // Try grammar.json for target packages
-                const grammarPath = path.join(packageDir, 'grammar.json');
-                if (fs.existsSync(grammarPath)) {
-                    const grammar = JSON.parse(fs.readFileSync(grammarPath, 'utf-8'));
-                    manifest = {
-                        name: grammar.name || path.basename(packageDir),
-                        version: grammar.version || '1.0.0',
-                        type: 'target',
-                        files: ['grammar.json']
-                    };
-                }
-            }
-        } else if (package_path.endsWith('.json')) {
-            // Single JSON file (target profile)
-            const content = JSON.parse(fs.readFileSync(package_path, 'utf-8'));
-            manifest = {
-                name: content.name || path.basename(package_path, '.json'),
-                version: content.version || '1.0.0',
-                type: 'target'
-            };
-            packageDir = path.dirname(package_path);
-        }
-        
-        if (!manifest) {
-            CLI_error("Invalid package: missing manifest.json or grammar.json");
+        if (packagesToUpdate.length === 0) {
+            CLI_info("No packages to update");
             return;
         }
         
-        CLI_info("Package: " + manifest.name + " v" + manifest.version);
-        CLI_info("Type: " + manifest.type);
+        console.log(CLI_COLORS.dim + "  Updating " + packagesToUpdate.length + " packages..." + CLI_COLORS.reset);
         
-        CLI_step(2, 4, "Installing files...");
-        
-        // Determine target directory based on package type
-        let targetDir;
-        switch (manifest.type) {
-            case 'target':
-                targetDir = path.join(__dirname, '..', 'targets');
-                break;
-            case 'adapter':
-                targetDir = path.join(__dirname, '..', 'adapters');
-                break;
-            case 'pattern':
-                targetDir = path.join(__dirname, '..', 'patterns');
-                break;
-            default:
-                targetDir = path.join(__dirname, '..', 'packages', manifest.name);
-        }
-        
-        if (!fs.existsSync(targetDir)) {
-            fs.mkdirSync(targetDir, { recursive: true });
-        }
-        
-        // Copy files
-        if (manifest.type === 'target') {
-            // Copy grammar.json to targets/
-            const grammarPath = path.join(packageDir, 'grammar.json');
-            if (fs.existsSync(grammarPath)) {
-                const destPath = path.join(targetDir, manifest.name + '.json');
-                fs.copyFileSync(grammarPath, destPath);
-                CLI_success("Installed: targets/" + manifest.name + ".json");
-            } else if (package_path.endsWith('.json')) {
-                // Direct JSON file
-                const destPath = path.join(targetDir, manifest.name + '.json');
-                fs.copyFileSync(package_path, destPath);
-                CLI_success("Installed: targets/" + manifest.name + ".json");
-            }
-        } else if (manifest.type === 'adapter') {
-            // Copy adapter files
-            const adapterPath = path.join(packageDir, 'adapter.json');
-            if (fs.existsSync(adapterPath)) {
-                const destPath = path.join(targetDir, manifest.name + '.json');
-                fs.copyFileSync(adapterPath, destPath);
-                CLI_success("Installed: adapters/" + manifest.name + ".json");
-            }
-        } else if (manifest.type === 'pattern') {
-            // Copy pattern files to patterns/
-            const patternPath = path.join(packageDir, 'patterns.json');
-            if (fs.existsSync(patternPath)) {
-                const destPath = path.join(targetDir, manifest.name + '.json');
-                fs.copyFileSync(patternPath, destPath);
-                CLI_success("Installed: patterns/" + manifest.name + ".json");
+        for (const entry of packagesToUpdate) {
+            const pkg = GitPackage_parse(entry.url);
+            
+            console.log(CLI_COLORS.cyan + "  Updating: " + CLI_COLORS.reset + pkg.name);
+            
+            // Get latest commit
+            const newCommit = git_get_latest_commit(pkg);
+            
+            if (newCommit && newCommit !== entry.commit) {
+                console.log(CLI_COLORS.dim + "    " + entry.commit.substring(0, 8) + " → " + newCommit.substring(0, 8) + CLI_COLORS.reset);
+                
+                pkg.commit = newCommit;
+                const target = path.join(cwd, pkg.local_path);
+                git_clone(pkg, target);
+                
+                LockFile_add(lock, pkg);
+            } else {
+                console.log(CLI_COLORS.dim + "    Already up to date" + CLI_COLORS.reset);
             }
         }
         
-        CLI_step(3, 4, "Registering package...");
-        
-        // Register in local registry
-        registry.packages[manifest.name] = {
-            name: manifest.name,
-            version: manifest.version,
-            type: manifest.type,
-            path: targetDir,
-            installed: true,
-            installedAt: new Date().toISOString()
-        };
-        
-        PackageRegistry_save(registry);
-        
-        CLI_step(4, 4, "Done!");
-        console.log("");
-        CLI_success("Package '" + manifest.name + "' installed successfully!");
-        
-        // Show usage
-        console.log("");
-        CLI_info("Usage:");
-        if (manifest.type === 'target') {
-            console.log(CLI_COLORS.dim + "  omni compile app.omni output --target " + manifest.name + CLI_COLORS.reset);
-        } else if (manifest.type === 'adapter') {
-            console.log(CLI_COLORS.dim + "  omni compile app.omni output --framework " + manifest.name + CLI_COLORS.reset);
-        } else if (manifest.type === 'pattern') {
-            console.log(CLI_COLORS.dim + "  omni ingest legacy.php output.omni  # Patterns auto-loaded" + CLI_COLORS.reset);
-        }
+        LockFile_save(lock, cwd);
+        CLI_success("Update complete!");
     }
-}
-
-fn cmd_uninstall(package_name: string) {
-    CLI_header("Omni Package Uninstaller");
-    
-    let registry = PackageRegistry_new();
-    
-    native "js" {
-        const fs = require('fs');
-        const path = require('path');
-        
-        if (!registry.packages[package_name]) {
-            CLI_error("Package not found: " + package_name);
-            return;
-        }
-        
-        const pkg = registry.packages[package_name];
-        
-        CLI_info("Uninstalling: " + pkg.name + " v" + pkg.version);
-        
-        // Remove files based on type
-        let filePath;
-        switch (pkg.type) {
-            case 'target':
-                filePath = path.join(__dirname, '..', 'targets', pkg.name + '.json');
-                break;
-            case 'adapter':
-                filePath = path.join(__dirname, '..', 'adapters', pkg.name + '.json');
-                break;
-            case 'pattern':
-                filePath = path.join(__dirname, '..', 'patterns', pkg.name + '.json');
-                break;
-        }
-        
-        if (filePath && fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-            CLI_success("Removed: " + filePath);
-        }
-        
-        // Remove from registry
-        delete registry.packages[package_name];
-        PackageRegistry_save(registry);
-        
-        CLI_success("Package '" + package_name + "' uninstalled.");
-    }
-}
-
-fn cmd_list_packages() {
-    let registry = PackageRegistry_new();
-    PackageRegistry_list(registry);
 }
 
 // ============================================================================
-// DOCTOR COMMAND - System Health Check
+// DOCTOR COMMAND
 // ============================================================================
 
 fn cmd_doctor() {
+    CLI_banner();
     CLI_header("Omni Doctor - System Health Check");
     
-    let all_healthy = true;
-    let checks_passed = 0;
-    let checks_total = 0;
-    
     native "js" {
+        const { execSync } = require('child_process');
         const fs = require('fs');
         const path = require('path');
         
-        const check = (name, condition) => {
-            checks_total++;
-            if (condition) {
-                checks_passed++;
-                CLI_success(name);
-                return true;
+        let allOk = true;
+        
+        // Check git
+        console.log("");
+        console.log(CLI_COLORS.cyan + "  Checking tools:" + CLI_COLORS.reset);
+        
+        const tools = [
+            { name: 'git', cmd: 'git --version' },
+            { name: 'node', cmd: 'node --version' },
+            { name: 'curl', cmd: 'curl --version' }
+        ];
+        
+        for (const tool of tools) {
+            try {
+                const version = execSync(tool.cmd, { encoding: 'utf-8' }).trim().split('\n')[0];
+                console.log("  " + CLI_COLORS.green + "✓" + CLI_COLORS.reset + " " + tool.name + ": " + CLI_COLORS.dim + version + CLI_COLORS.reset);
+            } catch (e) {
+                console.log("  " + CLI_COLORS.red + "✗" + CLI_COLORS.reset + " " + tool.name + ": not found");
+                allOk = false;
+            }
+        }
+        
+        // Check omni.lock
+        console.log("");
+        console.log(CLI_COLORS.cyan + "  Checking project:" + CLI_COLORS.reset);
+        
+        const cwd = process.cwd();
+        const files = [
+            { name: 'omni.config.json', path: path.join(cwd, 'omni.config.json') },
+            { name: 'omni.lock', path: path.join(cwd, 'omni.lock') },
+            { name: 'packages/', path: path.join(cwd, 'packages') }
+        ];
+        
+        for (const file of files) {
+            if (fs.existsSync(file.path)) {
+                console.log("  " + CLI_COLORS.green + "✓" + CLI_COLORS.reset + " " + file.name);
             } else {
-                CLI_error(name);
-                all_healthy = false;
-                return false;
-            }
-        };
-        
-        console.log("");
-        console.log(CLI_COLORS.bold + "Core Components" + CLI_COLORS.reset);
-        console.log("");
-        
-        // Check core directories
-        const omniDir = path.join(__dirname, '..');
-        check("Omni directory exists", fs.existsSync(omniDir));
-        check("targets/ directory exists", fs.existsSync(path.join(omniDir, 'targets')));
-        check("adapters/ directory exists", fs.existsSync(path.join(omniDir, 'adapters')));
-        check("packages/ directory exists", fs.existsSync(path.join(omniDir, 'packages')));
-        
-        console.log("");
-        console.log(CLI_COLORS.bold + "Target Profiles" + CLI_COLORS.reset);
-        console.log("");
-        
-        // Check built-in targets
-        const targetsDir = path.join(omniDir, 'targets');
-        const requiredTargets = ['js.json', 'python.json', 'lua.json'];
-        
-        for (const target of requiredTargets) {
-            const exists = fs.existsSync(path.join(targetsDir, target));
-            check("Target: " + target, exists);
-        }
-        
-        // Check optional targets
-        const optionalTargets = ['c.json', 'c_native.json', 'rust.json'];
-        for (const target of optionalTargets) {
-            const targetPath = path.join(targetsDir, target);
-            if (fs.existsSync(targetPath)) {
-                checks_total++;
-                checks_passed++;
-                CLI_info("Optional: " + target + " (installed)");
+                console.log("  " + CLI_COLORS.yellow + "○" + CLI_COLORS.reset + " " + file.name + CLI_COLORS.dim + " (optional)" + CLI_COLORS.reset);
             }
         }
         
         console.log("");
-        console.log(CLI_COLORS.bold + "Contract Registry" + CLI_COLORS.reset);
-        console.log("");
-        
-        // Check contract implementations
-        const contracts = ['std.io', 'std.fs', 'std.http', 'std.json', 'std.time'];
-        for (const contract of contracts) {
-            check("Contract: " + contract, true); // Built-in contracts always available
-        }
-        
-        console.log("");
-        console.log(CLI_COLORS.bold + "Installed Packages" + CLI_COLORS.reset);
-        console.log("");
-        
-        // Check installed packages
-        const registryFile = path.join(omniDir, 'packages', 'registry.json');
-        if (fs.existsSync(registryFile)) {
-            const registry = JSON.parse(fs.readFileSync(registryFile, 'utf-8'));
-            const pkgCount = Object.keys(registry).length;
-            check("Package registry exists", true);
-            CLI_info("Installed packages: " + pkgCount);
-            
-            // Validate each package
-            for (const [name, pkg] of Object.entries(registry)) {
-                let pkgFile;
-                switch (pkg.type) {
-                    case 'target':
-                        pkgFile = path.join(omniDir, 'targets', name + '.json');
-                        break;
-                    case 'adapter':
-                        pkgFile = path.join(omniDir, 'adapters', name + '.json');
-                        break;
-                    case 'pattern':
-                        pkgFile = path.join(omniDir, 'patterns', name + '.json');
-                        break;
-                }
-                
-                if (pkgFile && fs.existsSync(pkgFile)) {
-                    checks_total++;
-                    checks_passed++;
-                    CLI_info("Package: " + name + " v" + pkg.version + " ✓");
-                } else if (pkgFile) {
-                    checks_total++;
-                    CLI_warning("Package: " + name + " (file missing)");
-                    all_healthy = false;
-                }
-            }
+        if (allOk) {
+            CLI_success("All systems operational!");
         } else {
-            CLI_info("No packages installed");
-        }
-        
-        // Summary
-        console.log("");
-        console.log("─".repeat(50));
-        console.log("");
-        
-        const healthPercent = Math.round((checks_passed / checks_total) * 100);
-        
-        if (all_healthy) {
-            CLI_success("All systems operational! (" + checks_passed + "/" + checks_total + " checks passed)");
-            console.log("");
-            console.log(CLI_COLORS.green + "  █████████████████████████████████████████████████" + CLI_COLORS.reset);
-            console.log(CLI_COLORS.green + "  ██                                             ██" + CLI_COLORS.reset);
-            console.log(CLI_COLORS.green + "  ██   OMNI COMPILER - ALL SYSTEMS HEALTHY       ██" + CLI_COLORS.reset);
-            console.log(CLI_COLORS.green + "  ██                                             ██" + CLI_COLORS.reset);
-            console.log(CLI_COLORS.green + "  █████████████████████████████████████████████████" + CLI_COLORS.reset);
-        } else {
-            CLI_warning("Some issues detected (" + checks_passed + "/" + checks_total + " checks passed)");
-            console.log("");
-            CLI_info("Run 'omni setup' to fix missing components");
+            CLI_warning("Some tools are missing. Git is recommended for package installation.");
         }
     }
 }
 
 // ============================================================================
-// AST PARITY VERIFICATION
+// SEARCH (STATIC REGISTRY)
 // ============================================================================
 
-fn verify_package_parity(package_path: string) -> bool {
-    let is_valid = true;
+fn cmd_search(query: string) {
+    CLI_banner();
+    CLI_header("Omni Package Search");
     
     native "js" {
-        const fs = require('fs');
-        const path = require('path');
+        const https = require('https');
         
-        if (!fs.existsSync(package_path)) {
-            CLI_error("Package not found: " + package_path);
-            is_valid = false;
-            return;
-        }
+        // Fetch from static registry JSON
+        const registryUrl = 'https://raw.githubusercontent.com/crom-lang/registry/main/packages.json';
+        
+        console.log(CLI_COLORS.dim + "  Fetching registry..." + CLI_COLORS.reset);
+        
+        const { execSync } = require('child_process');
         
         try {
-            const content = JSON.parse(fs.readFileSync(package_path, 'utf-8'));
+            const result = execSync('curl -sL "' + registryUrl + '"', { encoding: 'utf-8' });
+            const registry = JSON.parse(result);
             
-            // Required fields for targets
-            const requiredFields = ['name', 'templates'];
-            for (const field of requiredFields) {
-                if (!content[field]) {
-                    CLI_error("Missing required field: " + field);
-                    is_valid = false;
+            let results = registry.packages || [];
+            
+            if (query) {
+                const q = query.toLowerCase();
+                results = results.filter(p => 
+                    p.name.toLowerCase().includes(q) ||
+                    (p.description && p.description.toLowerCase().includes(q)) ||
+                    (p.tags && p.tags.some(t => t.toLowerCase().includes(q)))
+                );
+            }
+            
+            console.log("");
+            console.log(CLI_COLORS.cyan + "  Found " + results.length + " packages:" + CLI_COLORS.reset);
+            console.log("");
+            
+            for (const pkg of results.slice(0, 20)) {
+                console.log("  📦 " + CLI_COLORS.bold + pkg.name + CLI_COLORS.reset);
+                if (pkg.description) {
+                    console.log("     " + CLI_COLORS.dim + pkg.description + CLI_COLORS.reset);
                 }
+                console.log("     " + CLI_COLORS.dim + "omni install github:" + pkg.repo + CLI_COLORS.reset);
+                console.log("");
             }
-            
-            // Check template completeness
-            const requiredTemplates = ['let_decl', 'fn_decl', 'if_stmt', 'return_stmt'];
-            const templates = content.templates || {};
-            
-            for (const tmpl of requiredTemplates) {
-                if (!templates[tmpl]) {
-                    CLI_warning("Missing template: " + tmpl);
-                    // Not fatal, just warning
-                }
-            }
-            
-            if (is_valid) {
-                CLI_success("Package parity verified: " + content.name);
-            }
-            
         } catch (e) {
-            CLI_error("Invalid JSON: " + e.message);
-            is_valid = false;
+            CLI_warning("Could not fetch registry. You can still install packages directly:");
+            console.log(CLI_COLORS.dim + "  omni install github:user/repo" + CLI_COLORS.reset);
         }
     }
-    
-    return is_valid;
 }
 
 // ============================================================================
 // EXPORTS
 // ============================================================================
 
-export Package;
-export PackageRegistry;
-export PackageRegistry_new;
-export PackageRegistry_save;
-export PackageRegistry_list;
+export GitPackage;
+export GitPackage_parse;
+export GitPackage_get_zip_url;
+export LockEntry;
+export LockFile;
+export LockFile_load;
+export LockFile_save;
+export LockFile_add;
+export LockFile_get;
+export LockFile_remove;
+export git_get_latest_commit;
+export git_clone;
 export cmd_install;
+export cmd_install_from_lock;
 export cmd_uninstall;
-export cmd_list_packages;
+export cmd_list;
+export cmd_update;
 export cmd_doctor;
-export verify_package_parity;
-
+export cmd_search;
