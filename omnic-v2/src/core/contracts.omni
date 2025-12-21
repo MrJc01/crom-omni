@@ -159,7 +159,30 @@ fn ContractRegistry_new() -> ContractRegistry {
                     file_dialog: { signature: 'fn file_dialog(title: string, filter: string) -> string', params: ['title', 'filter'], return_type: 'string' },
                     folder_dialog: { signature: 'fn folder_dialog(title: string) -> string', params: ['title'], return_type: 'string' },
                     message_box: { signature: 'fn message_box(title: string, message: string, type: string)', params: ['title', 'message', 'type'], return_type: 'void' },
-                    notification: { signature: 'fn notification(title: string, message: string)', params: ['title', 'message'], return_type: 'void' }
+                    notification: { signature: 'fn notification(title: string, message: string)', params: ['title', 'message'], return_type: 'void' },
+                    canvas_create: { signature: 'fn canvas_create(width: i64, height: i64) -> Canvas', params: ['width', 'height'], return_type: 'Canvas' },
+                    canvas_draw_rect: { signature: 'fn canvas_draw_rect(canvas: Canvas, x: f64, y: f64, w: f64, h: f64, color: string)', params: ['canvas', 'x', 'y', 'w', 'h', 'color'], return_type: 'void' },
+                    canvas_draw_text: { signature: 'fn canvas_draw_text(canvas: Canvas, text: string, x: f64, y: f64, size: i64)', params: ['canvas', 'text', 'x', 'y', 'size'], return_type: 'void' }
+                }
+            },
+            
+            // ============================================================
+            // std.3d - 3D Graphics operations
+            // ============================================================
+            'std.3d': {
+                name: 'std.3d',
+                category: '3d',
+                version: '1.0.0',
+                methods: {
+                    create_scene: { signature: 'fn create_scene(width: i64, height: i64) -> Scene', params: ['width', 'height'], return_type: 'Scene' },
+                    add_cube: { signature: 'fn add_cube(scene: Scene, x: f64, y: f64, z: f64, size: f64, color: string) -> Object3D', params: ['scene', 'x', 'y', 'z', 'size', 'color'], return_type: 'Object3D' },
+                    add_sphere: { signature: 'fn add_sphere(scene: Scene, x: f64, y: f64, z: f64, radius: f64, color: string) -> Object3D', params: ['scene', 'x', 'y', 'z', 'radius', 'color'], return_type: 'Object3D' },
+                    add_plane: { signature: 'fn add_plane(scene: Scene, width: f64, height: f64, color: string) -> Object3D', params: ['scene', 'width', 'height', 'color'], return_type: 'Object3D' },
+                    add_light: { signature: 'fn add_light(scene: Scene, type: string, intensity: f64, color: string) -> Light', params: ['scene', 'type', 'intensity', 'color'], return_type: 'Light' },
+                    set_camera: { signature: 'fn set_camera(scene: Scene, x: f64, y: f64, z: f64)', params: ['scene', 'x', 'y', 'z'], return_type: 'void' },
+                    rotate: { signature: 'fn rotate(obj: Object3D, rx: f64, ry: f64, rz: f64)', params: ['obj', 'rx', 'ry', 'rz'], return_type: 'void' },
+                    animate: { signature: 'fn animate(scene: Scene, flow: fn())', params: ['scene', 'flow'], return_type: 'void' },
+                    render: { signature: 'fn render(scene: Scene)', params: ['scene'], return_type: 'void' }
                 }
             }
         };
@@ -203,7 +226,20 @@ fn ContractRegistry_new() -> ContractRegistry {
                 'std.gui.file_dialog': '(console.log("[gui] File dialog not supported in Node.js"), "")',
                 'std.gui.folder_dialog': '(console.log("[gui] Folder dialog not supported in Node.js"), "")',
                 'std.gui.message_box': 'console.log("[" + {0} + "] " + {1})',
-                'std.gui.notification': 'console.log("🔔 " + {0} + ": " + {1})'
+                'std.gui.notification': 'console.log("🔔 " + {0} + ": " + {1})',
+                'std.gui.canvas_create': 'document.createElement("canvas")',
+                'std.gui.canvas_draw_rect': '{0}.getContext("2d").fillRect({1}, {2}, {3}, {4})',
+                'std.gui.canvas_draw_text': '{0}.getContext("2d").fillText({1}, {2}, {3})',
+                
+                'std.3d.create_scene': 'new THREE.Scene()',
+                'std.3d.add_cube': '(() => { const g = new THREE.BoxGeometry({3}, {3}, {3}); const m = new THREE.MeshStandardMaterial({color: {4}}); const c = new THREE.Mesh(g, m); c.position.set({0}, {1}, {2}); {5}.add(c); return c; })()',
+                'std.3d.add_sphere': '(() => { const g = new THREE.SphereGeometry({3}); const m = new THREE.MeshStandardMaterial({color: {4}}); const s = new THREE.Mesh(g, m); s.position.set({0}, {1}, {2}); {5}.add(s); return s; })()',
+                'std.3d.add_plane': '(() => { const g = new THREE.PlaneGeometry({0}, {1}); const m = new THREE.MeshStandardMaterial({color: {2}}); const p = new THREE.Mesh(g, m); return p; })()',
+                'std.3d.add_light': '(() => { const l = new THREE.DirectionalLight({2}, {1}); {0}.add(l); return l; })()',
+                'std.3d.set_camera': 'camera.position.set({1}, {2}, {3})',
+                'std.3d.rotate': '{0}.rotation.set({1}, {2}, {3})',
+                'std.3d.animate': 'requestAnimationFrame(() => { {1}(); renderer.render({0}, camera); })',
+                'std.3d.render': 'renderer.render({0}, camera)'
             },
             
             // ============================================================
