@@ -467,6 +467,252 @@ fn json_to_graph(json: string) -> VisualGraph {
 }
 
 // ============================================================================
+// CODE -> GRAPH (with @visual:position parsing)
+// Full round-trip: preserves positions from comments
+// ============================================================================
+
+fn code_to_graph(source: string, program: any) -> VisualGraph {
+    let graph = VisualGraph_new();
+    
+    native "js" {
+        if (!program || !program.statements) {
+            console.error("[graph] Invalid program AST");
+            return;
+        }
+        
+        // Parse @visual:position comments from source
+        const positionMap = {};
+        const lines = source.split('\n');
+        
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const match = line.match(/@visual:position\((\d+),\s*(\d+)\)/);
+            if (match) {
+                // Position applies to next non-comment line
+                const x = parseInt(match[1]);
+                const y = parseInt(match[2]);
+                
+                // Find next statement line
+                for (let j = i + 1; j < lines.length; j++) {
+                    const nextLine = lines[j].trim();
+                    if (nextLine && !nextLine.startsWith('//') && !nextLine.startsWith('@')) {
+                        positionMap[j + 1] = { x, y }; // 1-indexed
+                        break;
+                    }
+                }
+            }
+        }
+        
+        graph.metadata.generated = new Date().toISOString();
+        graph.metadata.source = 'code';
+        
+        let nodeId = 0;
+        let edgeId = 0;
+        let defaultY = 50;
+        const NODE_HEIGHT = 80;
+        const NODE_WIDTH = 200;
+        
+        const createNode = (type, name, x, y, astKind, astLine, parentId = null) => {
+            return {
+                id: 'node_' + (++nodeId),
+                type: type,
+                name: name,
+                x: x,
+                y: y,
+                width: NODE_WIDTH,
+                height: NODE_HEIGHT,
+                ports_in: [],
+                ports_out: [],
+                attributes: [],
+                properties: {},
+                parent_id: parentId,
+                ast_kind: astKind,
+                ast_line: astLine || 0
+            };
+        };
+        
+        for (const stmt of program.statements) {
+            // Get saved position or use default
+            const savedPos = positionMap[stmt.line];
+            const x = savedPos ? savedPos.x : 50;
+            const y = savedPos ? savedPos.y : defaultY;
+            
+            // Import
+            if (stmt.kind === 10) {
+                const node = createNode('import', stmt.path || stmt.value, x, y, 10, stmt.line);
+                node.width = 150;
+                node.height = 40;
+                graph.nodes.push(node);
+                defaultY = y + 60;
+                continue;
+            }
+            
+            // Struct / Entity
+            if (stmt.kind === 70) {
+                const isEntity = (stmt.attributes || []).some(a => a.name === 'entity');
+                const node = createNode(isEntity ? 'entity' : 'struct', stmt.name, x, y, 70, stmt.line);
+                
+                for (const field of (stmt.fields || [])) {
+                    const fieldName = typeof field === 'string' ? field : field.name;
+                    const fieldType = typeof field === 'object' ? field.type : 'any';
+                    node.ports_out.push({
+                        id: 'port_' + (++nodeId),
+                        name: fieldName,
+                        type: fieldType
+                    });
+                }
+                
+                node.attributes = stmt.attributes || [];
+                node.height = Math.max(NODE_HEIGHT, 40 + node.ports_out.length * 25);
+                graph.nodes.push(node);
+                defaultY = y + node.height + 30;
+                continue;
+            }
+            
+            // Capsule
+            if (stmt.kind === 93) {
+                const capsuleNode = createNode('capsule', stmt.name, x, y, 93, stmt.line);
+                capsuleNode.width = 350;
+                
+                let innerY = y + 40;
+                
+                for (const flow of (stmt.flows || [])) {
+                    const flowPos = positionMap[flow.line];
+                    const fx = flowPos ? flowPos.x : x + 20;
+                    const fy = flowPos ? flowPos.y : innerY;
+                    
+                    const flowNode = createNode('flow', flow.name, fx, fy, 94, flow.line, capsuleNode.id);
+                    flowNode.width = 280;
+                    
+                    for (const param of (flow.params || [])) {
+                        const paramName = typeof param === 'string' ? param : param.name;
+                        const paramType = typeof param === 'object' ? param.type : 'any';
+                        flowNode.ports_in.push({
+                            id: 'port_' + (++nodeId),
+                            name: paramName,
+                            type: paramType
+                        });
+                    }
+                    
+                    flowNode.ports_out.push({
+                        id: 'port_' + (++nodeId),
+                        name: 'return',
+                        type: flow.return_type || 'void'
+                    });
+                    
+                    flowNode.attributes = flow.attributes || [];
+                    flowNode.height = Math.max(60, 30 + Math.max(flowNode.ports_in.length, 1) * 25);
+                    
+                    graph.nodes.push(flowNode);
+                    innerY = fy + flowNode.height + 20;
+                }
+                
+                capsuleNode.height = innerY - y + 40;
+                graph.nodes.push(capsuleNode);
+                defaultY = y + capsuleNode.height + 50;
+                continue;
+            }
+            
+            // Function
+            if (stmt.kind === 4) {
+                const node = createNode('function', stmt.name, x, y, 4, stmt.line);
+                
+                for (const param of (stmt.params || [])) {
+                    const paramName = typeof param === 'string' ? param : param.name;
+                    const paramType = typeof param === 'object' ? param.type : 'any';
+                    node.ports_in.push({
+                        id: 'port_' + (++nodeId),
+                        name: paramName,
+                        type: paramType
+                    });
+                }
+                
+                node.ports_out.push({
+                    id: 'port_' + (++nodeId),
+                    name: 'return',
+                    type: stmt.return_type || 'void'
+                });
+                
+                node.height = Math.max(NODE_HEIGHT, 40 + Math.max(node.ports_in.length, 1) * 25);
+                graph.nodes.push(node);
+                defaultY = y + node.height + 30;
+                continue;
+            }
+        }
+    }
+    
+    return graph;
+}
+
+// ============================================================================
+// INSTALLED PACKAGE NODES
+// Scans packages/ for capsules and functions to show in palette
+// ============================================================================
+
+fn get_installed_package_nodes() -> any {
+    let nodes = [];
+    
+    native "js" {
+        const fs = require('fs');
+        const path = require('path');
+        
+        const packagesDir = path.join(process.cwd(), 'packages');
+        if (!fs.existsSync(packagesDir)) {
+            return;
+        }
+        
+        const scanDir = (dir, pkgName = '') => {
+            const entries = fs.readdirSync(dir, { withFileTypes: true });
+            
+            for (const entry of entries) {
+                const fullPath = path.join(dir, entry.name);
+                
+                if (entry.isDirectory() && !entry.name.startsWith('.')) {
+                    const newPkgName = pkgName ? pkgName + '/' + entry.name : entry.name;
+                    scanDir(fullPath, newPkgName);
+                } else if (entry.name.endsWith('.omni')) {
+                    try {
+                        const source = fs.readFileSync(fullPath, 'utf-8');
+                        
+                        // Simple regex to find capsules and functions
+                        const capsuleMatches = source.matchAll(/capsule\s+(\w+)\s*\{/g);
+                        for (const match of capsuleMatches) {
+                            nodes.push({
+                                type: 'package_capsule',
+                                name: match[1],
+                                package: pkgName,
+                                file: entry.name,
+                                import: pkgName + '/' + entry.name.replace('.omni', '')
+                            });
+                        }
+                        
+                        const fnMatches = source.matchAll(/fn\s+(\w+)\s*\(/g);
+                        for (const match of fnMatches) {
+                            // Skip private functions (starting with _)
+                            if (!match[1].startsWith('_')) {
+                                nodes.push({
+                                    type: 'package_function',
+                                    name: match[1],
+                                    package: pkgName,
+                                    file: entry.name,
+                                    import: pkgName + '/' + entry.name.replace('.omni', '')
+                                });
+                            }
+                        }
+                    } catch (e) {
+                        // Skip files that can't be read
+                    }
+                }
+            }
+        };
+        
+        scanDir(packagesDir);
+    }
+    
+    return nodes;
+}
+
+// ============================================================================
 // GRAPH MANIPULATION
 // ============================================================================
 
