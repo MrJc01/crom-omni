@@ -1969,13 +1969,10 @@ function cmd_version() {
   CLI_banner();
   print("Version: " + CLI_version());
   print("");
-  console.log(
-    CLI_COLORS.dim + "Node.js: " + process.version + CLI_COLORS.reset
-  );
-  console.log(
-    CLI_COLORS.dim + "Platform: " + process.platform + CLI_COLORS.reset
-  );
-  console.log(CLI_COLORS.dim + "Arch: " + process.arch + CLI_COLORS.reset);
+  const c = CLI_COLORS();
+  console.log(c.dim + "Node.js: " + process.version + c.reset);
+  console.log(c.dim + "Platform: " + process.platform + c.reset);
+  console.log(c.dim + "Arch: " + process.arch + c.reset);
 }
 
 function cmd_package_self() {
@@ -2507,8 +2504,6 @@ function main() {
   CLI_success("Output: " + output_path);
   CLI_success("Compiled successfully!");
 }
-
-let _ = main();
 
 // Entry Point
 if (require.main === module) {
