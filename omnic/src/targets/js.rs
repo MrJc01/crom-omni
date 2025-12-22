@@ -192,6 +192,42 @@ impl JsBackend {
         }
     }
 
+    /// Returns the precedence level of a binary operator (higher = binds tighter)
+    fn operator_precedence(op: &BinaryOperator) -> u8 {
+        match op {
+            // Logical OR has lowest precedence
+            BinaryOperator::LogicalOr => 1,
+            // Logical AND has higher precedence than OR
+            BinaryOperator::LogicalAnd => 2,
+            // Comparison operators
+            BinaryOperator::Equals | BinaryOperator::NotEquals |
+            BinaryOperator::LessThan | BinaryOperator::GreaterThan |
+            BinaryOperator::LessEquals | BinaryOperator::GreaterEquals => 3,
+            // Additive operators
+            BinaryOperator::Add | BinaryOperator::Subtract => 4,
+            // Multiplicative operators (highest)
+            BinaryOperator::Multiply | BinaryOperator::Divide => 5,
+        }
+    }
+
+    /// Generates an expression, adding parentheses only when the child has lower precedence
+    fn gen_expression_with_precedence(&self, expr: &Expression, parent_op: &BinaryOperator) -> String {
+        match expr {
+            Expression::BinaryOp { op: child_op, .. } => {
+                let child_prec = Self::operator_precedence(child_op);
+                let parent_prec = Self::operator_precedence(parent_op);
+                
+                // Add parens if child has lower precedence, or same precedence for OR (left-associative safety)
+                if child_prec < parent_prec {
+                    format!("({})", self.gen_expression(expr))
+                } else {
+                    self.gen_expression(expr)
+                }
+            }
+            _ => self.gen_expression(expr)
+        }
+    }
+
     fn gen_expression(&self, expr: &Expression) -> String {
         match expr {
             Expression::Literal(l) => match l {
@@ -214,8 +250,8 @@ impl JsBackend {
                 format!("{}[{}]", t, i)
             },
             Expression::BinaryOp { left, op, right } => {
-                let l = self.gen_expression(left);
-                let r = self.gen_expression(right);
+                let l = self.gen_expression_with_precedence(left, op);
+                let r = self.gen_expression_with_precedence(right, op);
                 let op_str = match op {
                     BinaryOperator::Add => "+",
                     BinaryOperator::Subtract => "-",
@@ -230,7 +266,7 @@ impl JsBackend {
                     BinaryOperator::LogicalAnd => "&&",
                     BinaryOperator::LogicalOr => "||",
                 };
-                format!("({} {} {})", l, op_str, r)
+                format!("{} {} {}", l, op_str, r)
             },
             Expression::Call { function, args } => {
                 let func_name = self.gen_expression(function);

@@ -1,0 +1,410 @@
+// ============================================================================
+// Example 22: Stress Test - Complex Type System
+// Tests AST with many inter-referencing structs and capsules
+// ============================================================================
+// @visual:position(100, 100)
+
+// ============================================================================
+// PART 1: Base Types (Foundation Layer)
+// ============================================================================
+
+struct Vector2 {
+    x: float,
+    y: float
+}
+
+struct Vector3 {
+    x: float,
+    y: float,
+    z: float
+}
+
+struct Vector4 {
+    x: float,
+    y: float,
+    z: float,
+    w: float
+}
+
+struct Color {
+    r: int,
+    g: int,
+    b: int,
+    a: int
+}
+
+struct ColorF {
+    r: float,
+    g: float,
+    b: float,
+    a: float
+}
+
+// ============================================================================
+// PART 2: Geometry Types (Reference Vector types)
+// ============================================================================
+
+struct Point {
+    position: Vector3,
+    color: Color
+}
+
+struct Vertex {
+    position: Vector3,
+    normal: Vector3,
+    uv: Vector2,
+    color: ColorF
+}
+
+struct Triangle {
+    v0: Vertex,
+    v1: Vertex,
+    v2: Vertex
+}
+
+struct Quad {
+    v0: Vertex,
+    v1: Vertex,
+    v2: Vertex,
+    v3: Vertex
+}
+
+struct BoundingBox {
+    min: Vector3,
+    max: Vector3,
+    center: Vector3
+}
+
+struct BoundingSphere {
+    center: Vector3,
+    radius: float
+}
+
+// ============================================================================
+// PART 3: Transform Types (Reference Geometry)
+// ============================================================================
+
+struct Transform {
+    position: Vector3,
+    rotation: Vector3,
+    scale: Vector3
+}
+
+struct Matrix3x3 {
+    m00: float, m01: float, m02: float,
+    m10: float, m11: float, m12: float,
+    m20: float, m21: float, m22: float
+}
+
+struct Matrix4x4 {
+    m00: float, m01: float, m02: float, m03: float,
+    m10: float, m11: float, m12: float, m13: float,
+    m20: float, m21: float, m22: float, m23: float,
+    m30: float, m31: float, m32: float, m33: float
+}
+
+struct Quaternion {
+    x: float,
+    y: float,
+    z: float,
+    w: float
+}
+
+// ============================================================================
+// PART 4: Scene Graph Types (Reference Transform + Geometry)
+// ============================================================================
+
+struct Material {
+    name: string,
+    diffuse: ColorF,
+    specular: ColorF,
+    shininess: float,
+    opacity: float
+}
+
+struct Mesh {
+    name: string,
+    vertex_count: int,
+    triangle_count: int,
+    bounds: BoundingBox
+}
+
+struct SceneNode {
+    id: int,
+    name: string,
+    transform: Transform,
+    visible: bool,
+    layer: int
+}
+
+struct Camera {
+    node: SceneNode,
+    fov: float,
+    near_clip: float,
+    far_clip: float,
+    aspect_ratio: float
+}
+
+struct Light {
+    node: SceneNode,
+    color: ColorF,
+    intensity: float,
+    range: float,
+    light_type: int
+}
+
+// ============================================================================
+// PART 5: Animation Types (Reference Scene Graph)
+// ============================================================================
+
+struct Keyframe {
+    time: float,
+    value: float,
+    in_tangent: float,
+    out_tangent: float
+}
+
+struct AnimationCurve {
+    name: string,
+    keyframe_count: int,
+    loop_mode: int
+}
+
+struct AnimationClip {
+    name: string,
+    duration: float,
+    frame_rate: float,
+    curve_count: int
+}
+
+struct Animator {
+    current_clip: string,
+    speed: float,
+    playing: bool,
+    time: float
+}
+
+// ============================================================================
+// PART 6: Physics Types (Reference Transform + Geometry)
+// ============================================================================
+
+struct Rigidbody {
+    mass: float,
+    drag: float,
+    angular_drag: float,
+    use_gravity: bool,
+    is_kinematic: bool,
+    velocity: Vector3,
+    angular_velocity: Vector3
+}
+
+struct Collider {
+    is_trigger: bool,
+    bounds: BoundingBox,
+    center: Vector3
+}
+
+struct BoxCollider {
+    collider: Collider,
+    size: Vector3
+}
+
+struct SphereCollider {
+    collider: Collider,
+    radius: float
+}
+
+struct CapsuleCollider {
+    collider: Collider,
+    radius: float,
+    height: float,
+    direction: int
+}
+
+struct RaycastHit {
+    point: Vector3,
+    normal: Vector3,
+    distance: float,
+    collider_id: int
+}
+
+// ============================================================================
+// PART 7: UI Types (Reference Geometry + Color)
+// ============================================================================
+
+struct UIRect {
+    x: float,
+    y: float,
+    width: float,
+    height: float
+}
+
+struct UIElement {
+    id: int,
+    name: string,
+    rect: UIRect,
+    anchor: Vector2,
+    pivot: Vector2,
+    visible: bool
+}
+
+struct UIButton {
+    element: UIElement,
+    label: string,
+    normal_color: Color,
+    hover_color: Color,
+    pressed_color: Color
+}
+
+struct UISlider {
+    element: UIElement,
+    min_value: float,
+    max_value: float,
+    current_value: float
+}
+
+struct UIText {
+    element: UIElement,
+    text: string,
+    font_size: int,
+    color: Color,
+    alignment: int
+}
+
+// ============================================================================
+// PART 8: Complete Game Object (References Everything)
+// ============================================================================
+
+struct GameObject {
+    id: int,
+    name: string,
+    tag: string,
+    layer: int,
+    active: bool,
+    transform: Transform,
+    bounds: BoundingBox,
+    parent_id: int,
+    child_count: int
+}
+
+struct Component {
+    id: int,
+    type_name: string,
+    enabled: bool,
+    game_object_id: int
+}
+
+struct Scene {
+    name: string,
+    object_count: int,
+    camera_count: int,
+    light_count: int,
+    loaded: bool
+}
+
+// ============================================================================
+// FUNCTIONS: Using All Types
+// ============================================================================
+
+// @visual:position(100, 500)
+fn create_default_transform() -> Transform {
+    let t = Transform {
+        position: Vector3 { x: 0.0, y: 0.0, z: 0.0 },
+        rotation: Vector3 { x: 0.0, y: 0.0, z: 0.0 },
+        scale: Vector3 { x: 1.0, y: 1.0, z: 1.0 }
+    };
+    return t;
+}
+
+// @visual:position(300, 500)
+fn create_unit_cube() -> BoundingBox {
+    let box = BoundingBox {
+        min: Vector3 { x: -0.5, y: -0.5, z: -0.5 },
+        max: Vector3 { x: 0.5, y: 0.5, z: 0.5 },
+        center: Vector3 { x: 0.0, y: 0.0, z: 0.0 }
+    };
+    return box;
+}
+
+// @visual:position(500, 500)
+fn create_white_material() -> Material {
+    let mat = Material {
+        name: "White",
+        diffuse: ColorF { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
+        specular: ColorF { r: 0.5, g: 0.5, b: 0.5, a: 1.0 },
+        shininess: 32.0,
+        opacity: 1.0
+    };
+    return mat;
+}
+
+// @visual:position(700, 500)
+fn create_main_camera() -> Camera {
+    let cam = Camera {
+        node: SceneNode {
+            id: 1,
+            name: "MainCamera",
+            transform: create_default_transform(),
+            visible: true,
+            layer: 0
+        },
+        fov: 60.0,
+        near_clip: 0.1,
+        far_clip: 1000.0,
+        aspect_ratio: 1.78
+    };
+    return cam;
+}
+
+// @visual:position(100, 700)
+fn count_struct_types() -> int {
+    // Count all struct types defined in this file
+    // + Vector2, Vector3, Vector4, Color, ColorF (5)
+    // + Point, Vertex, Triangle, Quad, BoundingBox, BoundingSphere (6)
+    // + Transform, Matrix3x3, Matrix4x4, Quaternion (4)
+    // + Material, Mesh, SceneNode, Camera, Light (5)
+    // + Keyframe, AnimationCurve, AnimationClip, Animator (4)
+    // + Rigidbody, Collider, BoxCollider, SphereCollider, CapsuleCollider, RaycastHit (6)
+    // + UIRect, UIElement, UIButton, UISlider, UIText (5)
+    // + GameObject, Component, Scene (3)
+    // = 38 total structs
+    return 38;
+}
+
+// @visual:position(100, 900)
+fn main() {
+    let struct_count = count_struct_types();
+    
+    native "js" {
+        console.log("=== Stress Test: Complex Type System ===");
+        console.log("Total struct types defined: " + struct_count);
+        console.log("");
+        
+        console.log("Creating instances...");
+        
+        const transform = create_default_transform();
+        console.log("✓ Transform created: " + JSON.stringify(transform));
+        
+        const bounds = create_unit_cube();
+        console.log("✓ BoundingBox created: " + JSON.stringify(bounds));
+        
+        const material = create_white_material();
+        console.log("✓ Material created: " + material.name);
+        
+        const camera = create_main_camera();
+        console.log("✓ Camera created: " + camera.node.name + " (FOV: " + camera.fov + ")");
+        
+        console.log("");
+        console.log("Type categories:");
+        console.log("  - Base Types: 5 (Vector2, Vector3, Vector4, Color, ColorF)");
+        console.log("  - Geometry: 6 (Point, Vertex, Triangle, Quad, BoundingBox, BoundingSphere)");
+        console.log("  - Transform: 4 (Transform, Matrix3x3, Matrix4x4, Quaternion)");
+        console.log("  - Scene Graph: 5 (Material, Mesh, SceneNode, Camera, Light)");
+        console.log("  - Animation: 4 (Keyframe, AnimationCurve, AnimationClip, Animator)");
+        console.log("  - Physics: 6 (Rigidbody, Collider, BoxCollider, SphereCollider, CapsuleCollider, RaycastHit)");
+        console.log("  - UI: 5 (UIRect, UIElement, UIButton, UISlider, UIText)");
+        console.log("  - Core: 3 (GameObject, Component, Scene)");
+        console.log("");
+        console.log("✓ Type stress test completed: " + struct_count + " structs parsed!");
+    }
+}

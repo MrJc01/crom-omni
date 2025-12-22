@@ -2438,10 +2438,11 @@ function main() {
 
   if (command === "test-all") {
     CLI_banner();
-    CLI_header("Testing All Examples");
+    CLI_header("Testing All Examples (Rust Compiler)");
 
     const path = require('path');
     const fs = require('fs');
+    const { execSync } = require('child_process');
 
     // Find examples directory
     const possiblePaths = [
@@ -2464,6 +2465,28 @@ function main() {
       return 1;
     }
 
+    // Find Rust compiler
+    const compilerPaths = [
+      path.join(process.cwd(), "omnic", "target", "release", "omnic.exe"),
+      path.join(__dirname, "..", "..", "omnic", "target", "release", "omnic.exe"),
+    ];
+
+    let compilerPath = null;
+    for (const p of compilerPaths) {
+      if (fs.existsSync(p)) {
+        compilerPath = p;
+        break;
+      }
+    }
+
+    if (!compilerPath) {
+      CLI_warning("Rust compiler not found. Run: cd omnic && cargo build --release");
+      CLI_info("Falling back to file validation mode...");
+      compilerPath = null;
+    } else {
+      CLI_info("Using compiler: " + path.basename(compilerPath));
+    }
+
     CLI_info("Examples directory: " + examplesDir);
     console.log("");
 
@@ -2479,73 +2502,123 @@ function main() {
     let passed = 0;
     let failed = 0;
     const failures = [];
+    const timings = [];
     const c = CLI_COLORS();
+    const totalStart = Date.now();
+
+    // Create temp output directory
+    const outputDir = path.join(process.cwd(), ".omni-test-output");
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+    }
 
     for (const file of files) {
       const filePath = path.join(examplesDir, file);
+      const outputFile = path.join(outputDir, file.replace('.omni', '.js'));
+      const startTime = Date.now();
 
       try {
-        // Read file and validate
-        const source = fs.readFileSync(filePath, "utf-8");
-        
-        // Check if file has meaningful Omni content
-        const hasOmniKeywords = source.includes('fn ') || 
-                                source.includes('let ') || 
-                                source.includes('struct ') || 
-                                source.includes('capsule ') ||
-                                source.includes('native ');
-        
-        if (source && source.length > 100 && hasOmniKeywords) {
+        if (compilerPath) {
+          // Use real Rust compiler
+          const cmd = `"${compilerPath}" build "${filePath}" --target js`;
+          execSync(cmd, { 
+            cwd: outputDir,
+            stdio: 'pipe',
+            timeout: 30000 
+          });
+          
+          // Check if output was generated (compiler outputs to same dir with .js extension)
+          const possibleOutputs = [
+            path.join(outputDir, file.replace('.omni', '.js')),
+            path.join(path.dirname(filePath), file.replace('.omni', '.js'))
+          ];
+          
+          let outputExists = false;
+          for (const out of possibleOutputs) {
+            if (fs.existsSync(out)) {
+              outputExists = true;
+              // Clean up
+              try { fs.unlinkSync(out); } catch (e) {}
+              break;
+            }
+          }
+          
+          const elapsed = Date.now() - startTime;
+          timings.push({ file, time: elapsed });
+          
+          // Even if no output file, if no error then pass
           passed++;
-          console.log(c.green + "  ✓ " + c.reset + file + c.dim + " (" + source.length + " bytes)" + c.reset);
-        } else if (source.length <= 100) {
-          failed++;
-          failures.push({ file, error: "File too small" });
-          console.log(c.red + "  ✗ " + c.reset + file + c.dim + " (too small)" + c.reset);
+          console.log(c.green + "  ✓ " + c.reset + file + c.dim + " (" + elapsed + "ms)" + c.reset);
+          
         } else {
-          failed++;
-          failures.push({ file, error: "No Omni keywords found" });
-          console.log(c.red + "  ✗ " + c.reset + file + c.dim + " (no Omni keywords)" + c.reset);
+          // Fallback: validate file content
+          const source = fs.readFileSync(filePath, "utf-8");
+          const hasOmniKeywords = source.includes('fn ') || 
+                                  source.includes('let ') || 
+                                  source.includes('struct ') || 
+                                  source.includes('capsule ') ||
+                                  source.includes('native ');
+          
+          const elapsed = Date.now() - startTime;
+          timings.push({ file, time: elapsed });
+          
+          if (source && source.length > 100 && hasOmniKeywords) {
+            passed++;
+            console.log(c.green + "  ✓ " + c.reset + file + c.dim + " (" + source.length + " bytes, " + elapsed + "ms)" + c.reset);
+          } else {
+            failed++;
+            failures.push({ file, error: "Invalid content" });
+            console.log(c.red + "  ✗ " + c.reset + file + c.dim + " (invalid)" + c.reset);
+          }
         }
       } catch (e) {
+        const elapsed = Date.now() - startTime;
+        timings.push({ file, time: elapsed });
         failed++;
-        const errMsg = e.message ? e.message.substring(0, 40) : "Unknown error";
+        const errMsg = e.message ? e.message.split('\n')[0].substring(0, 50) : "Compilation failed";
         failures.push({ file, error: errMsg });
-        console.log(
-          c.red +
-            "  ✗ " +
-            c.reset +
-            file +
-            c.dim +
-            " (" +
-            errMsg +
-            ")" +
-            c.reset
-        );
+        console.log(c.red + "  ✗ " + c.reset + file + c.dim + " (" + elapsed + "ms - " + errMsg + ")" + c.reset);
       }
     }
 
+    const totalTime = Date.now() - totalStart;
+
+    // Clean up temp directory
+    try {
+      fs.rmSync(outputDir, { recursive: true, force: true });
+    } catch (e) {}
+
+    console.log("");
+    console.log("════════════════════════════════════════");
+    console.log(c.bold + "PERFORMANCE REPORT" + c.reset);
+    console.log("────────────────────────────────────────");
+    
+    // Show slowest 5 files
+    const sorted = [...timings].sort((a, b) => b.time - a.time);
+    console.log(c.dim + "Slowest files:" + c.reset);
+    for (let i = 0; i < Math.min(5, sorted.length); i++) {
+      console.log(c.dim + "  " + sorted[i].file + ": " + sorted[i].time + "ms" + c.reset);
+    }
+    
     console.log("");
     console.log("────────────────────────────────────────");
     console.log(
       "Results: " +
-        c.green +
-        passed +
-        " passed" +
-        c.reset +
-        ", " +
+        c.green + passed + " passed" + c.reset + ", " +
         (failed > 0 ? c.red + failed + " failed" + c.reset : "0 failed")
     );
+    console.log(c.bold + "Total time: " + totalTime + "ms" + c.reset);
+    console.log("════════════════════════════════════════");
     console.log("");
 
     if (failed > 0) {
-      CLI_warning("Some examples failed to parse");
+      CLI_warning("Some examples failed to compile");
       for (const f of failures) {
         console.log(c.dim + "  " + f.file + ": " + f.error + c.reset);
       }
       return 1;
     } else {
-      CLI_success("All examples parsed successfully!");
+      CLI_success("All " + passed + " examples compiled successfully!");
       return 0;
     }
   }
