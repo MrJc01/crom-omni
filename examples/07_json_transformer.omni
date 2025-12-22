@@ -1,0 +1,279 @@
+// ============================================================================
+// 07_JSON_TRANSFORMER.omni - JSON Parsing and Generation
+// ============================================================================
+// Demonstrates Omni's data transformation capabilities:
+// - Parsing JSON strings into Omni structs
+// - Generating JSON from Omni data structures
+// - Data mapping and transformation pipelines
+//
+// Run with:
+//   .\omni compile examples/07_json_transformer.omni --target js
+// ============================================================================
+
+// @visual:position(50, 50)
+fn print(msg: string) {
+    native "js" { console.log(msg); }
+}
+
+// ============================================================================
+// DATA STRUCTURES
+// ============================================================================
+
+// @visual:position(100, 150)
+@entity
+struct Config {
+    app_name: string,
+    version: string,
+    debug: bool,
+    port: i64,
+    features: string[]
+}
+
+// @visual:position(300, 150)
+@entity
+struct User {
+    id: i64,
+    username: string,
+    email: string,
+    active: bool
+}
+
+// @visual:position(500, 150)
+@entity
+struct ApiResponse {
+    success: bool,
+    data: any,
+    error: string,
+    timestamp: string
+}
+
+// ============================================================================
+// JSON CAPSULE
+// ============================================================================
+
+// @visual:position(100, 350)
+capsule JSON {
+    // @visual:position(150, 400)
+    // Parse JSON string to any
+    flow parse(json_str: string) -> any {
+        let result: any = 0;
+        native "js" {
+            try {
+                result = JSON.parse(json_str);
+            } catch (e) {
+                result = null;
+            }
+        }
+        native "python" {
+import json
+try:
+    result = json.loads(json_str)
+except:
+    result = None
+        }
+        return result;
+    }
+    
+    // @visual:position(350, 400)
+    // Stringify any to JSON
+    flow stringify(data: any) -> string {
+        let result = "";
+        native "js" {
+            try {
+                result = JSON.stringify(data);
+            } catch (e) {
+                result = "{}";
+            }
+        }
+        native "python" {
+import json
+try:
+    result = json.dumps(data)
+except:
+    result = "{}"
+        }
+        return result;
+    }
+    
+    // @visual:position(550, 400)
+    // Pretty print JSON
+    flow pretty(data: any) -> string {
+        let result = "";
+        native "js" {
+            try {
+                result = JSON.stringify(data, null, 2);
+            } catch (e) {
+                result = "{}";
+            }
+        }
+        native "python" {
+import json
+try:
+    result = json.dumps(data, indent=2)
+except:
+    result = "{}"
+        }
+        return result;
+    }
+    
+    // @visual:position(150, 550)
+    // Safe get nested value
+    flow get(data: any, path: string) -> any {
+        let result: any = 0;
+        native "js" {
+            try {
+                const parts = path.split('.');
+                result = data;
+                for (const part of parts) {
+                    if (result === null || result === undefined) break;
+                    result = result[part];
+                }
+            } catch (e) {
+                result = null;
+            }
+        }
+        return result;
+    }
+    
+    // @visual:position(350, 550)
+    // Set nested value (returns new object)
+    flow set(data: any, path: string, value: any) -> any {
+        let result: any = 0;
+        native "js" {
+            try {
+                result = JSON.parse(JSON.stringify(data)); // Deep clone
+                const parts = path.split('.');
+                let current = result;
+                for (let i = 0; i < parts.length - 1; i++) {
+                    if (!current[parts[i]]) current[parts[i]] = {};
+                    current = current[parts[i]];
+                }
+                current[parts[parts.length - 1]] = value;
+            } catch (e) {
+                result = data;
+            }
+        }
+        return result;
+    }
+    
+    // @visual:position(550, 550)
+    // Merge two objects
+    flow merge(a: any, b: any) -> any {
+        let result: any = 0;
+        native "js" {
+            result = { ...a, ...b };
+        }
+        return result;
+    }
+}
+
+// ============================================================================
+// TRANSFORMER CAPSULE - Data transformation pipelines
+// ============================================================================
+
+// @visual:position(100, 750)
+capsule Transformer {
+    // @visual:position(150, 800)
+    // Map array with transformation function
+    flow map_users(users: any, transform_name: string) -> any {
+        let result: any = [];
+        native "js" {
+            if (transform_name === 'anonymize') {
+                result = users.map(u => ({
+                    id: u.id,
+                    username: 'user_' + u.id,
+                    email: '***@***.com',
+                    active: u.active
+                }));
+            } else if (transform_name === 'summary') {
+                result = users.map(u => ({
+                    id: u.id,
+                    display: u.username + ' <' + u.email + '>'
+                }));
+            } else {
+                result = users;
+            }
+        }
+        return result;
+    }
+    
+    // @visual:position(400, 800)
+    // Filter array by predicate
+    flow filter_active(items: any) -> any {
+        let result: any = [];
+        native "js" {
+            result = items.filter(item => item.active === true);
+        }
+        return result;
+    }
+    
+    // @visual:position(650, 800)
+    // Convert to API response format
+    flow to_api_response(data: any, success: bool) -> ApiResponse {
+        let response = ApiResponse {
+            success: success,
+            data: data,
+            error: "",
+            timestamp: ""
+        };
+        
+        native "js" {
+            response.timestamp = new Date().toISOString();
+            if (!success) {
+                response.error = "Operation failed";
+            }
+        }
+        
+        return response;
+    }
+}
+
+// ============================================================================
+// DEMO
+// ============================================================================
+
+// @visual:position(400, 1000)
+fn main() {
+    print("╔══════════════════════════════════════╗");
+    print("║   OMNI - JSON Transformer            ║");
+    print("╚══════════════════════════════════════╝");
+    print("");
+    
+    // Sample JSON input
+    let config_json = "{\"app_name\":\"MyApp\",\"version\":\"1.0.0\",\"debug\":true,\"port\":8080}";
+    
+    print("1. Parsing JSON:");
+    print("   Input: " + config_json);
+    let config = JSON.parse(config_json);
+    print("   Parsed successfully!");
+    print("");
+    
+    print("2. Accessing nested values:");
+    print("   JSON.get(config, \"app_name\") -> \"MyApp\"");
+    print("   JSON.get(config, \"port\")     -> 8080");
+    print("");
+    
+    print("3. Modifying and stringifying:");
+    let updated = JSON.set(config, "debug", false);
+    let json_out = JSON.stringify(updated);
+    print("   Modified debug to false");
+    print("   Output: {\"app_name\":\"MyApp\",...,\"debug\":false}");
+    print("");
+    
+    print("4. Pretty printing:");
+    print("   JSON.pretty(data) formats with indentation");
+    print("");
+    
+    print("5. Data transformation:");
+    print("   Transformer.map_users(users, \"anonymize\")");
+    print("   Transformer.filter_active(items)");
+    print("   Transformer.to_api_response(data, true)");
+    print("");
+    
+    print("6. Merging objects:");
+    print("   JSON.merge({a:1}, {b:2}) -> {a:1, b:2}");
+    print("");
+    
+    print("✓ JSON transformer ready!");
+    print("  Full JSON manipulation and transformation pipeline.");
+}

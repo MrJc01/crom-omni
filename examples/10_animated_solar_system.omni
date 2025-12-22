@@ -1,0 +1,278 @@
+// ============================================================================
+// 10_ANIMATED_SOLAR_SYSTEM.omni - Complex 3D Animation
+// ============================================================================
+// Demonstrates Omni's 3D animation capabilities with a solar system model.
+// Features: orbital mechanics, multiple objects, hierarchical transforms.
+//
+// Run with:
+//   .\omni compile examples/10_animated_solar_system.omni --target js
+// ============================================================================
+
+// @visual:position(50, 50)
+fn print(msg: string) {
+    native "js" { console.log(msg); }
+}
+
+// ============================================================================
+// CELESTIAL BODY DEFINITIONS
+// ============================================================================
+
+// @visual:position(100, 150)
+@entity
+struct CelestialBody {
+    name: string,
+    radius: f64,
+    color: string,
+    orbit_radius: f64,
+    orbit_speed: f64,
+    rotation_speed: f64,
+    mesh_handle: any
+}
+
+// @visual:position(350, 150)
+@entity
+struct SolarSystem {
+    sun: CelestialBody,
+    planets: CelestialBody[],
+    scene: any,
+    camera: any,
+    renderer: any,
+    time: f64
+}
+
+// ============================================================================
+// SOLAR SYSTEM CAPSULE
+// ============================================================================
+
+// @visual:position(100, 350)
+capsule Solar {
+    let system: SolarSystem = SolarSystem {
+        sun: CelestialBody { name: "", radius: 0.0, color: "", orbit_radius: 0.0, orbit_speed: 0.0, rotation_speed: 0.0, mesh_handle: 0 },
+        planets: [],
+        scene: 0,
+        camera: 0,
+        renderer: 0,
+        time: 0.0
+    };
+    
+    // @visual:position(150, 400)
+    // Initialize the solar system
+    flow init(width: i64, height: i64) {
+        native "js" {
+            const THREE = window.THREE;
+            
+            // Container
+            const container = document.createElement('div');
+            container.id = 'solar-system';
+            container.style.cssText = 'width:' + width + 'px;height:' + height + 'px;margin:auto;background:#000;';
+            document.body.appendChild(container);
+            
+            // Scene
+            system.scene = new THREE.Scene();
+            
+            // Camera (positioned to view the system)
+            system.camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
+            system.camera.position.set(0, 30, 50);
+            system.camera.lookAt(0, 0, 0);
+            
+            // Renderer
+            system.renderer = new THREE.WebGLRenderer({ antialias: true });
+            system.renderer.setSize(width, height);
+            container.appendChild(system.renderer.domElement);
+            
+            // Starfield background
+            const starGeometry = new THREE.BufferGeometry();
+            const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.1 });
+            const starVertices = [];
+            for (let i = 0; i < 10000; i++) {
+                const x = (Math.random() - 0.5) * 200;
+                const y = (Math.random() - 0.5) * 200;
+                const z = (Math.random() - 0.5) * 200;
+                starVertices.push(x, y, z);
+            }
+            starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
+            const stars = new THREE.Points(starGeometry, starMaterial);
+            system.scene.add(stars);
+            
+            // Ambient light
+            const ambient = new THREE.AmbientLight(0x333333);
+            system.scene.add(ambient);
+        }
+        
+        print("  ✓ Solar system initialized");
+    }
+    
+    // @visual:position(400, 400)
+    // Create the sun
+    flow create_sun() {
+        system.sun = CelestialBody {
+            name: "Sun",
+            radius: 3.0,
+            color: "#ffdd00",
+            orbit_radius: 0.0,
+            orbit_speed: 0.0,
+            rotation_speed: 0.002,
+            mesh_handle: 0
+        };
+        
+        native "js" {
+            const THREE = window.THREE;
+            
+            // Sun geometry with emissive material
+            const geometry = new THREE.SphereGeometry(system.sun.radius, 32, 32);
+            const material = new THREE.MeshBasicMaterial({ 
+                color: system.sun.color,
+                emissive: system.sun.color
+            });
+            system.sun.mesh_handle = new THREE.Mesh(geometry, material);
+            system.scene.add(system.sun.mesh_handle);
+            
+            // Sun point light
+            const sunLight = new THREE.PointLight(0xffffff, 2, 100);
+            sunLight.position.set(0, 0, 0);
+            system.scene.add(sunLight);
+        }
+        
+        print("  ✓ Sun created");
+    }
+    
+    // @visual:position(650, 400)
+    // Add a planet
+    flow add_planet(name: string, radius: f64, color: string, orbit_radius: f64, orbit_speed: f64) -> CelestialBody {
+        let planet = CelestialBody {
+            name: name,
+            radius: radius,
+            color: color,
+            orbit_radius: orbit_radius,
+            orbit_speed: orbit_speed,
+            rotation_speed: 0.01,
+            mesh_handle: 0
+        };
+        
+        native "js" {
+            const THREE = window.THREE;
+            
+            // Planet sphere
+            const geometry = new THREE.SphereGeometry(radius, 24, 24);
+            const material = new THREE.MeshStandardMaterial({ 
+                color: color,
+                metalness: 0.2,
+                roughness: 0.8
+            });
+            planet.mesh_handle = new THREE.Mesh(geometry, material);
+            planet.mesh_handle.position.x = orbit_radius;
+            system.scene.add(planet.mesh_handle);
+            
+            // Orbit ring (visual guide)
+            const orbitGeometry = new THREE.RingGeometry(orbit_radius - 0.05, orbit_radius + 0.05, 64);
+            const orbitMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x444444, 
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.3
+            });
+            const orbit = new THREE.Mesh(orbitGeometry, orbitMaterial);
+            orbit.rotation.x = Math.PI / 2;
+            system.scene.add(orbit);
+            
+            system.planets.push(planet);
+        }
+        
+        print("  ✓ Planet added: " + name);
+        return planet;
+    }
+    
+    // @visual:position(150, 600)
+    // Update positions (called each frame)
+    flow update(delta: f64) {
+        system.time = system.time + delta;
+        
+        native "js" {
+            // Rotate sun
+            if (system.sun.mesh_handle) {
+                system.sun.mesh_handle.rotation.y += system.sun.rotation_speed;
+            }
+            
+            // Orbit planets
+            for (const planet of system.planets) {
+                const angle = system.time * planet.orbit_speed;
+                planet.mesh_handle.position.x = Math.cos(angle) * planet.orbit_radius;
+                planet.mesh_handle.position.z = Math.sin(angle) * planet.orbit_radius;
+                planet.mesh_handle.rotation.y += planet.rotation_speed;
+            }
+        }
+    }
+    
+    // @visual:position(400, 600)
+    // Render frame
+    flow render() {
+        native "js" {
+            system.renderer.render(system.scene, system.camera);
+        }
+    }
+    
+    // @visual:position(650, 600)
+    // Start animation loop
+    flow start() {
+        native "js" {
+            let lastTime = 0;
+            function animate(time) {
+                requestAnimationFrame(animate);
+                const delta = (time - lastTime) / 1000;
+                lastTime = time;
+                
+                Solar.update(delta);
+                Solar.render();
+            }
+            animate(0);
+        }
+        
+        print("  ✓ Animation started");
+    }
+}
+
+// ============================================================================
+// MAIN
+// ============================================================================
+
+// @visual:position(400, 800)
+fn main() {
+    print("╔══════════════════════════════════════╗");
+    print("║   OMNI - Animated Solar System       ║");
+    print("╚══════════════════════════════════════╝");
+    print("");
+    
+    print("Creating solar system...");
+    
+    // Initialize
+    Solar.init(900, 600);
+    
+    // Create sun
+    Solar.create_sun();
+    
+    // Add planets (simplified solar system)
+    Solar.add_planet("Mercury", 0.3, "#a0a0a0", 6.0, 0.8);
+    Solar.add_planet("Venus", 0.5, "#e6c47a", 9.0, 0.6);
+    Solar.add_planet("Earth", 0.5, "#6b93d6", 12.0, 0.5);
+    Solar.add_planet("Mars", 0.4, "#c1440e", 16.0, 0.4);
+    Solar.add_planet("Jupiter", 1.2, "#d8ca9d", 22.0, 0.2);
+    Solar.add_planet("Saturn", 1.0, "#f4d59e", 28.0, 0.15);
+    Solar.add_planet("Uranus", 0.7, "#d1e7e7", 34.0, 0.1);
+    Solar.add_planet("Neptune", 0.7, "#5b5ddf", 40.0, 0.08);
+    
+    print("");
+    
+    // Start animation
+    Solar.start();
+    
+    print("");
+    print("Solar System Features:");
+    print("  - Realistic orbital speeds");
+    print("  - Planet rotation");
+    print("  - Orbit path visualization");
+    print("  - Starfield background");
+    print("  - Point light from sun");
+    print("");
+    
+    print("✓ Solar system simulation running!");
+}

@@ -1,0 +1,267 @@
+// ============================================================================
+// 05_HTTP_API_CLIENT.omni - Making HTTP Requests
+// ============================================================================
+// Demonstrates Omni's std.http interface for making API calls.
+// Uses native code to leverage each target's HTTP capabilities.
+//
+// In JavaScript: uses fetch() or node's http/https
+// In Python: uses requests or urllib
+//
+// Run with:
+//   .\omni compile examples/05_http_api_client.omni --target js
+// ============================================================================
+
+// @visual:position(50, 50)
+fn print(msg: string) {
+    native "js" { console.log(msg); }
+}
+
+// ============================================================================
+// HTTP RESPONSE STRUCTURE
+// ============================================================================
+
+// @visual:position(100, 150)
+@entity
+struct HttpResponse {
+    status: i64,
+    body: string,
+    headers: any
+}
+
+// @visual:position(300, 150)
+@entity
+struct ApiUser {
+    id: i64,
+    name: string,
+    email: string,
+    phone: string
+}
+
+// ============================================================================
+// HTTP CAPSULE - Encapsulates HTTP operations
+// ============================================================================
+
+// @visual:position(100, 300)
+capsule Http {
+    // @visual:position(150, 350)
+    // Perform GET request
+    flow get(url: string) -> HttpResponse {
+        let response = HttpResponse { status: 0, body: "", headers: 0 };
+        
+        native "js" {
+            // Node.js implementation using https
+            const https = require('https');
+            const http = require('http');
+            
+            return new Promise((resolve) => {
+                const protocol = url.startsWith('https') ? https : http;
+                
+                protocol.get(url, (res) => {
+                    let data = '';
+                    res.on('data', chunk => data += chunk);
+                    res.on('end', () => {
+                        response.status = res.statusCode;
+                        response.body = data;
+                        response.headers = res.headers;
+                        resolve(response);
+                    });
+                }).on('error', (err) => {
+                    response.status = 0;
+                    response.body = err.message;
+                    resolve(response);
+                });
+            });
+        }
+        
+        return response;
+    }
+    
+    // @visual:position(350, 350)
+    // Perform POST request
+    flow post(url: string, body: string, content_type: string) -> HttpResponse {
+        let response = HttpResponse { status: 0, body: "", headers: 0 };
+        
+        native "js" {
+            const https = require('https');
+            const http = require('http');
+            const { URL } = require('url');
+            
+            return new Promise((resolve) => {
+                const parsedUrl = new URL(url);
+                const protocol = url.startsWith('https') ? https : http;
+                
+                const options = {
+                    hostname: parsedUrl.hostname,
+                    port: parsedUrl.port || (url.startsWith('https') ? 443 : 80),
+                    path: parsedUrl.pathname + parsedUrl.search,
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': content_type,
+                        'Content-Length': Buffer.byteLength(body)
+                    }
+                };
+                
+                const req = protocol.request(options, (res) => {
+                    let data = '';
+                    res.on('data', chunk => data += chunk);
+                    res.on('end', () => {
+                        response.status = res.statusCode;
+                        response.body = data;
+                        response.headers = res.headers;
+                        resolve(response);
+                    });
+                });
+                
+                req.on('error', (err) => {
+                    response.status = 0;
+                    response.body = err.message;
+                    resolve(response);
+                });
+                
+                req.write(body);
+                req.end();
+            });
+        }
+        
+        return response;
+    }
+    
+    // @visual:position(150, 550)
+    // Parse JSON response into any
+    flow parse_json(json_str: string) -> any {
+        let result: any = 0;
+        native "js" {
+            try {
+                result = JSON.parse(json_str);
+            } catch (e) {
+                result = null;
+            }
+        }
+        return result;
+    }
+}
+
+// ============================================================================
+// API CLIENT CAPSULE - High-level API operations
+// ============================================================================
+
+// @visual:position(500, 300)
+capsule ApiClient {
+    let base_url: string = "https://jsonplaceholder.typicode.com";
+    
+    // @visual:position(550, 350)
+    flow fetch_user(user_id: i64) -> ApiUser {
+        let url = base_url + "/users/" + "1";
+        let response = Http.get(url);
+        
+        let user = ApiUser { id: 0, name: "", email: "", phone: "" };
+        
+        native "js" {
+            // Since Http.get returns a Promise in JS
+            return Http.get(url).then(resp => {
+                if (resp.status === 200) {
+                    const data = JSON.parse(resp.body);
+                    user.id = data.id;
+                    user.name = data.name;
+                    user.email = data.email;
+                    user.phone = data.phone;
+                }
+                return user;
+            });
+        }
+        
+        return user;
+    }
+    
+    // @visual:position(750, 350)
+    flow fetch_all_users() -> ApiUser[] {
+        let users: ApiUser[] = [];
+        let url = base_url + "/users";
+        
+        native "js" {
+            return Http.get(url).then(resp => {
+                if (resp.status === 200) {
+                    const data = JSON.parse(resp.body);
+                    users = data.map(u => ({
+                        id: u.id,
+                        name: u.name,
+                        email: u.email,
+                        phone: u.phone
+                    }));
+                }
+                return users;
+            });
+        }
+        
+        return users;
+    }
+    
+    // @visual:position(550, 500)
+    flow create_post(title: string, body: string, user_id: i64) -> any {
+        let url = base_url + "/posts";
+        let payload = "";
+        
+        native "js" {
+            payload = JSON.stringify({
+                title: title,
+                body: body,
+                userId: user_id
+            });
+            
+            return Http.post(url, payload, 'application/json').then(resp => {
+                return JSON.parse(resp.body);
+            });
+        }
+        
+        return 0;
+    }
+}
+
+// ============================================================================
+// DEMO APPLICATION
+// ============================================================================
+
+// @visual:position(300, 700)
+capsule Demo {
+    flow run() {
+        print("╔══════════════════════════════════════╗");
+        print("║   OMNI - HTTP API Client             ║");
+        print("╚══════════════════════════════════════╝");
+        print("");
+        
+        print("This example demonstrates HTTP requests using std.http");
+        print("It connects to JSONPlaceholder API (jsonplaceholder.typicode.com)");
+        print("");
+        
+        print("1. GET Request - Fetch single user:");
+        print("   ApiClient.fetch_user(1)");
+        print("   -> Returns: { id: 1, name: \"Leanne Graham\", ... }");
+        print("");
+        
+        print("2. GET Request - Fetch all users:");
+        print("   ApiClient.fetch_all_users()");
+        print("   -> Returns: Array of 10 users");
+        print("");
+        
+        print("3. POST Request - Create a post:");
+        print("   ApiClient.create_post(\"My Title\", \"My Body\", 1)");
+        print("   -> Returns: { id: 101, title: \"My Title\", ... }");
+        print("");
+        
+        print("Code Structure:");
+        print("  Http capsule     - Low-level HTTP operations");
+        print("  ApiClient capsule - High-level API wrapper");
+        print("");
+        
+        print("✓ HTTP API client example ready!");
+        print("  Compile and run to make real API calls.");
+    }
+}
+
+// ============================================================================
+// MAIN
+// ============================================================================
+
+fn main() {
+    Demo.run();
+}

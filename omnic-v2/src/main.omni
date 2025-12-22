@@ -684,6 +684,103 @@ fn main() {
         return 0;
     }
     
+    // Check for 'test-all' command (Validate all examples)
+    if (command == "test-all") {
+        CLI_banner();
+        CLI_header("Testing All Examples");
+        
+        native "js" {
+            const fs = require('fs');
+            const path = require('path');
+            
+            // Find examples directory
+            const possiblePaths = [
+                path.join(process.cwd(), 'examples'),
+                path.join(__dirname, '..', '..', 'examples'),
+                path.join(__dirname, '..', 'examples')
+            ];
+            
+            let examplesDir = null;
+            for (const p of possiblePaths) {
+                if (fs.existsSync(p)) {
+                    examplesDir = p;
+                    break;
+                }
+            }
+            
+            if (!examplesDir) {
+                CLI_error("Examples directory not found");
+                CLI_info("Run from project root: .\\omni test-all");
+                return 1;
+            }
+            
+            CLI_info("Examples directory: " + examplesDir);
+            console.log("");
+            
+            // Get all .omni files
+            const files = fs.readdirSync(examplesDir)
+                .filter(f => f.endsWith('.omni'))
+                .sort();
+            
+            CLI_info("Found " + files.length + " example files");
+            console.log("");
+            
+            let passed = 0;
+            let failed = 0;
+            const failures = [];
+            
+            for (const file of files) {
+                const filePath = path.join(examplesDir, file);
+                const outputPath = path.join(examplesDir, file.replace('.omni', '.test.js'));
+                
+                try {
+                    // Read and parse
+                    const source = fs.readFileSync(filePath, 'utf-8');
+                    const l = new_lexer(source);
+                    const p = new_parser(l);
+                    const program = Parser_parse_program(p);
+                    
+                    // Generate code
+                    const gen = HybridCodeGenerator_new('js');
+                    const code = HybridCodeGenerator_generate(gen, program);
+                    
+                    // Check if code was generated
+                    if (code && code.length > 0) {
+                        passed++;
+                        console.log(CLI_COLORS().green + "  ✓ " + CLI_COLORS().reset + file);
+                    } else {
+                        failed++;
+                        failures.push({ file, error: "Empty output" });
+                        console.log(CLI_COLORS().red + "  ✗ " + CLI_COLORS().reset + file + CLI_COLORS().dim + " (empty output)" + CLI_COLORS().reset);
+                    }
+                } catch (e) {
+                    failed++;
+                    failures.push({ file, error: e.message });
+                    console.log(CLI_COLORS().red + "  ✗ " + CLI_COLORS().reset + file + CLI_COLORS().dim + " (" + e.message.substring(0, 40) + ")" + CLI_COLORS().reset);
+                }
+            }
+            
+            console.log("");
+            console.log("────────────────────────────────────────");
+            console.log("Results: " + CLI_COLORS().green + passed + " passed" + CLI_COLORS().reset + ", " + 
+                (failed > 0 ? CLI_COLORS().red + failed + " failed" + CLI_COLORS().reset : "0 failed"));
+            console.log("");
+            
+            if (failed > 0) {
+                CLI_warning("Some examples failed to compile");
+                for (const f of failures) {
+                    console.log(CLI_COLORS().dim + "  " + f.file + ": " + f.error + CLI_COLORS().reset);
+                }
+                return 1;
+            } else {
+                CLI_success("All examples compiled successfully!");
+                return 0;
+            }
+        }
+        
+        return 0;
+    }
+    
     // Show help
     let show_help = false;
     native "js" { 
@@ -703,6 +800,7 @@ fn main() {
         print("  setup                          Install Omni globally");
         print("  run <file.omni>                Execute instantly via VM");
         print("  build                          Build from omni.config.json");
+        print("  test-all                       Validate all examples compile");
         print("  package --self                 Create self-contained package");
         print("  <input> <output> [options]     Compile to target");
         print("");
