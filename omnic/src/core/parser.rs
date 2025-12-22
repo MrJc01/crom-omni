@@ -85,7 +85,7 @@ impl<'a> Parser<'a> {
              attributes.push(self.parse_attribute()?);
         }
 
-        // 2. Identificar Struct, Function, ou Let
+        // 2. Identificar Struct, Function, Capsule, Flow, ou Let
         let token = self.peek_token()?;
         match token {
             Token::Struct => {
@@ -98,6 +98,16 @@ impl<'a> Parser<'a> {
                 decl.attributes = attributes;
                 Ok(TopLevelItem::Function(decl))
             }
+            Token::Capsule => {
+                let mut decl = self.parse_capsule()?;
+                decl.attributes = attributes;
+                Ok(TopLevelItem::Capsule(decl))
+            }
+            Token::Flow => {
+                let mut decl = self.parse_flow()?;
+                decl.attributes = attributes;
+                Ok(TopLevelItem::Flow(decl))
+            }
             Token::Let | Token::Mut => {
                 // Parse top-level let binding
                 let stmt = self.parse_let_binding()?;
@@ -107,7 +117,7 @@ impl<'a> Parser<'a> {
                     Err(anyhow!("Erro interno parsing let"))
                 }
             }
-            _ => Err(anyhow!("Esperado 'struct', 'fn' ou 'let' no nível superior (encontrado {:?})", token)),
+            _ => Err(anyhow!("Esperado 'struct', 'fn', 'capsule', 'flow' ou 'let' no nível superior (encontrado {:?})", token)),
         }
     }
 
@@ -200,6 +210,96 @@ impl<'a> Parser<'a> {
             body,
             attributes: vec![],
             is_public: false, // TODO: Suportar pub
+        })
+    }
+
+    /// Parse capsule block: capsule Name { fn ... struct ... }
+    fn parse_capsule(&mut self) -> Result<CapsuleDeclaration> {
+        self.expect(Token::Capsule)?;
+        let name = self.parse_identifier()?;
+        self.expect(Token::BraceOpen)?;
+        
+        let mut items = Vec::new();
+        while self.peek_token()? != Token::BraceClose {
+            // Inside capsule, we can have functions, structs, flows, or nested capsules
+            let mut inner_attrs = Vec::new();
+            while let Ok(Token::Attribute(_)) = self.peek_token() {
+                inner_attrs.push(self.parse_attribute()?);
+            }
+            
+            let token = self.peek_token()?;
+            match token {
+                Token::Fn => {
+                    let mut decl = self.parse_function()?;
+                    decl.attributes = inner_attrs;
+                    items.push(TopLevelItem::Function(decl));
+                }
+                Token::Struct => {
+                    let mut decl = self.parse_struct()?;
+                    decl.attributes = inner_attrs;
+                    items.push(TopLevelItem::Struct(decl));
+                }
+                Token::Flow => {
+                    let mut decl = self.parse_flow()?;
+                    decl.attributes = inner_attrs;
+                    items.push(TopLevelItem::Flow(decl));
+                }
+                Token::Let | Token::Mut => {
+                    let stmt = self.parse_let_binding()?;
+                    if let Statement::LetBinding { name, ty, value, is_mut } = stmt {
+                        items.push(TopLevelItem::LetBinding { name, ty, value, is_mut });
+                    }
+                }
+                _ => return Err(anyhow!("Item inesperado dentro de capsule: {:?}", token)),
+            }
+        }
+        
+        self.expect(Token::BraceClose)?;
+        
+        Ok(CapsuleDeclaration {
+            name,
+            items,
+            attributes: vec![],
+        })
+    }
+
+    /// Parse flow block: flow Name(params) -> ReturnType { ... }
+    fn parse_flow(&mut self) -> Result<FlowDeclaration> {
+        self.expect(Token::Flow)?;
+        let name = self.parse_identifier()?;
+        
+        // Params (a: T, b: T)
+        self.expect(Token::ParenOpen)?;
+        let mut params = Vec::new();
+        while self.peek_token()? != Token::ParenClose {
+            let param_name = self.parse_identifier()?;
+            self.expect(Token::Colon)?;
+            let ty = self.parse_type()?;
+            
+            params.push(Param { name: param_name, ty });
+            
+            if let Ok(Token::Comma) = self.peek_token() {
+                self.consume()?;
+            }
+        }
+        self.expect(Token::ParenClose)?;
+
+        // Return Type -> T (Optional)
+        let mut return_type = None;
+        if let Ok(Token::Arrow) = self.peek_token() {
+            self.consume()?;
+            return_type = Some(self.parse_type()?);
+        }
+
+        // Body { ... }
+        let body = self.parse_block()?;
+
+        Ok(FlowDeclaration {
+            name,
+            params,
+            return_type,
+            body,
+            attributes: vec![],
         })
     }
 
@@ -666,9 +766,15 @@ impl<'a> Parser<'a> {
 
     fn parse_type(&mut self) -> Result<Type> {
         let name = self.parse_identifier()?;
-        if let Ok(Token::Plus) = self.peek_token() { 
+        
+        // Check for array suffix: Type[]
+        if let Ok(Token::BracketOpen) = self.peek_token() {
+            self.consume()?;  // eat [
+            self.expect(Token::BracketClose)?;  // eat ]
+            Ok(Type::List(Box::new(Type::Simple(name))))
+        } else {
+            Ok(Type::Simple(name))
         }
-        Ok(Type::Simple(name))
     }
 
     fn parse_identifier(&mut self) -> Result<String> {

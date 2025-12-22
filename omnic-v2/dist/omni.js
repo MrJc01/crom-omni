@@ -2404,27 +2404,56 @@ function main() {
     CLI_info("Target: " + target_lang);
     CLI_info("Output: " + output_file);
     
-    // Read and compile
-    try {
-      const source = fs.readFileSync(input_file, 'utf-8');
-      const l = new_lexer(source);
-      const p = new_parser(l);
-      const program = Parser_parse_program(p);
+    // Find Rust compiler
+    const { execSync } = require('child_process');
+    const compilerPaths = [
+      path.join(process.cwd(), "omnic", "target", "release", "omnic.exe"),
+      path.join(__dirname, "..", "..", "omnic", "target", "release", "omnic.exe"),
+    ];
+
+    let compilerPath = null;
+    for (const p of compilerPaths) {
+      if (fs.existsSync(p)) {
+        compilerPath = p;
+        break;
+      }
+    }
+
+    if (!compilerPath) {
+      CLI_warning("Rust compiler not found. Run: cd omnic && cargo build --release");
+      CLI_warning("Falling back to stub output...");
       
-      // Generate code (stub - shows warning)
-      const gen = HybridCodeGenerator_new(target_lang);
-      const code = HybridCodeGenerator_generate(gen, program);
-      
-      // For now, just write the source with a header comment
+      // Stub output
       const output = "// Compiled from " + input_file + " (target: " + target_lang + ")\n" +
-                     "// Note: Full compilation requires bootstrap\n\n" +
-                     "console.log('Omni compiled output - run bootstrap for full functionality');";
-      
+                     "// Note: Full compilation requires Rust compiler\n\n" +
+                     "console.log('Omni compiled output - run cargo build --release in omnic folder');";
       fs.writeFileSync(output_file, output);
       CLI_success("Output: " + output_file);
       CLI_warning("Full compilation requires bootstrap. This is a stub output.");
+      return 0;
+    }
+    
+    // Use real Rust compiler
+    try {
+      const cmd = `"${compilerPath}" build "${path.resolve(input_file)}" --target ${target_lang}`;
+      const result = execSync(cmd, { 
+        cwd: process.cwd(),
+        encoding: 'utf-8',
+        stdio: 'pipe'
+      });
+      
+      // The Rust compiler outputs to stdout, we need to capture and save it
+      // Extract just the code (after the "Compilando..." line)
+      const lines = result.split('\n');
+      const codeStartIdx = lines.findIndex(l => l.startsWith('// Generated'));
+      const code = codeStartIdx >= 0 ? lines.slice(codeStartIdx).join('\n') : result;
+      
+      fs.writeFileSync(output_file, code);
+      CLI_success("Output: " + output_file);
     } catch (e) {
-      CLI_error("Compilation failed: " + e.message);
+      // Try to parse error from stderr
+      const errMsg = e.stderr ? e.stderr.toString().split('\n')[0] : e.message;
+      CLI_error("Compilation failed: " + errMsg);
       return 1;
     }
     

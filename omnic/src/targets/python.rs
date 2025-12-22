@@ -42,6 +42,26 @@ impl CodeGenerator for PythonBackend {
                 TopLevelItem::Function(f) => {
                     buffer.push_str(&self.gen_function(f, 0));
                 }
+                TopLevelItem::Capsule(c) => {
+                    // Capsule as a class with static methods
+                    buffer.push_str(&format!("class {}:\n", c.name));
+                    if c.items.is_empty() {
+                        buffer.push_str("    pass\n");
+                    } else {
+                        for inner_item in &c.items {
+                            match inner_item {
+                                TopLevelItem::Function(f) => {
+                                    buffer.push_str(&self.gen_function(f, 1));
+                                }
+                                _ => {}
+                            }
+                        }
+                    }
+                }
+                TopLevelItem::Flow(fl) => {
+                    // Flow as a regular function
+                    buffer.push_str(&self.gen_flow(fl, 0));
+                }
                 TopLevelItem::LetBinding { name, value, .. } => {
                     // Python doesn't have const, just use variable assignment
                     buffer.push_str(&format!("{} = {}\n", name, self.gen_expression(value)));
@@ -104,6 +124,20 @@ impl PythonBackend {
         // Body (Block)
         // Python precisa de pelo menos uma linha. Se bloco vazio, 'pass'.
         let body = self.gen_block(&f.body, indent + 1);
+        
+        format!("{}{}", header, body)
+    }
+
+    fn gen_flow(&self, fl: &FlowDeclaration, indent: usize) -> String {
+        let prefix = self.indent(indent);
+        
+        let params = fl.params.iter()
+            .map(|p| p.name.clone())
+            .collect::<Vec<_>>()
+            .join(", ");
+        
+        let header = format!("{}def {}({}):\n", prefix, fl.name, params);
+        let body = self.gen_block(&fl.body, indent + 1);
         
         format!("{}{}", header, body)
     }

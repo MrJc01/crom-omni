@@ -1,0 +1,44 @@
+// victory.omni
+// Testando Capsula, Flow, Entidade e Arrays num único arquivo
+
+@entity
+struct User {
+    id: i64,
+    name: string,
+    roles: string[] // Agora suporta Arrays!
+}
+
+capsule AuthSystem {
+    
+    // Um fluxo de negócio claro
+    flow validate_access(user: User) -> bool {
+        let has_role = false;
+        
+        // Loop em array (feature nova)
+        for (role in user.roles) {
+            if (role == "admin") {
+                has_role = true;
+            }
+        }
+        
+        return has_role;
+    }
+
+    fn login(name: string) {
+        let u = User { 
+            id: 1, 
+            name: name, 
+            roles: ["user", "admin"] // Array literal
+        };
+        
+        let allowed = AuthSystem.validate_access(u);
+        
+        native "js" {
+            console.log(`User ${name} allowed: ${allowed}`);
+        }
+    }
+}
+
+fn main() {
+    AuthSystem.login("AdminUser");
+}

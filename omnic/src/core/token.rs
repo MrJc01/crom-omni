@@ -67,6 +67,18 @@ pub enum Token {
     #[token("continue")]
     Continue,
 
+    #[token("capsule")]
+    Capsule,
+
+    #[token("flow")]
+    Flow,
+
+    #[token("entity")]
+    Entity,
+
+    #[token("pub")]
+    Pub,
+
     // --- Símbolos e Pontuação ---
 
     #[token("{")]

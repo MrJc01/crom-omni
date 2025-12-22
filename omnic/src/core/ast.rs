@@ -14,11 +14,13 @@ pub struct Import {
     pub alias: Option<String>,
 }
 
-/// Itens de Nível Superior (Funções, Structs, Let)
+/// Itens de Nível Superior (Funções, Structs, Let, Capsule, Flow)
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum TopLevelItem {
     Function(FunctionDeclaration),
     Struct(StructDeclaration),
+    Capsule(CapsuleDeclaration),
+    Flow(FlowDeclaration),
     LetBinding {
         name: String,
         ty: Option<Type>,
@@ -66,6 +68,26 @@ pub struct StructField {
 pub struct Attribute {
     pub name: String,
     pub args: Vec<Expression>, // Simplificado para lista de expr
+}
+
+/// Declaração de Cápsula (namespace/módulo)
+/// capsule UserModule { fn ... struct ... }
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct CapsuleDeclaration {
+    pub name: String,
+    pub items: Vec<TopLevelItem>,
+    pub attributes: Vec<Attribute>,
+}
+
+/// Declaração de Flow (pipeline de processamento)
+/// flow ProcessData(input: Data) -> Result { ... }
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct FlowDeclaration {
+    pub name: String,
+    pub params: Vec<Param>,
+    pub return_type: Option<Type>,
+    pub body: Block,
+    pub attributes: Vec<Attribute>,
 }
 
 /// Tipos da Linguagem

@@ -50,7 +50,7 @@ impl CodeGenerator for JsBackend {
         }
         buffer.push('\n');
 
-        // 2. Items (Structs, Functions, and Let bindings)
+        // 2. Items (Structs, Functions, Capsules, Flows, and Let bindings)
         for item in &program.items {
             match item {
                 TopLevelItem::Struct(s) => {
@@ -59,7 +59,13 @@ impl CodeGenerator for JsBackend {
                 TopLevelItem::Function(f) => {
                     buffer.push_str(&self.gen_function(f));
                 }
-                TopLevelItem::LetBinding { name, value, is_mut, .. } => {
+                TopLevelItem::Capsule(c) => {
+                    buffer.push_str(&self.gen_capsule(c));
+                }
+                TopLevelItem::Flow(fl) => {
+                    buffer.push_str(&self.gen_flow(fl));
+                }
+                TopLevelItem::LetBinding { name, value, is_mut: _, .. } => {
                     let keyword = "let";
                     buffer.push_str(&format!("{} {} = {};\n", keyword, name, self.gen_expression(value)));
                 }
@@ -126,6 +132,68 @@ impl JsBackend {
         
         let mut code = format!("{}{}", header, body);
         code.push_str(&self.gen_attributes(&f.attributes, &f.name));
+        code
+    }
+
+    /// Generate JS for a capsule (as a namespace object)
+    fn gen_capsule(&self, c: &CapsuleDeclaration) -> String {
+        let mut code = format!("// Capsule: {}\n", c.name);
+        code.push_str(&format!("const {} = {{}};\n\n", c.name));
+        
+        for item in &c.items {
+            match item {
+                TopLevelItem::Function(f) => {
+                    // Capsule methods: CapsuleName.methodName = function(...) { }
+                    let params = f.params.iter()
+                        .map(|p| p.name.clone())
+                        .collect::<Vec<_>>()
+                        .join(", ");
+                    let body = self.gen_block(&f.body);
+                    code.push_str(&format!("{}.{} = function({}) {};\n", c.name, f.name, params, body));
+                    code.push_str(&self.gen_attributes(&f.attributes, &format!("{}.{}", c.name, f.name)));
+                }
+                TopLevelItem::Struct(s) => {
+                    // Nested class definition
+                    code.push_str(&format!("{}.{} = ", c.name, s.name));
+                    code.push_str(&self.gen_struct(s));
+                }
+                TopLevelItem::Flow(fl) => {
+                    // Flow as method
+                    let params = fl.params.iter()
+                        .map(|p| p.name.clone())
+                        .collect::<Vec<_>>()
+                        .join(", ");
+                    let body = self.gen_block(&fl.body);
+                    code.push_str(&format!("{}.{} = function({}) {};\n", c.name, fl.name, params, body));
+                }
+                TopLevelItem::LetBinding { name, value, .. } => {
+                    code.push_str(&format!("{}.{} = {};\n", c.name, name, self.gen_expression(value)));
+                }
+                TopLevelItem::Capsule(nested) => {
+                    // Nested capsule
+                    code.push_str(&format!("{}.{} = {{}};\n", c.name, nested.name));
+                    // Recursively generate nested content - simplified for now
+                }
+            }
+        }
+        
+        code.push_str(&self.gen_attributes(&c.attributes, &c.name));
+        code.push('\n');
+        code
+    }
+
+    /// Generate JS for a flow (as a regular function)
+    fn gen_flow(&self, fl: &FlowDeclaration) -> String {
+        let params = fl.params.iter()
+            .map(|p| p.name.clone())
+            .collect::<Vec<_>>()
+            .join(", ");
+        
+        let header = format!("function {}({}) ", fl.name, params);
+        let body = self.gen_block(&fl.body);
+        
+        let mut code = format!("{}{}", header, body);
+        code.push_str(&self.gen_attributes(&fl.attributes, &fl.name));
         code
     }
 
