@@ -102,12 +102,12 @@ capsule Engine3D {
             renderer.setSize(width, height);
             container.appendChild(renderer.domElement);
             
-            scene.handle = sceneObj;
-            scene.camera = camera;
-            scene.renderer = renderer;
+            Engine3D.scene.handle = sceneObj;
+            Engine3D.scene.camera = camera;
+            Engine3D.scene.renderer = renderer;
         }
         
-        return scene;
+        return Engine3D.scene;
     }
     
     // @visual:position(400, 550)
@@ -131,8 +131,9 @@ capsule Engine3D {
                 roughness: 0.7
             });
             mesh.handle = new THREE.Mesh(geometry, material);
-            scene.handle.add(mesh.handle);
-            meshes.push(mesh);
+            Engine3D.scene.handle.add(mesh.handle);
+            Engine3D.meshes.push(mesh);
+        }
         }
         
         return mesh;
@@ -150,7 +151,7 @@ capsule Engine3D {
         native "js" {
             const THREE = window.THREE;
             light.handle = new THREE.AmbientLight(color, intensity);
-            scene.handle.add(light.handle);
+            Engine3D.scene.handle.add(light.handle);
         }
         
         return light;
@@ -170,7 +171,7 @@ capsule Engine3D {
             const dirLight = new THREE.DirectionalLight(color, intensity);
             dirLight.position.set(x, y, z);
             light.handle = dirLight;
-            scene.handle.add(dirLight);
+            Engine3D.scene.handle.add(dirLight);
         }
         
         return light;
@@ -209,12 +210,12 @@ capsule Engine3D {
                 requestAnimationFrame(animate);
                 
                 // Rotate all meshes
-                for (const mesh of meshes) {
+                for (const mesh of Engine3D.meshes) {
                     mesh.handle.rotation.x += 0.01;
                     mesh.handle.rotation.y += 0.01;
                 }
                 
-                scene.renderer.render(scene.handle, scene.camera);
+                Engine3D.scene.renderer.render(Engine3D.scene.handle, Engine3D.scene.camera);
             }
             animate();
         }

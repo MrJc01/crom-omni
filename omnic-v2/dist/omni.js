@@ -118,22 +118,22 @@ function CLI_COLORS() {
 
 function CLI_success(msg) {
   const c = CLI_COLORS();
-  console.log(c.green + "â”œÃ³â”¼Ã´Ã”Ã‡Â£" + c.reset + " " + msg);
+  console.log(c.green + "[OK]" + c.reset + " " + msg);
 }
 
 function CLI_error(msg) {
   const c = CLI_COLORS();
-  console.error(c.red + "â”œÃ³â”¼Ã´Ã”Ã‡Ã¶" + c.reset + " " + msg);
+  console.error(c.red + "[ERR]" + c.reset + " " + msg);
 }
 
 function CLI_warning(msg) {
   const c = CLI_COLORS();
-  console.log(c.yellow + "â”œÃ³â”¼Ã­â”¬Ã¡" + c.reset + " " + msg);
+  console.log(c.yellow + "[!]" + c.reset + " " + msg);
 }
 
 function CLI_info(msg) {
   const c = CLI_COLORS();
-  console.log(c.blue + "â”œÃ³Ã”Ã‡Ã—â”¬â•£" + c.reset + " " + msg);
+  console.log(c.blue + "[>]" + c.reset + " " + msg);
 }
 
 function CLI_step(step, total, msg) {
@@ -148,9 +148,9 @@ function CLI_header(title) {
   console.log(
     c.bold +
       c.cyan +
-      "â”œÃ³Ã”Ã‡Ã³â”¬Ã‰â”œÃ³Ã”Ã‡Ã³â”¬Ã‰â”œÃ³Ã”Ã‡Ã³â”¬Ã‰ " +
+      "=== " +
       title +
-      " â”œÃ³Ã”Ã‡Ã³â”¬Ã‰â”œÃ³Ã”Ã‡Ã³â”¬Ã‰â”œÃ³Ã”Ã‡Ã³â”¬Ã‰" +
+      " ===" +
       c.reset
   );
   console.log("");
@@ -350,7 +350,7 @@ function CLI_table_header(title) {
   const c = CLI_COLORS();
   console.log("");
   console.log(c.bold + title + c.reset);
-  console.log("â”œÃ³Ã”Ã‡Ã˜Ã”Ã©Â¼".repeat(50));
+  console.log("-".repeat(50));
 }
 
 function CLI_banner() {
@@ -2349,25 +2349,61 @@ function main() {
     return 0;
   }
 
+
+
+  // Check for 'compile' command
   if (command === "run") {
-    let run_file = "";
-    run_file = process.argv[3] || "";
-    if (run_file === "") {
+    const path = require('path');
+    const fs = require('fs');
+    const os = require('os');
+    
+    const input_file = process.argv[3];
+    if (!input_file) {
       CLI_error("Usage: omni run <file.omni>");
       return 1;
     }
-
-    CLI_info("VM Mode - Executing: " + run_file);
-    let source = read_file(run_file);
-    let l = new_lexer(source);
-    let p = new_parser(l);
-    let program = Parser_parse_program(p);
-    let vm = OmniVM_new();
-    OmniVM_run(vm, program);
+    
+    // Temp output file - use .js extension
+    const runFile = path.join(os.tmpdir(), 'omni_run_' + Date.now() + '.js');
+    const omniScript = __filename; 
+    
+    try {
+      // 1. Compile using the existing compile command logic
+      // We invoke: node omni.js compile <input> <output> --target js
+      const cmd = `node "${omniScript}" compile "${input_file}" "${runFile}" --target js`;
+      
+      // Inherit stdio so compilation progress/errors are visible
+      execSync(cmd, { 
+        cwd: process.cwd(),
+        stdio: 'inherit' 
+      });
+      
+      // 2. Execute the compiled file
+      console.log("");
+      console.log(CLI_COLORS.dim + "Running [" + input_file + "]..." + CLI_COLORS.reset);
+      console.log("");
+      
+      execSync(`node "${runFile}"`, {
+        cwd: process.cwd(),
+        stdio: 'inherit'
+      });
+      
+      // Cleanup
+      try { fs.unlinkSync(runFile); } catch (e) {}
+      
+    } catch (e) {
+      // Cleanup
+      try { fs.unlinkSync(runFile); } catch (ex) {}
+      
+      // If execSync throws, it means exit code non-zero
+      // Error message likely already printed due to stdio: inherit
+      if (e.status) return e.status;
+      return 1;
+    }
+    
     return 0;
   }
 
-  // Check for 'compile' command
   if (command === "compile") {
     const path = require('path');
     const fs = require('fs');

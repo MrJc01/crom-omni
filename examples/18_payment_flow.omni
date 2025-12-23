@@ -81,7 +81,7 @@ capsule Audit {
                 details: details,
                 timestamp: new Date().toISOString()
             };
-            entries.push(entry);
+            Audit.entries.push(entry);
             console.log('  [AUDIT] ' + action + ': ' + details);
         }
     }
@@ -90,7 +90,7 @@ capsule Audit {
     flow get_entries(count: i64) -> AuditEntry[] {
         let result: AuditEntry[] = [];
         native "js" {
-            result = entries.slice(-count);
+            result = Audit.entries.slice(-count);
         }
         return result;
     }
@@ -117,7 +117,7 @@ capsule Accounts {
         native "js" {
             const crypto = require('crypto');
             account.id = 'ACC-' + crypto.randomBytes(6).toString('hex').toUpperCase();
-            accounts.push(account);
+            Accounts.accounts.push(account);
         }
         
         Audit.log("ACCOUNT_CREATED", "system", "Account " + account.id + " for " + name);
@@ -129,7 +129,7 @@ capsule Accounts {
         let account = Account { id: "", name: "", balance: 0.0, currency: "", status: "" };
         
         native "js" {
-            const found = accounts.find(a => a.id === account_id);
+            const found = Accounts.accounts.find(a => a.id === account_id);
             if (found) {
                 account = found;
             }
@@ -143,7 +143,7 @@ capsule Accounts {
         let success = false;
         
         native "js" {
-            const account = accounts.find(a => a.id === account_id);
+            const account = Accounts.accounts.find(a => a.id === account_id);
             if (account && account.status === 'active') {
                 account.balance += amount;
                 success = true;
@@ -156,7 +156,7 @@ capsule Accounts {
     // @visual:position(700, 650)
     flow freeze(account_id: string) {
         native "js" {
-            const account = accounts.find(a => a.id === account_id);
+            const account = Accounts.accounts.find(a => a.id === account_id);
             if (account) {
                 account.status = 'frozen';
             }
@@ -257,7 +257,7 @@ capsule PaymentProcessor {
             result.success = true;
             
             native "js" {
-                transactions.push(result.transaction);
+                PaymentProcessor.transactions.push(result.transaction);
             }
             
             Audit.log("PAYMENT_COMPLETED", from_id, 
@@ -289,7 +289,7 @@ capsule PaymentProcessor {
         };
         
         native "js" {
-            const original = transactions.find(t => t.id === transaction_id);
+            const original = PaymentProcessor.transactions.find(t => t.id === transaction_id);
             
             if (!original) {
                 result.error_code = 'TXN_NOT_FOUND';

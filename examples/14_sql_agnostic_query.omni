@@ -78,13 +78,13 @@ capsule Database {
     // @visual:position(150, 550)
     // Connect to database
     flow connect(cfg: DbConfig) -> bool {
-        config = cfg;
+        Database.config = cfg;
         
         native "js" {
-            if (config.driver === 'memory') {
+            if (Database.config.driver === 'memory') {
                 // In-memory mock database
-                tables = {};
-                connection = { connected: true };
+                Database.tables = {};
+                Database.connection = { connected: true };
                 return true;
             }
             
@@ -103,8 +103,8 @@ capsule Database {
         let success = false;
         
         native "js" {
-            if (config.driver === 'memory') {
-                tables[name] = {
+            if (Database.config.driver === 'memory') {
+                Database.tables[name] = {
                     schema: schema,
                     rows: [],
                     autoIncrement: 1
@@ -128,10 +128,10 @@ capsule Database {
         };
         
         native "js" {
-            if (config.driver === 'memory' && tables[table]) {
-                const id = tables[table].autoIncrement++;
+            if (Database.config.driver === 'memory' && Database.tables[table]) {
+                const id = Database.tables[table].autoIncrement++;
                 const row = { id, ...data };
-                tables[table].rows.push(row);
+                Database.tables[table].rows.push(row);
                 result.success = true;
                 result.affected_rows = 1;
                 result.last_insert_id = id;
@@ -155,8 +155,8 @@ capsule Database {
         };
         
         native "js" {
-            if (config.driver === 'memory' && tables[table]) {
-                let rows = tables[table].rows;
+            if (Database.config.driver === 'memory' && Database.tables[table]) {
+                let rows = Database.tables[table].rows;
                 
                 if (where_clause) {
                     rows = rows.filter(row => {
@@ -190,10 +190,10 @@ capsule Database {
         };
         
         native "js" {
-            if (config.driver === 'memory' && tables[table]) {
+            if (Database.config.driver === 'memory' && Database.tables[table]) {
                 let updated = 0;
                 
-                tables[table].rows = tables[table].rows.map(row => {
+                Database.tables[table].rows = Database.tables[table].rows.map(row => {
                     let matches = true;
                     for (const key in where_clause) {
                         if (row[key] !== where_clause[key]) matches = false;
@@ -228,17 +228,17 @@ capsule Database {
         };
         
         native "js" {
-            if (config.driver === 'memory' && tables[table]) {
-                const original = tables[table].rows.length;
+            if (Database.config.driver === 'memory' && Database.tables[table]) {
+                const original = Database.tables[table].rows.length;
                 
-                tables[table].rows = tables[table].rows.filter(row => {
+                Database.tables[table].rows = Database.tables[table].rows.filter(row => {
                     for (const key in where_clause) {
                         if (row[key] === where_clause[key]) return false;
                     }
                     return true;
                 });
                 
-                result.affected_rows = original - tables[table].rows.length;
+                result.affected_rows = original - Database.tables[table].rows.length;
                 result.success = true;
             } else {
                 result.error = 'Table not found: ' + table;

@@ -122,30 +122,30 @@ capsule Converter {
                 }
                 
                 // Convert function declarations
-                if (line.match(/function\s+(\w+)\s*\(/)) {
+                if (line.match(new RegExp("function\\s+(\\w+)\\s*\\("))) {
                     converted = line
-                        .replace(/function\s+(\w+)\s*\((.*?)\)/, 'fn $1($2)')
-                        .replace(/\$(\w+)/g, '$1')
-                        .replace(/:\s*string/, ': string')
-                        .replace(/:\s*int/, ': i64')
-                        .replace(/:\s*float/, ': f64')
-                        .replace(/:\s*bool/, ': bool');
+                        .replace(new RegExp("function\\s+(\\w+)\\s*\\((.*?)\\)"), "fn $1($2)")
+                        .replace(new RegExp("\\$(\\w+)", "g"), "$1")
+                        .replace(new RegExp(":\\s*string"), ": string")
+                        .replace(new RegExp(":\\s*int"), ": i64")
+                        .replace(new RegExp(":\\s*float"), ": f64")
+                        .replace(new RegExp(":\\s*bool"), ": bool");
                     result.stats.functions_converted++;
                 }
                 
                 // Convert echo/print
-                converted = converted.replace(/echo\s+(.+);/, 'print($1);');
-                converted = converted.replace(/print\s+(.+);/, 'print($1);');
+                converted = converted.replace(new RegExp("echo\\s+(.+);"), "print($1);");
+                converted = converted.replace(new RegExp("print\\s+(.+);"), "print($1);");
                 
                 // Convert variable declarations
-                converted = converted.replace(/\$(\w+)\s*=/, 'let $1 =');
+                converted = converted.replace(new RegExp("\\$(\\w+)\\s*="), "let $1 =");
                 
                 // Convert string concatenation
-                converted = converted.replace(/\s*\.\s*/g, ' + ');
+                converted = converted.replace(new RegExp("\\s*\\.\\s*", "g"), " + ");
                 
                 // Convert class
-                if (line.match(/class\s+(\w+)/)) {
-                    converted = line.replace(/class\s+(\w+)/, 'capsule $1');
+                if (line.match(new RegExp("class\\s+(\\w+)"))) {
+                    converted = line.replace(new RegExp("class\\s+(\\w+)"), "capsule $1");
                     result.stats.classes_converted++;
                 }
                 
@@ -198,32 +198,32 @@ capsule Converter {
                 let converted = line;
                 
                 // Convert function declarations
-                if (line.match(/function\s+(\w+)\s*\(/)) {
-                    converted = line.replace(/function\s+(\w+)/, 'fn $1');
+                if (line.match(new RegExp("function\\s+(\\w+)\\s*\\("))) {
+                    converted = line.replace(new RegExp("function\\s+(\\w+)"), "fn $1");
                     result.stats.functions_converted++;
                 }
                 
                 // Convert arrow functions (basic)
-                if (line.match(/const\s+(\w+)\s*=\s*\(.*?\)\s*=>/)) {
+                if (line.match(new RegExp("const\\s+(\\w+)\\s*=\\s*\\(.*?\\)\\s*=>"))) {
                     converted = line
-                        .replace(/const\s+(\w+)\s*=\s*\((.*?)\)\s*=>/, 'fn $1($2) ->');
+                        .replace(new RegExp("const\\s+(\\w+)\\s*=\\s*\\((.*?)\\)\\s*=>"), "fn $1($2) ->");
                     result.stats.functions_converted++;
                 }
                 
                 // Convert let/const
-                converted = converted.replace(/const\s+/g, 'let ');
-                converted = converted.replace(/var\s+/g, 'let ');
+                converted = converted.replace(new RegExp("const\\s+", "g"), "let ");
+                converted = converted.replace(new RegExp("var\\s+", "g"), "let ");
                 
                 // Convert console.log
-                converted = converted.replace(/console\.log\s*\(/g, 'print(');
+                converted = converted.replace(new RegExp("console\\.log\\s*\\(", "g"), "print(");
                 
                 // Convert class
-                if (line.match(/class\s+(\w+)/)) {
+                if (line.match(new RegExp("class\\s+(\\w+)"))) {
                     // Check if it extends something
                     if (line.includes('extends')) {
                         warnings.push('Inheritance not directly supported - use capsules');
                     }
-                    converted = line.replace(/class\s+(\w+)(\s+extends\s+\w+)?/, 'capsule $1');
+                    converted = line.replace(new RegExp("class\\s+(\\w+)(\\s+extends\\s+\\w+)?"), "capsule $1");
                     result.stats.classes_converted++;
                 }
                 

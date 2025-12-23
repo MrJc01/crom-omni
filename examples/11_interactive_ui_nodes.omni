@@ -73,7 +73,10 @@ capsule InputNode {
             i = i + 1;
         }
         
-        output_buffer = packets;
+            i = i + 1;
+        }
+        
+        InputNode.output_buffer = packets;
         return packets;
     }
     
@@ -81,8 +84,9 @@ capsule InputNode {
     // @visual:output(DataPacket)
     flow emit_single() -> DataPacket {
         native "js" {
-            if (output_buffer.length > 0) {
-                return output_buffer.shift();
+        native "js" {
+            if (InputNode.output_buffer.length > 0) {
+                return InputNode.output_buffer.shift();
             }
         }
         return DataPacket { id: 0, payload: "", timestamp: "", processed: false };
@@ -102,8 +106,10 @@ capsule TransformNode {
     // @visual:position(450, 400)
     // @visual:input(DataPacket)
     // @visual:output(TransformResult)
+    // @visual:input(DataPacket)
+    // @visual:output(TransformResult)
     flow uppercase(packet: DataPacket) -> TransformResult {
-        transform_count = transform_count + 1;
+        TransformNode.transform_count = TransformNode.transform_count + 1;
         
         let result = TransformResult {
             original_id: packet.id,
@@ -121,8 +127,10 @@ capsule TransformNode {
     // @visual:position(650, 400)
     // @visual:input(DataPacket)
     // @visual:output(TransformResult)
+    // @visual:input(DataPacket)
+    // @visual:output(TransformResult)
     flow reverse(packet: DataPacket) -> TransformResult {
-        transform_count = transform_count + 1;
+        TransformNode.transform_count = TransformNode.transform_count + 1;
         
         let result = TransformResult {
             original_id: packet.id,
@@ -140,8 +148,10 @@ capsule TransformNode {
     // @visual:position(450, 550)
     // @visual:input(TransformResult)
     // @visual:output(TransformResult)
+    // @visual:input(TransformResult)
+    // @visual:output(TransformResult)
     flow chain(input: TransformResult, transform_name: string) -> TransformResult {
-        transform_count = transform_count + 1;
+        TransformNode.transform_count = TransformNode.transform_count + 1;
         input.steps_applied = input.steps_applied + 1;
         
         native "js" {
@@ -169,27 +179,31 @@ capsule OutputNode {
     // @visual:position(750, 400)
     // @visual:input(TransformResult)
     flow collect(result: TransformResult) {
+        flow collect(result: TransformResult) {
         native "js" {
-            received.push(result);
+            OutputNode.received.push(result);
         }
     }
     
     // @visual:position(750, 500)
     flow log_all() {
+        flow log_all() {
         native "js" {
             console.log("--- Collected Results ---");
-            for (const r of received) {
+            for (const r of OutputNode.received) {
                 console.log("  [" + r.original_id + "] " + r.transformed_payload + " (steps: " + r.steps_applied + ")");
             }
             console.log("--- End ---");
         }
     }
+    }
     
     // @visual:position(950, 400)
     flow count() -> i64 {
         let c: i64 = 0;
+        let c: i64 = 0;
         native "js" {
-            c = received.length;
+            c = OutputNode.received.length;
         }
         return c;
     }

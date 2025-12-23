@@ -86,6 +86,11 @@ let TOKEN_PACKAGE = 91;
 
 let TOKEN_EXPORT = 92;
 
+let TOKEN_CAPSULE = 93;
+let TOKEN_FLOW = 94;
+let TOKEN_AT = 95;
+let TOKEN_ENTITY = 96;
+
 class Token {
     constructor(data = {}) {
         this.kind = data.kind;
@@ -99,4 +104,17 @@ class Token {
 function new_token(kind, lexeme, line) {
     return new Token({ kind: kind, lexeme: lexeme, line: line, start: 0, end: 0 });
 }
+
+module.exports = {
+    TOKEN_EOF, TOKEN_ILLEGAL, TOKEN_IDENTIFIER, TOKEN_INT, TOKEN_STRING,
+    TOKEN_ASSIGN, TOKEN_PLUS, TOKEN_MINUS, TOKEN_BANG, TOKEN_ASTERISK, TOKEN_SLASH,
+    TOKEN_LT, TOKEN_GT, TOKEN_EQ, TOKEN_NOT_EQ, TOKEN_COLON, TOKEN_DOT,
+    TOKEN_AND, TOKEN_OR, TOKEN_LE, TOKEN_GE, TOKEN_COMMA, TOKEN_SEMICOLON,
+    TOKEN_LPAREN, TOKEN_RPAREN, TOKEN_LBRACE, TOKEN_RBRACE, TOKEN_LBRACKET, TOKEN_RBRACKET,
+    TOKEN_FN, TOKEN_LET, TOKEN_TRUE, TOKEN_FALSE, TOKEN_IF, TOKEN_ELSE, TOKEN_RETURN, TOKEN_WHILE,
+    TOKEN_STRUCT, TOKEN_NATIVE, TOKEN_IMPORT, TOKEN_PACKAGE, TOKEN_EXPORT,
+    TOKEN_CAPSULE, TOKEN_FLOW, TOKEN_AT, TOKEN_ENTITY,
+    Token, new_token
+};
+Object.assign(global, module.exports);
 

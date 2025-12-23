@@ -578,6 +578,7 @@ run_file = process.argv[3] || '';
 }
 
     CLI_info(("VM Mode - Executing: " + run_file));
+    
     let source = read_file(run_file);
     let l = new_lexer(source);
     let p = new_parser(l);
@@ -633,6 +634,12 @@ console.log(CLI_COLORS.dim + "  omni run app.omni                       # Execut
     let show_coverage = false;
 input_path = process.argv[2];
         output_path = process.argv[3];
+
+        if (!output_path && input_path) {
+            const path = require('path');
+            const ext = target_lang === 'js' ? '.js' : (target_lang === 'python' ? '.py' : '.out');
+            output_path = path.join(path.dirname(input_path), path.basename(input_path, path.extname(input_path)) + ext);
+        }
         
         for (let i = 4; i < process.argv.length; i++) {
             const arg = process.argv[i];

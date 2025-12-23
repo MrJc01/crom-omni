@@ -70,11 +70,11 @@ capsule OmniLexer {
         
         native "js" {
             const patterns = [
-                { type: 'KEYWORD', regex: /\b(fn|let|if|else|while|return|struct|capsule|flow|import|native)\b/g },
-                { type: 'IDENTIFIER', regex: /\b[a-zA-Z_][a-zA-Z0-9_]*\b/g },
-                { type: 'NUMBER', regex: /\b\d+(\.\d+)?\b/g },
-                { type: 'STRING', regex: /"[^"]*"/g },
-                { type: 'COMMENT', regex: /\/\/.*$/gm }
+                { type: 'KEYWORD', regex: new RegExp("\\b(fn|let|if|else|while|return|struct|capsule|flow|import|native)\\b", "g") },
+                { type: 'IDENTIFIER', regex: new RegExp("\\b[a-zA-Z_][a-zA-Z0-9_]*\\b", "g") },
+                { type: 'NUMBER', regex: new RegExp("\\b\\d+(\\.\\d+)?\\b", "g") },
+                { type: 'STRING', regex: new RegExp("\"[^\"]*\"", "g") },
+                { type: 'COMMENT', regex: new RegExp("//.*$", "gm") }
             ];
             
             const lines = source.split('\n');
@@ -118,34 +118,34 @@ capsule Analyzer {
         };
         
         native "js" {
-            const lines = content.split('\n');
+            const lines = content.split("\n");
             metrics.total_lines = lines.length;
             
             for (const line of lines) {
                 const trimmed = line.trim();
                 
-                if (trimmed === '') {
+                if (trimmed === "") {
                     metrics.blank_lines++;
-                } else if (trimmed.startsWith('//')) {
+                } else if (trimmed.startsWith("//")) {
                     metrics.comment_lines++;
                 } else {
                     metrics.code_lines++;
                 }
                 
                 // Count declarations
-                if (trimmed.match(/^fn\s+\w+/)) {
+                if (trimmed.match(new RegExp("^fn\\s+\\w+"))) {
                     metrics.function_count++;
                 }
-                if (trimmed.match(/^flow\s+\w+/)) {
+                if (trimmed.match(new RegExp("^flow\\s+\\w+"))) {
                     metrics.function_count++; // flows are also functions
                 }
-                if (trimmed.match(/^capsule\s+\w+/)) {
+                if (trimmed.match(new RegExp("^capsule\\s+\\w+"))) {
                     metrics.capsule_count++;
                 }
-                if (trimmed.match(/^struct\s+\w+/) || trimmed.match(/^@entity\s*$/)) {
+                if (trimmed.match(new RegExp("^struct\\s+\\w+")) || trimmed.match(new RegExp("^@entity\\s*$"))) {
                     metrics.struct_count++;
                 }
-                if (trimmed.match(/^native\s+"/)) {
+                if (trimmed.match(new RegExp("^native\\s+\""))) {
                     metrics.native_block_count++;
                 }
             }

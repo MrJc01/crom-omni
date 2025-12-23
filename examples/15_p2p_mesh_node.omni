@@ -69,14 +69,14 @@ capsule P2PNode {
     flow init(port: i64) {
         native "js" {
             const crypto = require('crypto');
-            state.node_id = crypto.randomBytes(8).toString('hex');
-            state.data_store = {};
+            P2PNode.state.node_id = crypto.randomBytes(8).toString('hex');
+            P2PNode.state.data_store = {};
             
-            console.log('  Node ID: ' + state.node_id);
+            console.log('  Node ID: ' + P2PNode.state.node_id);
             console.log('  Listening on port: ' + port);
         }
         
-        running = true;
+        P2PNode.running = true;
     }
     
     // @visual:position(400, 450)
@@ -97,7 +97,7 @@ capsule P2PNode {
                     is_connected: true
                 };
                 discovered.push(peer);
-                state.peers.push(peer);
+                P2PNode.state.peers.push(peer);
             }
         }
         
@@ -123,7 +123,7 @@ capsule P2PNode {
             peer.last_seen = new Date().toISOString();
             peer.is_connected = true;
             
-            state.peers.push(peer);
+            P2PNode.state.peers.push(peer);
             
             console.log('  Connected to peer: ' + peer.id);
         }
@@ -136,7 +136,7 @@ capsule P2PNode {
     flow send(to_peer_id: string, message_type: string, payload: string) -> Message {
         let msg = Message {
             id: "",
-            from_peer: state.node_id,
+            from_peer: P2PNode.state.node_id,
             to_peer: to_peer_id,
             message_type: message_type,
             payload: payload,
@@ -161,7 +161,7 @@ capsule P2PNode {
         let sent_count: i64 = 0;
         
         native "js" {
-            for (const peer of state.peers) {
+            for (const peer of P2PNode.state.peers) {
                 if (peer.is_connected) {
                     P2PNode.send(peer.id, message_type, payload);
                     sent_count++;
@@ -186,10 +186,10 @@ capsule P2PNode {
                 case 'sync':
                     // Sync data with peer
                     const data = JSON.parse(msg.payload);
-                    Object.assign(state.data_store, data);
+                    Object.assign(P2PNode.state.data_store, data);
                     break;
                 case 'data':
-                    state.message_queue.push(msg);
+                    P2PNode.state.message_queue.push(msg);
                     break;
             }
         }
@@ -199,7 +199,7 @@ capsule P2PNode {
     // Store data (distributed)
     flow store(key: string, value: any) {
         native "js" {
-            state.data_store[key] = value;
+            P2PNode.state.data_store[key] = value;
             
             // Replicate to peers
             const payload = JSON.stringify({ [key]: value });
@@ -213,7 +213,7 @@ capsule P2PNode {
         let value: any = 0;
         
         native "js" {
-            value = state.data_store[key];
+            value = P2PNode.state.data_store[key];
         }
         
         return value;
@@ -225,7 +225,7 @@ capsule P2PNode {
         let count: i64 = 0;
         
         native "js" {
-            count = state.peers.filter(p => p.is_connected).length;
+            count = P2PNode.state.peers.filter(p => p.is_connected).length;
         }
         
         return count;
@@ -235,7 +235,7 @@ capsule P2PNode {
     // Ping all peers (heartbeat)
     flow heartbeat() {
         native "js" {
-            console.log('  Heartbeat: pinging ' + state.peers.length + ' peers');
+            console.log('  Heartbeat: pinging ' + P2PNode.state.peers.length + ' peers');
             P2PNode.broadcast('ping', '');
         }
     }

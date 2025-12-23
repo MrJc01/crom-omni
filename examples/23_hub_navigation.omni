@@ -1,0 +1,151 @@
+// 23_HUB_NAVIGATION.omni
+// Implementation of Hub.org Navigation Graph
+
+// Entity for HTTP Requests
+@entity
+struct HttpRequest {
+    url: string,
+    method: string
+}
+
+capsule HubServer {
+    let port: i64 = 8080;
+    
+    // HTML Generators
+    fn layout(title: string, content: string) {
+        let nav = "<nav style='background:#6366f1; padding:15px; color:white;'>";
+        nav = nav + "<a href='/' style='color:white; margin-right:15px'>🏠 Home</a>";
+        nav = nav + "<a href='/updates' style='color:white; margin-right:15px'>Updates</a>";
+        nav = nav + "<a href='/voting' style='color:white; margin-right:15px'>Voting</a>";
+        nav = nav + "<a href='/status' style='color:white; margin-right:15px'>Status</a>";
+        nav = nav + "<a href='/login' style='background:#f59e0b; padding:5px 10px; border-radius:5px; color:white; text-decoration:none;'>Login</a>";
+        nav = nav + "</nav>";
+        
+        let footer = "<footer style='margin-top:50px; padding:20px; background:#f3f4f6;'>";
+        footer = footer + "<a href='#sobre'>Sobre</a> | <a href='https://github.com/hub-org'>Github</a>";
+        footer = footer + "</footer>";
+        
+        let html = "<html><head><title>" + title + "</title>";
+        html = html + "<style>body{font-family:sans-serif; margin:0}</style>";
+        html = html + "</head><body>" + nav;
+        html = html + "<div style='padding:20px'>" + content + "</div>";
+        html = html + footer + "</body></html>";
+        
+        return html;
+    }
+
+    fn page_home() {
+        let content = "<h1>Dashboard Publico</h1>";
+        content = content + "<p>Bem-vindo ao Hub.org</p>";
+        content = content + "<div style='margin:20px 0'>";
+        content = content + "<a href='#doar' style='background:#6366f1; color:white; padding:10px 20px; border-radius:5px; text-decoration:none;'>Doar Agora</a> ";
+        content = content + "<a href='#transparencia' style='color:#6366f1'>Ver Financas</a>";
+        content = content + "</div>";
+        content = content + "<hr>";
+        content = content + "<h3 id='sobre'>Sobre</h3><p>Informações sobre o hub...</p>";
+        content = content + "<h3 id='doar'>Doar</h3><p>Apoie nossa causa...</p>";
+        content = content + "<form action='/stripe-checkout' method='POST'><button>Pagar com Stripe</button></form>";
+        
+        return HubServer.layout("Home", content);
+    }
+    
+    fn page_updates() {
+        return HubServer.layout("Updates", "<h1>Atualizacoes</h1><a href='/'>Voltar</a>");
+    }
+
+    fn page_voting() {
+        return HubServer.layout("Voting", "<h1>Votacao</h1><a href='/'>Voltar ao inicio</a>");
+    }
+    
+    fn page_status() {
+        return HubServer.layout("Status", "<h1>System Status: Online ✅</h1>");
+    }
+    
+    fn page_login() {
+        let content = "<h1>Login</h1>";
+        content = content + "<form action='/auth/login' method='POST'>";
+        content = content + "<input type='email' placeholder='seu@email.com' required> ";
+        content = content + "<button>Enviar Magic Link</button>";
+        content = content + "</form>";
+        return HubServer.layout("Login", content);
+    }
+    
+    fn page_admin() {
+        let content = "<h1>🔒 Area Admin</h1>";
+        content = content + "<p>Bem-vindo, Admin!</p>";
+        content = content + "<a href='/admin/layout'>Ver Layout Admin</a><br><br>";
+        content = content + "<a href='/' style='color:red'>Logout</a>";
+        return HubServer.layout("Admin", content);
+    }
+
+    // Server Logic
+    flow start() {
+        native "js" {
+            const http = require('http');
+            
+            const server = http.createServer((req, res) => {
+                const url = req.url;
+                const method = req.method;
+                
+                console.log(`[${method}] ${url}`);
+                
+                let body = "";
+                
+                // Router Logic
+                if (url === '/' || url.startsWith('/#')) {
+                    body = HubServer.page_home();
+                } 
+                else if (url === '/updates') {
+                    body = HubServer.page_updates();
+                }
+                else if (url === '/voting') {
+                    body = HubServer.page_voting();
+                }
+                else if (url === '/status') {
+                    body = HubServer.page_status();
+                }
+                else if (url === '/login') {
+                    body = HubServer.page_login();
+                }
+                else if (url === '/auth/login' && method === 'POST') {
+                    // Simulation of redirection flow
+                    res.writeHead(302, { 'Location': '/admin' });
+                    res.end();
+                    return;
+                }
+                else if (url === '/admin') {
+                    body = HubServer.page_admin();
+                }
+                else if (url === '/admin/layout') {
+                    body = HubServer.layout("Admin Layout", "<h1>Admin Layout</h1><a href='/admin'>Voltar</a>");
+                }
+                else if (url === '/stripe-checkout') {
+                     // Simulation of external redirect
+                     res.writeHead(302, { 'Location': '/' }); // Back to home for demo
+                     res.end();
+                     return;
+                }
+                else {
+                    res.writeHead(404);
+                    res.end("404 Not Found");
+                    return;
+                }
+                
+                res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+                res.end(body);
+            });
+            
+            server.listen(8080, () => {
+                console.log(`🚀 Hub.org Server running at http://localhost:8080`);
+                console.log(`   - Home:    http://localhost:8080/`);
+                console.log(`   - Updates: http://localhost:8080/updates`);
+                console.log(`   - Login:   http://localhost:8080/login`);
+                console.log(`   - Admin:   http://localhost:8080/admin (via redirect)`);
+            });
+        }
+    }
+}
+
+fn main() {
+    HubServer.start();
+}

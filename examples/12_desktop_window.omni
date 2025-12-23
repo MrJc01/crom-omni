@@ -154,7 +154,9 @@ capsule GUI {
             }
         }
         
-        main_window = win;
+        }
+        
+        GUI.main_window = win;
         return win;
     }
     
@@ -287,9 +289,9 @@ capsule GUI {
     // Close the window
     flow close() {
         native "js" {
-            if (main_window.handle) {
-                main_window.handle.remove();
-                main_window.is_open = false;
+            if (GUI.main_window.handle) {
+                GUI.main_window.handle.remove();
+                GUI.main_window.is_open = false;
             }
         }
     }

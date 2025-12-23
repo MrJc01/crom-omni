@@ -72,7 +72,7 @@ capsule TaskQueue {
         native "js" {
             const crypto = require('crypto');
             task.id = crypto.randomBytes(4).toString('hex');
-            queue.push(task);
+            TaskQueue.queue.push(task);
         }
         
         return task;
@@ -91,7 +91,7 @@ capsule TaskQueue {
         };
         
         native "js" {
-            const pending = queue.find(t => t.status === 'pending');
+            const pending = TaskQueue.queue.find(t => t.status === 'pending');
             if (pending) {
                 pending.status = 'running';
                 task = pending;
@@ -105,7 +105,7 @@ capsule TaskQueue {
     // Mark task as completed
     flow complete(task_id: string, result: any) {
         native "js" {
-            const task = queue.find(t => t.id === task_id);
+            const task = TaskQueue.queue.find(t => t.id === task_id);
             if (task) {
                 task.status = 'completed';
                 task.result = result;
@@ -117,7 +117,7 @@ capsule TaskQueue {
     // Mark task as failed
     flow fail(task_id: string, error: string) {
         native "js" {
-            const task = queue.find(t => t.id === task_id);
+            const task = TaskQueue.queue.find(t => t.id === task_id);
             if (task) {
                 task.status = 'failed';
                 task.error = error;
@@ -130,7 +130,7 @@ capsule TaskQueue {
     flow length() -> i64 {
         let len: i64 = 0;
         native "js" {
-            len = queue.filter(t => t.status === 'pending').length;
+            len = TaskQueue.queue.filter(t => t.status === 'pending').length;
         }
         return len;
     }
@@ -152,7 +152,7 @@ capsule Workers {
     // @visual:position(150, 850)
     // Initialize worker pool
     flow init(num_workers: i64) {
-        pool.max_workers = num_workers;
+        Workers.pool.max_workers = num_workers;
         
         native "js" {
             const crypto = require('crypto');
@@ -164,7 +164,7 @@ capsule Workers {
                     current_task: null,
                     tasks_completed: 0
                 };
-                pool.workers.push(worker);
+                Workers.pool.workers.push(worker);
             }
         }
     }
@@ -176,7 +176,7 @@ capsule Workers {
         
         native "js" {
             // Find idle worker
-            const worker = pool.workers.find(w => w.status === 'idle');
+            const worker = Workers.pool.workers.find(w => w.status === 'idle');
             
             if (worker) {
                 worker.status = 'busy';
@@ -196,7 +196,7 @@ capsule Workers {
                     worker.status = 'idle';
                     worker.current_task = null;
                     worker.tasks_completed++;
-                    pool.total_completed++;
+                    Workers.pool.total_completed++;
                 }, 100);
             }
         }
@@ -213,7 +213,7 @@ capsule Workers {
             promise = new Promise((resolve, reject) => {
                 const task = TaskQueue.enqueue(name, payload);
                 
-                const worker = pool.workers.find(w => w.status === 'idle');
+                const worker = Workers.pool.workers.find(w => w.status === 'idle');
                 
                 if (worker) {
                     worker.status = 'busy';
@@ -225,7 +225,7 @@ capsule Workers {
                             task.result = result;
                             worker.status = 'idle';
                             worker.tasks_completed++;
-                            pool.total_completed++;
+                            Workers.pool.total_completed++;
                             resolve(result);
                         } catch (e) {
                             task.status = 'failed';
@@ -248,10 +248,10 @@ capsule Workers {
     flow status() {
         native "js" {
             console.log('  Worker Pool Status:');
-            console.log('    Total workers: ' + pool.workers.length);
-            console.log('    Idle: ' + pool.workers.filter(w => w.status === 'idle').length);
-            console.log('    Busy: ' + pool.workers.filter(w => w.status === 'busy').length);
-            console.log('    Tasks completed: ' + pool.total_completed);
+            console.log('    Total workers: ' + Workers.pool.workers.length);
+            console.log('    Idle: ' + Workers.pool.workers.filter(w => w.status === 'idle').length);
+            console.log('    Busy: ' + Workers.pool.workers.filter(w => w.status === 'busy').length);
+            console.log('    Tasks completed: ' + Workers.pool.total_completed);
         }
     }
     
@@ -261,7 +261,7 @@ capsule Workers {
         native "js" {
             return new Promise(resolve => {
                 const check = () => {
-                    const busy = pool.workers.filter(w => w.status === 'busy').length;
+                    const busy = Workers.pool.workers.filter(w => w.status === 'busy').length;
                     if (busy === 0) {
                         resolve();
                     } else {
@@ -277,10 +277,10 @@ capsule Workers {
     // Shutdown pool
     flow shutdown() {
         native "js" {
-            for (const worker of pool.workers) {
+            for (const worker of Workers.pool.workers) {
                 worker.status = 'stopped';
             }
-            pool.workers = [];
+            Workers.pool.workers = [];
             console.log('  Worker pool shutdown complete');
         }
     }

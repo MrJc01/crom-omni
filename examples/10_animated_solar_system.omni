@@ -68,17 +68,17 @@ capsule Solar {
             document.body.appendChild(container);
             
             // Scene
-            system.scene = new THREE.Scene();
+            Solar.system.scene = new THREE.Scene();
             
             // Camera (positioned to view the system)
-            system.camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
-            system.camera.position.set(0, 30, 50);
-            system.camera.lookAt(0, 0, 0);
+            Solar.system.camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000);
+            Solar.system.camera.position.set(0, 30, 50);
+            Solar.system.camera.lookAt(0, 0, 0);
             
             // Renderer
-            system.renderer = new THREE.WebGLRenderer({ antialias: true });
-            system.renderer.setSize(width, height);
-            container.appendChild(system.renderer.domElement);
+            Solar.system.renderer = new THREE.WebGLRenderer({ antialias: true });
+            Solar.system.renderer.setSize(width, height);
+            container.appendChild(Solar.system.renderer.domElement);
             
             // Starfield background
             const starGeometry = new THREE.BufferGeometry();
@@ -92,11 +92,11 @@ capsule Solar {
             }
             starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
             const stars = new THREE.Points(starGeometry, starMaterial);
-            system.scene.add(stars);
+            Solar.system.scene.add(stars);
             
             // Ambient light
             const ambient = new THREE.AmbientLight(0x333333);
-            system.scene.add(ambient);
+            Solar.system.scene.add(ambient);
         }
         
         print("  ✓ Solar system initialized");
@@ -105,7 +105,7 @@ capsule Solar {
     // @visual:position(400, 400)
     // Create the sun
     flow create_sun() {
-        system.sun = CelestialBody {
+        Solar.system.sun = CelestialBody {
             name: "Sun",
             radius: 3.0,
             color: "#ffdd00",
@@ -119,18 +119,18 @@ capsule Solar {
             const THREE = window.THREE;
             
             // Sun geometry with emissive material
-            const geometry = new THREE.SphereGeometry(system.sun.radius, 32, 32);
+            const geometry = new THREE.SphereGeometry(Solar.system.sun.radius, 32, 32);
             const material = new THREE.MeshBasicMaterial({ 
-                color: system.sun.color,
-                emissive: system.sun.color
+                color: Solar.system.sun.color,
+                emissive: Solar.system.sun.color
             });
-            system.sun.mesh_handle = new THREE.Mesh(geometry, material);
-            system.scene.add(system.sun.mesh_handle);
+            Solar.system.sun.mesh_handle = new THREE.Mesh(geometry, material);
+            Solar.system.scene.add(Solar.system.sun.mesh_handle);
             
             // Sun point light
             const sunLight = new THREE.PointLight(0xffffff, 2, 100);
             sunLight.position.set(0, 0, 0);
-            system.scene.add(sunLight);
+            Solar.system.scene.add(sunLight);
         }
         
         print("  ✓ Sun created");
@@ -161,7 +161,7 @@ capsule Solar {
             });
             planet.mesh_handle = new THREE.Mesh(geometry, material);
             planet.mesh_handle.position.x = orbit_radius;
-            system.scene.add(planet.mesh_handle);
+            Solar.system.scene.add(planet.mesh_handle);
             
             // Orbit ring (visual guide)
             const orbitGeometry = new THREE.RingGeometry(orbit_radius - 0.05, orbit_radius + 0.05, 64);
@@ -173,9 +173,9 @@ capsule Solar {
             });
             const orbit = new THREE.Mesh(orbitGeometry, orbitMaterial);
             orbit.rotation.x = Math.PI / 2;
-            system.scene.add(orbit);
+            Solar.system.scene.add(orbit);
             
-            system.planets.push(planet);
+            Solar.system.planets.push(planet);
         }
         
         print("  ✓ Planet added: " + name);
@@ -185,17 +185,17 @@ capsule Solar {
     // @visual:position(150, 600)
     // Update positions (called each frame)
     flow update(delta: f64) {
-        system.time = system.time + delta;
+        Solar.system.time = Solar.system.time + delta;
         
         native "js" {
             // Rotate sun
-            if (system.sun.mesh_handle) {
-                system.sun.mesh_handle.rotation.y += system.sun.rotation_speed;
+            if (Solar.system.sun.mesh_handle) {
+                Solar.system.sun.mesh_handle.rotation.y += Solar.system.sun.rotation_speed;
             }
             
             // Orbit planets
-            for (const planet of system.planets) {
-                const angle = system.time * planet.orbit_speed;
+            for (const planet of Solar.system.planets) {
+                const angle = Solar.system.time * planet.orbit_speed;
                 planet.mesh_handle.position.x = Math.cos(angle) * planet.orbit_radius;
                 planet.mesh_handle.position.z = Math.sin(angle) * planet.orbit_radius;
                 planet.mesh_handle.rotation.y += planet.rotation_speed;
@@ -207,7 +207,7 @@ capsule Solar {
     // Render frame
     flow render() {
         native "js" {
-            system.renderer.render(system.scene, system.camera);
+            Solar.system.renderer.render(Solar.system.scene, Solar.system.camera);
         }
     }
     

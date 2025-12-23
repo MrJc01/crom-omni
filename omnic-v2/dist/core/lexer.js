@@ -3,6 +3,7 @@
 
 const token = require('./token.js');
 
+
 function char_at(s, i) {
 if (i >= s.length) return "\0";
         return s.charAt(i);
@@ -28,6 +29,7 @@ class Lexer {
         this.ch = data.ch;
         this.line = data.line;
     }
+
 }
 
 function new_lexer(input) {
@@ -145,22 +147,24 @@ function Lexer_lookup_ident(ident) {
     return TOKEN_WHILE;
 }
 
+    if ((ident === "capsule")) {
+    return TOKEN_CAPSULE;
+}
+
+    if ((ident === "flow")) {
+    return TOKEN_FLOW;
+}
+
+    if ((ident === "entity")) {
+    return TOKEN_ENTITY;
+}
+
     return TOKEN_IDENTIFIER;
 }
 
 function Lexer_next_token(l) {
     Lexer_skip_whitespace(l);
-    if ((l.ch === "/")) {
-    let peek = char_at(l.input, l.read_position);
-    if ((peek === "/")) {
-    while ((((l.ch !== "\n") && l.ch) !== "\0")) {
-    Lexer_read_char(l);
-}
 
-    Lexer_skip_whitespace(l);
-}
-
-}
 
     let tok = new_token(TOKEN_ILLEGAL, l.ch, l.line);
     tok.start = l.position;
@@ -253,12 +257,22 @@ function Lexer_next_token(l) {
     tok.lexeme = "+";
 }
  else {
+    if ((l.ch === "-")) {
+    tok.kind = TOKEN_MINUS;
+    tok.lexeme = "-";
+}
+ else {
+    if ((l.ch === "*")) {
+    tok.kind = TOKEN_ASTERISK;
+    tok.lexeme = "*";
+}
+ else {
     if ((l.ch === "/")) {
     let peek_slash = char_at(l.input, l.read_position);
     if ((peek_slash === "/")) {
     Lexer_read_char(l);
     Lexer_read_char(l);
-    while ((((l.ch !== "\n") && l.ch) !== "\0")) {
+    while (l.ch !== "\n" && l.ch !== "\0") {
     Lexer_read_char(l);
 }
 
@@ -276,11 +290,14 @@ function Lexer_next_token(l) {
     Lexer_read_char(l);
     let start = l.position;
     while ((is_quote(l.ch) === false)) {
-    Lexer_read_char(l);
-}
+        if (l.ch === "\\") {
+            Lexer_read_char(l); // consume backslash
+        }
+        Lexer_read_char(l); // consume char (or escaped char)
+    }
 
     let end = l.position;
-str_val = l.input.substring(Number(start), Number(end));
+    str_val = l.input.substring(Number(start), Number(end));
     tok.kind = TOKEN_STRING;
     tok.lexeme = str_val;
 }
@@ -354,6 +371,11 @@ str_val = l.input.substring(Number(start), Number(end));
     return tok;
 }
  else {
+    if ((l.ch === "@")) {
+    tok.kind = 95; // TOKEN_AT
+    tok.lexeme = "@";
+}
+ else {
     tok.kind = TOKEN_ILLEGAL;
     tok.lexeme = l.ch;
 }
@@ -398,7 +420,28 @@ str_val = l.input.substring(Number(start), Number(end));
 
 }
 
+}
+
+
+    }
+    }
     Lexer_read_char(l);
     return tok;
 }
+
+module.exports = { 
+    char_at, 
+    is_letter, 
+    is_digit, 
+    is_quote, 
+    Lexer, 
+    new_lexer, 
+    Lexer_read_char, 
+    Lexer_skip_whitespace, 
+    Lexer_read_identifier, 
+    Lexer_read_number, 
+    Lexer_lookup_ident, 
+    Lexer_next_token 
+};
+Object.assign(global, module.exports);
 
