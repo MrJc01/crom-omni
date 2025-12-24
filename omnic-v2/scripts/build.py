@@ -78,15 +78,31 @@ def main():
         # return
         pass
 
+
     # Create directories
     os.makedirs(os.path.join(DIST_DIR, "core"), exist_ok=True)
+    os.makedirs(os.path.join(DIST_DIR, "core", "codegen"), exist_ok=True)
     os.makedirs(os.path.join(DIST_DIR, "lib"), exist_ok=True)
     os.makedirs(os.path.join(DIST_DIR, "commands"), exist_ok=True)
 
     # Core
     print("Step 1: Compiling core modules...")
     compiled_core = []
-    for mod in CORE_MODULES:
+    # Explicitly compile submodules first? Order usually doesn't matter for JS requires, but...
+    # Update CORE_MODULES dynamically or here?
+    # Let's just create a list here or update the global constant?
+    # Updating constant is cleaner but I need to make sure I don't break iteration.
+    
+    # Extended list
+    full_core_modules = [
+        "token", "lexer", "parser", "ast", 
+        "codegen/base", "codegen/js", "codegen/python", "codegen",
+        "vm", "framework_adapter", "ingestion", "package_manager", 
+        "contracts", "ghost_writer", "bootstrap", 
+        "studio_engine", "studio_graph", "app_packager", "tui"
+    ]
+
+    for mod in full_core_modules:
         if compile_file(os.path.join(SRC_DIR, "core", f"{mod}.omni"), os.path.join(DIST_DIR, "core", f"{mod}.js"), auto_export=True):
             compiled_core.append(mod)
 
