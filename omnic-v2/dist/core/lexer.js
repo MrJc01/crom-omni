@@ -1,151 +1,5 @@
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 61 (let)
-BlockLoop: 10 (Lexer_read_char)
-BlockLoop: 42 (()
-BlockLoop: 66 (return)
-BlockLoop: 64 (if)
-BlockLoop: 35 (>=)
-BlockLoop: 11 (999999)
-BlockLoop: 43 ())
-BlockLoop: 44 ({)
-BlockLoop: 10 (l)
-BlockLoop: 31 (.)
-BlockLoop: 10 (ch)
-BlockLoop: 10 (l)
-BlockLoop: 31 (.)
-BlockLoop: 10 (ch)
-BlockLoop: 10 (l)
-BlockLoop: 31 (.)
-BlockLoop: 10 (position)
-BlockLoop: 31 (.)
-BlockLoop: 10 (read_position)
-BlockLoop: 10 (l)
-BlockLoop: 31 (.)
-BlockLoop: 10 (read_position)
-BlockLoop: 31 (.)
-BlockLoop: 10 (read_position)
-BlockLoop: 21 (+)
-BlockLoop: 11 (1)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 67 (while)
-BlockLoop: 64 (if)
-BlockLoop: 28 (==)
-BlockLoop: 12 (\n)
-BlockLoop: 43 ())
-BlockLoop: 44 ({)
-BlockLoop: 10 (l)
-BlockLoop: 31 (.)
-BlockLoop: 10 (line)
-BlockLoop: 31 (.)
-BlockLoop: 10 (line)
-BlockLoop: 21 (+)
-BlockLoop: 11 (1)
-BlockLoop: 10 (Lexer_read_char)
-BlockLoop: 42 (()
-BlockLoop: 80 (native)
-BlockLoop: 61 (let)
-BlockLoop: 31 (.)
-BlockLoop: 10 (position)
-BlockLoop: 67 (while)
-BlockLoop: 31 (.)
-BlockLoop: 10 (ch)
-BlockLoop: 43 ())
-BlockLoop: 33 (||)
-BlockLoop: 10 (is_digit)
-BlockLoop: 42 (()
-BlockLoop: 10 (ch)
-BlockLoop: 43 ())
-BlockLoop: 43 ())
-BlockLoop: 44 ({)
-BlockLoop: 10 (Lexer_read_char)
-BlockLoop: 42 (()
-BlockLoop: 61 (let)
-BlockLoop: 31 (.)
-BlockLoop: 10 (position)
-BlockLoop: 67 (while)
-BlockLoop: 31 (.)
-BlockLoop: 10 (ch)
-BlockLoop: 43 ())
-BlockLoop: 43 ())
-BlockLoop: 44 ({)
-BlockLoop: 10 (Lexer_read_char)
-BlockLoop: 42 (()
-BlockLoop: 64 (if)
-BlockLoop: 43 ())
-BlockLoop: 66 (return)
-BlockLoop: 64 (if)
-BlockLoop: 43 ())
-BlockLoop: 66 (return)
-BlockLoop: 64 (if)
-BlockLoop: 43 ())
-BlockLoop: 66 (return)
-BlockLoop: 64 (if)
-BlockLoop: 43 ())
-BlockLoop: 66 (return)
-BlockLoop: 64 (if)
-BlockLoop: 43 ())
-BlockLoop: 66 (return)
-BlockLoop: 64 (if)
-BlockLoop: 43 ())
-BlockLoop: 66 (return)
-BlockLoop: 64 (if)
-BlockLoop: 43 ())
-BlockLoop: 66 (return)
-BlockLoop: 64 (if)
-BlockLoop: 43 ())
-BlockLoop: 66 (return)
-BlockLoop: 64 (if)
-BlockLoop: 43 ())
-BlockLoop: 66 (return)
-BlockLoop: 64 (if)
-BlockLoop: 43 ())
-BlockLoop: 66 (return)
-BlockLoop: 64 (if)
-BlockLoop: 43 ())
-BlockLoop: 66 (return)
-BlockLoop: 64 (if)
-BlockLoop: 43 ())
-BlockLoop: 66 (return)
-BlockLoop: 64 (if)
-BlockLoop: 43 ())
-BlockLoop: 66 (return)
-BlockLoop: 66 (return)
-BlockLoop: 10 (Lexer_skip_whitespace)
-BlockLoop: 42 (()
-BlockLoop: 64 (if)
-BlockLoop: 28 (==)
-BlockLoop: 12 (/)
-BlockLoop: 43 ())
-BlockLoop: 44 ({)
-BlockLoop: 61 (let)
-BlockLoop: 42 (()
-BlockLoop: 10 (input)
-BlockLoop: 40 (,)
-BlockLoop: 10 (l)
-BlockLoop: 31 (.)
-BlockLoop: 10 (read_position)
-BlockLoop: 43 ())
-BlockLoop: 64 (if)
-BlockLoop: 43 ())
-BlockLoop: 44 ({)
-BlockLoop: 67 (while)
-BlockLoop: 29 (!=)
-BlockLoop: 12 (\n)
-BlockLoop: 32 (&&)
-BlockLoop: 10 (l)
-BlockLoop: 31 (.)
-BlockLoop: 10 (ch)
-BlockLoop: 29 (!=)
-BlockLoop: 12 (\0)
-BlockLoop: 43 ())
-BlockLoop: 44 ({)
-BlockLoop: 10 (Lexer_read_char)
-BlockLoop: 42 (()
 const token = require("./token.js");
+if (typeof global !== 'undefined') Object.assign(global, token);
 function char_at(s, i) {
     
         if (i >= s.length) return "\0";
@@ -172,400 +26,318 @@ class Lexer {
 }
 function new_lexer(input) {
     const l = new Lexer({ input: input, position: 0, read_position: 0, ch: "\0", line: 1 });
-    Lexer_read_char;
-    l;
+    Lexer_read_char(l);
     return l;
 }
 function Lexer_read_char(l) {
-    if (l) {
-    read_position;
-}
-    // Unknown stmt kind: 0
-    999999;
-    // Unknown stmt kind: 0
-    // Unknown stmt kind: 0
-    l;
-    // Unknown stmt kind: 0
-    ch = "\0";
-}
-// Unknown stmt kind: undefined
-const is_eof = false;
- is_eof = l.ch === "\0"; 
-if (is_eof) {
-    l;
-    // Unknown stmt kind: 0
-    ch = "\0";
+    if (l.read_position >= 999999) {
+    l.ch = "\0";
 } else {
-    l;
-    // Unknown stmt kind: 0
-    position = l;
-    // Unknown stmt kind: 0
-    read_position;
-    l;
-    // Unknown stmt kind: 0
-    read_position = l;
-    // Unknown stmt kind: 0
-    read_position;
-    // Unknown stmt kind: 0
-    1;
+    l.ch = char_at(l.input, l.read_position);
 }
-// Unknown stmt kind: undefined
+    const is_eof = false;
+     is_eof = l.ch === "\0"; 
+    if (is_eof) {
+    l.ch = "\0";
+} else {
+    l.position = l.read_position;
+    l.read_position = l.read_position + 1;
+}
+}
 function Lexer_skip_whitespace(l) {
     const is_ws = false;
     
         is_ws = l.ch === ' ' || l.ch === '\t' || l.ch === '\n' || l.ch === '\r';
     
     while (is_ws) {
-    if (l) {
-    ch;
+    if (l.ch == "\n") {
+    l.line = l.line + 1;
 }
-    // Unknown stmt kind: 0
-    "\n";
-    // Unknown stmt kind: 0
-    // Unknown stmt kind: 0
-    l;
-    // Unknown stmt kind: 0
-    line = l;
-    // Unknown stmt kind: 0
-    line;
-    // Unknown stmt kind: 0
-    1;
-}
-    Lexer_read_char;
-    l;
+    Lexer_read_char(l);
     
              is_ws = l.ch === ' ' || l.ch === '\t' || l.ch === '\n' || l.ch === '\r';
         
 }
-// Unknown stmt kind: undefined
+}
 function Lexer_read_identifier(l) {
-    const start_pos = l;
-    // Unknown stmt kind: 0
-    position;
-    while (is_letter) {
-    l;
+    const start_pos = l.position;
+    while (is_letter(l.ch) || is_digit(l.ch)) {
+    Lexer_read_char(l);
 }
-    // Unknown stmt kind: 0
-    ch;
-    // Unknown stmt kind: 0
-    // Unknown stmt kind: 0
-    is_digit;
-    l;
-    ch;
-    // Unknown stmt kind: 0
-    // Unknown stmt kind: 0
-    // Unknown stmt kind: 0
-    Lexer_read_char;
-    l;
-}
-const ident = "";
-
+    const ident = "";
+    
         ident = l.input.substring(Number(start_pos), Number(l.position));
     
-return ident;
-// Unknown stmt kind: undefined
+    return ident;
+}
 function Lexer_read_number(l) {
-    const start_pos = l;
-    // Unknown stmt kind: 0
-    position;
-    while (is_digit) {
-    l;
+    const start_pos = l.position;
+    while (is_digit(l.ch)) {
+    Lexer_read_char(l);
 }
-    // Unknown stmt kind: 0
-    ch;
-    // Unknown stmt kind: 0
-    // Unknown stmt kind: 0
-    // Unknown stmt kind: 0
-    Lexer_read_char;
-    l;
-}
-const num_str = "";
-
+    const num_str = "";
+    
         num_str = l.input.substring(Number(start_pos), Number(l.position));
     
-return num_str;
-// Unknown stmt kind: undefined
+    return num_str;
+}
 function Lexer_lookup_ident(ident) {
-    if (ident) {
-    "fn";
-}
-    // Unknown stmt kind: 0
+    if (ident == "fn") {
     return TOKEN_FN;
-    if (ident) {
-    "let";
 }
-    // Unknown stmt kind: 0
+    if (ident == "let") {
     return TOKEN_LET;
-    if (ident) {
-    "struct";
 }
-    // Unknown stmt kind: 0
+    if (ident == "struct") {
     return TOKEN_STRUCT;
-    if (ident) {
-    "if";
 }
-    // Unknown stmt kind: 0
+    if (ident == "if") {
     return TOKEN_IF;
-    if (ident) {
-    "else";
 }
-    // Unknown stmt kind: 0
+    if (ident == "else") {
     return TOKEN_ELSE;
-    if (ident) {
-    "return";
 }
-    // Unknown stmt kind: 0
+    if (ident == "return") {
     return TOKEN_RETURN;
-    if (ident) {
-    "true";
 }
-    // Unknown stmt kind: 0
+    if (ident == "true") {
     return TOKEN_TRUE;
-    if (ident) {
-    "false";
 }
-    // Unknown stmt kind: 0
+    if (ident == "false") {
     return TOKEN_FALSE;
-    if (ident) {
-    "native";
 }
-    // Unknown stmt kind: 0
+    if (ident == "native") {
     return TOKEN_NATIVE;
-    if (ident) {
-    "import";
 }
-    // Unknown stmt kind: 0
+    if (ident == "import") {
     return 90;
-    if (ident) {
-    "package";
 }
-    // Unknown stmt kind: 0
+    if (ident == "package") {
     return 91;
-    if (ident) {
-    "export";
 }
-    // Unknown stmt kind: 0
+    if (ident == "export") {
     return 92;
-    if (ident) {
-    "while";
 }
-    // Unknown stmt kind: 0
+    if (ident == "while") {
     return TOKEN_WHILE;
+}
     return TOKEN_IDENTIFIER;
 }
 function Lexer_next_token(l) {
-    Lexer_skip_whitespace;
-    l;
-    if (l) {
-    ch;
+    Lexer_skip_whitespace(l);
+    if (l.ch == "/") {
+    const peek = char_at(l.input, l.read_position);
+    if (peek == "/") {
+    while (l.ch != "\n" && l.ch != "\0") {
+    Lexer_read_char(l);
 }
-    // Unknown stmt kind: 0
-    "/";
-    // Unknown stmt kind: 0
-    // Unknown stmt kind: 0
-    const peek = char_at;
-    l;
-    input;
-    // Unknown stmt kind: 0
-    l;
-    // Unknown stmt kind: 0
-    read_position;
-    // Unknown stmt kind: 0
-    if (peek) {
-    "/";
+    Lexer_skip_whitespace(l);
 }
-    // Unknown stmt kind: 0
-    // Unknown stmt kind: 0
-    while (l) {
-    ch;
 }
-    // Unknown stmt kind: 0
-    "\n";
-    // Unknown stmt kind: 0
-    l;
-    // Unknown stmt kind: 0
-    ch;
-    // Unknown stmt kind: 0
-    "\0";
-    // Unknown stmt kind: 0
-    // Unknown stmt kind: 0
-    Lexer_read_char;
-    l;
+    const tok = new_token(TOKEN_ILLEGAL, l.ch, l.line);
+    tok.start = l.position;
+    if (l.ch == "\0") {
+    tok.kind = TOKEN_EOF;
+    tok.lexeme = "";
+    return tok;
 }
-// Unknown stmt kind: undefined
-// Unknown stmt kind: undefined
-const tok = new_token;
-if (l) {
-    ch;
+    if (l.ch == "=") {
+    const peek_eq = char_at(l.input, l.read_position);
+    if (peek_eq == "=") {
+    Lexer_read_char(l);
+    tok.kind = TOKEN_EQ;
+    tok.lexeme = "==";
+} else {
+    tok.kind = TOKEN_ASSIGN;
+    tok.lexeme = "=";
 }
-return tok;
-// Unknown stmt kind: undefined
-if (l) {
-    ch;
+} else {
+    if (l.ch == "!") {
+    const peek_bang = char_at(l.input, l.read_position);
+    if (peek_bang == "=") {
+    Lexer_read_char(l);
+    tok.kind = TOKEN_NOT_EQ;
+    tok.lexeme = "!=";
+} else {
+    tok.kind = TOKEN_BANG;
+    tok.lexeme = "!";
 }
-const peek_eq = char_at;
-if (peek_eq) {
-    "=";
+} else {
+    if (l.ch == ";") {
+    tok.kind = TOKEN_SEMICOLON;
+    tok.lexeme = ";";
+} else {
+    if (l.ch == "(") {
+    tok.kind = TOKEN_LPAREN;
+    tok.lexeme = "(";
+} else {
+    if (l.ch == ")") {
+    tok.kind = TOKEN_RPAREN;
+    tok.lexeme = ")";
+} else {
+    if (l.ch == "{") {
+    tok.kind = TOKEN_LBRACE;
+    tok.lexeme = "{";
+} else {
+    if (l.ch == "}") {
+    tok.kind = TOKEN_RBRACE;
+    tok.lexeme = "}";
+} else {
+    if (l.ch == ",") {
+    tok.kind = TOKEN_COMMA;
+    tok.lexeme = ",";
+} else {
+    if (l.ch == ":") {
+    tok.kind = 30;
+    tok.lexeme = ":";
+} else {
+    if (l.ch == ".") {
+    tok.kind = 31;
+    tok.lexeme = ".";
+} else {
+    if (l.ch == "[") {
+    tok.kind = TOKEN_LBRACKET;
+    tok.lexeme = "[";
+} else {
+    if (l.ch == "]") {
+    tok.kind = TOKEN_RBRACKET;
+    tok.lexeme = "]";
+} else {
+    if (l.ch == "+") {
+    tok.kind = TOKEN_PLUS;
+    tok.lexeme = "+";
+} else {
+    if (l.ch == "-") {
+    const peek_arrow = char_at(l.input, l.read_position);
+    if (peek_arrow == ">") {
+    Lexer_read_char(l);
+    tok.kind = 99;
+    tok.lexeme = "->";
+} else {
+    tok.kind = TOKEN_MINUS;
+    tok.lexeme = "-";
 }
-// Unknown stmt kind: undefined
-// Unknown stmt kind: undefined
-// Unknown stmt kind: undefined
-if (l) {
-    ch;
+} else {
+    if (l.ch == "*") {
+    tok.kind = TOKEN_ASTERISK;
+    tok.lexeme = "*";
+} else {
+    if (l.ch == "/") {
+    const peek_slash = char_at(l.input, l.read_position);
+    if (peek_slash == "/") {
+    Lexer_read_char(l);
+    Lexer_read_char(l);
+    while (l.ch != "\n" && l.ch != "\0") {
+    Lexer_read_char(l);
 }
-const peek_bang = char_at;
-if (peek_bang) {
-    "=";
+    return Lexer_next_token(l);
+} else {
+    tok.kind = TOKEN_SLASH;
+    tok.lexeme = "/";
 }
-// Unknown stmt kind: undefined
-// Unknown stmt kind: undefined
-// Unknown stmt kind: undefined
-if (l) {
-    ch;
+} else {
+    if (is_quote(l.ch)) {
+    const str_val = "";
+    Lexer_read_char(l);
+    const start = l.position;
+    while (is_quote(l.ch) == false) {
+    Lexer_read_char(l);
 }
-// Unknown stmt kind: undefined
-if (l) {
-    ch;
-}
-// Unknown stmt kind: undefined
-if (l) {
-    ch;
-}
-// Unknown stmt kind: undefined
-if (l) {
-    ch;
-}
-// Unknown stmt kind: undefined
-if (l) {
-    ch;
-}
-// Unknown stmt kind: undefined
-if (l) {
-    ch;
-}
-// Unknown stmt kind: undefined
-if (l) {
-    ch;
-}
-// Unknown stmt kind: undefined
-if (l) {
-    ch;
-}
-// Unknown stmt kind: undefined
-if (l) {
-    ch;
-}
-// Unknown stmt kind: undefined
-if (l) {
-    ch;
-}
-// Unknown stmt kind: undefined
-if (l) {
-    ch;
-}
-// Unknown stmt kind: undefined
-if (l) {
-    ch;
-}
-const peek_arrow = char_at;
-if (peek_arrow) {
-    ">";
-}
-// Unknown stmt kind: undefined
-// Unknown stmt kind: undefined
-// Unknown stmt kind: undefined
-if (l) {
-    ch;
-}
-// Unknown stmt kind: undefined
-if (l) {
-    ch;
-}
-const peek_slash = char_at;
-if (peek_slash) {
-    "/";
-}
-while (l) {
-    ch;
-}
-// Unknown stmt kind: undefined
-return Lexer_next_token;
-// Unknown stmt kind: undefined
-// Unknown stmt kind: undefined
-// Unknown stmt kind: undefined
-if (is_quote) {
-    l;
-}
-const str_val = "";
-const start = l;
-while (is_quote) {
-    l;
-}
-// Unknown stmt kind: undefined
-const end = l;
-
+    const end = l.position;
+    
             str_val = l.input.substring(Number(start), Number(end));
         
-// Unknown stmt kind: undefined
-if (l) {
-    ch;
+    tok.kind = TOKEN_STRING;
+    tok.lexeme = str_val;
+} else {
+    if (l.ch == "&") {
+    const peek_and = char_at(l.input, l.read_position);
+    if (peek_and == "&") {
+    Lexer_read_char(l);
+    tok.kind = TOKEN_AND;
+    tok.lexeme = "&&";
+} else {
+    tok.kind = TOKEN_ILLEGAL;
+    tok.lexeme = "&";
 }
-const peek_and = char_at;
-if (peek_and) {
-    "&";
+} else {
+    if (l.ch == "|") {
+    const peek_or = char_at(l.input, l.read_position);
+    if (peek_or == "|") {
+    Lexer_read_char(l);
+    tok.kind = TOKEN_OR;
+    tok.lexeme = "||";
+} else {
+    tok.kind = TOKEN_ILLEGAL;
+    tok.lexeme = "|";
 }
-// Unknown stmt kind: undefined
-// Unknown stmt kind: undefined
-// Unknown stmt kind: undefined
-if (l) {
-    ch;
+} else {
+    if (l.ch == "<") {
+    const peek_lt = char_at(l.input, l.read_position);
+    if (peek_lt == "=") {
+    Lexer_read_char(l);
+    tok.kind = TOKEN_LE;
+    tok.lexeme = "<=";
+} else {
+    tok.kind = TOKEN_LT;
+    tok.lexeme = "<";
 }
-const peek_or = char_at;
-if (peek_or) {
-    "|";
+} else {
+    if (l.ch == "@") {
+    tok.kind = 95;
+    tok.lexeme = "@";
+} else {
+    if (l.ch == ">") {
+    const peek_gt = char_at(l.input, l.read_position);
+    if (peek_gt == "=") {
+    Lexer_read_char(l);
+    tok.kind = TOKEN_GE;
+    tok.lexeme = ">=";
+} else {
+    tok.kind = TOKEN_GT;
+    tok.lexeme = ">";
 }
-// Unknown stmt kind: undefined
-// Unknown stmt kind: undefined
-// Unknown stmt kind: undefined
-if (l) {
-    ch;
+} else {
+    if (is_letter(l.ch)) {
+    const literal = Lexer_read_identifier(l);
+    tok.kind = Lexer_lookup_ident(literal);
+    tok.lexeme = literal;
+    return tok;
+} else {
+    if (is_digit(l.ch)) {
+    tok.kind = TOKEN_INT;
+    tok.lexeme = Lexer_read_number(l);
+    return tok;
+} else {
+    tok.kind = TOKEN_ILLEGAL;
+    tok.lexeme = l.ch;
 }
-const peek_lt = char_at;
-if (peek_lt) {
-    "=";
 }
-// Unknown stmt kind: undefined
-// Unknown stmt kind: undefined
-// Unknown stmt kind: undefined
-if (l) {
-    ch;
 }
-// Unknown stmt kind: undefined
-if (l) {
-    ch;
 }
-const peek_gt = char_at;
-if (peek_gt) {
-    "=";
 }
-// Unknown stmt kind: undefined
-// Unknown stmt kind: undefined
-// Unknown stmt kind: undefined
-if (is_letter) {
-    l;
 }
-const literal = Lexer_read_identifier;
-return tok;
-// Unknown stmt kind: undefined
-if (is_digit) {
-    l;
 }
-return tok;
-// Unknown stmt kind: undefined
-// Unknown stmt kind: undefined
-// Unknown stmt kind: undefined
-return tok;
-// Unknown stmt kind: undefined
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+}
+    Lexer_read_char(l);
+    return tok;
+}
 
 
 // Auto-exports

@@ -17,16 +17,24 @@ struct VMEnvironment {
     call_stack: any
 }
 
+fn new_map() -> any {
+    native "js" { return {}; }
+    return 0;
+}
+
 fn VMEnvironment_new(parent: any) -> VMEnvironment {
-    let env = VMEnvironment {
-        variables: {},
-        functions: {},
-        parent: parent,
-        call_stack: []
-    };
-    
-    // Register builtin functions
+    let env = 0;
     native "js" {
+        env = {
+            _omni_struct: true,
+            name: "VMEnvironment",
+            variables: {},
+            functions: {},
+            parent: parent,
+            call_stack: []
+        };
+        
+        // Register builtin functions
         env.functions['print'] = (...args) => { console.log(...args); return null; };
         env.functions['read_file'] = (path) => {
             const fs = require('fs');
@@ -421,7 +429,4 @@ fn OmniVM_call_function(self: OmniVM, func: any, args: any) -> any {
 // EXPORTS
 // ============================================================================
 
-export OmniVM;
-export OmniVM_new;
-export OmniVM_run;
-export VMEnvironment;
+// Exports handled by build system auto-patching

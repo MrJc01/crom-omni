@@ -1,19 +1,15 @@
-BlockLoop: 61 (let)
-BlockLoop: 61 (let)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 64 (if)
-BlockLoop: 43 ())
-BlockLoop: 44 ({)
-BlockLoop: 10 (CLI_error)
-BlockLoop: 42 (()
-BlockLoop: 66 (return)
-const cli = require("./lib/cli.js");
-const std = require("./lib/std.js");
-const lexer = require("./core/lexer.js");
-const parser = require("./core/parser.js");
-const codegen_hybrid = require("./core/codegen_hybrid.js");
-const vm = require("./core/vm.js");
+const terminal = require("../lib/terminal.js");
+if (typeof global !== 'undefined') Object.assign(global, terminal);
+const std = require("../lib/std.js");
+if (typeof global !== 'undefined') Object.assign(global, std);
+const lexer = require("../core/lexer.js");
+if (typeof global !== 'undefined') Object.assign(global, lexer);
+const parser = require("../core/parser.js");
+if (typeof global !== 'undefined') Object.assign(global, parser);
+const codegen_hybrid = require("../core/codegen_hybrid.js");
+if (typeof global !== 'undefined') Object.assign(global, codegen_hybrid);
+const vm = require("../core/vm.js");
+if (typeof global !== 'undefined') Object.assign(global, vm);
 function cmd_run() {
     const run_file = "";
     const is_app = false;
@@ -30,25 +26,19 @@ function cmd_run() {
              target = process.argv[t_idx+1];
          }
     
-    if (run_file) {
-    "";
-}
-    // Unknown stmt kind: 0
-    // Unknown stmt kind: 0
-    CLI_error;
-    "Usage: omni run <file.omni> [--app] [--target python]";
+    if (run_file == "") {
+    CLI_error("Usage: omni run <file.omni> [--app] [--target python]");
     return true;
 }
-const source = read_file;
-const l = new_lexer;
-const p = new_parser;
-const program = Parser_parse_program;
-if (is_app) {
-    target;
-}
-const gen = new_code_generator;
-const code = CodeGenerator_generate;
-
+    const source = read_file(run_file);
+    const l = new_lexer(source);
+    const p = new_parser(l);
+    const program = Parser_parse_program(p);
+    if (is_app || target == "python") {
+    CLI_info("Compiling Native App (" + target + ")...");
+    const gen = new_code_generator(target);
+    const code = CodeGenerator_generate(gen, program);
+    
              const fs = require('fs');
              const path = require('path');
              const { spawn } = require('child_process');
@@ -69,11 +59,13 @@ const code = CodeGenerator_generate;
                  // process.exit(code); // Optional
              });
          
-return true;
-// Unknown stmt kind: undefined
-const vm = OmniVM_new;
-return true;
-// Unknown stmt kind: undefined
+    return true;
+}
+    CLI_info("VM Mode - Executing: " + run_file);
+    const vm = OmniVM_new();
+    OmniVM_run(vm, program);
+    return true;
+}
 
 
 // Auto-exports

@@ -3,14 +3,14 @@
 // Facade for contract modules
 // ============================================================================
 
-import "contracts/types.omni";
-import "contracts/registry.omni";
+import "../contracts/types.omni";
+import "../contracts/registry.omni";
 
 // Sub-modules (imported by registry, but good to be explicit if needed)
-import "contracts/interfaces.omni";
-import "contracts/impl_js.omni";
-import "contracts/impl_python.omni";
-import "contracts/impl_cnative.omni";
-import "contracts/impl_lua.omni";
+import "../contracts/interfaces.omni";
+import "../contracts/impl_js.omni";
+import "../contracts/impl_python.omni";
+import "../contracts/impl_cnative.omni";
+import "../contracts/impl_lua.omni";
 
 // Exports are handled by the build system's auto-export feature

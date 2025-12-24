@@ -1,10 +1,7 @@
-BlockLoop: 10 (CLI_header)
-BlockLoop: 42 (()
-BlockLoop: 80 (native)
-const cli = require("./lib/cli.js");
+const terminal = require("../lib/terminal.js");
+if (typeof global !== 'undefined') Object.assign(global, terminal);
 function cmd_package_self() {
-    CLI_header;
-    "Self-Package";
+    CLI_header("Self-Package");
     
         const fs = require('fs');
         const path = require('path');
@@ -14,13 +11,13 @@ function cmd_package_self() {
         const version = CLI_version();
         const platform = process.platform;
         
-        CLI_step(1, 4, "Collecting source files...");
+        terminal.CLI_step(1, 4, "Collecting source files...");
         
         // Files to include
         const distDir = path.join(omniDir, 'dist');
         const targetsDir = path.join(omniDir, 'targets');
         
-        CLI_step(2, 4, "Creating package manifest...");
+        terminal.CLI_step(2, 4, "Creating package manifest...");
         
         const manifest = {
             name: 'omni-compiler',

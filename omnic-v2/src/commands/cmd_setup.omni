@@ -1,5 +1,5 @@
 
-import "lib/cli.omni";
+import "../lib/terminal.omni";
 
 // ============================================================================
 // RESOURCE PATH RESOLUTION (Local-First)
@@ -100,9 +100,9 @@ fn cmd_setup(is_global: bool) {
         const isWindows = platform === 'win32';
         const omniDir = path.dirname(path.dirname(__filename));
         
-        CLI_info("Platform: " + platform + " (" + os.arch() + ")");
-        CLI_info("Omni directory: " + omniDir);
-        CLI_info("Mode: " + (is_global ? "GLOBAL" : "LOCAL"));
+        terminal.CLI_info("Platform: " + platform + " (" + os.arch() + ")");
+        terminal.CLI_info("Omni directory: " + omniDir);
+        terminal.CLI_info("Mode: " + (is_global ? "GLOBAL" : "LOCAL"));
         
         console.log("");
         
@@ -110,7 +110,7 @@ fn cmd_setup(is_global: bool) {
             // ============================================================
             // GLOBAL INSTALLATION
             // ============================================================
-            CLI_step(1, 4, "Detecting global installation path...");
+            terminal.CLI_step(1, 4, "Detecting global installation path...");
             
             let globalDir;
             if (isWindows) {

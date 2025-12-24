@@ -1,34 +1,38 @@
-BlockLoop: 61 (let)
-BlockLoop: 40 (,)
-BlockLoop: 10 (implementations)
-BlockLoop: 30 (:)
-BlockLoop: 44 ({)
-BlockLoop: 80 (native)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 80 (native)
-BlockLoop: 61 (let)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-const types = require("./contracts/types.js");
-const interfaces = require("./contracts/interfaces.js");
-const impl_js = require("./contracts/impl_js.js");
-const impl_python = require("./contracts/impl_python.js");
-const impl_cnative = require("./contracts/impl_cnative.js");
-const impl_lua = require("./contracts/impl_lua.js");
-const cli = require("./lib/cli.js");
-function ContractRegistry_new() {
-    const registry = new ContractRegistry({ interfaces: null });
-    // Unknown stmt kind: 0
-    implementations;
-    // Unknown stmt kind: 0
-    // Unknown stmt kind: 0
+const types = require("./types.js");
+if (typeof global !== 'undefined') Object.assign(global, types);
+const interfaces = require("./interfaces.js");
+if (typeof global !== 'undefined') Object.assign(global, interfaces);
+const impl_js = require("./impl_js.js");
+if (typeof global !== 'undefined') Object.assign(global, impl_js);
+const impl_python = require("./impl_python.js");
+if (typeof global !== 'undefined') Object.assign(global, impl_python);
+const impl_cnative = require("./impl_cnative.js");
+if (typeof global !== 'undefined') Object.assign(global, impl_cnative);
+const impl_lua = require("./impl_lua.js");
+if (typeof global !== 'undefined') Object.assign(global, impl_lua);
+const terminal = require("../lib/terminal.js");
+if (typeof global !== 'undefined') Object.assign(global, terminal);
+
+    const { ContractRegistry } = types;
+    const { register_std_interfaces } = interfaces;
+    const { register_js_impl } = impl_js;
+    const { register_python_impl } = impl_python;
+    const { register_cnative_impl } = impl_cnative;
+    const { register_lua_impl } = impl_lua;
+
+function new_map() {
+     return {}; 
+    return 0;
 }
-// Unknown stmt kind: undefined
-return registry;
-// Unknown stmt kind: undefined
+function ContractRegistry_new() {
+    const registry = new ContractRegistry({ interfaces: new_map(), implementations: new_map(), active_target: "js" });
+    register_std_interfaces(registry);
+    register_js_impl(registry);
+    register_python_impl(registry);
+    register_cnative_impl(registry);
+    register_lua_impl(registry);
+    return registry;
+}
 function ContractRegistry_set_target(self, target) {
     
         self.active_target = target;
@@ -85,7 +89,7 @@ function ContractRegistry_verify_target(self, target) {
     
         const impl = self.implementations[target];
         if (!impl) {
-            CLI_error("Target '" + target + "' has no implementations");
+            terminal.CLI_error("Target '" + target + "' has no implementations");
             is_complete = false;
             return;
         }
@@ -107,11 +111,12 @@ function ContractRegistry_verify_target(self, target) {
     
     return is_complete;
 }
-const GLOBAL_CONTRACTS = ContractRegistry_new;
+const GLOBAL_CONTRACTS = ContractRegistry_new();
 
 
 // Auto-exports
 if (typeof exports !== 'undefined') {
+    exports.new_map = new_map;
     exports.ContractRegistry_new = ContractRegistry_new;
     exports.ContractRegistry_set_target = ContractRegistry_set_target;
     exports.ContractRegistry_resolve = ContractRegistry_resolve;

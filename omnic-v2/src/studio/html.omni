@@ -1,5 +1,5 @@
 
-import "studio/server.omni";
+import "./server.omni";
 
 fn generate_studio_html(server: StudioServer) -> string {
     let html = "";

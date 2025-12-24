@@ -4,7 +4,7 @@
 // Security via omni.lock with commit hash verification
 // ============================================================================
 
-import "lib/cli.omni";
+import "../lib/terminal.omni";
 
 // ============================================================================
 // GIT RESOLVER
@@ -138,10 +138,15 @@ struct LockFile {
     packages: any
 }
 
+fn new_map() -> any {
+    native "js" { return {}; }
+    return 0;
+}
+
 fn LockFile_load(project_dir: string) -> LockFile {
     let lock = LockFile {
         version: "1.0",
-        packages: {}
+        packages: new_map()
     };
     
     native "js" {
@@ -400,7 +405,7 @@ fn cmd_install_from_lock() {
         const packages = Object.values(lock.packages);
         
         if (packages.length === 0) {
-            CLI_info("No packages in omni.lock");
+            terminal.CLI_info("No packages in omni.lock");
             return;
         }
         
@@ -489,9 +494,9 @@ fn cmd_list() {
         const packages = Object.values(lock.packages);
         
         if (packages.length === 0) {
-            CLI_info("No packages installed.");
+            terminal.CLI_info("No packages installed.");
             console.log("");
-            CLI_info("Install packages with: omni install github:user/repo");
+            terminal.CLI_info("Install packages with: omni install github:user/repo");
             return;
         }
         

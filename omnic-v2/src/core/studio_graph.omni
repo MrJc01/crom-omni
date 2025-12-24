@@ -3,11 +3,11 @@
 // Bidirectional AST <-> VisualGraph conversion engine
 // ============================================================================
 
-import "core/ast.omni";
-import "lib/cli.omni";
+import "./ast.omni";
+import "../lib/terminal.omni";
 
 // Sub-modules
-import "studio/graph_types.omni";
-import "studio/graph_convert.omni";
-import "studio/graph_io.omni";
-import "studio/graph_actions.omni";
+import "../studio/graph_types.omni";
+import "../studio/graph_convert.omni";
+import "../studio/graph_io.omni";
+import "../studio/graph_actions.omni";

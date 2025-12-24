@@ -1,11 +1,3 @@
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 42 (()
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
 class GraphNode {
     constructor(data = {}) {
         this.id = data.id;
@@ -38,8 +30,7 @@ function GraphState_new() {
 }
 // Unknown stmt kind: undefined
 function GraphState_from_ast(program) {
-    const state = GraphState_new;
-    // Unknown stmt kind: 0
+    const state = GraphState_new();
     
         if (!program || !program.statements) return;
         

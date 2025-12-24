@@ -1,13 +1,8 @@
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 42 (()
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-const graph_types = require("./studio/graph_types.js");
+const graph_types = require("./graph_types.js");
+if (typeof global !== 'undefined') Object.assign(global, graph_types);
+
+    const { VisualGraph_new } = graph_types;
+
 function graph_to_json(graph) {
     const json = "";
     
@@ -16,8 +11,7 @@ function graph_to_json(graph) {
     return json;
 }
 function json_to_graph(json) {
-    const graph = VisualGraph_new;
-    // Unknown stmt kind: 0
+    const graph = VisualGraph_new();
     
         try {
             const parsed = JSON.parse(json);
@@ -56,7 +50,7 @@ function get_installed_package_nodes() {
                         const source = fs.readFileSync(fullPath, 'utf-8');
                         
                         // Simple regex to find capsules and functions
-                        const capsuleMatches = source.matchAll(new RegExp("capsule\\s+(\\w+)\\s*\\{", "g"));
+                        const capsuleMatches = source.matchAll(new RegExp("capsule\\s+(\\w+)\\s*\\{", "g")); // }
                         for (const match of capsuleMatches) {
                             nodes.push({
                                 type: 'package_capsule',
@@ -88,10 +82,8 @@ function get_installed_package_nodes() {
         };
         
         scanDir(packagesDir);
-    }
     
     return nodes;
-
 }
 
 

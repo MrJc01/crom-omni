@@ -1,6 +1,7 @@
-BlockLoop: 66 (return)
 const ast = require("../ast.js");
+if (typeof global !== 'undefined') Object.assign(global, ast);
 const token = require("../token.js");
+if (typeof global !== 'undefined') Object.assign(global, token);
 class CodeGenerator {
     constructor(data = {}) {
         this.target = data.target;

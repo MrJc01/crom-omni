@@ -1,14 +1,5 @@
-BlockLoop: 66 (return)
-BlockLoop: 40 (,)
-BlockLoop: 10 (output_buffer)
-BlockLoop: 30 (:)
-BlockLoop: 44 ({)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-const cli = require("./lib/cli.js");
+const terminal = require("../lib/terminal.js");
+if (typeof global !== 'undefined') Object.assign(global, terminal);
 class CrossRunner {
     constructor(data = {}) {
         this.processes = data.processes;
@@ -65,7 +56,7 @@ function CrossRunner_run(self, name, command, cwd) {
         });
         
         proc.on('error', (err) => {
-            CLI_error("Failed to start " + name + ": " + err.message);
+            terminal.CLI_error("Failed to start " + name + ": " + err.message);
             success = false;
         });
     

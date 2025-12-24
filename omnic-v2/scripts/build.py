@@ -8,12 +8,12 @@ OMNIC_PATH = os.path.join("..", "omnic", "target", "release", "omnic.exe")
 SRC_DIR = "src"
 DIST_DIR = "dist"
 CORE_MODULES = [
-    "token", "lexer", "parser", "ast", "codegen",
+    "token", "lexer", "parser", "ast", "codegen", "codegen_hybrid",
     "vm", "framework_adapter", "ingestion", "package_manager", 
     "contracts", "ghost_writer", "bootstrap", 
     "studio_engine", "studio_graph", "app_packager", "tui"
 ]
-LIB_MODULES = ["std", "cli"]
+LIB_MODULES = ["std", "terminal"]
 COMMAND_MODULES = [
     "cmd_setup", "cmd_run", "cmd_build", "cmd_test", 
     "cmd_package", "cmd_registry", "cmd_studio"
@@ -88,6 +88,15 @@ def main():
     os.makedirs(os.path.join(DIST_DIR, "studio"), exist_ok=True)
     os.makedirs(os.path.join(DIST_DIR, "contracts"), exist_ok=True)
 
+
+    # Copy helper JS files
+    try:
+        import shutil
+        shutil.copy(os.path.join(SRC_DIR, "core", "codegen_hybrid_impl.js"), os.path.join(DIST_DIR, "core", "codegen_hybrid_impl.js"))
+        shutil.copy(os.path.join(SRC_DIR, "core", "ingestion_patterns.js"), os.path.join(DIST_DIR, "core", "ingestion_patterns.js"))
+    except Exception as e:
+        print(f"Error copying helper JS: {e}")
+
     # Core
     print("Step 1: Compiling core modules...")
     compiled_core = []
@@ -99,10 +108,10 @@ def main():
     # Extended list
     full_core_modules = [
         "token", "lexer", "parser", "ast", 
-        "codegen/base", "codegen/js", "codegen/python", "codegen",
+        "codegen/base", "codegen/js", "codegen/python", "codegen", "codegen_hybrid",
         "vm", "framework_adapter", "ingestion", "package_manager", 
         "contracts", "ghost_writer", "bootstrap", 
-        "tui"
+        "studio_engine", "studio_graph", "app_packager", "tui"
     ]
     
     # Studio modules (compile to dist/studio/)
@@ -118,9 +127,11 @@ def main():
     ]
 
     for mod in full_core_modules:
+        print(f"DEBUG: Processing {mod}")
         if compile_file(os.path.join(SRC_DIR, "core", f"{mod}.omni"), os.path.join(DIST_DIR, "core", f"{mod}.js"), auto_export=True):
             compiled_core.append(mod)
-            
+
+
     # Compiling Studio Submodules
     print("Step 1.1: Compiling studio modules...")
     for mod in studio_modules:

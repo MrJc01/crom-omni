@@ -1,6 +1,6 @@
 
-import "core/studio_engine.omni";
-import "core/tui.omni";
+import "../core/studio_engine.omni";
+import "../core/tui.omni";
 
 fn cmd_studio_cli() {
     let port = 3000;

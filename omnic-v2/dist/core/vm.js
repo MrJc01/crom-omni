@@ -1,36 +1,7 @@
-BlockLoop: 61 (let)
-BlockLoop: 40 (,)
-BlockLoop: 10 (functions)
-BlockLoop: 30 (:)
-BlockLoop: 44 ({)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 80 (native)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 80 (native)
-BlockLoop: 61 (let)
-BlockLoop: 42 (()
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
 const ast = require("./ast.js");
+if (typeof global !== 'undefined') Object.assign(global, ast);
 const token = require("./token.js");
+if (typeof global !== 'undefined') Object.assign(global, token);
 class VMEnvironment {
     constructor(data = {}) {
         this.variables = data.variables;
@@ -39,15 +10,23 @@ class VMEnvironment {
         this.call_stack = data.call_stack;
     }
 }
-function VMEnvironment_new(parent) {
-    const env = new VMEnvironment({ variables: null });
-    // Unknown stmt kind: 0
-    functions;
-    // Unknown stmt kind: 0
-    // Unknown stmt kind: 0
+function new_map() {
+     return {}; 
+    return 0;
 }
-// Unknown stmt kind: undefined
-
+function VMEnvironment_new(parent) {
+    const env = 0;
+    
+        env = {
+            _omni_struct: true,
+            name: "VMEnvironment",
+            variables: {},
+            functions: {},
+            parent: parent,
+            call_stack: []
+        };
+        
+        // Register builtin functions
         env.functions['print'] = (...args) => { console.log(...args); return null; };
         env.functions['read_file'] = (path) => {
             const fs = require('fs');
@@ -70,8 +49,8 @@ function VMEnvironment_new(parent) {
         env.functions['JSON_parse'] = (s) => JSON.parse(s);
         env.functions['JSON_stringify'] = (obj) => JSON.stringify(obj);
     
-return env;
-// Unknown stmt kind: undefined
+    return env;
+}
 function VMEnvironment_get(self, name) {
     const result = 0;
     
@@ -116,8 +95,7 @@ class OmniVM {
     }
 }
 function OmniVM_new() {
-    const env = VMEnvironment_new;
-    0;
+    const env = VMEnvironment_new(0);
     return new OmniVM({ env: env, trace: false, step_count: 0 });
 }
 function OmniVM_run(self, program) {
@@ -414,6 +392,7 @@ function OmniVM_call_function(self, func, args) {
 
 // Auto-exports
 if (typeof exports !== 'undefined') {
+    exports.new_map = new_map;
     exports.VMEnvironment_new = VMEnvironment_new;
     exports.VMEnvironment_get = VMEnvironment_get;
     exports.VMEnvironment_set = VMEnvironment_set;

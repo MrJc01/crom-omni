@@ -1,9 +1,9 @@
 
-import "lib/cli.omni";
-import "studio/project.omni";
-import "studio/runner.omni";
-import "studio/state.omni";
-import "studio/html.omni";
+import "../lib/terminal.omni";
+import "./project.omni";
+import "./runner.omni";
+import "./state.omni";
+import "./html.omni";
 
 // ============================================================================
 // STUDIO SERVER

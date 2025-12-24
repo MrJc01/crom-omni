@@ -1,93 +1,55 @@
-BlockLoop: 10 (CLI_banner)
-BlockLoop: 42 (()
-BlockLoop: 10 (print)
-BlockLoop: 42 (()
-BlockLoop: 10 (CLI_version)
-BlockLoop: 42 (()
-BlockLoop: 10 (print)
-BlockLoop: 42 (()
-BlockLoop: 80 (native)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 64 (if)
-BlockLoop: 43 ())
-BlockLoop: 44 ({)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 10 (cmd_setup)
-BlockLoop: 42 (()
-BlockLoop: 66 (return)
-BlockLoop: 10 (cmd_package_self)
-BlockLoop: 42 (()
-BlockLoop: 66 (return)
-BlockLoop: 10 (CLI_banner)
-BlockLoop: 42 (()
-BlockLoop: 10 (print)
-BlockLoop: 42 (()
-BlockLoop: 10 (print)
-BlockLoop: 42 (()
-BlockLoop: 10 (print)
-BlockLoop: 42 (()
-BlockLoop: 10 (print)
-BlockLoop: 42 (()
-BlockLoop: 10 (print)
-BlockLoop: 42 (()
-BlockLoop: 10 (print)
-BlockLoop: 42 (()
-BlockLoop: 10 (print)
-BlockLoop: 42 (()
-BlockLoop: 10 (print)
-BlockLoop: 42 (()
-BlockLoop: 10 (print)
-BlockLoop: 42 (()
-BlockLoop: 10 (print)
-BlockLoop: 42 (()
-BlockLoop: 10 (print)
-BlockLoop: 42 (()
-BlockLoop: 10 (print)
-BlockLoop: 42 (()
-BlockLoop: 10 (print)
-BlockLoop: 42 (()
-BlockLoop: 10 (print)
-BlockLoop: 42 (()
-BlockLoop: 10 (print)
-BlockLoop: 42 (()
-BlockLoop: 66 (return)
 const token = require("./core/token.js");
+if (typeof global !== 'undefined') Object.assign(global, token);
 const lexer = require("./core/lexer.js");
+if (typeof global !== 'undefined') Object.assign(global, lexer);
 const parser = require("./core/parser.js");
+if (typeof global !== 'undefined') Object.assign(global, parser);
 const codegen_hybrid = require("./core/codegen_hybrid.js");
+if (typeof global !== 'undefined') Object.assign(global, codegen_hybrid);
 const vm = require("./core/vm.js");
+if (typeof global !== 'undefined') Object.assign(global, vm);
 const framework_adapter = require("./core/framework_adapter.js");
+if (typeof global !== 'undefined') Object.assign(global, framework_adapter);
 const ingestion = require("./core/ingestion.js");
+if (typeof global !== 'undefined') Object.assign(global, ingestion);
 const package_manager = require("./core/package_manager.js");
+if (typeof global !== 'undefined') Object.assign(global, package_manager);
 const contracts = require("./core/contracts.js");
+if (typeof global !== 'undefined') Object.assign(global, contracts);
 const ghost_writer = require("./core/ghost_writer.js");
+if (typeof global !== 'undefined') Object.assign(global, ghost_writer);
 const bootstrap = require("./core/bootstrap.js");
+if (typeof global !== 'undefined') Object.assign(global, bootstrap);
 const studio_engine = require("./core/studio_engine.js");
+if (typeof global !== 'undefined') Object.assign(global, studio_engine);
 const studio_graph = require("./core/studio_graph.js");
+if (typeof global !== 'undefined') Object.assign(global, studio_graph);
 const app_packager = require("./core/app_packager.js");
+if (typeof global !== 'undefined') Object.assign(global, app_packager);
 const tui = require("./core/tui.js");
+if (typeof global !== 'undefined') Object.assign(global, tui);
+const terminal = require("./lib/terminal.js");
+if (typeof global !== 'undefined') Object.assign(global, terminal);
 const std = require("./lib/std.js");
-const cli = require("./lib/cli.js");
+if (typeof global !== 'undefined') Object.assign(global, std);
 const cmd_setup = require("./commands/cmd_setup.js");
+if (typeof global !== 'undefined') Object.assign(global, cmd_setup);
 const cmd_run = require("./commands/cmd_run.js");
+if (typeof global !== 'undefined') Object.assign(global, cmd_run);
 const cmd_build = require("./commands/cmd_build.js");
+if (typeof global !== 'undefined') Object.assign(global, cmd_build);
 const cmd_test = require("./commands/cmd_test.js");
+if (typeof global !== 'undefined') Object.assign(global, cmd_test);
 const cmd_package = require("./commands/cmd_package.js");
+if (typeof global !== 'undefined') Object.assign(global, cmd_package);
 const cmd_registry = require("./commands/cmd_registry.js");
+if (typeof global !== 'undefined') Object.assign(global, cmd_registry);
 const cmd_studio = require("./commands/cmd_studio.js");
+if (typeof global !== 'undefined') Object.assign(global, cmd_studio);
 function cmd_version() {
-    CLI_banner;
-    // Unknown stmt kind: 0
-    print;
-    "Version: ";
-    CLI_version;
-    // Unknown stmt kind: 0
-    print;
-    "";
+    CLI_banner();
+    print("Version: " + CLI_version());
+    print("");
     
         console.log(CLI_COLORS.dim + "Node.js: " + process.version + CLI_COLORS.reset);
         console.log(CLI_COLORS.dim + "Platform: " + process.platform + CLI_COLORS.reset);
@@ -103,11 +65,7 @@ function main() {
     
         command = process.argv[2] || '';
     
-    if (command) {
-    "setup";
-}
-    // Unknown stmt kind: 0
-    // Unknown stmt kind: 0
+    if (command == "setup") {
     const is_global = false;
     
             for (let i = 3; i < process.argv.length; i++) {
@@ -116,118 +74,97 @@ function main() {
                 }
             }
         
-    cmd_setup;
-    is_global;
+    cmd_setup(is_global);
     return 0;
 }
-if (command) {
-    "--version";
-}
-return 0;
-// Unknown stmt kind: undefined
-if (command) {
-    "package";
-}
-const self_package = false;
- self_package = process.argv[3] === '--self'; 
-if (self_package) {
-    cmd_package_self;
-    // Unknown stmt kind: 0
+    if (command == "--version" || command == "-v" || command == "version") {
+    cmd_version();
     return 0;
 }
-// Unknown stmt kind: undefined
-if (command) {
-    "install";
+    if (command == "package") {
+    const self_package = false;
+     self_package = process.argv[3] === '--self'; 
+    if (self_package) {
+    cmd_package_self();
+    return 0;
 }
-const package_spec = "";
- package_spec = process.argv[3] || ''; 
-return 0;
-// Unknown stmt kind: undefined
-if (command) {
-    "uninstall";
 }
-const package_name = "";
- package_name = process.argv[3] || ''; 
-if (package_name) {
-    "";
+    if (command == "install") {
+    const package_spec = "";
+     package_spec = process.argv[3] || ''; 
+    cmd_install(package_spec);
+    return 0;
 }
-return 1;
-// Unknown stmt kind: undefined
-return 0;
-// Unknown stmt kind: undefined
-if (command) {
-    "list";
+    if (command == "uninstall") {
+    const package_name = "";
+     package_name = process.argv[3] || ''; 
+    if (package_name == "") {
+    terminal.CLI_error("Usage: omni uninstall <package_name>");
+    return 1;
 }
-return 0;
-// Unknown stmt kind: undefined
-if (command) {
-    "update";
+    cmd_uninstall(package_name);
+    return 0;
 }
-const package_name = "";
- package_name = process.argv[3] || ''; 
-return 0;
-// Unknown stmt kind: undefined
-if (command) {
-    "search";
+    if (command == "list") {
+    cmd_list();
+    return 0;
 }
-const query = "";
- query = process.argv[3] || ''; 
-return 0;
-// Unknown stmt kind: undefined
-if (command) {
-    "doctor";
+    if (command == "update") {
+    const package_name = "";
+     package_name = process.argv[3] || ''; 
+    cmd_update(package_name);
+    return 0;
 }
-return 0;
-// Unknown stmt kind: undefined
-if (command) {
-    "contracts";
+    if (command == "search") {
+    const query = "";
+     query = process.argv[3] || ''; 
+    cmd_search(query);
+    return 0;
 }
-return 0;
-// Unknown stmt kind: undefined
-if (command) {
-    "graph";
+    if (command == "doctor") {
+    cmd_doctor();
+    return 0;
 }
-const input_file = "";
-const output_file = "";
- 
+    if (command == "contracts") {
+    cmd_contracts();
+    return 0;
+}
+    if (command == "graph") {
+    const input_file = "";
+    const output_file = "";
+     
             input_file = process.argv[3] || '';
             output_file = process.argv[4] || '';
         
-if (input_file) {
-    "";
+    if (input_file == "") {
+    CLI_error("Usage: omni graph <input.omni> [output.md]");
+    CLI_info("Generates architecture diagrams in Mermaid format");
+    return 1;
 }
-return 1;
-// Unknown stmt kind: undefined
-if (output_file) {
-    "";
-}
-
+    if (output_file == "") {
+    
                 const path = require('path');
                 output_file = path.basename(input_file, '.omni') + '_architecture.md';
             
-// Unknown stmt kind: undefined
-return 0;
-// Unknown stmt kind: undefined
-if (command) {
-    "bootstrap";
 }
-return 0;
-// Unknown stmt kind: undefined
-if (command) {
-    "studio";
+    cmd_graph(input_file, output_file);
+    return 0;
 }
-return 0;
-// Unknown stmt kind: undefined
-if (command) {
-    "ui";
+    if (command == "bootstrap") {
+    cmd_bootstrap();
+    return 0;
 }
-return 0;
-// Unknown stmt kind: undefined
-if (command) {
-    "package";
+    if (command == "studio") {
+    cmd_studio_cli();
+    return 0;
 }
-const target = "";
-
+    if (command == "ui") {
+    cmd_tui();
+    return 0;
+}
+    if (command == "package") {
+    const target = "";
+    
             for (let i = 3; i < process.argv.length; i++) {
                 if (process.argv[i] === '--app' && process.argv[i + 1]) {
                     target = process.argv[i + 1];
@@ -241,8 +178,8 @@ const target = "";
                 else target = 'windows';
             }
         
-const config = AppConfig_default;
-
+    const config = AppConfig_default();
+    
             const fs = require('fs');
             const path = require('path');
             const configPath = path.join(process.cwd(), 'omni.config.json');
@@ -257,98 +194,76 @@ const config = AppConfig_default;
                 }
             }
         
-return 0;
-// Unknown stmt kind: undefined
-if (command) {
-    "ingest";
+    cmd_package_app(target, config);
+    return 0;
 }
-const input_file = "";
-const output_file = "";
- 
+    if (command == "ingest") {
+    const input_file = "";
+    const output_file = "";
+     
             input_file = process.argv[3] || '';
             output_file = process.argv[4] || '';
         
-if (input_file) {
-    "";
+    if (input_file == "") {
+    CLI_error("Usage: omni ingest <legacy_file> <output.omni>");
+    return 1;
 }
-return 1;
-// Unknown stmt kind: undefined
-if (output_file) {
-    "";
-}
-
+    if (output_file == "") {
+    
                 const path = require('path');
                 output_file = path.basename(input_file).replace(/\.[^.]+$/, '.omni');
             
-// Unknown stmt kind: undefined
-return 0;
-// Unknown stmt kind: undefined
-if (command) {
-    "run";
 }
-return 0;
-// Unknown stmt kind: undefined
-if (command) {
-    "build";
-}
-return 0;
-// Unknown stmt kind: undefined
-if (command) {
-    "test-all";
-}
-return 0;
-// Unknown stmt kind: undefined
-const show_help = false;
- 
-        show_help = command === 'help' || command === '--help' || command === '-h'; 
-    
-if (command) {
-    "";
-}
-return 0;
-// Unknown stmt kind: undefined
-if (show_help) {
-    CLI_banner;
-    // Unknown stmt kind: 0
-    print;
-    "Commands:";
-    print;
-    "  setup                          Start Global Setup Wizard";
-    print;
-    "  run <file.omni>                Execute instantly via VM";
-    print;
-    "  build                          Build from omni.config.json";
-    print;
-    "  test-all                       Validate all examples compile";
-    print;
-    "  package --self                 Create self-contained package";
-    print;
-    "  <input> <output> [options]     Compile to target";
-    print;
-    "";
-    print;
-    "Options:";
-    print;
-    "  --target <lang>     Target language (js, python)";
-    print;
-    "  --package <path>    Load external language package (.omni-pkg)";
-    print;
-    "  --framework <name>  Framework adapter (nextjs, laravel, android)";
-    print;
-    "  --coverage          Show AST coverage report";
-    print;
-    "  --version, -v       Show version";
-    print;
-    "";
+    cmd_ingest(input_file, output_file);
     return 0;
 }
-const input_path = "";
-const output_path = "";
-const target_lang = "js";
-const package_path = "";
-const framework = "";
-const show_coverage = false;
-
+    if (command == "run") {
+    cmd_run();
+    return 0;
+}
+    if (command == "build") {
+    cmd_build();
+    return 0;
+}
+    if (command == "test-all") {
+    cmd_test_all();
+    return 0;
+}
+    const show_help = false;
+     
+        show_help = command === 'help' || command === '--help' || command === '-h'; 
+    
+    if (command == "" || args_len < 3) {
+    CLI_info("Launching interactive mode...");
+    cmd_tui();
+    return 0;
+}
+    if (show_help) {
+    CLI_banner();
+    print("Commands:");
+    print("  setup                          Start Global Setup Wizard");
+    print("  run <file.omni>                Execute instantly via VM");
+    print("  build                          Build from omni.config.json");
+    print("  test-all                       Validate all examples compile");
+    print("  package --self                 Create self-contained package");
+    print("  <input> <output> [options]     Compile to target");
+    print("");
+    print("Options:");
+    print("  --target <lang>     Target language (js, python)");
+    print("  --package <path>    Load external language package (.omni-pkg)");
+    print("  --framework <name>  Framework adapter (nextjs, laravel, android)");
+    print("  --coverage          Show AST coverage report");
+    print("  --version, -v       Show version");
+    print("");
+    return 0;
+}
+    const input_path = "";
+    const output_path = "";
+    const target_lang = "js";
+    const package_path = "";
+    const framework = "";
+    const show_coverage = false;
+    
         input_path = process.argv[2];
         output_path = process.argv[3];
         
@@ -365,13 +280,15 @@ const show_coverage = false;
             }
         }
     
-
+    CLI_info("Compiling: " + input_path);
+    CLI_info("Target: " + target_lang);
+    
         if (package_path) {
             const fs = require('fs');
             const path = require('path');
             
             if (fs.existsSync(package_path)) {
-                CLI_info("Loading package: " + package_path);
+                terminal.CLI_info("Loading package: " + package_path);
                 
                 const grammarPath = fs.statSync(package_path).isDirectory() 
                     ? path.join(package_path, 'grammar.json')
@@ -398,29 +315,32 @@ const show_coverage = false;
             }
         }
     
-const source = read_file;
-const l = new_lexer;
-const p = new_parser;
-const program = Parser_parse_program;
-const gen = new_code_generator;
-
+    const source = read_file(input_path);
+    const l = new_lexer(source);
+    const p = new_parser(l);
+    const program = Parser_parse_program(p);
+    const gen = new_code_generator(target_lang);
+    
         if (framework) {
             gen.framework = framework;
         }
     
-const code = CodeGenerator_generate;
-
+    const code = CodeGenerator_generate(gen, program);
+    
         if (show_coverage || gen.ast_node_count > 0) {
             const coverage = gen.ast_node_count > 0 
                 ? (gen.generated_count / gen.ast_node_count * 100).toFixed(1)
                 : 100;
-            CLI_info("AST Coverage: " + coverage + "% (" + 
+            terminal.CLI_info("AST Coverage: " + coverage + "% (" + 
                 gen.generated_count + "/" + gen.ast_node_count + " nodes)");
                 
             if (coverage < 100) {
-                CLI_warning("Some AST nodes were not generated");
+                terminal.CLI_warning("Some AST nodes were not generated");
             }
         }
     
-// Unknown stmt kind: undefined
+    write_file(output_path, code);
+    CLI_success("Output: " + output_path);
+    CLI_success("Compiled successfully!");
+}
 

@@ -1,5 +1,5 @@
-BlockLoop: 80 (native)
-const contracts = require("./core/contracts.js");
+const contracts = require("../core/contracts.js");
+if (typeof global !== 'undefined') Object.assign(global, contracts);
 function cmd_contracts() {
     
         const registry = ContractRegistry_new();

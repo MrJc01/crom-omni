@@ -1,15 +1,5 @@
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 10 (CLI_banner)
-BlockLoop: 42 (()
-BlockLoop: 10 (CLI_header)
-BlockLoop: 42 (()
-BlockLoop: 80 (native)
-const cli = require("./lib/cli.js");
+const terminal = require("../lib/terminal.js");
+if (typeof global !== 'undefined') Object.assign(global, terminal);
 function get_omni_home() {
     const home = "";
     
@@ -86,10 +76,8 @@ function resolve_resource_path(name) {
     return resolved;
 }
 function cmd_setup(is_global) {
-    CLI_banner;
-    // Unknown stmt kind: 0
-    CLI_header;
-    "Omni Setup";
+    CLI_banner();
+    CLI_header("Omni Setup");
     
         const os = require('os');
         const fs = require('fs');
@@ -100,9 +88,9 @@ function cmd_setup(is_global) {
         const isWindows = platform === 'win32';
         const omniDir = path.dirname(path.dirname(__filename));
         
-        CLI_info("Platform: " + platform + " (" + os.arch() + ")");
-        CLI_info("Omni directory: " + omniDir);
-        CLI_info("Mode: " + (is_global ? "GLOBAL" : "LOCAL"));
+        terminal.CLI_info("Platform: " + platform + " (" + os.arch() + ")");
+        terminal.CLI_info("Omni directory: " + omniDir);
+        terminal.CLI_info("Mode: " + (is_global ? "GLOBAL" : "LOCAL"));
         
         console.log("");
         
@@ -110,7 +98,7 @@ function cmd_setup(is_global) {
             // ============================================================
             // GLOBAL INSTALLATION
             // ============================================================
-            CLI_step(1, 4, "Detecting global installation path...");
+            terminal.CLI_step(1, 4, "Detecting global installation path...");
             
             let globalDir;
             if (isWindows) {

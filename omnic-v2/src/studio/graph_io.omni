@@ -1,5 +1,9 @@
 
-import "studio/graph_types.omni";
+import "./graph_types.omni";
+
+native "js" {
+    const { VisualGraph_new } = graph_types;
+}
 
 // ============================================================================
 // GRAPH JSON SERIALIZATION
@@ -60,7 +64,7 @@ fn get_installed_package_nodes() -> any {
                         const source = fs.readFileSync(fullPath, 'utf-8');
                         
                         // Simple regex to find capsules and functions
-                        const capsuleMatches = source.matchAll(new RegExp("capsule\\s+(\\w+)\\s*\\{", "g"));
+                        const capsuleMatches = source.matchAll(new RegExp("capsule\\s+(\\w+)\\s*\\{", "g")); // }
                         for (const match of capsuleMatches) {
                             nodes.push({
                                 type: 'package_capsule',

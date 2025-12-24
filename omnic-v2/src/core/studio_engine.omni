@@ -3,12 +3,12 @@
 // Manages IDE state, Cross-Runner, and visual programming graph
 // ============================================================================
 
-import "lib/cli.omni";
-import "core/ghost_writer.omni";
+import "../lib/terminal.omni";
+import "./ghost_writer.omni";
 
 // Sub-modules
-import "studio/project.omni";
-import "studio/runner.omni";
-import "studio/state.omni";
-import "studio/server.omni";
-import "studio/html.omni";
+import "../studio/project.omni";
+import "../studio/runner.omni";
+import "../studio/state.omni";
+import "../studio/server.omni";
+import "../studio/html.omni";

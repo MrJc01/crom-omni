@@ -54,7 +54,7 @@ Shared utilities.
 
 The build process (`scripts/build.py`) is a Python script that:
 
-1. Compiles all `.omni` modules to `.js` using the bootstrap compiler.
+1. Compiles all `.omni` modules to `.js` using the bootstrap compiler (with native block filtering).
 2. Bundles them into a single `dist/omni_bundle.js`.
 3. Handles directory recursion and export hoisting.
 4. Creates the `omni` executable (via `omni.cmd` wrapper).

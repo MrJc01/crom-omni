@@ -1,153 +1,65 @@
-BlockLoop: 64 (if)
-BlockLoop: 28 (==)
-BlockLoop: 10 (NODE_IMPORT)
-BlockLoop: 43 ())
-BlockLoop: 44 ({)
-BlockLoop: 66 (return)
-BlockLoop: 42 (()
-BlockLoop: 10 (stmt)
-BlockLoop: 43 ())
-BlockLoop: 61 (let)
-BlockLoop: 31 (.)
-BlockLoop: 10 (path)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 31 (.)
-BlockLoop: 10 (name)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 21 (+)
-BlockLoop: 10 (name)
-BlockLoop: 21 (+)
-BlockLoop: 12 ( {\n    constructor(data = {}) {\n)
-BlockLoop: 21 (+)
-BlockLoop: 10 (assignments)
-BlockLoop: 21 (+)
-BlockLoop: 12 (    }\n})
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 10 (out)
-BlockLoop: 21 (+)
-BlockLoop: 12 (})
-BlockLoop: 66 (return)
-BlockLoop: 64 (if)
-BlockLoop: 43 ())
-BlockLoop: 66 (return)
-BlockLoop: 64 (if)
-BlockLoop: 28 (==)
-BlockLoop: 10 (NODE_LITERAL)
-BlockLoop: 43 ())
-BlockLoop: 66 (return)
-BlockLoop: 31 (.)
-BlockLoop: 10 (value)
-BlockLoop: 64 (if)
-BlockLoop: 28 (==)
-BlockLoop: 10 (NODE_STRING)
-BlockLoop: 43 ())
-BlockLoop: 44 ({)
-BlockLoop: 66 (return)
-BlockLoop: 21 (+)
-BlockLoop: 10 (expr)
-BlockLoop: 31 (.)
-BlockLoop: 10 (value)
-BlockLoop: 21 (+)
-BlockLoop: 12 (')
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
 const base = require("./base.js");
+if (typeof global !== 'undefined') Object.assign(global, base);
 const ast = require("../ast.js");
+if (typeof global !== 'undefined') Object.assign(global, ast);
 const token = require("../token.js");
+if (typeof global !== 'undefined') Object.assign(global, token);
 function CodeGenerator_gen_statement(self, stmt) {
-    if (stmt) {
-    kind;
+    if (stmt.kind == NODE_IMPORT) {
+    return CodeGenerator_gen_import(self, stmt);
 }
-    // Unknown stmt kind: 0
-    NODE_IMPORT;
-    // Unknown stmt kind: 0
-    // Unknown stmt kind: 0
-    return CodeGenerator_gen_import;
-    self;
-    stmt;
-    // Unknown stmt kind: 0
+    if (stmt.kind == 80) {
+    if (stmt.lang == "js" || stmt.lang == "javascript") {
+    return stmt.code;
 }
-if (stmt) {
-    kind;
+    return "";
 }
-if (stmt) {
-    lang;
+    if (stmt.kind == NODE_LET) {
+    return "let " + stmt.name + " = " + CodeGenerator_gen_expression(self, stmt.value) + ";";
 }
-return stmt;
-// Unknown stmt kind: undefined
-return "";
-// Unknown stmt kind: undefined
-if (stmt) {
-    kind;
+    if (stmt.kind == NODE_RETURN) {
+    return "return " + CodeGenerator_gen_expression(self, stmt.value) + ";";
 }
-return "let ";
-// Unknown stmt kind: undefined
-if (stmt) {
-    kind;
+    if (stmt.kind == NODE_FUNCTION) {
+    const params = "";
+     params = stmt.params.join(", "); 
+    const body = CodeGenerator_gen_block(self, stmt.body);
+    const decl = "function " + stmt.name + "(" + params + ") " + body;
+    const decorators_code = CodeGenerator_gen_decorators(self, stmt.name, stmt.decorators);
+    if (decorators_code != "") {
+    decl = decl + "\n" + decorators_code;
 }
-return "return ";
-// Unknown stmt kind: undefined
-if (stmt) {
-    kind;
+    return decl;
 }
-const params = "";
- params = stmt.params.join(", "); 
-const body = CodeGenerator_gen_block;
-const decl = "function ";
-const decorators_code = CodeGenerator_gen_decorators;
-if (decorators_code) {
-    "";
+    if (stmt.kind == NODE_STRUCT) {
+    const decl = CodeGenerator_gen_struct(self, stmt);
+    const decorators_code = CodeGenerator_gen_decorators(self, stmt.name, stmt.decorators);
+    if (decorators_code != "") {
+    decl = decl + "\n" + decorators_code;
 }
-// Unknown stmt kind: undefined
-return decl;
-// Unknown stmt kind: undefined
-if (stmt) {
-    kind;
+    return decl;
 }
-const decl = CodeGenerator_gen_struct;
-const decorators_code = CodeGenerator_gen_decorators;
-if (decorators_code) {
-    "";
+    if (stmt.kind == NODE_IF) {
+    const cond = CodeGenerator_gen_expression(self, stmt.condition);
+    const cons = CodeGenerator_gen_block(self, stmt.consequence);
+    const alt = "";
+    if (stmt.alternative) {
+    alt = " else " + CodeGenerator_gen_block(self, stmt.alternative);
 }
-// Unknown stmt kind: undefined
-return decl;
-// Unknown stmt kind: undefined
-if (stmt) {
-    kind;
+    return "if (" + cond + ") " + cons + alt;
 }
-const cond = CodeGenerator_gen_expression;
-const cons = CodeGenerator_gen_block;
-const alt = "";
-if (stmt) {
-    alternative;
+    if (stmt.kind == NODE_WHILE) {
+    const cond = CodeGenerator_gen_expression(self, stmt.condition);
+    const body = CodeGenerator_gen_block(self, stmt.body);
+    return "while (" + cond + ") " + body;
 }
-// Unknown stmt kind: undefined
-return "if (";
-// Unknown stmt kind: undefined
-if (stmt) {
-    kind;
+    if (stmt.expr) {
+    return CodeGenerator_gen_expression(self, stmt.expr) + ";";
 }
-const cond = CodeGenerator_gen_expression;
-const body = CodeGenerator_gen_block;
-return "while (";
-// Unknown stmt kind: undefined
-if (stmt) {
-    expr;
+    return "// Unknown stmt kind: " + stmt.kind;
 }
-return CodeGenerator_gen_expression;
-// Unknown stmt kind: undefined
-return "// Unknown stmt kind: ";
-// Unknown stmt kind: undefined
 function CodeGenerator_gen_import(self, stmt) {
-    const path = stmt;
-    // Unknown stmt kind: 0
-    path;
+    const path = stmt.path;
     
         path = path.replace(".omni", ".js");
         if (path.startsWith(".") == false) path = "./" + path;
@@ -160,24 +72,14 @@ function CodeGenerator_gen_import(self, stmt) {
     return "";
 }
 function CodeGenerator_gen_struct(self, stmt) {
-    const name = stmt;
-    // Unknown stmt kind: 0
-    name;
+    const name = stmt.name;
     const assignments = "";
     
         for (const field of stmt.fields) {
              assignments = assignments + "        this." + field.name + " = data." + field.name + ";\n";
         }
     
-    return "class ";
-    // Unknown stmt kind: 0
-    name;
-    // Unknown stmt kind: 0
-    " {\n    constructor(data = {}) {\n";
-    // Unknown stmt kind: 0
-    assignments;
-    // Unknown stmt kind: 0
-    "    }\n}";
+    return "class " + name + " {\n    constructor(data = {}) {\n" + assignments + "    }\n}";
 }
 function CodeGenerator_gen_block(self, block) {
     const out = "{\n";
@@ -188,127 +90,87 @@ function CodeGenerator_gen_block(self, block) {
             }
         }
     
-    out = out;
-    // Unknown stmt kind: 0
-    "}";
+    out = out + "}";
     return out;
 }
 function CodeGenerator_gen_expression(self, expr) {
-    if (expr) {
-    0;
-}
-    // Unknown stmt kind: 0
+    if (expr == 0) {
     return "null";
-    if (expr) {
-    kind;
 }
-    // Unknown stmt kind: 0
-    NODE_LITERAL;
-    // Unknown stmt kind: 0
-    return expr;
-    // Unknown stmt kind: 0
-    value;
-    if (expr) {
-    kind;
+    if (expr.kind == NODE_LITERAL) {
+    return expr.value;
 }
-    // Unknown stmt kind: 0
-    NODE_STRING;
-    // Unknown stmt kind: 0
-    // Unknown stmt kind: 0
-    return "'";
-    // Unknown stmt kind: 0
-    expr;
-    // Unknown stmt kind: 0
-    value;
-    // Unknown stmt kind: 0
-    "'";
+    if (expr.kind == NODE_STRING) {
+    return "'" + expr.value + "'";
 }
-if (expr) {
-    kind;
+    if (expr.kind == NODE_BOOL) {
+    if (expr.value) {
+    return "true";
 }
-if (expr) {
-    value;
+    return "false";
 }
-return "true";
-// Unknown stmt kind: undefined
-return "false";
-// Unknown stmt kind: undefined
-if (expr) {
-    kind;
+    if (expr.kind == NODE_BINARY) {
+    return CodeGenerator_gen_expression(self, expr.left) + " " + expr.op + " " + CodeGenerator_gen_expression(self, expr.right);
 }
-return CodeGenerator_gen_expression;
-// Unknown stmt kind: undefined
-if (expr) {
-    kind;
-}
-const args = "";
-
+    if (expr.kind == NODE_CALL) {
+    const args = "";
+    
              let list = [];
              for(let a of expr.args) list.push(CodeGenerator_gen_expression(self, a));
              args = list.join(", ");
          
-const callee = CodeGenerator_gen_expression;
-const is_class = false;
-
+    const callee = CodeGenerator_gen_expression(self, expr.function);
+    const is_class = false;
+    
              if (typeof expr.function.value === 'string') {
                  let val = expr.function.value;
                  let first = val.charAt(0);
                  is_class = (first >= "A" && first <= "Z") && (val.indexOf("_") == -1);
              }
          
-if (is_class) {
-    return "new ";
+    if (is_class) {
+    return "new " + callee + "(" + args + ")";
 }
-return callee;
-// Unknown stmt kind: undefined
-if (expr) {
-    kind;
+    return callee + "(" + args + ")";
 }
-return CodeGenerator_gen_expression;
-// Unknown stmt kind: undefined
-if (expr) {
-    kind;
+    if (expr.kind == NODE_MEMBER) {
+    return CodeGenerator_gen_expression(self, expr.target) + "." + expr.property;
 }
-const fields = "";
-
+    if (expr.kind == NODE_STRUCT_INIT) {
+    const fields = "";
+    
             let list = [];
             for(let f of expr.fields) {
                 list.push(f.name + ": " + CodeGenerator_gen_expression(self, f.value));
             }
             fields = list.join(", ");
         
-return "new ";
-// Unknown stmt kind: undefined
-if (expr) {
-    kind;
+    return "new " + expr.name + "({ " + fields + " })";
 }
-const elems = "";
-
+    if (expr.kind == NODE_ARRAY) {
+    const elems = "";
+    
             let list = [];
             for (let e of expr.elements) {
                 list.push(CodeGenerator_gen_expression(self, e));
             }
             elems = list.join(", ");
         
-return "[";
-// Unknown stmt kind: undefined
-if (expr) {
-    kind;
+    return "[" + elems + "]";
 }
-return expr;
-// Unknown stmt kind: undefined
-if (expr) {
-    kind;
+    if (expr.kind == NODE_IDENTIFIER) {
+    return expr.value;
 }
-const left = CodeGenerator_gen_expression;
-const right = CodeGenerator_gen_expression;
-const code = "";
- code = left + " = " + right; 
-return code;
-// Unknown stmt kind: undefined
- if (typeof(expr) == "string") return expr; 
-return expr;
-// Unknown stmt kind: undefined
+    if (expr.kind == NODE_ASSIGNMENT) {
+    const left = CodeGenerator_gen_expression(self, expr.left);
+    const right = CodeGenerator_gen_expression(self, expr.right);
+    const code = "";
+     code = left + " = " + right; 
+    return code;
+}
+     if (typeof(expr) == "string") return expr; 
+    return expr;
+}
 function CodeGenerator_gen_decorators(self, target_name, decorators) {
     const out = "";
     

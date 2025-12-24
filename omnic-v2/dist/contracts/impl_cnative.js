@@ -1,5 +1,5 @@
-BlockLoop: 80 (native)
-const types = require("./contracts/types.js");
+const types = require("./types.js");
+if (typeof global !== 'undefined') Object.assign(global, types);
 function register_cnative_impl(registry) {
     
         registry.implementations['c_native'] = {

@@ -1,124 +1,5 @@
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 80 (native)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 10 (CLI_banner)
-BlockLoop: 42 (()
-BlockLoop: 10 (CLI_header)
-BlockLoop: 42 (()
-BlockLoop: 64 (if)
-BlockLoop: 43 ())
-BlockLoop: 44 ({)
-BlockLoop: 10 (cmd_install_from_lock)
-BlockLoop: 42 (()
-BlockLoop: 66 (return)
-BlockLoop: 10 (CLI_step)
-BlockLoop: 42 (()
-BlockLoop: 11 (3)
-BlockLoop: 40 (,)
-BlockLoop: 12 (Updating lock file...)
-BlockLoop: 43 ())
-BlockLoop: 61 (let)
-BlockLoop: 42 (()
-BlockLoop: 10 (LockFile_add)
-BlockLoop: 42 (()
-BlockLoop: 10 (pkg)
-BlockLoop: 43 ())
-BlockLoop: 10 (LockFile_save)
-BlockLoop: 42 (()
-BlockLoop: 10 (cwd)
-BlockLoop: 43 ())
-BlockLoop: 10 (CLI_step)
-BlockLoop: 42 (()
-BlockLoop: 11 (3)
-BlockLoop: 40 (,)
-BlockLoop: 12 (Done!)
-BlockLoop: 43 ())
-BlockLoop: 10 (CLI_success)
-BlockLoop: 42 (()
-BlockLoop: 10 (pkg)
-BlockLoop: 31 (.)
-BlockLoop: 10 (name)
-BlockLoop: 43 ())
-BlockLoop: 80 (native)
-BlockLoop: 10 (CLI_error)
-BlockLoop: 42 (()
-BlockLoop: 10 (CLI_info)
-BlockLoop: 42 (()
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 61 (let)
-BlockLoop: 42 (()
-BlockLoop: 80 (native)
-BlockLoop: 10 (CLI_banner)
-BlockLoop: 42 (()
-BlockLoop: 10 (CLI_header)
-BlockLoop: 42 (()
-BlockLoop: 64 (if)
-BlockLoop: 43 ())
-BlockLoop: 44 ({)
-BlockLoop: 10 (CLI_error)
-BlockLoop: 42 (()
-BlockLoop: 66 (return)
-BlockLoop: 10 (LockFile_save)
-BlockLoop: 42 (()
-BlockLoop: 10 (cwd)
-BlockLoop: 43 ())
-BlockLoop: 10 (CLI_success)
-BlockLoop: 42 (()
-BlockLoop: 10 (package_name)
-BlockLoop: 43 ())
-BlockLoop: 10 (CLI_error)
-BlockLoop: 42 (()
-BlockLoop: 10 (package_name)
-BlockLoop: 43 ())
-BlockLoop: 10 (CLI_banner)
-BlockLoop: 42 (()
-BlockLoop: 10 (CLI_header)
-BlockLoop: 42 (()
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 61 (let)
-BlockLoop: 42 (()
-BlockLoop: 80 (native)
-BlockLoop: 10 (CLI_banner)
-BlockLoop: 42 (()
-BlockLoop: 10 (CLI_header)
-BlockLoop: 42 (()
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 61 (let)
-BlockLoop: 42 (()
-BlockLoop: 80 (native)
-BlockLoop: 10 (CLI_banner)
-BlockLoop: 42 (()
-BlockLoop: 10 (CLI_header)
-BlockLoop: 42 (()
-BlockLoop: 80 (native)
-BlockLoop: 10 (CLI_banner)
-BlockLoop: 42 (()
-BlockLoop: 10 (CLI_header)
-BlockLoop: 42 (()
-BlockLoop: 80 (native)
-const cli = require("./lib/cli.js");
+const terminal = require("../lib/terminal.js");
+if (typeof global !== 'undefined') Object.assign(global, terminal);
 class GitPackage {
     constructor(data = {}) {
         this.name = data.name;
@@ -226,10 +107,13 @@ class LockFile {
         this.packages = data.packages;
     }
 }
-function LockFile_load(project_dir) {
-    const lock = new LockFile({ version: "1.0", packages: null });
+function new_map() {
+     return {}; 
+    return 0;
 }
-
+function LockFile_load(project_dir) {
+    const lock = new LockFile({ version: "1.0", packages: new_map() });
+    
         const fs = require('fs');
         const path = require('path');
         
@@ -245,8 +129,8 @@ function LockFile_load(project_dir) {
             }
         }
     
-return lock;
-// Unknown stmt kind: undefined
+    return lock;
+}
 function LockFile_save(lock, project_dir) {
     
         const fs = require('fs');
@@ -381,90 +265,64 @@ function git_clone(pkg, target_dir) {
     return success;
 }
 function cmd_install(package_spec) {
-    CLI_banner;
-    // Unknown stmt kind: 0
-    CLI_header;
-    "Omni Package Installer";
-    if (package_spec) {
-    "";
-}
-    // Unknown stmt kind: 0
-    // Unknown stmt kind: 0
-    cmd_install_from_lock;
-    // Unknown stmt kind: 0
+    CLI_banner();
+    CLI_header("Omni Package Installer");
+    if (package_spec == "") {
+    cmd_install_from_lock();
     return null;
 }
-const pkg = GitPackage_parse;
-if (pkg) {
-    name;
+    const pkg = GitPackage_parse(package_spec);
+    if (pkg.name == "") {
+    CLI_error("Invalid package specification: " + package_spec);
+    CLI_info("Examples:");
+    CLI_info("  omni install github:crom/utils");
+    CLI_info("  omni install crom/utils");
+    CLI_info("  omni install https://github.com/crom/utils");
+    return null;
 }
-return null;
-// Unknown stmt kind: undefined
-const commit = git_get_latest_commit;
-if (commit) {
-    "";
+    CLI_info("Package: " + pkg.name);
+    CLI_info("Source: " + pkg.full_url);
+    const commit = git_get_latest_commit(pkg);
+    if (commit != "") {
+    pkg.commit = commit;
+    CLI_info("Commit: " + commit.substring(0, 8) + "...");
 }
-// Unknown stmt kind: undefined
-const cwd = "";
- cwd = process.cwd(); 
-const target = "";
-
+    const cwd = "";
+     cwd = process.cwd(); 
+    const target = "";
+    
         const path = require('path');
         target = path.join(cwd, pkg.local_path);
     
-const success = git_clone;
-if (success) {
-    CLI_step;
-    2;
-    3;
-    // Unknown stmt kind: 0
-    "Updating lock file...";
-    // Unknown stmt kind: 0
-    const lock = LockFile_load;
-    cwd;
-    LockFile_add;
-    lock;
-    pkg;
-    // Unknown stmt kind: 0
-    LockFile_save;
-    lock;
-    cwd;
-    // Unknown stmt kind: 0
-    CLI_step;
-    3;
-    3;
-    // Unknown stmt kind: 0
-    "Done!";
-    // Unknown stmt kind: 0
-    CLI_success;
-    "Installed: ";
-    pkg;
-    // Unknown stmt kind: 0
-    name;
-    // Unknown stmt kind: 0
+    CLI_step(1, 3, "Downloading...");
+    const success = git_clone(pkg, target);
+    if (success) {
+    CLI_step(2, 3, "Updating lock file...");
+    const lock = LockFile_load(cwd);
+    LockFile_add(lock, pkg);
+    LockFile_save(lock, cwd);
+    CLI_step(3, 3, "Done!");
+    CLI_success("Installed: " + pkg.name);
     
             console.log("");
             console.log(CLI_COLORS.cyan + "  Usage:" + CLI_COLORS.reset);
             console.log(CLI_COLORS.dim + '    import "' + pkg.owner + '/' + pkg.repo + '/src/main.omni";' + CLI_COLORS.reset);
         
 } else {
-    CLI_error;
-    "Failed to install package";
+    CLI_error("Failed to install package");
 }
-// Unknown stmt kind: undefined
+}
 function cmd_install_from_lock() {
-    CLI_info;
-    "Installing packages from omni.lock...";
+    CLI_info("Installing packages from omni.lock...");
     const cwd = "";
      cwd = process.cwd(); 
-    const lock = LockFile_load;
-    cwd;
+    const lock = LockFile_load(cwd);
     
         const path = require('path');
         const packages = Object.values(lock.packages);
         
         if (packages.length === 0) {
-            CLI_info("No packages in omni.lock");
+            terminal.CLI_info("No packages in omni.lock");
             return;
         }
         
@@ -484,24 +342,17 @@ function cmd_install_from_lock() {
     
 }
 function cmd_uninstall(package_name) {
-    CLI_banner;
-    // Unknown stmt kind: 0
-    CLI_header;
-    "Omni Package Uninstaller";
-    if (package_name) {
-    "";
-}
-    // Unknown stmt kind: 0
-    // Unknown stmt kind: 0
-    CLI_error;
-    "Usage: omni uninstall <package>";
+    CLI_banner();
+    CLI_header("Omni Package Uninstaller");
+    if (package_name == "") {
+    CLI_error("Usage: omni uninstall <package>");
     return null;
 }
-const cwd = "";
- cwd = process.cwd(); 
-const lock = LockFile_load;
-const found = false;
-
+    const cwd = "";
+     cwd = process.cwd(); 
+    const lock = LockFile_load(cwd);
+    const found = false;
+    
         const fs = require('fs');
         const path = require('path');
         
@@ -525,38 +376,26 @@ const found = false;
             }
         }
     
-if (found) {
-    LockFile_save;
-    lock;
-    cwd;
-    // Unknown stmt kind: 0
-    CLI_success;
-    "Uninstalled: ";
-    package_name;
-    // Unknown stmt kind: 0
+    if (found) {
+    LockFile_save(lock, cwd);
+    CLI_success("Uninstalled: " + package_name);
 } else {
-    CLI_error;
-    "Package not found: ";
-    package_name;
-    // Unknown stmt kind: 0
+    CLI_error("Package not found: " + package_name);
 }
-// Unknown stmt kind: undefined
+}
 function cmd_list() {
-    CLI_banner;
-    // Unknown stmt kind: 0
-    CLI_header;
-    "Installed Packages";
+    CLI_banner();
+    CLI_header("Installed Packages");
     const cwd = "";
      cwd = process.cwd(); 
-    const lock = LockFile_load;
-    cwd;
+    const lock = LockFile_load(cwd);
     
         const packages = Object.values(lock.packages);
         
         if (packages.length === 0) {
-            CLI_info("No packages installed.");
+            terminal.CLI_info("No packages installed.");
             console.log("");
-            CLI_info("Install packages with: omni install github:user/repo");
+            terminal.CLI_info("Install packages with: omni install github:user/repo");
             return;
         }
         
@@ -575,14 +414,11 @@ function cmd_list() {
     
 }
 function cmd_update(package_name) {
-    CLI_banner;
-    // Unknown stmt kind: 0
-    CLI_header;
-    "Omni Package Updater";
+    CLI_banner();
+    CLI_header("Omni Package Updater");
     const cwd = "";
      cwd = process.cwd(); 
-    const lock = LockFile_load;
-    cwd;
+    const lock = LockFile_load(cwd);
     
         const path = require('path');
         let packagesToUpdate = Object.values(lock.packages);
@@ -626,10 +462,8 @@ function cmd_update(package_name) {
     
 }
 function cmd_doctor() {
-    CLI_banner;
-    // Unknown stmt kind: 0
-    CLI_header;
-    "Omni Doctor - System Health Check";
+    CLI_banner();
+    CLI_header("Omni Doctor - System Health Check");
     
         const { execSync } = require('child_process');
         const fs = require('fs');
@@ -685,10 +519,8 @@ function cmd_doctor() {
     
 }
 function cmd_search(query) {
-    CLI_banner;
-    // Unknown stmt kind: 0
-    CLI_header;
-    "Omni Package Search";
+    CLI_banner();
+    CLI_header("Omni Package Search");
     
         const https = require('https');
         
@@ -739,6 +571,7 @@ if (typeof exports !== 'undefined') {
     exports.GitPackage_parse = GitPackage_parse;
     exports.GitPackage_get_zip_url = GitPackage_get_zip_url;
     exports.GitPackage_get_api_url = GitPackage_get_api_url;
+    exports.new_map = new_map;
     exports.LockFile_load = LockFile_load;
     exports.LockFile_save = LockFile_save;
     exports.LockFile_add = LockFile_add;

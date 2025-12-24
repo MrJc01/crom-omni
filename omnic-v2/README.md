@@ -41,6 +41,7 @@ omni studio
 - **Omni Studio**: Visual programming environment (experimental)
 - **Contract System**: Standard library interfaces with pluggable implementations
 - **Native blocks**: Embed target-specific code with `native "js" { ... }` or `native "py" { ... }`
+- **Stable**: Self-hosted and validated with `test-all` coverage.
 
 ## Source Structure
 

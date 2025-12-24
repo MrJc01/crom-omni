@@ -1,13 +1,5 @@
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 80 (native)
-const graph_types = require("./studio/graph_types.js");
+const graph_types = require("./graph_types.js");
+if (typeof global !== 'undefined') Object.assign(global, graph_types);
 function graph_add_node(graph, node_type, name, x, y) {
     const new_id = "";
     

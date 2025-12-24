@@ -1,7 +1,5 @@
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-const server = require("./studio/server.js");
+const server = require("./server.js");
+if (typeof global !== 'undefined') Object.assign(global, server);
 function generate_studio_html(server) {
     const html = "";
     

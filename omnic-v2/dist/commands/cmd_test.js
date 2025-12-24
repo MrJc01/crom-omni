@@ -1,18 +1,14 @@
-BlockLoop: 10 (CLI_banner)
-BlockLoop: 42 (()
-BlockLoop: 10 (CLI_header)
-BlockLoop: 42 (()
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-const cli = require("./lib/cli.js");
-const lexer = require("./core/lexer.js");
-const parser = require("./core/parser.js");
-const codegen_hybrid = require("./core/codegen_hybrid.js");
+const terminal = require("../lib/terminal.js");
+if (typeof global !== 'undefined') Object.assign(global, terminal);
+const lexer = require("../core/lexer.js");
+if (typeof global !== 'undefined') Object.assign(global, lexer);
+const parser = require("../core/parser.js");
+if (typeof global !== 'undefined') Object.assign(global, parser);
+const codegen_hybrid = require("../core/codegen_hybrid.js");
+if (typeof global !== 'undefined') Object.assign(global, codegen_hybrid);
 function cmd_test_all() {
-    CLI_banner;
-    // Unknown stmt kind: 0
-    CLI_header;
-    "Testing All Examples";
+    CLI_banner();
+    CLI_header("Testing All Examples");
     
         const fs = require('fs');
         const path = require('path');

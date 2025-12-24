@@ -1,38 +1,12 @@
-import "ast.omni";
-import "token.omni";
-
-// Import modules
-import "codegen/base.omni";
-import "codegen/js.omni";
-import "codegen/python.omni";
+import "codegen_hybrid.omni";
 
 fn CodeGenerator_generate(self: CodeGenerator, program: Program) -> string {
-    if (self.target == "python") {
-        return CodeGenerator_generate_python(self, program);
-    }
-
-    let output = "";
-    native "js" {
-        if (program && program.statements) {
-            for (const stmt of program.statements) {
-                output = output + CodeGenerator_gen_statement(self, stmt) + "\n";
-            }
-        }
-    }
+    let hybrid = new_code_generator(self.target); // HybridCodeGenerator alias or new function
+    // Wait, new_code_generator in hybrid returns HybridCodeGenerator? 
+    // In hybrid.omni it is HybridCodeGenerator_new.
+    // In dist/core/codegen.js, new_code_generator is base.omni's.
     
-    // Auto-Export (JS) - based on is_exported flag
-    let exports = [];
-    native "js" {
-        if (program && program.statements) {
-             for (const stmt of program.statements) {
-                 if (stmt.is_exported && stmt.name) {
-                     exports.push(stmt.name);
-                 }
-             }
-        }
-        if (exports.length > 0) {
-            output += "\nmodule.exports = { " + exports.join(", ") + " };\n";
-        }
-    }
-    return output;
+    // Explicitly use HybridCodeGenerator_new
+    let h = HybridCodeGenerator_new(self.target);
+    return HybridCodeGenerator_generate(h, program);
 }

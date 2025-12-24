@@ -1,34 +1,5 @@
-BlockLoop: 66 (return)
-BlockLoop: 40 (,)
-BlockLoop: 10 (server_templates)
-BlockLoop: 30 (:)
-BlockLoop: 44 ({)
-BlockLoop: 61 (let)
-BlockLoop: 42 (()
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 42 (()
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 42 (()
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 42 (()
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 80 (native)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
 const ast = require("./ast.js");
+if (typeof global !== 'undefined') Object.assign(global, ast);
 class FrameworkAdapter {
     constructor(data = {}) {
         this.name = data.name;
@@ -49,8 +20,7 @@ function FrameworkAdapter_new(name) {
 // Unknown stmt kind: undefined
 // Unknown stmt kind: undefined
 function FrameworkAdapter_nextjs() {
-    const adapter = FrameworkAdapter_new;
-    "nextjs";
+    const adapter = FrameworkAdapter_new("nextjs");
     
         adapter.language = "typescript";
         
@@ -169,8 +139,7 @@ export default {
     return adapter;
 }
 function FrameworkAdapter_laravel() {
-    const adapter = FrameworkAdapter_new;
-    "laravel";
+    const adapter = FrameworkAdapter_new("laravel");
     
         adapter.language = "php";
         
@@ -278,8 +247,7 @@ use Illuminate\\Support\\Facades\\Route;
     return adapter;
 }
 function FrameworkAdapter_android() {
-    const adapter = FrameworkAdapter_new;
-    "android";
+    const adapter = FrameworkAdapter_new("android");
     
         adapter.language = "kotlin";
         
@@ -372,8 +340,7 @@ class FrameworkGenerator {
     }
 }
 function FrameworkGenerator_new(framework, output_dir) {
-    const adapter = FrameworkAdapter_new;
-    framework;
+    const adapter = FrameworkAdapter_new(framework);
     
         switch (framework) {
             case 'nextjs':

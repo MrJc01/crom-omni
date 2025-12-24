@@ -1,57 +1,7 @@
-BlockLoop: 66 (return)
-BlockLoop: 80 (native)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 10 (CLI_header)
-BlockLoop: 42 (()
-BlockLoop: 10 (CLI_info)
-BlockLoop: 42 (()
-BlockLoop: 10 (input_file)
-BlockLoop: 43 ())
-BlockLoop: 61 (let)
-BlockLoop: 42 (()
-BlockLoop: 61 (let)
-BlockLoop: 42 (()
-BlockLoop: 61 (let)
-BlockLoop: 42 (()
-BlockLoop: 61 (let)
-BlockLoop: 42 (()
-BlockLoop: 61 (let)
-BlockLoop: 42 (()
-BlockLoop: 10 (GhostWriter_analyze)
-BlockLoop: 42 (()
-BlockLoop: 10 (program)
-BlockLoop: 43 ())
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 61 (let)
-BlockLoop: 42 (()
-BlockLoop: 10 (project_name)
-BlockLoop: 43 ())
-BlockLoop: 10 (write_file)
-BlockLoop: 42 (()
-BlockLoop: 10 (docs)
-BlockLoop: 43 ())
-BlockLoop: 10 (CLI_success)
-BlockLoop: 42 (()
-BlockLoop: 10 (output_file)
-BlockLoop: 43 ())
-BlockLoop: 80 (native)
 const ast = require("./ast.js");
-const cli = require("./lib/cli.js");
+if (typeof global !== 'undefined') Object.assign(global, ast);
+const terminal = require("../lib/terminal.js");
+if (typeof global !== 'undefined') Object.assign(global, terminal);
 class CapsuleGraph {
     constructor(data = {}) {
         this.name = data.name;
@@ -431,43 +381,22 @@ function GhostWriter_generate_docs(self, project_name) {
     return doc;
 }
 function cmd_graph(input_file, output_file) {
-    CLI_header;
-    "Omni Ghost Writer";
-    CLI_info;
-    "Analyzing: ";
-    input_file;
-    // Unknown stmt kind: 0
-    const source = read_file;
-    input_file;
-    const l = new_lexer;
-    source;
-    const p = new_parser;
-    l;
-    const program = Parser_parse_program;
-    p;
-    const writer = GhostWriter_new;
-    // Unknown stmt kind: 0
-    GhostWriter_analyze;
-    writer;
-    program;
-    // Unknown stmt kind: 0
+    CLI_header("Omni Ghost Writer");
+    CLI_info("Analyzing: " + input_file);
+    const source = read_file(input_file);
+    const l = new_lexer(source);
+    const p = new_parser(l);
+    const program = Parser_parse_program(p);
+    const writer = GhostWriter_new();
+    GhostWriter_analyze(writer, program);
     const project_name = "";
     
         const path = require('path');
         project_name = path.basename(input_file, '.omni');
     
-    const docs = GhostWriter_generate_docs;
-    writer;
-    project_name;
-    // Unknown stmt kind: 0
-    write_file;
-    output_file;
-    docs;
-    // Unknown stmt kind: 0
-    CLI_success;
-    "Documentation generated: ";
-    output_file;
-    // Unknown stmt kind: 0
+    const docs = GhostWriter_generate_docs(writer, project_name);
+    write_file(output_file, docs);
+    CLI_success("Documentation generated: " + output_file);
     
         console.log("");
         console.log(CLI_COLORS.bold + "Generated Diagrams:" + CLI_COLORS.reset);
@@ -476,7 +405,7 @@ function cmd_graph(input_file, output_file) {
         console.log("  • Sequence Diagram");
         console.log("  • Call Graph");
         console.log("");
-        CLI_info("View the .md file in any Markdown viewer with Mermaid support");
+        terminal.CLI_info("View the .md file in any Markdown viewer with Mermaid support");
     
 }
 

@@ -1,10 +1,10 @@
 
-import "lib/cli.omni";
-import "lib/std.omni";
-import "core/lexer.omni";
-import "core/parser.omni";
-import "core/codegen_hybrid.omni";
-import "core/vm.omni";
+import "../lib/terminal.omni";
+import "../lib/std.omni";
+import "../core/lexer.omni";
+import "../core/parser.omni";
+import "../core/codegen_hybrid.omni";
+import "../core/vm.omni";
 
 // ============================================================================
 // RUN COMMAND

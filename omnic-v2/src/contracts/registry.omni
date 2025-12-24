@@ -1,20 +1,34 @@
 
-import "contracts/types.omni";
-import "contracts/interfaces.omni";
-import "contracts/impl_js.omni";
-import "contracts/impl_python.omni";
-import "contracts/impl_cnative.omni";
-import "contracts/impl_lua.omni";
-import "lib/cli.omni";
+import "types.omni";
+import "interfaces.omni";
+import "impl_js.omni";
+import "impl_python.omni";
+import "impl_cnative.omni";
+import "impl_lua.omni";
+import "../lib/terminal.omni";
+
+native "js" {
+    const { ContractRegistry } = types;
+    const { register_std_interfaces } = interfaces;
+    const { register_js_impl } = impl_js;
+    const { register_python_impl } = impl_python;
+    const { register_cnative_impl } = impl_cnative;
+    const { register_lua_impl } = impl_lua;
+}
 
 // ============================================================================
 // CONTRACT REGISTRY
 // ============================================================================
 
+fn new_map() -> any {
+    native "js" { return {}; }
+    return 0;
+}
+
 fn ContractRegistry_new() -> ContractRegistry {
     let registry = ContractRegistry {
-        interfaces: {},
-        implementations: {},
+        interfaces: new_map(),
+        implementations: new_map(),
         active_target: "js"
     };
     
@@ -92,7 +106,7 @@ fn ContractRegistry_verify_target(self: ContractRegistry, target: string) -> boo
     native "js" {
         const impl = self.implementations[target];
         if (!impl) {
-            CLI_error("Target '" + target + "' has no implementations");
+            terminal.CLI_error("Target '" + target + "' has no implementations");
             is_complete = false;
             return;
         }

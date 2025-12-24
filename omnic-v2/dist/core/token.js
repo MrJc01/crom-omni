@@ -1,4 +1,3 @@
-BlockLoop: 66 (return)
 const TOKEN_EOF = 0;
 const TOKEN_ILLEGAL = 1;
 const TOKEN_IDENTIFIER = 10;

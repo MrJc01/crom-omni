@@ -1,5 +1,5 @@
 
-import "contracts/types.omni";
+import "types.omni";
 
 // ============================================================================
 // CANONICAL INTERFACE DEFINITIONS

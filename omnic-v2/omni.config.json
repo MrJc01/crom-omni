@@ -3,18 +3,11 @@
     "name": "omnic-v2",
     "version": "0.1.0"
   },
-  "targets": {
-    "server": {
-      "format": "python",
-      "output": "dist/python",
-      "source": "src/server.omni"
-    },
-    "client": {
+    "compiler": {
       "format": "js",
-      "output": "dist/js",
-      "source": "src/client.omni"
+      "output": "dist/omni.js",
+      "source": "src/main.omni"
     }
-  },
   "shared": ["src/shared"],
   "nodes": {
     "app-monolith": {

@@ -1,40 +1,5 @@
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 10 (CLI_banner)
-BlockLoop: 42 (()
-BlockLoop: 10 (CLI_header)
-BlockLoop: 42 (()
-BlockLoop: 10 (CLI_info)
-BlockLoop: 42 (()
-BlockLoop: 10 (target)
-BlockLoop: 43 ())
-BlockLoop: 10 (CLI_info)
-BlockLoop: 42 (()
-BlockLoop: 10 (config)
-BlockLoop: 31 (.)
-BlockLoop: 10 (name)
-BlockLoop: 21 (+)
-BlockLoop: 12 ( v)
-BlockLoop: 21 (+)
-BlockLoop: 10 (config)
-BlockLoop: 31 (.)
-BlockLoop: 10 (version)
-BlockLoop: 43 ())
-BlockLoop: 61 (let)
-BlockLoop: 42 (()
-BlockLoop: 61 (let)
-BlockLoop: 42 (()
-BlockLoop: 80 (native)
-const cli = require("./lib/cli.js");
+const terminal = require("../lib/terminal.js");
+if (typeof global !== 'undefined') Object.assign(global, terminal);
 class AppConfig {
     constructor(data = {}) {
         this.name = data.name;
@@ -163,30 +128,12 @@ function generate_capacitor_config(config) {
     return json;
 }
 function cmd_package_app(target, config) {
-    CLI_banner;
-    // Unknown stmt kind: 0
-    CLI_header;
-    "Omni App Packager";
-    CLI_info;
-    "Target: ";
-    target;
-    // Unknown stmt kind: 0
-    CLI_info;
-    "App: ";
-    config;
-    // Unknown stmt kind: 0
-    name;
-    // Unknown stmt kind: 0
-    " v";
-    // Unknown stmt kind: 0
-    config;
-    // Unknown stmt kind: 0
-    version;
-    // Unknown stmt kind: 0
-    const tools = detect_build_tools;
-    // Unknown stmt kind: 0
-    const platform = detect_platform;
-    // Unknown stmt kind: 0
+    CLI_banner();
+    CLI_header("Omni App Packager");
+    CLI_info("Target: " + target);
+    CLI_info("App: " + config.name + " v" + config.version);
+    const tools = detect_build_tools();
+    const platform = detect_platform();
     
         const fs = require('fs');
         const path = require('path');

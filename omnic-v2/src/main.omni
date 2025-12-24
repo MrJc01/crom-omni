@@ -2,32 +2,32 @@
 // OMNI COMPILER - MAIN ENTRY POINT
 // ============================================================================
 
-import "core/token.omni";
-import "core/lexer.omni";
-import "core/parser.omni";
-import "core/codegen_hybrid.omni";
-import "core/vm.omni";
-import "core/framework_adapter.omni";
-import "core/ingestion.omni";
-import "core/package_manager.omni";
-import "core/contracts.omni";
-import "core/ghost_writer.omni";
-import "core/bootstrap.omni";
-import "core/studio_engine.omni";
-import "core/studio_graph.omni";
-import "core/app_packager.omni";
-import "core/tui.omni";
-import "lib/std.omni";
-import "lib/cli.omni";
+import "./core/token.omni";
+import "./core/lexer.omni";
+import "./core/parser.omni";
+import "./core/codegen_hybrid.omni";
+import "./core/vm.omni";
+import "./core/framework_adapter.omni";
+import "./core/ingestion.omni";
+import "./core/package_manager.omni";
+import "./core/contracts.omni";
+import "./core/ghost_writer.omni";
+import "./core/bootstrap.omni";
+import "./core/studio_engine.omni";
+import "./core/studio_graph.omni";
+import "./core/app_packager.omni";
+import "./core/tui.omni";
+import "./lib/terminal.omni";
+import "./lib/std.omni";
 
 // Command Modules
-import "commands/cmd_setup.omni";
-import "commands/cmd_run.omni";
-import "commands/cmd_build.omni";
-import "commands/cmd_test.omni";
-import "commands/cmd_package.omni";
-import "commands/cmd_registry.omni";
-import "commands/cmd_studio.omni";
+import "./commands/cmd_setup.omni";
+import "./commands/cmd_run.omni";
+import "./commands/cmd_build.omni";
+import "./commands/cmd_test.omni";
+import "./commands/cmd_package.omni";
+import "./commands/cmd_registry.omni";
+import "./commands/cmd_studio.omni";
 
 // ============================================================================
 // VERSION COMMAND
@@ -104,7 +104,7 @@ fn main() {
         native "js" { package_name = process.argv[3] || ''; }
         
         if (package_name == "") {
-            CLI_error("Usage: omni uninstall <package_name>");
+            terminal.CLI_error("Usage: omni uninstall <package_name>");
             return 1;
         }
         
@@ -341,7 +341,7 @@ fn main() {
             const path = require('path');
             
             if (fs.existsSync(package_path)) {
-                CLI_info("Loading package: " + package_path);
+                terminal.CLI_info("Loading package: " + package_path);
                 
                 const grammarPath = fs.statSync(package_path).isDirectory() 
                     ? path.join(package_path, 'grammar.json')
@@ -396,11 +396,11 @@ fn main() {
             const coverage = gen.ast_node_count > 0 
                 ? (gen.generated_count / gen.ast_node_count * 100).toFixed(1)
                 : 100;
-            CLI_info("AST Coverage: " + coverage + "% (" + 
+            terminal.CLI_info("AST Coverage: " + coverage + "% (" + 
                 gen.generated_count + "/" + gen.ast_node_count + " nodes)");
                 
             if (coverage < 100) {
-                CLI_warning("Some AST nodes were not generated");
+                terminal.CLI_warning("Some AST nodes were not generated");
             }
         }
     }

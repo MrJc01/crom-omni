@@ -4,7 +4,7 @@
 // ============================================================================
 
 import "ast.omni";
-import "lib/cli.omni";
+import "../lib/terminal.omni";
 
 // ============================================================================
 // GRAPH STRUCTURES
@@ -461,7 +461,7 @@ fn cmd_graph(input_file: string, output_file: string) {
         console.log("  • Sequence Diagram");
         console.log("  • Call Graph");
         console.log("");
-        CLI_info("View the .md file in any Markdown viewer with Mermaid support");
+        terminal.CLI_info("View the .md file in any Markdown viewer with Mermaid support");
     }
 }
 

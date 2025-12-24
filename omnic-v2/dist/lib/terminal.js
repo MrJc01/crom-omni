@@ -1,50 +1,3 @@
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 64 (if)
-BlockLoop: 43 ())
-BlockLoop: 44 ({)
-BlockLoop: 10 (CLI_COLORS_CACHE)
-BlockLoop: 42 (()
-BlockLoop: 10 (CLI_COLORS_INIT)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 66 (return)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
 class Colors {
     constructor(data = {}) {
         this.reset = data.reset;
@@ -107,17 +60,12 @@ function Colors_new() {
 const CLI_COLORS_INIT = false;
 const CLI_COLORS_CACHE = new Colors({ reset: "", bold: "", dim: "", underline: "", black: "", red: "", green: "", yellow: "", blue: "", magenta: "", cyan: "", white: "", bg_black: "", bg_red: "", bg_green: "", bg_yellow: "", bg_blue: "", bg_magenta: "", bg_cyan: "", bg_white: "" });
 function CLI_COLORS() {
-    if (CLI_COLORS_INIT) {
-    false;
-}
-    // Unknown stmt kind: 0
-    // Unknown stmt kind: 0
-    CLI_COLORS_CACHE = Colors_new;
-    // Unknown stmt kind: 0
+    if (CLI_COLORS_INIT == false) {
+    CLI_COLORS_CACHE = Colors_new();
     CLI_COLORS_INIT = true;
 }
-return CLI_COLORS_CACHE;
-// Unknown stmt kind: undefined
+    return CLI_COLORS_CACHE;
+}
 function CLI_success(msg) {
     
         const c = CLI_COLORS();

@@ -1,5 +1,5 @@
 
-import "contracts/types.omni";
+import "types.omni";
 
 fn register_cnative_impl(registry: ContractRegistry) {
     native "js" {

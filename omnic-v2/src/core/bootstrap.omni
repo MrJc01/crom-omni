@@ -3,7 +3,7 @@
 // Compiles Omni compiler to standalone native binary
 // ============================================================================
 
-import "lib/cli.omni";
+import "../lib/terminal.omni";
 
 // ============================================================================
 // C RUNTIME HEADER - Injected into native builds

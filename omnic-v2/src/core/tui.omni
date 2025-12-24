@@ -3,7 +3,7 @@
 // Interactive keyboard-driven interface for Omni operations
 // ============================================================================
 
-import "lib/cli.omni";
+import "../lib/terminal.omni";
 
 // ============================================================================
 // TUI STATE

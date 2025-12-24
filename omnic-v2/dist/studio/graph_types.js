@@ -1,4 +1,3 @@
-BlockLoop: 66 (return)
 class VisualNode {
     constructor(data = {}) {
         this.id = data.id;
@@ -36,8 +35,20 @@ class VisualGraph {
     }
 }
 function VisualGraph_new() {
-    return new VisualGraph({ nodes: [], edges: [], viewport: null, x: 0, y: 0, zoom: 1, .: null, metadata: null, version: "1.0", generated: "" });
+    return new VisualGraph({ nodes: [], edges: [], viewport: null, x: 0, y: 0, zoom: 1.0 });
+    // Unknown stmt kind: 0
+    metadata;
+    // Unknown stmt kind: 0
+    // Unknown stmt kind: 0
+    version;
+    // Unknown stmt kind: 0
+    "1.0";
+    // Unknown stmt kind: 0
+    generated;
+    // Unknown stmt kind: 0
+    "";
 }
+// Unknown stmt kind: undefined
 // Unknown stmt kind: undefined
 
 

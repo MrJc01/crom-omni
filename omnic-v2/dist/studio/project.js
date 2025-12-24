@@ -1,6 +1,3 @@
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
 class ProjectInfo {
     constructor(data = {}) {
         this.name = data.name;

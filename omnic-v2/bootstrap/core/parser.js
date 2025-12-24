@@ -180,7 +180,7 @@ function Parser_parse_block(p) {
     if (p.cur_token.kind == TOKEN_LBRACE) {
     Parser_next_token(p);
     while (p.cur_token.kind != TOKEN_RBRACE && p.cur_token.kind != TOKEN_EOF) {
-     console.log("BlockLoop: " + p.cur_token.kind + " (" + p.cur_token.lexeme + ")"); 
+     // console.log("BlockLoop: " + p.cur_token.kind + " (" + p.cur_token.lexeme + ")"); 
     let stmt = Parser_parse_statement(p);
      stmts.push(stmt); 
 }
@@ -212,7 +212,7 @@ function Parser_parse_assignment(p) {
 }
 function Parser_parse_equality(p) {
     let left = Parser_parse_relational(p);
-    while (null) {
+    while (true) {
     let k = p.cur_token.kind;
     if (k != TOKEN_EQ && k != TOKEN_NOT_EQ) {
     break;
@@ -226,7 +226,7 @@ function Parser_parse_equality(p) {
 }
 function Parser_parse_relational(p) {
     let left = Parser_parse_term(p);
-    while (null) {
+    while (true) {
     let k = p.cur_token.kind;
     if (k != TOKEN_LT && k != TOKEN_GT && k != TOKEN_LE && k != TOKEN_GE) {
     break;
@@ -240,7 +240,7 @@ function Parser_parse_relational(p) {
 }
 function Parser_parse_logic(p) {
     let left = Parser_parse_equality(p);
-    while (null) {
+    while (true) {
     let k = p.cur_token.kind;
     if (k != TOKEN_AND && k != TOKEN_OR) {
     break;
@@ -254,7 +254,7 @@ function Parser_parse_logic(p) {
 }
 function Parser_parse_term(p) {
     let left = Parser_parse_factor(p);
-    while (null) {
+    while (true) {
     let k = p.cur_token.kind;
     if (k != TOKEN_PLUS && k != TOKEN_MINUS) {
     break;
@@ -321,7 +321,7 @@ function Parser_parse_factor(p) {
     Parser_next_token(p);
      node = { kind: NODE_ARRAY, elements: elements }; 
 } else {
-     console.error("Unexpected token in expression: Kind " + p.cur_token.kind + ", Lexeme: " + p.cur_token.lexeme); 
+     // console.error("Unexpected token in expression: Kind " + p.cur_token.kind + ", Lexeme: " + p.cur_token.lexeme); 
     Parser_next_token(p);
     return 0;
 }
@@ -330,7 +330,7 @@ function Parser_parse_factor(p) {
 }
 }
 }
-    let continue_loop = null;
+    let continue_loop = true;
     while (continue_loop) {
     if (p.cur_token.kind == 31) {
     Parser_next_token(p);

@@ -1,5 +1,5 @@
 
-import "lib/cli.omni";
+import "../lib/terminal.omni";
 
 // ============================================================================
 // SELF-PACKAGING COMMAND
@@ -17,13 +17,13 @@ fn cmd_package_self() {
         const version = CLI_version();
         const platform = process.platform;
         
-        CLI_step(1, 4, "Collecting source files...");
+        terminal.CLI_step(1, 4, "Collecting source files...");
         
         // Files to include
         const distDir = path.join(omniDir, 'dist');
         const targetsDir = path.join(omniDir, 'targets');
         
-        CLI_step(2, 4, "Creating package manifest...");
+        terminal.CLI_step(2, 4, "Creating package manifest...");
         
         const manifest = {
             name: 'omni-compiler',

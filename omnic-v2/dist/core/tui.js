@@ -1,30 +1,5 @@
-BlockLoop: 66 (return)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 42 (()
-BlockLoop: 80 (native)
-BlockLoop: 10 (tui_enable_raw_mode)
-BlockLoop: 42 (()
-BlockLoop: 10 (tui_hide_cursor)
-BlockLoop: 42 (()
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-const cli = require("./lib/cli.js");
+const terminal = require("../lib/terminal.js");
+if (typeof global !== 'undefined') Object.assign(global, terminal);
 class TUIState {
     constructor(data = {}) {
         this.screen = data.screen;
@@ -210,15 +185,12 @@ function tui_scan_legacy_files(dir) {
     return files;
 }
 function cmd_tui() {
-    const state = TUIState_new;
-    // Unknown stmt kind: 0
+    const state = TUIState_new();
     
         state.items = tui_main_menu();
     
-    tui_enable_raw_mode;
-    // Unknown stmt kind: 0
-    tui_hide_cursor;
-    // Unknown stmt kind: 0
+    tui_enable_raw_mode();
+    tui_hide_cursor();
     
         const readline = require('readline');
         

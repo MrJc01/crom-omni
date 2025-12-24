@@ -1,16 +1,6 @@
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
 function print(msg) {
      console.log(msg); 
     
-print(msg)
-
 }
 function read_file(path) {
     const content = "";
@@ -24,9 +14,6 @@ function read_file(path) {
         }
     
     
-with open(path, "r") as f:
-    content = f.read()
-
     return content;
 }
 function write_file(path, content) {
@@ -40,9 +27,6 @@ function write_file(path, content) {
         }
     
     
-with open(path, "w") as f:
-    f.write(content)
-
 }
 
 

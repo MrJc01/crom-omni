@@ -1,20 +1,12 @@
-BlockLoop: 61 (let)
-BlockLoop: 42 (()
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 42 (()
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-const ast = require("./core/ast.js");
-const graph_types = require("./studio/graph_types.js");
+const ast = require("../core/ast.js");
+if (typeof global !== 'undefined') Object.assign(global, ast);
+const graph_types = require("./graph_types.js");
+if (typeof global !== 'undefined') Object.assign(global, graph_types);
+
+    const { VisualGraph_new, VisualGraph } = graph_types;
+
 function ast_to_graph(program) {
-    const graph = VisualGraph_new;
-    // Unknown stmt kind: 0
+    const graph = VisualGraph_new();
     
         if (!program || !program.statements) {
             console.error("[graph] Invalid program AST");
@@ -185,10 +177,13 @@ function ast_to_graph(program) {
     
     return graph;
 }
-function graph_to_ast(graph) {
-    const program = null;
+function new_map() {
+     return {}; 
+    return 0;
 }
-
+function graph_to_ast(graph) {
+    const program = new_map();
+    
         program = {
             kind: 1, // NODE_PROGRAM
             statements: []
@@ -274,8 +269,8 @@ function graph_to_ast(graph) {
             }
         }
     
-return program;
-// Unknown stmt kind: undefined
+    return program;
+}
 function graph_to_code(graph) {
     const code = "";
     
@@ -380,8 +375,7 @@ function graph_to_code(graph) {
     return code;
 }
 function code_to_graph(source, program) {
-    const graph = VisualGraph_new;
-    // Unknown stmt kind: 0
+    const graph = VisualGraph_new();
     
         if (!program || !program.statements) {
             console.error("[graph] Invalid program AST");
@@ -555,6 +549,7 @@ function code_to_graph(source, program) {
 // Auto-exports
 if (typeof exports !== 'undefined') {
     exports.ast_to_graph = ast_to_graph;
+    exports.new_map = new_map;
     exports.graph_to_ast = graph_to_ast;
     exports.graph_to_code = graph_to_code;
     exports.code_to_graph = code_to_graph;

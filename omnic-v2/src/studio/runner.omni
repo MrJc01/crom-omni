@@ -1,5 +1,5 @@
 
-import "lib/cli.omni";
+import "../lib/terminal.omni";
 
 // ============================================================================
 // CROSS-RUNNER - Execute Any Project
@@ -59,7 +59,7 @@ fn CrossRunner_run(self: CrossRunner, name: string, command: string, cwd: string
         });
         
         proc.on('error', (err) => {
-            CLI_error("Failed to start " + name + ": " + err.message);
+            terminal.CLI_error("Failed to start " + name + ": " + err.message);
             success = false;
         });
     }

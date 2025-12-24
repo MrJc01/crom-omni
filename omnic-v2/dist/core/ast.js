@@ -1,4 +1,3 @@
-BlockLoop: 66 (return)
 const NODE_PROGRAM = 1;
 const NODE_LET = 2;
 const NODE_LITERAL = 3;

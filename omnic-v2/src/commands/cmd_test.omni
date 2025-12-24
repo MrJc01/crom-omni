@@ -1,8 +1,8 @@
 
-import "lib/cli.omni";
-import "core/lexer.omni";
-import "core/parser.omni";
-import "core/codegen_hybrid.omni";
+import "../lib/terminal.omni";
+import "../core/lexer.omni";
+import "../core/parser.omni";
+import "../core/codegen_hybrid.omni";
 
 // ============================================================================
 // TEST ALL COMMAND

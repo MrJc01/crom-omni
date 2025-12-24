@@ -1,12 +1,5 @@
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 10 (CLI_banner)
-BlockLoop: 42 (()
-BlockLoop: 10 (CLI_header)
-BlockLoop: 42 (()
-BlockLoop: 80 (native)
-const cli = require("./lib/cli.js");
+const terminal = require("../lib/terminal.js");
+if (typeof global !== 'undefined') Object.assign(global, terminal);
 function get_c_runtime_header() {
     const header = "";
     
@@ -244,10 +237,8 @@ typedef float f32;
     return header;
 }
 function cmd_bootstrap() {
-    CLI_banner;
-    // Unknown stmt kind: 0
-    CLI_header;
-    "Omni Bootstrap - Native Compilation";
+    CLI_banner();
+    CLI_header("Omni Bootstrap - Native Compilation");
     
         const fs = require('fs');
         const path = require('path');

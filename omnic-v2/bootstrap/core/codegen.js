@@ -23,8 +23,25 @@ function CodeGenerator_gen_statement(self, stmt) {
     return CodeGenerator_gen_import(self, stmt);
 }
     if (stmt.kind == 80) {
-    return stmt.code;
-}
+        let lang = stmt.lang || 'js';
+        // Strip quotes
+        if ((lang.startsWith('"') && lang.endsWith('"')) || (lang.startsWith("'") && lang.endsWith("'"))) {
+            lang = lang.substring(1, lang.length - 1);
+        }
+        
+        // Normalize
+        if (lang === 'python') lang = 'py';
+        if (lang === 'javascript') lang = 'js';
+        
+        let target = self.target || 'js';
+        if (target === 'python') target = 'py';
+        if (target === 'javascript') target = 'js';
+        
+        if (lang === target) {
+            return stmt.code;
+        }
+        return "";
+    }
     if (stmt.kind == NODE_LET) {
     return "const " + stmt.name + " = " + CodeGenerator_gen_expression(self, stmt.value) + ";";
 }
@@ -67,7 +84,8 @@ function CodeGenerator_gen_import(self, stmt) {
         // Extrai nome do arquivo para variável: "./core/token.js" -> "token"
         let name = path.split("/").pop().replace(".js", "");
         // Gera: let token = require("./token.js");
-        return "const " + name + " = require(\"" + path + "\");";
+        return "const " + name + " = require(\"" + path + "\");\n" + 
+               "if (typeof global !== 'undefined') Object.assign(global, " + name + ");";
     
     return "";
 }

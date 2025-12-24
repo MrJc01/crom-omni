@@ -1,6 +1,10 @@
 
-import "core/ast.omni";
-import "studio/graph_types.omni";
+import "../core/ast.omni";
+import "./graph_types.omni";
+
+native "js" {
+    const { VisualGraph_new, VisualGraph } = graph_types;
+}
 
 // ============================================================================
 // AST -> VISUAL GRAPH CONVERTER
@@ -185,8 +189,14 @@ fn ast_to_graph(program: any) -> VisualGraph {
 // VISUAL GRAPH -> AST CONVERTER
 // ============================================================================
 
+
+fn new_map() -> any {
+    native "js" { return {}; }
+    return 0;
+}
+
 fn graph_to_ast(graph: VisualGraph) -> any {
-    let program = {};
+    let program = new_map();
     
     native "js" {
         program = {

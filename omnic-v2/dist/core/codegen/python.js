@@ -1,54 +1,9 @@
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 64 (if)
-BlockLoop: 28 (==)
-BlockLoop: 11 (91)
-BlockLoop: 43 ())
-BlockLoop: 44 ({)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 64 (if)
-BlockLoop: 43 ())
-BlockLoop: 66 (return)
-BlockLoop: 64 (if)
-BlockLoop: 28 (==)
-BlockLoop: 10 (NODE_LITERAL)
-BlockLoop: 43 ())
-BlockLoop: 44 ({)
-BlockLoop: 64 (if)
-BlockLoop: 28 (==)
-BlockLoop: 12 (true)
-BlockLoop: 43 ())
-BlockLoop: 66 (return)
-BlockLoop: 64 (if)
-BlockLoop: 28 (==)
-BlockLoop: 12 (false)
-BlockLoop: 43 ())
-BlockLoop: 66 (return)
-BlockLoop: 64 (if)
-BlockLoop: 28 (==)
-BlockLoop: 12 (null)
-BlockLoop: 43 ())
-BlockLoop: 66 (return)
-BlockLoop: 66 (return)
-BlockLoop: 31 (.)
-BlockLoop: 10 (value)
 const base = require("./base.js");
+if (typeof global !== 'undefined') Object.assign(global, base);
 const ast = require("../ast.js");
+if (typeof global !== 'undefined') Object.assign(global, ast);
 const token = require("../token.js");
+if (typeof global !== 'undefined') Object.assign(global, token);
 function CodeGenerator_generate_python(self, program) {
     const output = "";
     
@@ -83,68 +38,53 @@ function CodeGenerator_generate_python(self, program) {
 function CodeGenerator_gen_stmt_py(self, stmt) {
     const indent_str = "";
      indent_str = "    ".repeat(self.indent); 
-    if (stmt) {
-    kind;
-}
-    // Unknown stmt kind: 0
-    91;
-    // Unknown stmt kind: 0
-    // Unknown stmt kind: 0
+    if (stmt.kind == 91) {
     return "";
 }
-if (stmt) {
-    kind;
-}
-const path = stmt;
-const name = "";
-
+    if (stmt.kind == NODE_IMPORT) {
+    const path = stmt.path;
+    const name = "";
+    
              path = path.replace(".omni", "");
              path = path.replace(/\//g, "."); // core/token -> core.token
              if (path.startsWith(".")) path = path.substring(1); // ./core -> /core -> core (fix logic later if needed)
              if (path.startsWith(".")) path = path.substring(1);
              name = path.split(".").pop();
         
-return indent_str;
-// Unknown stmt kind: undefined
-if (stmt) {
-    kind;
+    return indent_str + "import " + path + " as " + name;
 }
-if (stmt) {
-    lang;
+    if (stmt.kind == 80) {
+    if (stmt.lang == "py" || stmt.lang == "python") {
+    return stmt.code;
 }
-return stmt;
-// Unknown stmt kind: undefined
-return "";
-// Unknown stmt kind: undefined
-if (stmt) {
-    kind;
+    return "";
 }
-return indent_str;
-// Unknown stmt kind: undefined
-if (stmt) {
-    kind;
+    if (stmt.kind == NODE_LET) {
+    return indent_str + stmt.name + " = " + CodeGenerator_gen_expr_py(self, stmt.value);
 }
-return indent_str;
-// Unknown stmt kind: undefined
-if (stmt) {
-    kind;
+    if (stmt.kind == NODE_RETURN) {
+    return indent_str + "return " + CodeGenerator_gen_expr_py(self, stmt.value);
 }
-const decorators = CodeGenerator_gen_decorators_py;
-const params = "";
- params = stmt.params.join(", "); 
-const decl = indent_str;
-const body = CodeGenerator_gen_block_py;
-return decorators;
-// Unknown stmt kind: undefined
-if (stmt) {
-    kind;
+    if (stmt.kind == NODE_FUNCTION) {
+    const decorators = CodeGenerator_gen_decorators_py(self, stmt.decorators);
+    const params = "";
+     params = stmt.params.join(", "); 
+    const decl = indent_str + "def " + stmt.name + "(" + params + "):\n";
+    self.indent = self.indent + 1;
+    const body = CodeGenerator_gen_block_py(self, stmt.body);
+    self.indent = self.indent;
+    // Unknown stmt kind: 0
+    1;
+    return decorators + decl + body;
 }
-const decorators = CodeGenerator_gen_decorators_py;
-const decl = indent_str;
-const init_indent = "";
- init_indent = "    ".repeat(self.indent); 
-const assignments = "";
-
+    if (stmt.kind == NODE_STRUCT) {
+    const decorators = CodeGenerator_gen_decorators_py(self, stmt.decorators);
+    const decl = indent_str + "class " + stmt.name + ":\n";
+    self.indent = self.indent + 1;
+    const init_indent = "";
+     init_indent = "    ".repeat(self.indent); 
+    const assignments = "";
+    
              if (stmt.fields.length == 0) {
                  assignments = init_indent + "    pass";
              } else {
@@ -153,34 +93,47 @@ const assignments = "";
                  }
              }
         
-const init_fn = init_indent;
-return decorators;
-// Unknown stmt kind: undefined
-if (stmt) {
-    kind;
+    const init_fn = init_indent + "def __init__(self, data=None):\n";
+    init_fn = init_fn + init_indent + "    if data is None: data = {}\n";
+    init_fn = init_fn + assignments + "\n";
+    self.indent = self.indent;
+    // Unknown stmt kind: 0
+    1;
+    return decorators + decl + init_fn;
 }
-const cond = CodeGenerator_gen_expr_py;
-const out = indent_str;
-if (stmt) {
-    alternative;
+    if (stmt.kind == NODE_IF) {
+    const cond = CodeGenerator_gen_expr_py(self, stmt.condition);
+    const out = indent_str + "if " + cond + ":\n";
+    self.indent = self.indent + 1;
+    out = out + CodeGenerator_gen_block_py(self, stmt.consequence);
+    self.indent = self.indent;
+    // Unknown stmt kind: 0
+    1;
+    if (stmt.alternative) {
+    out = out + "\n" + indent_str + "else:\n";
+    self.indent = self.indent + 1;
+    out = out + CodeGenerator_gen_block_py(self, stmt.alternative);
+    self.indent = self.indent;
+    // Unknown stmt kind: 0
+    1;
 }
-// Unknown stmt kind: undefined
-return out;
-// Unknown stmt kind: undefined
-if (stmt) {
-    kind;
+    return out;
 }
-const cond = CodeGenerator_gen_expr_py;
-const out = indent_str;
-return out;
-// Unknown stmt kind: undefined
-if (stmt) {
-    expr;
+    if (stmt.kind == NODE_WHILE) {
+    const cond = CodeGenerator_gen_expr_py(self, stmt.condition);
+    const out = indent_str + "while " + cond + ":\n";
+    self.indent = self.indent + 1;
+    out = out + CodeGenerator_gen_block_py(self, stmt.body);
+    self.indent = self.indent;
+    // Unknown stmt kind: 0
+    1;
+    return out;
 }
-return indent_str;
-// Unknown stmt kind: undefined
-return indent_str;
-// Unknown stmt kind: undefined
+    if (stmt.expr) {
+    return indent_str + CodeGenerator_gen_expr_py(self, stmt.expr);
+}
+    return indent_str + "# Unknown stmt: " + stmt.kind;
+}
 function CodeGenerator_gen_decorators_py(self, decorators) {
     const out = "";
     const indent_str = "";
@@ -222,126 +175,85 @@ function CodeGenerator_gen_block_py(self, block) {
     return out;
 }
 function CodeGenerator_gen_expr_py(self, expr) {
-    if (expr) {
-    0;
-}
-    // Unknown stmt kind: 0
+    if (expr == 0) {
     return "None";
-    if (expr) {
-    kind;
 }
-    // Unknown stmt kind: 0
-    NODE_LITERAL;
-    // Unknown stmt kind: 0
-    // Unknown stmt kind: 0
-    if (expr) {
-    value;
-}
-    // Unknown stmt kind: 0
-    "true";
-    // Unknown stmt kind: 0
+    if (expr.kind == NODE_LITERAL) {
+    if (expr.value == "true") {
     return "True";
-    if (expr) {
-    value;
 }
-    // Unknown stmt kind: 0
-    "false";
-    // Unknown stmt kind: 0
+    if (expr.value == "false") {
     return "False";
-    if (expr) {
-    value;
 }
-    // Unknown stmt kind: 0
-    "null";
-    // Unknown stmt kind: 0
+    if (expr.value == "null") {
     return "None";
-    return expr;
-    // Unknown stmt kind: 0
-    value;
 }
-if (expr) {
-    kind;
+    return expr.value;
 }
-return "'";
-// Unknown stmt kind: undefined
-if (expr) {
-    kind;
+    if (expr.kind == NODE_STRING) {
+    return "'" + expr.value + "'";
 }
-if (expr) {
-    value;
+    if (expr.kind == NODE_BOOL) {
+    if (expr.value) {
+    return "True";
 }
-return "True";
-// Unknown stmt kind: undefined
-return "False";
-// Unknown stmt kind: undefined
-if (expr) {
-    kind;
+    return "False";
 }
-const op = expr;
-if (op) {
-    "&&";
+    if (expr.kind == NODE_BINARY) {
+    const op = expr.op;
+    if (op == "&&") {
+    op = "and";
 }
-if (op) {
-    "||";
+    if (op == "||") {
+    op = "or";
 }
-if (op) {
-    "!";
+    if (op == "!") {
+    op = "not ";
 }
-return CodeGenerator_gen_expr_py;
-// Unknown stmt kind: undefined
-if (expr) {
-    kind;
+    return CodeGenerator_gen_expr_py(self, expr.left) + " " + op + " " + CodeGenerator_gen_expr_py(self, expr.right);
 }
-const callee = CodeGenerator_gen_expr_py;
-const args = "";
-
+    if (expr.kind == NODE_CALL) {
+    const callee = CodeGenerator_gen_expr_py(self, expr.function);
+    const args = "";
+    
             let list = [];
             for(let a of expr.args) list.push(CodeGenerator_gen_expr_py(self, a));
             args = list.join(", ");
         
-return callee;
-// Unknown stmt kind: undefined
-if (expr) {
-    kind;
+    return callee + "(" + args + ")";
 }
-return CodeGenerator_gen_expr_py;
-// Unknown stmt kind: undefined
-if (expr) {
-    kind;
+    if (expr.kind == NODE_MEMBER) {
+    return CodeGenerator_gen_expr_py(self, expr.target) + "." + expr.property;
 }
-const fields = "";
-
+    if (expr.kind == NODE_STRUCT_INIT) {
+    const fields = "";
+    
               let list = [];
               for(let f of expr.fields) {
                    list.push("'" + f.name + "': " + CodeGenerator_gen_expr_py(self, f.value));
               }
               fields = list.join(", ");
          
-return expr;
-// Unknown stmt kind: undefined
-if (expr) {
-    kind;
+    return expr.name + "({ " + fields + " })";
 }
-const elems = "";
-
+    if (expr.kind == NODE_ARRAY) {
+    const elems = "";
+    
              let list = [];
              for (let e of expr.elements) list.push(CodeGenerator_gen_expr_py(self, e));
              elems = list.join(", ");
          
-return "[";
-// Unknown stmt kind: undefined
-if (expr) {
-    kind;
+    return "[" + elems + "]";
 }
-return expr;
-if (expr) {
-    kind;
+    if (expr.kind == NODE_IDENTIFIER) {
+    return expr.value;
 }
-return CodeGenerator_gen_expr_py;
-// Unknown stmt kind: undefined
- if (typeof(expr) == "string") return expr; 
-return "None";
-// Unknown stmt kind: undefined
+    if (expr.kind == NODE_ASSIGNMENT) {
+    return CodeGenerator_gen_expr_py(self, expr.left) + " = " + CodeGenerator_gen_expr_py(self, expr.right);
+}
+     if (typeof(expr) == "string") return expr; 
+    return "None";
+}
 
 
 // Auto-exports

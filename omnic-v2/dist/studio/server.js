@@ -1,20 +1,13 @@
-BlockLoop: 66 (return)
-BlockLoop: 43 ())
-BlockLoop: 10 (res)
-BlockLoop: 31 (.)
-BlockLoop: 10 (end)
-BlockLoop: 42 (()
-BlockLoop: 10 (stringify)
-BlockLoop: 42 (()
-BlockLoop: 10 (project)
-BlockLoop: 43 ())
-BlockLoop: 43 ())
-BlockLoop: 66 (return)
-const cli = require("./lib/cli.js");
-const project = require("./studio/project.js");
-const runner = require("./studio/runner.js");
-const state = require("./studio/state.js");
-const html = require("./studio/html.js");
+const terminal = require("../lib/terminal.js");
+if (typeof global !== 'undefined') Object.assign(global, terminal);
+const project = require("./project.js");
+if (typeof global !== 'undefined') Object.assign(global, project);
+const runner = require("./runner.js");
+if (typeof global !== 'undefined') Object.assign(global, runner);
+const state = require("./state.js");
+if (typeof global !== 'undefined') Object.assign(global, state);
+const html = require("./html.js");
+if (typeof global !== 'undefined') Object.assign(global, html);
 class StudioServer {
     constructor(data = {}) {
         this.port = data.port;
@@ -24,41 +17,69 @@ class StudioServer {
     }
 }
 function StudioServer_new(port) {
-    return new StudioServer({ port: port, project: new ProjectInfo({ name: "", type: "unknown", config_file: "", run_command: "", build_command: "", dev_command: "" }), runner: CrossRunner_new, (: null, graph: GraphState_new, (: null, ;: null, StudioServer_start: self, :: null, dir: string, ): CLI_banner, (: null, CLI_header: "Omni Studio", ): self, .: null, detect_project: dir, ): CLI_info, (: null, self: project, .: null, ;: "Type: ", self: project, .: null, ;: "js", {: http = require, (: http, ': null, const: null, require: null, fs: null, ;: path = require, (: path, ': null, const: null, http: createServer, (: req, res: null, >: null, (: null, url: null, ': api, /: null, ): res, .: 200, {: Content, -: null, :: application, /: null });
-    // Unknown stmt kind: 0
-    res;
-    // Unknown stmt kind: 0
-    end;
-    JSON;
-    stringify;
-    self;
-    project;
-    // Unknown stmt kind: 0
-    // Unknown stmt kind: 0
-    return null;
+    return new StudioServer({ port: port, project: new ProjectInfo({ name: "", type: "unknown", config_file: "", run_command: "", build_command: "", dev_command: "" }), runner: CrossRunner_new(), graph: GraphState_new() });
 }
-if (req) {
-    url;
+function StudioServer_start(self, dir) {
+    CLI_banner();
+    CLI_header("Omni Studio");
+    self.project = detect_project(dir);
+    CLI_info("Project: " + self.project.name);
+    CLI_info("Type: " + self.project.type);
+    
+        const http = require('http');
+        const fs = require('fs');
+        const path = require('path');
+        
+        const server = http.createServer((req, res) => {
+            // API Routes
+            if (req.url === '/api/project') {
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify(self.project));
+                return;
+            }
+            
+            if (req.url === '/api/graph') {
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(GraphState_to_json(self.graph));
+                return;
+            }
+            
+            if (req.url === '/api/packages') {
+                // Warning: PackageRegistry_new might need import or be available
+                // Assuming it's available via global context or we need to import it here.
+                // For now, let's assume it's imported in facade or globally available.
+                const registry = PackageRegistry_new();
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify(registry.packages));
+                return;
+            }
+            
+            // Serve Studio UI
+            if (req.url === '/' || req.url === '/index.html') {
+                res.writeHead(200, { 'Content-Type': 'text/html' });
+                res.end(generate_studio_html(self));
+                return;
+            }
+            
+            res.writeHead(404);
+            res.end('Not Found');
+        });
+        
+        server.listen(self.port, () => {
+            console.log("");
+            console.log(CLI_COLORS.green + "  ╔════════════════════════════════════════════════╗" + CLI_COLORS.reset);
+            console.log(CLI_COLORS.green + "  ║                                                ║" + CLI_COLORS.reset);
+            console.log(CLI_COLORS.green + "  ║       OMNI STUDIO - Ready                      ║" + CLI_COLORS.reset);
+            console.log(CLI_COLORS.green + "  ║                                                ║" + CLI_COLORS.reset);
+            console.log(CLI_COLORS.green + "  ╚════════════════════════════════════════════════╝" + CLI_COLORS.reset);
+            console.log("");
+            console.log(CLI_COLORS.cyan + "  → Local:   " + CLI_COLORS.reset + "http://localhost:" + self.port);
+            console.log(CLI_COLORS.cyan + "  → Project: " + CLI_COLORS.reset + self.project.name);
+            console.log("");
+            CLI_info("Press Ctrl+C to stop");
+        });
+    
 }
-// Unknown stmt kind: undefined
-return null;
-// Unknown stmt kind: undefined
-if (req) {
-    url;
-}
-// Unknown stmt kind: undefined
-return null;
-// Unknown stmt kind: undefined
-if (req) {
-    url;
-}
-// Unknown stmt kind: undefined
-return null;
-// Unknown stmt kind: undefined
-// Unknown stmt kind: undefined
-// Unknown stmt kind: undefined
-// Unknown stmt kind: undefined
-// Unknown stmt kind: undefined
 
 
 // Auto-exports

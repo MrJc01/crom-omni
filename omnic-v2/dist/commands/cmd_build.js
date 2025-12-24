@@ -1,9 +1,7 @@
-BlockLoop: 10 (CLI_info)
-BlockLoop: 42 (()
-const cli = require("./lib/cli.js");
+const terminal = require("../lib/terminal.js");
+if (typeof global !== 'undefined') Object.assign(global, terminal);
 function cmd_build() {
-    CLI_info;
-    "Building from omni.config.json...";
+    CLI_info("Building from omni.config.json...");
 }
 
 

@@ -1,16 +1,7 @@
-BlockLoop: 61 (let)
-BlockLoop: 61 (let)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 64 (if)
-BlockLoop: 10 (cmd_tui)
-BlockLoop: 42 (()
-BlockLoop: 10 (cmd_studio)
-BlockLoop: 42 (()
-BlockLoop: 10 (open_app)
-BlockLoop: 43 ())
-const studio_engine = require("./core/studio_engine.js");
-const tui = require("./core/tui.js");
+const studio_engine = require("../core/studio_engine.js");
+if (typeof global !== 'undefined') Object.assign(global, studio_engine);
+const tui = require("../core/tui.js");
+if (typeof global !== 'undefined') Object.assign(global, tui);
 function cmd_studio_cli() {
     const port = 3000;
     const open_app = false;
@@ -30,13 +21,9 @@ function cmd_studio_cli() {
         }
     
     if (run_tui) {
-    cmd_tui;
-    // Unknown stmt kind: 0
+    cmd_tui();
 } else {
-    cmd_studio;
-    port;
-    open_app;
-    // Unknown stmt kind: 0
+    cmd_studio(port, open_app);
 }
 }
 

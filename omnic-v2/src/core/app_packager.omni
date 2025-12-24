@@ -3,7 +3,7 @@
 // Builds standalone EXE, APK, and other native formats
 // ============================================================================
 
-import "lib/cli.omni";
+import "../lib/terminal.omni";
 
 // ============================================================================
 // PACKAGE CONFIGURATION
