@@ -1,46 +1,64 @@
 # Omnic V2 Compiler
 
-A self-hosted compiler written in Omni that compiles Omni source code to JavaScript or Python.
+A modular, self-hosted compiler written in Omni that compiles Omni source code to JavaScript or Python.
 
 ## Quick Start
 
-### Compile to JavaScript (default)
+### Build the Compiler
 
 ```bash
-node dist/main.js src/myfile.omni output.js
+python scripts/build.py
+```
+
+### Run (JIT Mode)
+
+```bash
+omni run src/examples/hello.omni
+```
+
+### Compile to JavaScript
+
+```bash
+omni build src/myfile.omni --target js
 ```
 
 ### Compile to Python
 
 ```bash
-node dist/main.js src/myfile.omni output.py --target python
+omni build src/myfile.omni --target python
 ```
 
-## Self-Hosting Test
-
-Compile the compiler's own token module to Python:
+### Omni Studio (IDE)
 
 ```bash
-node dist/main.js src/core/token.omni dist/core/token.py --target python
+omni studio
 ```
 
 ## Features
 
 - **Multi-target**: Generates JS or Python
-- **Auto-exports**: Automatically generates `module.exports` for JS
+- **Modular Architecture**: Split into core, studio, contracts, and commands
+- **Omni Studio**: Visual programming environment (experimental)
+- **Contract System**: Standard library interfaces with pluggable implementations
 - **Native blocks**: Embed target-specific code with `native "js" { ... }` or `native "py" { ... }`
-- **Structs**: Compile to JS classes or Python classes with `__init__`
 
 ## Source Structure
 
 ```
 src/
-├── main.omni          # Entry point
-└── core/
-    ├── token.omni     # Token definitions
-    ├── lexer.omni     # Tokenizer
-    ├── parser.omni    # Parser
-    ├── codegen.omni   # Code generator (JS + Python)
-    ├── ast.omni       # AST node definitions
-    └── io.omni        # File I/O helpers
+├── main.omni            # Entry point dispatcher
+├── commands/            # CLI command implementations
+├── core/
+│   ├── ast.omni         # AST node definitions
+│   ├── lexer.omni       # Tokenizer
+│   ├── parser.omni      # Parser
+│   ├── codegen/         # Code generation modules (Base, JS, Py)
+│   └── ...
+├── studio/              # Studio IDE modules (Server, Graph, UI)
+├── contracts/           # Standard library & Registry
+└── lib/                 # Shared libraries (std, cli)
 ```
+
+## Architecture
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for a detailed overview of the compiler design.
