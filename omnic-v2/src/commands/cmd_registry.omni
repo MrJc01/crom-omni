@@ -1,0 +1,9 @@
+
+import "core/contracts.omni";
+
+fn cmd_contracts() {
+    native "js" {
+        const registry = ContractRegistry_new();
+        ContractRegistry_list_interfaces(registry);
+    }
+}

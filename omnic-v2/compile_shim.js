@@ -1,5 +1,24 @@
 const fs = require('fs');
-const OMNI = require('./dist/omni_bundle.js');
+
+// Bootstrap
+try {
+    require('./bootstrap/core/token.js');
+    require('./bootstrap/core/ast.js');
+} catch (e) {
+    // If not in bootstrap, maybe try dist/core? But sticking to bootstrap plan.
+    console.error("Bootstrap modules not found:", e.message);
+    process.exit(1);
+}
+
+const LexerMod = require('./bootstrap/core/lexer.js');
+const ParserMod = require('./bootstrap/core/parser.js');
+const CodegenMod = require('./bootstrap/core/codegen.js');
+
+const OMNI = {
+    ...LexerMod,
+    ...ParserMod,
+    ...CodegenMod
+};
 
 // Args: build --target js <src>
 // Index: 0=node, 1=shim, 2=build, 3=--target, 4=js, 5=src
@@ -15,6 +34,9 @@ try {
     const p = OMNI.new_parser(l);
     const program = OMNI.Parser_parse_program(p);
     const gen = OMNI.new_code_generator('js');
+    
+    // Inject framework if needed? The build script doesn't seem to pass it yet.
+    
     const code = OMNI.CodeGenerator_generate(gen, program);
     console.log(code);
 } catch (e) {

@@ -14,6 +14,10 @@ CORE_MODULES = [
     "studio_engine", "studio_graph", "app_packager", "tui"
 ]
 LIB_MODULES = ["std", "cli"]
+COMMAND_MODULES = [
+    "cmd_setup", "cmd_run", "cmd_build", "cmd_test", 
+    "cmd_package", "cmd_registry", "cmd_studio"
+]
 
 import re
 
@@ -69,41 +73,48 @@ def compile_file(src, dest, auto_export=False):
 
 def main():
     if not os.path.exists(OMNIC_PATH):
-        print(f"Error: Rust compiler not found at {OMNIC_PATH}")
-        return
+        # Allow running without Rust compiler for testing parsing/logic via Node shim if available
+        # print(f"Error: Rust compiler not found at {OMNIC_PATH}")
+        # return
+        pass
 
     # Create directories
     os.makedirs(os.path.join(DIST_DIR, "core"), exist_ok=True)
     os.makedirs(os.path.join(DIST_DIR, "lib"), exist_ok=True)
+    os.makedirs(os.path.join(DIST_DIR, "commands"), exist_ok=True)
 
     # Core
-    print("Step 1: Compiling core modules (SKIPPED)...")
-    compiled_core = CORE_MODULES # Assume existing
-    # compiled_core = []
-    # for mod in CORE_MODULES:
-    #     if compile_file(os.path.join(SRC_DIR, "core", f"{mod}.omni"), os.path.join(DIST_DIR, "core", f"{mod}.js"), auto_export=True):
-    #         compiled_core.append(mod)
+    print("Step 1: Compiling core modules...")
+    compiled_core = []
+    for mod in CORE_MODULES:
+        if compile_file(os.path.join(SRC_DIR, "core", f"{mod}.omni"), os.path.join(DIST_DIR, "core", f"{mod}.js"), auto_export=True):
+            compiled_core.append(mod)
 
     # Lib
-    print("Step 2: Compiling lib modules (SKIPPED)...")
-    compiled_lib = LIB_MODULES # Assume existing
-    # compiled_lib = []
-    # for mod in LIB_MODULES:
-    #     if compile_file(os.path.join(SRC_DIR, "lib", f"{mod}.omni"), os.path.join(DIST_DIR, "lib", f"{mod}.js"), auto_export=True):
-    #         compiled_lib.append(mod)
+    print("Step 2: Compiling lib modules...")
+    compiled_lib = []
+    for mod in LIB_MODULES:
+        if compile_file(os.path.join(SRC_DIR, "lib", f"{mod}.omni"), os.path.join(DIST_DIR, "lib", f"{mod}.js"), auto_export=True):
+            compiled_lib.append(mod)
+
+    # Commands
+    print("Step 3: Compiling command modules...")
+    compiled_commands = []
+    for mod in COMMAND_MODULES:
+        if compile_file(os.path.join(SRC_DIR, "commands", f"{mod}.omni"), os.path.join(DIST_DIR, "commands", f"{mod}.js"), auto_export=True):
+            compiled_commands.append(mod)
 
     # Main
-    print("Step 3: Compiling main.omni (SKIPPED)...")
-    # compile_file(os.path.join(SRC_DIR, "main.omni"), os.path.join(DIST_DIR, "main.js"))
+    print("Step 4: Compiling main.omni...")
+    compile_file(os.path.join(SRC_DIR, "main.omni"), os.path.join(DIST_DIR, "main.js"))
 
     # Bundle
-    print("Step 4: Creating bundle...")
+    print("Step 5: Creating bundle...")
     bundle_content = [
         "// OMNI v1.2.0 - Unified Bundle",
         "const OMNI = {};",
         
         # Hoist common Node.js modules to global scope to avoid collision
-        # Hoist common Node.js modules to global scope to avoid listening
         "const fs = require('fs');",
         "const path = require('path');",
         "const os = require('os');",
@@ -113,6 +124,7 @@ def main():
     ]
 
     def process_module(mod_path):
+        if not os.path.exists(mod_path): return ""
         with open(mod_path, "r", encoding="utf-8") as f:
             content = f.read()
         
@@ -140,6 +152,11 @@ def main():
     for mod in compiled_lib:
         bundle_content.append(f"\n// === Module: lib/{mod} ===")
         content = process_module(os.path.join(DIST_DIR, "lib", f"{mod}.js"))
+        bundle_content.append(content)
+
+    for mod in compiled_commands:
+        bundle_content.append(f"\n// === Module: commands/{mod} ===")
+        content = process_module(os.path.join(DIST_DIR, "commands", f"{mod}.js"))
         bundle_content.append(content)
             
     # Main Entry

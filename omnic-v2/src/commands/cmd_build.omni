@@ -1,0 +1,11 @@
+
+import "lib/cli.omni";
+
+// ============================================================================
+// BUILD COMMAND
+// ============================================================================
+
+fn cmd_build() {
+    CLI_info("Building from omni.config.json...");
+    // TODO: implement build_from_config
+}

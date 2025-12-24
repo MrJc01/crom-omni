@@ -1,7 +1,5 @@
 // ============================================================================
 // OMNI COMPILER - MAIN ENTRY POINT
-// Supports Hybrid Metamorphosis with external language packages
-// Version 1.2.0 - Visual Singularity + Interactive TUI
 // ============================================================================
 
 import "core/token.omni";
@@ -22,291 +20,14 @@ import "core/tui.omni";
 import "lib/std.omni";
 import "lib/cli.omni";
 
-// ============================================================================
-// RESOURCE PATH RESOLUTION (Local-First)
-// ============================================================================
-
-fn get_omni_home() -> string {
-    let home = "";
-    native "js" {
-        const path = require('path');
-        const os = require('os');
-        
-        // Priority 1: OMNI_HOME environment variable
-        if (process.env.OMNI_HOME) {
-            home = process.env.OMNI_HOME;
-        }
-        // Priority 2: Executable directory
-        else if (__dirname) {
-            home = path.dirname(__dirname);
-        }
-        // Priority 3: User's home directory
-        else {
-            const platform = os.platform();
-            if (platform === 'win32') {
-                home = path.join(os.homedir(), 'AppData', 'Local', 'Omni');
-            } else {
-                home = path.join(os.homedir(), '.local', 'share', 'omni');
-            }
-        }
-    }
-    return home;
-}
-
-fn resolve_resource_path(name: string) -> string {
-    let resolved = "";
-    native "js" {
-        const fs = require('fs');
-        const path = require('path');
-        
-        // Strategy 1: Local project path (./targets/, ./packages/, ./patterns/)
-        const localPath = path.join(process.cwd(), name);
-        if (fs.existsSync(localPath)) {
-            resolved = localPath;
-            return;
-        }
-        
-        // Strategy 2: Relative to executable (dist/../)
-        const execPath = path.join(__dirname, '..', name);
-        if (fs.existsSync(execPath)) {
-            resolved = execPath;
-            return;
-        }
-        
-        // Strategy 3: OMNI_HOME
-        const omniHome = get_omni_home();
-        const homePath = path.join(omniHome, name);
-        if (fs.existsSync(homePath)) {
-            resolved = homePath;
-            return;
-        }
-        
-        // Strategy 4: Global installation
-        const os = require('os');
-        const platform = os.platform();
-        let globalPath;
-        
-        if (platform === 'win32') {
-            globalPath = path.join(os.homedir(), 'AppData', 'Local', 'Omni', name);
-        } else {
-            globalPath = path.join(os.homedir(), '.local', 'share', 'omni', name);
-        }
-        
-        if (fs.existsSync(globalPath)) {
-            resolved = globalPath;
-            return;
-        }
-        
-        // Not found - return local path for error messages
-        resolved = localPath;
-    }
-    return resolved;
-}
-
-// ============================================================================
-// GLOBAL INSTALLATION COMMAND
-// ============================================================================
-
-fn cmd_setup(is_global: bool) {
-    CLI_banner();
-    CLI_header("Omni Setup");
-    
-    native "js" {
-        const os = require('os');
-        const fs = require('fs');
-        const path = require('path');
-        const { execSync } = require('child_process');
-        
-        const platform = os.platform();
-        const isWindows = platform === 'win32';
-        const omniDir = path.dirname(path.dirname(__filename));
-        
-        CLI_info("Platform: " + platform + " (" + os.arch() + ")");
-        CLI_info("Omni directory: " + omniDir);
-        CLI_info("Mode: " + (is_global ? "GLOBAL" : "LOCAL"));
-        
-        console.log("");
-        
-        if (is_global) {
-            // ============================================================
-            // GLOBAL INSTALLATION
-            // ============================================================
-            CLI_step(1, 4, "Detecting global installation path...");
-            
-            let globalDir;
-            if (isWindows) {
-                // Windows: Use %AppData%\Omni
-                globalDir = path.join(os.homedir(), 'AppData', 'Local', 'Omni');
-            } else {
-                // Unix: Use ~/.local/bin or /usr/local/bin
-                globalDir = path.join(os.homedir(), '.local', 'share', 'omni');
-            }
-            
-            CLI_info("Global directory: " + globalDir);
-            
-            CLI_step(2, 4, "Copying Omni files...");
-            
-            // Ensure directory exists
-            if (!fs.existsSync(globalDir)) {
-                fs.mkdirSync(globalDir, { recursive: true });
-            }
-            
-            // Copy dist folder
-            const srcDist = path.join(omniDir, 'dist');
-            const dstDist = path.join(globalDir, 'dist');
-            
-            if (fs.existsSync(srcDist)) {
-                if (!fs.existsSync(dstDist)) {
-                    fs.mkdirSync(dstDist, { recursive: true });
-                }
-                
-                const files = fs.readdirSync(srcDist);
-                for (const file of files) {
-                    fs.copyFileSync(
-                        path.join(srcDist, file),
-                        path.join(dstDist, file)
-                    );
-                }
-                CLI_success("Copied " + files.length + " files");
-            }
-            
-            // Copy lib folder
-            const srcLib = path.join(omniDir, 'src', 'lib');
-            const dstLib = path.join(globalDir, 'lib');
-            
-            if (fs.existsSync(srcLib)) {
-                if (!fs.existsSync(dstLib)) {
-                    fs.mkdirSync(dstLib, { recursive: true });
-                }
-                
-                const walkAndCopy = (src, dst) => {
-                    const entries = fs.readdirSync(src, { withFileTypes: true });
-                    for (const entry of entries) {
-                        const srcPath = path.join(src, entry.name);
-                        const dstPath = path.join(dst, entry.name);
-                        if (entry.isDirectory()) {
-                            if (!fs.existsSync(dstPath)) fs.mkdirSync(dstPath);
-                            walkAndCopy(srcPath, dstPath);
-                        } else {
-                            fs.copyFileSync(srcPath, dstPath);
-                        }
-                    }
-                };
-                walkAndCopy(srcLib, dstLib);
-                CLI_success("Copied standard library");
-            }
-            
-            CLI_step(3, 4, "Creating executable wrapper...");
-            
-            if (isWindows) {
-                // Windows: Create batch and PowerShell wrappers
-                const cmdContent = `@echo off
-node "%~dp0dist\\main.js" %*`;
-                fs.writeFileSync(path.join(globalDir, 'omni.cmd'), cmdContent);
-                
-                const ps1Content = `#!/usr/bin/env pwsh
-node "$PSScriptRoot\\dist\\main.js" @args`;
-                fs.writeFileSync(path.join(globalDir, 'omni.ps1'), ps1Content);
-                
-                CLI_success("Created omni.cmd and omni.ps1");
-            } else {
-                // Unix: Create shell script
-                const shContent = `#!/usr/bin/env bash
-OMNI_DIR="$( cd "$( dirname "\${BASH_SOURCE[0]}" )" && pwd )"
-node "$OMNI_DIR/dist/main.js" "$@"`;
-                const shPath = path.join(globalDir, 'omni');
-                fs.writeFileSync(shPath, shContent);
-                fs.chmodSync(shPath, '755');
-                
-                CLI_success("Created omni executable");
-            }
-            
-            CLI_step(4, 4, "Configuring PATH...");
-            
-            let binDir;
-            if (isWindows) {
-                binDir = globalDir;
-                
-                // Try to add to user PATH
-                try {
-                    const currentPath = execSync('echo %PATH%', { encoding: 'utf-8' }).trim();
-                    if (!currentPath.includes(globalDir)) {
-                        console.log("");
-                        CLI_warning("Add this directory to your PATH:");
-                        console.log(CLI_COLORS.cyan + "  " + globalDir + CLI_COLORS.reset);
-                        console.log("");
-                        console.log(CLI_COLORS.dim + "  PowerShell (admin):" + CLI_COLORS.reset);
-                        console.log(CLI_COLORS.dim + "  [Environment]::SetEnvironmentVariable('Path', $env:Path + ';' + '" + globalDir + "', 'User')" + CLI_COLORS.reset);
-                    } else {
-                        CLI_success("Already in PATH");
-                    }
-                } catch (e) {}
-            } else {
-                binDir = path.join(os.homedir(), '.local', 'bin');
-                
-                // Create symlink in ~/.local/bin
-                if (!fs.existsSync(binDir)) {
-                    fs.mkdirSync(binDir, { recursive: true });
-                }
-                
-                const linkPath = path.join(binDir, 'omni');
-                try {
-                    if (fs.existsSync(linkPath)) fs.unlinkSync(linkPath);
-                    fs.symlinkSync(path.join(globalDir, 'omni'), linkPath);
-                    CLI_success("Linked: " + linkPath);
-                } catch (e) {
-                    CLI_warning("Could not create symlink: " + e.message);
-                }
-                
-                // Check if ~/.local/bin is in PATH
-                const shellPath = process.env.PATH || '';
-                if (!shellPath.includes(binDir)) {
-                    console.log("");
-                    CLI_warning("Add to your shell profile (~/.bashrc or ~/.zshrc):");
-                    console.log(CLI_COLORS.cyan + '  export PATH="$HOME/.local/bin:$PATH"' + CLI_COLORS.reset);
-                }
-            }
-            
-            console.log("");
-            CLI_success("Global installation complete!");
-            console.log("");
-            console.log(CLI_COLORS.green + "  Try: omni --version" + CLI_COLORS.reset);
-            
-        } else {
-            // ============================================================
-            // LOCAL INSTALLATION (./omni in current project)
-            // ============================================================
-            CLI_step(1, 2, "Creating local wrapper...");
-            
-            const cwd = process.cwd();
-            
-            if (isWindows) {
-                const cmdContent = `@echo off
-node "${path.join(omniDir, 'dist', 'main.js')}" %*`;
-                fs.writeFileSync(path.join(cwd, 'omni.cmd'), cmdContent);
-                CLI_success("Created: omni.cmd");
-            } else {
-                const shContent = `#!/usr/bin/env bash
-node "${path.join(omniDir, 'dist', 'main.js')}" "$@"`;
-                const shPath = path.join(cwd, 'omni');
-                fs.writeFileSync(shPath, shContent);
-                fs.chmodSync(shPath, '755');
-                CLI_success("Created: ./omni");
-            }
-            
-            CLI_step(2, 2, "Done!");
-            
-            console.log("");
-            CLI_success("Local installation complete!");
-            console.log("");
-            if (isWindows) {
-                console.log(CLI_COLORS.green + "  Try: .\\omni.cmd --version" + CLI_COLORS.reset);
-            } else {
-                console.log(CLI_COLORS.green + "  Try: ./omni --version" + CLI_COLORS.reset);
-            }
-        }
-    }
-}
+// Command Modules
+import "commands/cmd_setup.omni";
+import "commands/cmd_run.omni";
+import "commands/cmd_build.omni";
+import "commands/cmd_test.omni";
+import "commands/cmd_package.omni";
+import "commands/cmd_registry.omni";
+import "commands/cmd_studio.omni";
 
 // ============================================================================
 // VERSION COMMAND
@@ -321,90 +42,6 @@ fn cmd_version() {
         console.log(CLI_COLORS.dim + "Node.js: " + process.version + CLI_COLORS.reset);
         console.log(CLI_COLORS.dim + "Platform: " + process.platform + CLI_COLORS.reset);
         console.log(CLI_COLORS.dim + "Arch: " + process.arch + CLI_COLORS.reset);
-    }
-}
-
-// ============================================================================
-// SELF-PACKAGING COMMAND
-// ============================================================================
-
-fn cmd_package_self() {
-    CLI_header("Self-Package");
-    
-    native "js" {
-        const fs = require('fs');
-        const path = require('path');
-        const { execSync } = require('child_process');
-        
-        const omniDir = path.dirname(path.dirname(__filename));
-        const version = CLI_version();
-        const platform = process.platform;
-        
-        CLI_step(1, 4, "Collecting source files...");
-        
-        // Files to include
-        const distDir = path.join(omniDir, 'dist');
-        const targetsDir = path.join(omniDir, 'targets');
-        
-        CLI_step(2, 4, "Creating package manifest...");
-        
-        const manifest = {
-            name: 'omni-compiler',
-            version: version,
-            platform: platform,
-            created: new Date().toISOString(),
-            files: []
-        };
-        
-        // List dist files
-        if (fs.existsSync(distDir)) {
-            const files = fs.readdirSync(distDir, { recursive: true });
-            manifest.files.push(...files.map(f => 'dist/' + f));
-        }
-        
-        // List target profiles
-        if (fs.existsSync(targetsDir)) {
-            const files = fs.readdirSync(targetsDir);
-            manifest.files.push(...files.map(f => 'targets/' + f));
-        }
-        
-        CLI_step(3, 4, "Writing package...");
-        
-        const packageName = `omni-${version}-${platform}`;
-        const packageDir = path.join(omniDir, 'packages');
-        
-        if (!fs.existsSync(packageDir)) {
-            fs.mkdirSync(packageDir, { recursive: true });
-        }
-        
-        // Write manifest
-        fs.writeFileSync(
-            path.join(packageDir, packageName + '.json'),
-            JSON.stringify(manifest, null, 2)
-        );
-        
-        CLI_step(4, 4, "Creating executable wrapper...");
-        
-        // Create .run file (Unix) or .cmd (Windows)
-        if (platform === 'win32') {
-            const runContent = `@echo off
-set OMNI_HOME=%~dp0
-node "%OMNI_HOME%dist\\main.js" %*`;
-            fs.writeFileSync(path.join(packageDir, packageName + '.cmd'), runContent);
-            CLI_success("Package created: packages/" + packageName + ".cmd");
-        } else {
-            const runContent = `#!/bin/bash
-OMNI_HOME="$(dirname "$(readlink -f "$0")")"
-node "$OMNI_HOME/dist/main.js" "$@"`;
-            const runPath = path.join(packageDir, packageName + '.run');
-            fs.writeFileSync(runPath, runContent);
-            fs.chmodSync(runPath, '755');
-            CLI_success("Package created: packages/" + packageName + ".run");
-        }
-        
-        console.log("");
-        CLI_info("Package manifest: packages/" + packageName + ".json");
-        CLI_info("Total files: " + manifest.files.length);
     }
 }
 
@@ -426,7 +63,15 @@ fn main() {
     
     // Handle special commands
     if (command == "setup") {
-        cmd_setup();
+        let is_global = false;
+        native "js" {
+            for (let i = 3; i < process.argv.length; i++) {
+                if (process.argv[i] === '--global' || process.argv[i] === '-g') {
+                    is_global = true;
+                }
+            }
+        }
+        cmd_setup(is_global);
         return 0;
     }
     
@@ -445,26 +90,10 @@ fn main() {
         }
     }
     
-    // Check for 'setup' command (Installation)
-    if (command == "setup") {
-        let is_global = false;
-        native "js" {
-            for (let i = 3; i < process.argv.length; i++) {
-                if (process.argv[i] === '--global' || process.argv[i] === '-g') {
-                    is_global = true;
-                }
-            }
-        }
-        cmd_setup(is_global);
-        return 0;
-    }
-    
     // Check for 'install' command (Git-native package installation)
     if (command == "install") {
         let package_spec = "";
         native "js" { package_spec = process.argv[3] || ''; }
-        
-        // Empty spec = install from omni.lock
         cmd_install(package_spec);
         return 0;
     }
@@ -489,7 +118,7 @@ fn main() {
         return 0;
     }
     
-    // Check for 'update' command (Update packages)
+    // Check for 'update' command
     if (command == "update") {
         let package_name = "";
         native "js" { package_name = process.argv[3] || ''; }
@@ -497,7 +126,7 @@ fn main() {
         return 0;
     }
     
-    // Check for 'search' command (Search static registry)
+    // Check for 'search' command
     if (command == "search") {
         let query = "";
         native "js" { query = process.argv[3] || ''; }
@@ -505,22 +134,19 @@ fn main() {
         return 0;
     }
     
-    // Check for 'doctor' command (System Health Check)
+    // Check for 'doctor' command
     if (command == "doctor") {
         cmd_doctor();
         return 0;
     }
     
-    // Check for 'contracts' command (Show Canonical Interfaces)
+    // Check for 'contracts' command
     if (command == "contracts") {
-        native "js" {
-            const registry = ContractRegistry_new();
-            ContractRegistry_list_interfaces(registry);
-        }
+        cmd_contracts();
         return 0;
     }
     
-    // Check for 'graph' command (Ghost Writer - Diagram Generation)
+    // Check for 'graph' command
     if (command == "graph") {
         let input_file = "";
         let output_file = "";
@@ -546,39 +172,19 @@ fn main() {
         return 0;
     }
     
-    // Check for 'bootstrap' command (Native Compilation)
+    // Check for 'bootstrap' command
     if (command == "bootstrap") {
         cmd_bootstrap();
         return 0;
     }
     
-    // Check for 'studio' command (Omni Studio IDE)
+    // Check for 'studio' command
     if (command == "studio") {
-        let port = 3000;
-        let open_app = false;
-        
-        native "js" {
-            // Parse port option
-            for (let i = 3; i < process.argv.length; i++) {
-                if (process.argv[i] === '--port' && process.argv[i + 1]) {
-                    port = parseInt(process.argv[i + 1]);
-                }
-                if (process.argv[i] === '--app') {
-                    open_app = true;
-                }
-                if (process.argv[i] === '--tui') {
-                    // TUI mode - interactive terminal
-                    cmd_tui();
-                    return 0;
-                }
-            }
-        }
-        
-        cmd_studio(port, open_app);
+        cmd_studio_cli();
         return 0;
     }
     
-    // Check for 'ui' command (Interactive TUI)
+    // Check for 'ui' command
     if (command == "ui") {
         cmd_tui();
         return 0;
@@ -588,14 +194,11 @@ fn main() {
     if (command == "package") {
         let target = "";
         native "js" {
-            // Parse arguments
             for (let i = 3; i < process.argv.length; i++) {
                 if (process.argv[i] === '--app' && process.argv[i + 1]) {
                     target = process.argv[i + 1];
                 }
             }
-            
-            // Default to current platform
             if (!target) {
                 const platform = process.platform;
                 if (platform === 'win32') target = 'windows';
@@ -607,7 +210,6 @@ fn main() {
         
         let config = AppConfig_default();
         native "js" {
-            // Try to read omni.config.json for app config
             const fs = require('fs');
             const path = require('path');
             const configPath = path.join(process.cwd(), 'omni.config.json');
@@ -627,7 +229,7 @@ fn main() {
         return 0;
     }
     
-    // Check for 'ingest' command (Legacy Code Transformation)
+    // Check for 'ingest' command
     if (command == "ingest") {
         let input_file = "";
         let output_file = "";
@@ -638,12 +240,10 @@ fn main() {
         
         if (input_file == "") {
             CLI_error("Usage: omni ingest <legacy_file> <output.omni>");
-            CLI_info("Transforms PHP, Java, Python, or JS code to Omni");
             return 1;
         }
         
         if (output_file == "") {
-            // Auto-generate output name
             native "js" {
                 const path = require('path');
                 output_file = path.basename(input_file).replace(/\.[^.]+$/, '.omni');
@@ -654,176 +254,21 @@ fn main() {
         return 0;
     }
     
-    // Check for 'run' command (VM mode or JIT compile)
+    // Check for 'run' command
     if (command == "run") {
-        let run_file = "";
-        let is_app = false;
-        let target = "js";
-        
-        native "js" { 
-             run_file = process.argv[3] || ''; 
-             if (process.argv.includes("--app")) {
-                 is_app = true;
-                 target = "python"; // Default Native App target
-             }
-             // Check custom target
-             let t_idx = process.argv.indexOf("--target");
-             if (t_idx > -1 && process.argv[t_idx+1]) {
-                 target = process.argv[t_idx+1];
-             }
-        }
-        
-        if (run_file == "") {
-            CLI_error("Usage: omni run <file.omni> [--app] [--target python]");
-            return 1;
-        }
-        
-        let source = read_file(run_file);
-        let l = new_lexer(source);
-        let p = new_parser(l);
-        let program = Parser_parse_program(p);
-        
-        if (is_app || target == "python") {
-             CLI_info("Compiling Native App (" + target + ")...");
-             let gen = new_code_generator(target);
-             let code = CodeGenerator_generate(gen, program);
-             
-             // Run the generated code
-             native "js" {
-                 const fs = require('fs');
-                 const path = require('path');
-                 const { spawn } = require('child_process');
-                 
-                 const ext = target == "python" ? ".py" : ".js";
-                 const outFile = run_file.replace(".omni", ext); 
-                 fs.writeFileSync(outFile, code);
-                 
-                 // CLI_success("Generated: " + outFile);
-                 
-                 let cmd = "node";
-                 let args = [outFile];
-                 if (target == "python") {
-                     cmd = "python";
-                     args = [outFile];
-                 }
-                 
-                 const proc = spawn(cmd, args, { stdio: 'inherit' });
-                 proc.on('close', (code) => {
-                     // process.exit(code); 
-                 });
-             }
-             return 0;
-        }
-        
-        CLI_info("VM Mode - Executing: " + run_file);
-        
-        let vm = OmniVM_new();
-        OmniVM_run(vm, program);
-        
+        cmd_run();
         return 0;
     }
     
     // Check for 'build' command
     if (command == "build") {
-        CLI_info("Building from omni.config.json...");
-        // TODO: implement build_from_config
+        cmd_build();
         return 0;
     }
     
-    // Check for 'test-all' command (Validate all examples)
+    // Check for 'test-all' command
     if (command == "test-all") {
-        CLI_banner();
-        CLI_header("Testing All Examples");
-        
-        native "js" {
-            const fs = require('fs');
-            const path = require('path');
-            
-            // Find examples directory
-            const possiblePaths = [
-                path.join(process.cwd(), 'examples'),
-                path.join(__dirname, '..', '..', 'examples'),
-                path.join(__dirname, '..', 'examples')
-            ];
-            
-            let examplesDir = null;
-            for (const p of possiblePaths) {
-                if (fs.existsSync(p)) {
-                    examplesDir = p;
-                    break;
-                }
-            }
-            
-            if (!examplesDir) {
-                CLI_error("Examples directory not found");
-                CLI_info("Run from project root: .\\omni test-all");
-                return 1;
-            }
-            
-            CLI_info("Examples directory: " + examplesDir);
-            console.log("");
-            
-            // Get all .omni files
-            const files = fs.readdirSync(examplesDir)
-                .filter(f => f.endsWith('.omni'))
-                .sort();
-            
-            CLI_info("Found " + files.length + " example files");
-            console.log("");
-            
-            let passed = 0;
-            let failed = 0;
-            const failures = [];
-            
-            for (const file of files) {
-                const filePath = path.join(examplesDir, file);
-                const outputPath = path.join(examplesDir, file.replace('.omni', '.test.js'));
-                
-                try {
-                    // Read and parse
-                    const source = fs.readFileSync(filePath, 'utf-8');
-                    const l = new_lexer(source);
-                    const p = new_parser(l);
-                    const program = Parser_parse_program(p);
-                    
-                    // Generate code
-                    const gen = HybridCodeGenerator_new('js');
-                    const code = HybridCodeGenerator_generate(gen, program);
-                    
-                    // Check if code was generated
-                    if (code && code.length > 0) {
-                        passed++;
-                        console.log(CLI_COLORS().green + "  ✓ " + CLI_COLORS().reset + file);
-                    } else {
-                        failed++;
-                        failures.push({ file, error: "Empty output" });
-                        console.log(CLI_COLORS().red + "  ✗ " + CLI_COLORS().reset + file + CLI_COLORS().dim + " (empty output)" + CLI_COLORS().reset);
-                    }
-                } catch (e) {
-                    failed++;
-                    failures.push({ file, error: e.message });
-                    console.log(CLI_COLORS().red + "  ✗ " + CLI_COLORS().reset + file + CLI_COLORS().dim + " (" + e.message.substring(0, 40) + ")" + CLI_COLORS().reset);
-                }
-            }
-            
-            console.log("");
-            console.log("────────────────────────────────────────");
-            console.log("Results: " + CLI_COLORS().green + passed + " passed" + CLI_COLORS().reset + ", " + 
-                (failed > 0 ? CLI_COLORS().red + failed + " failed" + CLI_COLORS().reset : "0 failed"));
-            console.log("");
-            
-            if (failed > 0) {
-                CLI_warning("Some examples failed to compile");
-                for (const f of failures) {
-                    console.log(CLI_COLORS().dim + "  " + f.file + ": " + f.error + CLI_COLORS().reset);
-                }
-                return 1;
-            } else {
-                CLI_success("All examples compiled successfully!");
-                return 0;
-            }
-        }
-        
+        cmd_test_all();
         return 0;
     }
     
@@ -843,7 +288,7 @@ fn main() {
     if (show_help) {
         CLI_banner();
         print("Commands:");
-        print("  setup                          Install Omni globally");
+        print("  setup                          Start Global Setup Wizard");
         print("  run <file.omni>                Execute instantly via VM");
         print("  build                          Build from omni.config.json");
         print("  test-all                       Validate all examples compile");
@@ -851,24 +296,16 @@ fn main() {
         print("  <input> <output> [options]     Compile to target");
         print("");
         print("Options:");
-        print("  --target <lang>     Target language (js, python, lua, c, rust)");
+        print("  --target <lang>     Target language (js, python)");
         print("  --package <path>    Load external language package (.omni-pkg)");
         print("  --framework <name>  Framework adapter (nextjs, laravel, android)");
         print("  --coverage          Show AST coverage report");
         print("  --version, -v       Show version");
         print("");
-        print("Examples:");
-        native "js" {
-            console.log(CLI_COLORS.dim + "  omni run app.omni                       # Execute immediately" + CLI_COLORS.reset);
-            console.log(CLI_COLORS.dim + "  omni app.omni app.js                    # Compile to JS" + CLI_COLORS.reset);
-            console.log(CLI_COLORS.dim + "  omni app.omni dist/ --framework nextjs  # Generate Next.js" + CLI_COLORS.reset);
-            console.log(CLI_COLORS.dim + "  omni setup                              # Install globally" + CLI_COLORS.reset);
-        }
-        print("");
         return 0;
     }
 
-    // Compile mode
+    // Compile mode (default fallback)
     let input_path = "";
     let output_path = "";
     let target_lang = "js";
@@ -942,10 +379,9 @@ fn main() {
     let p = new_parser(l);
     let program = Parser_parse_program(p);
 
-    // Code Generation - use basic CodeGenerator (always available)
+    // Code Generation
     let gen = new_code_generator(target_lang);
     
-    // Set framework if specified
     native "js" {
         if (framework) {
             gen.framework = framework;
@@ -975,6 +411,3 @@ fn main() {
     CLI_success("Output: " + output_path);
     CLI_success("Compiled successfully!");
 }
-
-// Entry point - wrapped for Rust parser compatibility
-// Entry point handled by native block or manual call

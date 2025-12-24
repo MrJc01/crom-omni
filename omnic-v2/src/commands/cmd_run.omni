@@ -1,0 +1,78 @@
+
+import "lib/cli.omni";
+import "lib/std.omni";
+import "core/lexer.omni";
+import "core/parser.omni";
+import "core/codegen_hybrid.omni";
+import "core/vm.omni";
+
+// ============================================================================
+// RUN COMMAND
+// ============================================================================
+
+fn cmd_run() -> bool {
+    // Check for 'run' command (VM mode or JIT compile)
+    let run_file = "";
+    let is_app = false;
+    let target = "js";
+    
+    native "js" { 
+         run_file = process.argv[3] || ''; 
+         if (process.argv.includes("--app")) {
+             is_app = true;
+             target = "python"; // Default Native App target
+         }
+         // Check custom target
+         let t_idx = process.argv.indexOf("--target");
+         if (t_idx > -1 && process.argv[t_idx+1]) {
+             target = process.argv[t_idx+1];
+         }
+    }
+    
+    if (run_file == "") {
+        CLI_error("Usage: omni run <file.omni> [--app] [--target python]");
+        return true; // Used to indicate handled but error? Or simply return
+    }
+    
+    let source = read_file(run_file);
+    let l = new_lexer(source);
+    let p = new_parser(l);
+    let program = Parser_parse_program(p);
+    
+    if (is_app || target == "python") {
+         CLI_info("Compiling Native App (" + target + ")...");
+         let gen = new_code_generator(target);
+         let code = CodeGenerator_generate(gen, program);
+         
+         // Run the generated code
+         native "js" {
+             const fs = require('fs');
+             const path = require('path');
+             const { spawn } = require('child_process');
+             
+             const ext = target == "python" ? ".py" : ".js";
+             const outFile = run_file.replace(".omni", ext); 
+             fs.writeFileSync(outFile, code);
+             
+             let cmd = "node";
+             let args = [outFile];
+             if (target == "python") {
+                 cmd = "python";
+                 args = [outFile];
+             }
+             
+             const proc = spawn(cmd, args, { stdio: 'inherit' });
+             proc.on('close', (code) => {
+                 // process.exit(code); // Optional
+             });
+         }
+         return true;
+    }
+    
+    CLI_info("VM Mode - Executing: " + run_file);
+    
+    let vm = OmniVM_new();
+    OmniVM_run(vm, program);
+    
+    return true;
+}
