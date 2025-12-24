@@ -101,8 +101,11 @@ function CodeGenerator_gen_stmt_py(self, stmt) {
     
     if (stmt.kind === 80) {
        if (stmt.lang === "py" || stmt.lang === "python") {
+           // Transform print() to _print() to avoid shadowing Python builtin
+           var code = stmt.code.replace(/\\bprint\\(/g, "_print(");
+           
            // Preserve relative indentation: find minimum leading spaces and dedent by that amount
-           var lines = stmt.code.split("\\n");
+           var lines = code.split("\\n");
            var minLeading = 9999;
            for (var i = 0; i < lines.length; i++) {
                var line = lines[i];

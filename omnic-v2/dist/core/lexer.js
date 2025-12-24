@@ -253,6 +253,25 @@ function Lexer_next_token(l) {
     tok.lexeme = "+";
 }
  else {
+    if (l.ch === "-") {
+    let peek_arrow = char_at(l.input, l.read_position);
+    if (peek_arrow === ">") {
+    Lexer_read_char(l);
+    tok.kind = 99;
+    tok.lexeme = "->";
+}
+ else {
+    tok.kind = TOKEN_MINUS;
+    tok.lexeme = "-";
+}
+
+}
+ else {
+    if (l.ch === "*") {
+    tok.kind = TOKEN_ASTERISK;
+    tok.lexeme = "*";
+}
+ else {
     if (l.ch === "/") {
     let peek_slash = char_at(l.input, l.read_position);
     if (peek_slash === "/") {
@@ -361,6 +380,12 @@ str_val = l.input.substring(Number(start), Number(end));
  else {
     tok.kind = TOKEN_ILLEGAL;
     tok.lexeme = l.ch;
+}
+
+}
+
+}
+
 }
 
 }
