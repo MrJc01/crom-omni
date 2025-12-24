@@ -1,0 +1,25 @@
+
+// ============================================================================
+// CANONICAL INTERFACE TYPE DEFINITIONS
+// ============================================================================
+
+struct CanonicalInterface {
+    name: string,
+    category: string,        // "io", "http", "sql", "fs", "crypto", "async"
+    methods: any,
+    version: string
+}
+
+struct ContractMethod {
+    name: string,
+    signature: string,
+    params: any,
+    return_type: string,
+    description: string
+}
+
+struct ContractRegistry {
+    interfaces: any,
+    implementations: any,
+    active_target: string
+}

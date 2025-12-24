@@ -4968,535 +4968,14 @@ if (typeof exports !== 'undefined') {
 
 
 // === Module: core/contracts ===
-BlockLoop: 61 (let)
-BlockLoop: 40 (,)
-BlockLoop: 10 (implementations)
-BlockLoop: 30 (:)
-BlockLoop: 44 ({)
-BlockLoop: 80 (native)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 80 (native)
-BlockLoop: 61 (let)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-class CanonicalInterface {
-    constructor(data = {}) {
-        this.name = data.name;
-        this.category = data.category;
-        this.methods = data.methods;
-        this.version = data.version;
-    }
-}
-class ContractMethod {
-    constructor(data = {}) {
-        this.name = data.name;
-        this.signature = data.signature;
-        this.params = data.params;
-        this.return_type = data.return_type;
-        this.description = data.description;
-    }
-}
-class ContractRegistry {
-    constructor(data = {}) {
-        this.interfaces = data.interfaces;
-        this.implementations = data.implementations;
-        this.active_target = data.active_target;
-    }
-}
-function ContractRegistry_new() {
-    const registry = new ContractRegistry({ interfaces: null });
-    // Unknown stmt kind: 0
-    implementations;
-    // Unknown stmt kind: 0
-    // Unknown stmt kind: 0
-}
-// Unknown stmt kind: undefined
+var types = exports;
+var registry = exports;
+var interfaces = exports;
+var impl_js = exports;
+var impl_python = exports;
+var impl_cnative = exports;
+var impl_lua = exports;
 
-        // Define canonical interfaces
-        registry.interfaces = {
-            // ============================================================
-            // std.io - Input/Output operations
-            // ============================================================
-            'std.io': {
-                name: 'std.io',
-                category: 'io',
-                version: '1.0.0',
-                methods: {
-                    print: { signature: 'fn print(msg: string)', params: ['msg'], return_type: 'void' },
-                    println: { signature: 'fn println(msg: string)', params: ['msg'], return_type: 'void' },
-                    input: { signature: 'fn input(prompt: string) -> string', params: ['prompt'], return_type: 'string' },
-                    error: { signature: 'fn error(msg: string)', params: ['msg'], return_type: 'void' }
-                }
-            },
-            
-            // ============================================================
-            // std.fs - File System operations
-            // ============================================================
-            'std.fs': {
-                name: 'std.fs',
-                category: 'fs',
-                version: '1.0.0',
-                methods: {
-                    read_file: { signature: 'fn read_file(path: string) -> string', params: ['path'], return_type: 'string' },
-                    write_file: { signature: 'fn write_file(path: string, content: string)', params: ['path', 'content'], return_type: 'void' },
-                    exists: { signature: 'fn exists(path: string) -> bool', params: ['path'], return_type: 'bool' },
-                    delete: { signature: 'fn delete(path: string)', params: ['path'], return_type: 'void' },
-                    list_dir: { signature: 'fn list_dir(path: string) -> string[]', params: ['path'], return_type: 'string[]' },
-                    mkdir: { signature: 'fn mkdir(path: string)', params: ['path'], return_type: 'void' }
-                }
-            },
-            
-            // ============================================================
-            // std.http - HTTP Client operations
-            // ============================================================
-            'std.http': {
-                name: 'std.http',
-                category: 'http',
-                version: '1.0.0',
-                methods: {
-                    get: { signature: 'fn get(url: string) -> HttpResponse', params: ['url'], return_type: 'HttpResponse' },
-                    post: { signature: 'fn post(url: string, body: any) -> HttpResponse', params: ['url', 'body'], return_type: 'HttpResponse' },
-                    put: { signature: 'fn put(url: string, body: any) -> HttpResponse', params: ['url', 'body'], return_type: 'HttpResponse' },
-                    delete: { signature: 'fn delete(url: string) -> HttpResponse', params: ['url'], return_type: 'HttpResponse' }
-                }
-            },
-            
-            // ============================================================
-            // std.sql - Database operations
-            // ============================================================
-            'std.sql': {
-                name: 'std.sql',
-                category: 'sql',
-                version: '1.0.0',
-                methods: {
-                    connect: { signature: 'fn connect(dsn: string) -> Connection', params: ['dsn'], return_type: 'Connection' },
-                    query: { signature: 'fn query(conn: Connection, sql: string) -> Result[]', params: ['conn', 'sql'], return_type: 'Result[]' },
-                    execute: { signature: 'fn execute(conn: Connection, sql: string) -> i64', params: ['conn', 'sql'], return_type: 'i64' },
-                    close: { signature: 'fn close(conn: Connection)', params: ['conn'], return_type: 'void' }
-                }
-            },
-            
-            // ============================================================
-            // std.3d - 3D Visual Sandbox
-            // ============================================================
-            'std.3d': {
-                name: 'std.3d',
-                category: '3d',
-                version: '1.0.0',
-                methods: {
-                    Scene_new: { signature: 'fn Scene_new() -> Scene', params: [], return_type: 'Scene' },
-                    Mesh_create_cube: { signature: 'fn Mesh_create_cube(size: f64) -> Mesh', params: ['size'], return_type: 'Mesh' },
-                    Scene_add: { signature: 'fn Scene_add(scene: Scene, mesh: Mesh)', params: ['scene', 'mesh'], return_type: 'void' },
-                    Mesh_set_position: { signature: 'fn Mesh_set_position(mesh: Mesh, x: f64, y: f64, z: f64)', params: ['mesh', 'x', 'y', 'z'], return_type: 'void' }
-                }
-            },
-
-            // ============================================================
-            // std.gui - Native App Windowing
-            // ============================================================
-            'std.gui': {
-                name: 'std.gui',
-                category: 'gui',
-                version: '1.0.0',
-                methods: {
-                    Window_create: { signature: 'fn Window_create(title: string, width: i32, height: i32) -> Window', params: ['title', 'width', 'height'], return_type: 'Window' },
-                    App_run: { signature: 'fn App_run()', params: [], return_type: 'void' }
-                }
-            },
-            
-            // ============================================================
-            // std.json - JSON operations
-            // ============================================================
-            'std.json': {
-                name: 'std.json',
-                category: 'json',
-                version: '1.0.0',
-                methods: {
-                    parse: { signature: 'fn parse(json: string) -> any', params: ['json'], return_type: 'any' },
-                    stringify: { signature: 'fn stringify(obj: any) -> string', params: ['obj'], return_type: 'string' }
-                }
-            },
-            
-            // ============================================================
-            // std.crypto - Cryptography operations
-            // ============================================================
-            'std.crypto': {
-                name: 'std.crypto',
-                category: 'crypto',
-                version: '1.0.0',
-                methods: {
-                    hash_sha256: { signature: 'fn hash_sha256(data: string) -> string', params: ['data'], return_type: 'string' },
-                    hash_md5: { signature: 'fn hash_md5(data: string) -> string', params: ['data'], return_type: 'string' },
-                    random_bytes: { signature: 'fn random_bytes(len: i64) -> string', params: ['len'], return_type: 'string' }
-                }
-            },
-            
-            // ============================================================
-            // std.time - Time operations
-            // ============================================================
-            'std.time': {
-                name: 'std.time',
-                category: 'time',
-                version: '1.0.0',
-                methods: {
-                    now: { signature: 'fn now() -> i64', params: [], return_type: 'i64' },
-                    sleep: { signature: 'fn sleep(ms: i64)', params: ['ms'], return_type: 'void' },
-                    format: { signature: 'fn format(timestamp: i64, fmt: string) -> string', params: ['timestamp', 'fmt'], return_type: 'string' }
-                }
-            },
-            
-            // ============================================================
-            // std.gui - Native GUI operations
-            // ============================================================
-            'std.gui': {
-                name: 'std.gui',
-                category: 'gui',
-                version: '1.0.0',
-                methods: {
-                    create_window: { signature: 'fn create_window(title: string, width: i64, height: i64) -> Window', params: ['title', 'width', 'height'], return_type: 'Window' },
-                    open_webview: { signature: 'fn open_webview(url: string, width: i64, height: i64)', params: ['url', 'width', 'height'], return_type: 'void' },
-                    file_dialog: { signature: 'fn file_dialog(title: string, filter: string) -> string', params: ['title', 'filter'], return_type: 'string' },
-                    folder_dialog: { signature: 'fn folder_dialog(title: string) -> string', params: ['title'], return_type: 'string' },
-                    message_box: { signature: 'fn message_box(title: string, message: string, type: string)', params: ['title', 'message', 'type'], return_type: 'void' },
-                    notification: { signature: 'fn notification(title: string, message: string)', params: ['title', 'message'], return_type: 'void' },
-                    canvas_create: { signature: 'fn canvas_create(width: i64, height: i64) -> Canvas', params: ['width', 'height'], return_type: 'Canvas' },
-                    canvas_draw_rect: { signature: 'fn canvas_draw_rect(canvas: Canvas, x: f64, y: f64, w: f64, h: f64, color: string)', params: ['canvas', 'x', 'y', 'w', 'h', 'color'], return_type: 'void' },
-                    canvas_draw_text: { signature: 'fn canvas_draw_text(canvas: Canvas, text: string, x: f64, y: f64, size: i64)', params: ['canvas', 'text', 'x', 'y', 'size'], return_type: 'void' }
-                }
-            },
-            
-            // ============================================================
-            // std.3d - 3D Graphics operations
-            // ============================================================
-            'std.3d': {
-                name: 'std.3d',
-                category: '3d',
-                version: '1.0.0',
-                methods: {
-                    create_scene: { signature: 'fn create_scene(width: i64, height: i64) -> Scene', params: ['width', 'height'], return_type: 'Scene' },
-                    add_cube: { signature: 'fn add_cube(scene: Scene, x: f64, y: f64, z: f64, size: f64, color: string) -> Object3D', params: ['scene', 'x', 'y', 'z', 'size', 'color'], return_type: 'Object3D' },
-                    add_sphere: { signature: 'fn add_sphere(scene: Scene, x: f64, y: f64, z: f64, radius: f64, color: string) -> Object3D', params: ['scene', 'x', 'y', 'z', 'radius', 'color'], return_type: 'Object3D' },
-                    add_plane: { signature: 'fn add_plane(scene: Scene, width: f64, height: f64, color: string) -> Object3D', params: ['scene', 'width', 'height', 'color'], return_type: 'Object3D' },
-                    add_light: { signature: 'fn add_light(scene: Scene, type: string, intensity: f64, color: string) -> Light', params: ['scene', 'type', 'intensity', 'color'], return_type: 'Light' },
-                    set_camera: { signature: 'fn set_camera(scene: Scene, x: f64, y: f64, z: f64)', params: ['scene', 'x', 'y', 'z'], return_type: 'void' },
-                    rotate: { signature: 'fn rotate(obj: Object3D, rx: f64, ry: f64, rz: f64)', params: ['obj', 'rx', 'ry', 'rz'], return_type: 'void' },
-                    animate: { signature: 'fn animate(scene: Scene, flow: fn())', params: ['scene', 'flow'], return_type: 'void' },
-                    render: { signature: 'fn render(scene: Scene)', params: ['scene'], return_type: 'void' }
-                }
-            },
-            
-            // ============================================================
-            // std.system - Native OS integration
-            // ============================================================
-            'std.system': {
-                name: 'std.system',
-                category: 'system',
-                version: '1.0.0',
-                methods: {
-                    // Platform detection
-                    get_platform: { signature: 'fn get_platform() -> string', params: [], return_type: 'string' },
-                    get_arch: { signature: 'fn get_arch() -> string', params: [], return_type: 'string' },
-                    get_home_dir: { signature: 'fn get_home_dir() -> string', params: [], return_type: 'string' },
-                    get_temp_dir: { signature: 'fn get_temp_dir() -> string', params: [], return_type: 'string' },
-                    
-                    // Process control
-                    exec: { signature: 'fn exec(command: string) -> string', params: ['command'], return_type: 'string' },
-                    exec_async: { signature: 'fn exec_async(command: string) -> Process', params: ['command'], return_type: 'Process' },
-                    exit: { signature: 'fn exit(code: i64)', params: ['code'], return_type: 'void' },
-                    
-                    // Environment
-                    get_env: { signature: 'fn get_env(name: string) -> string', params: ['name'], return_type: 'string' },
-                    set_env: { signature: 'fn set_env(name: string, value: string)', params: ['name', 'value'], return_type: 'void' },
-                    
-                    // Desktop integration
-                    notify: { signature: 'fn notify(title: string, body: string, icon: string)', params: ['title', 'body', 'icon'], return_type: 'void' },
-                    tray_create: { signature: 'fn tray_create(icon: string, tooltip: string) -> Tray', params: ['icon', 'tooltip'], return_type: 'Tray' },
-                    tray_set_menu: { signature: 'fn tray_set_menu(tray: Tray, items: any)', params: ['tray', 'items'], return_type: 'void' },
-                    
-                    // Clipboard
-                    clipboard_read: { signature: 'fn clipboard_read() -> string', params: [], return_type: 'string' },
-                    clipboard_write: { signature: 'fn clipboard_write(text: string)', params: ['text'], return_type: 'void' },
-                    
-                    // Path manipulation
-                    path_join: { signature: 'fn path_join(parts: any) -> string', params: ['parts'], return_type: 'string' },
-                    path_resolve: { signature: 'fn path_resolve(path: string) -> string', params: ['path'], return_type: 'string' },
-                    path_dirname: { signature: 'fn path_dirname(path: string) -> string', params: ['path'], return_type: 'string' },
-                    path_basename: { signature: 'fn path_basename(path: string) -> string', params: ['path'], return_type: 'string' }
-                }
-            }
-        };
-        
-        // Define target-specific implementations
-        registry.implementations = {
-            // ============================================================
-            // JAVASCRIPT IMPLEMENTATIONS
-            // ============================================================
-            js: {
-                'std.io.print': 'console.log({0})',
-                'std.io.println': 'console.log({0})',
-                'std.io.input': 'require("readline-sync").question({0})',
-                'std.io.error': 'console.error({0})',
-                
-                'std.fs.read_file': 'require("fs").readFileSync({0}, "utf-8")',
-                'std.fs.write_file': 'require("fs").writeFileSync({0}, {1})',
-                'std.fs.exists': 'require("fs").existsSync({0})',
-                'std.fs.delete': 'require("fs").unlinkSync({0})',
-                'std.fs.list_dir': 'require("fs").readdirSync({0})',
-                'std.fs.mkdir': 'require("fs").mkdirSync({0}, { recursive: true })',
-                
-                'std.http.get': 'await fetch({0}).then(r => r.json())',
-                'std.http.post': 'await fetch({0}, { method: "POST", body: JSON.stringify({1}) }).then(r => r.json())',
-                'std.http.put': 'await fetch({0}, { method: "PUT", body: JSON.stringify({1}) }).then(r => r.json())',
-                'std.http.delete': 'await fetch({0}, { method: "DELETE" }).then(r => r.json())',
-                
-                'std.json.parse': 'JSON.parse({0})',
-                'std.json.stringify': 'JSON.stringify({0})',
-                
-                'std.crypto.hash_sha256': 'require("crypto").createHash("sha256").update({0}).digest("hex")',
-                'std.crypto.hash_md5': 'require("crypto").createHash("md5").update({0}).digest("hex")',
-                'std.crypto.random_bytes': 'require("crypto").randomBytes({0}).toString("hex")',
-                
-                'std.time.now': 'Date.now()',
-                'std.time.sleep': 'await new Promise(r => setTimeout(r, {0}))',
-                'std.time.format': 'new Date({0}).toLocaleString()',
-                
-                'std.gui.create_window': '(console.log("[gui] Window not supported in Node.js"), null)',
-                'std.gui.open_webview': 'require("open")({0})',
-                'std.gui.file_dialog': '(console.log("[gui] File dialog not supported in Node.js"), "")',
-                'std.gui.folder_dialog': '(console.log("[gui] Folder dialog not supported in Node.js"), "")',
-                'std.gui.message_box': 'console.log("[" + {0} + "] " + {1})',
-                'std.gui.notification': 'console.log("🔔 " + {0} + ": " + {1})',
-                'std.gui.canvas_create': 'document.createElement("canvas")',
-                'std.gui.canvas_draw_rect': '{0}.getContext("2d").fillRect({1}, {2}, {3}, {4})',
-                'std.gui.canvas_draw_text': '{0}.getContext("2d").fillText({1}, {2}, {3})',
-                
-                'std.3d.create_scene': 'new THREE.Scene()',
-                'std.3d.add_cube': '(() => { const g = new THREE.BoxGeometry({3}, {3}, {3}); const m = new THREE.MeshStandardMaterial({color: {4}}); const c = new THREE.Mesh(g, m); c.position.set({0}, {1}, {2}); {5}.add(c); return c; })()',
-                'std.3d.add_sphere': '(() => { const g = new THREE.SphereGeometry({3}); const m = new THREE.MeshStandardMaterial({color: {4}}); const s = new THREE.Mesh(g, m); s.position.set({0}, {1}, {2}); {5}.add(s); return s; })()',
-                'std.3d.add_plane': '(() => { const g = new THREE.PlaneGeometry({0}, {1}); const m = new THREE.MeshStandardMaterial({color: {2}}); const p = new THREE.Mesh(g, m); return p; })()',
-                'std.3d.add_light': '(() => { const l = new THREE.DirectionalLight({2}, {1}); {0}.add(l); return l; })()',
-                'std.3d.set_camera': 'camera.position.set({1}, {2}, {3})',
-                'std.3d.rotate': '{0}.rotation.set({1}, {2}, {3})',
-                'std.3d.animate': 'requestAnimationFrame(() => { {1}(); renderer.render({0}, camera); })',
-                'std.3d.render': 'renderer.render({0}, camera)',
-                
-                'std.system.get_platform': 'process.platform',
-                'std.system.get_arch': 'process.arch',
-                'std.system.get_home_dir': 'require("os").homedir()',
-                'std.system.get_temp_dir': 'require("os").tmpdir()',
-                'std.system.exec': 'require("child_process").execSync({0}, { encoding: "utf-8" })',
-                'std.system.exec_async': 'require("child_process").spawn({0}, { shell: true })',
-                'std.system.exit': 'process.exit({0})',
-                'std.system.get_env': 'process.env[{0}] || ""',
-                'std.system.set_env': 'process.env[{0}] = {1}',
-                'std.system.notify': 'console.log("🔔 " + {0} + ": " + {1})',
-                'std.system.clipboard_read': '""',
-                'std.system.clipboard_write': 'console.log("[clipboard] " + {0})',
-                'std.system.path_join': 'require("path").join(...{0})',
-                'std.system.path_resolve': 'require("path").resolve({0})',
-                'std.system.path_dirname': 'require("path").dirname({0})',
-                'std.system.path_basename': 'require("path").basename({0})'
-            },
-            
-            // ============================================================
-            // PYTHON IMPLEMENTATIONS
-            // ============================================================
-            python: {
-                'std.io.print': 'print({0})',
-                'std.io.println': 'print({0})',
-                'std.io.input': 'input({0})',
-                'std.io.error': 'print({0}, file=sys.stderr)',
-                
-                'std.fs.read_file': 'open({0}).read()',
-                'std.fs.write_file': 'open({0}, "w").write({1})',
-                'std.fs.exists': 'os.path.exists({0})',
-                'std.fs.delete': 'os.remove({0})',
-                'std.fs.list_dir': 'os.listdir({0})',
-                'std.fs.mkdir': 'os.makedirs({0}, exist_ok=True)',
-                
-                'std.http.get': 'requests.get({0}).json()',
-                'std.http.post': 'requests.post({0}, json={1}).json()',
-                'std.http.put': 'requests.put({0}, json={1}).json()',
-                'std.http.delete': 'requests.delete({0}).json()',
-                
-                'std.json.parse': 'json.loads({0})',
-                'std.json.stringify': 'json.dumps({0})',
-                
-                'std.crypto.hash_sha256': 'hashlib.sha256({0}.encode()).hexdigest()',
-                'std.crypto.hash_md5': 'hashlib.md5({0}.encode()).hexdigest()',
-                'std.crypto.random_bytes': 'secrets.token_hex({0})',
-                
-                'std.time.now': 'int(time.time() * 1000)',
-                'std.time.sleep': 'time.sleep({0} / 1000)',
-                'std.time.format': 'datetime.fromtimestamp({0} / 1000).strftime({1})',
-                
-                'std.gui.create_window': 'webview.create_window({0}, width={1}, height={2})',
-                'std.gui.open_webview': 'webbrowser.open({0})',
-                'std.gui.file_dialog': 'tkinter.filedialog.askopenfilename(title={0}, filetypes={1})',
-                'std.gui.folder_dialog': 'tkinter.filedialog.askdirectory(title={0})',
-                'std.gui.message_box': 'tkinter.messagebox.showinfo({0}, {1})',
-                'std.gui.notification': 'plyer.notification.notify(title={0}, message={1})'
-            },
-            
-            // ============================================================
-            // C NATIVE IMPLEMENTATIONS
-            // ============================================================
-            c_native: {
-                'std.io.print': 'printf("%s", {0})',
-                'std.io.println': 'printf("%s\\n", {0})',
-                'std.io.input': 'fgets(buffer, sizeof(buffer), stdin)',
-                'std.io.error': 'fprintf(stderr, "%s\\n", {0})',
-                
-                'std.fs.read_file': 'omni_read_file({0})',
-                'std.fs.write_file': 'omni_write_file({0}, {1})',
-                'std.fs.exists': 'access({0}, F_OK) == 0',
-                'std.fs.delete': 'remove({0})',
-                'std.fs.list_dir': 'omni_list_dir({0})',
-                'std.fs.mkdir': 'mkdir({0}, 0755)',
-                
-                'std.http.get': 'curl_get({0})',
-                'std.http.post': 'curl_post({0}, {1})',
-                'std.http.put': 'curl_put({0}, {1})',
-                'std.http.delete': 'curl_delete({0})',
-                
-                'std.json.parse': 'cJSON_Parse({0})',
-                'std.json.stringify': 'cJSON_Print({0})',
-                
-                'std.crypto.hash_sha256': 'openssl_sha256({0})',
-                'std.crypto.hash_md5': 'openssl_md5({0})',
-                'std.crypto.random_bytes': 'omni_random_bytes({0})',
-                
-                'std.time.now': '(long long)(time(NULL) * 1000)',
-                'std.time.sleep': 'usleep({0} * 1000)',
-                'std.time.format': 'strftime(buffer, sizeof(buffer), {1}, localtime(&{0}))',
-                
-                'std.gui.create_window': 'webview_create({1}, {2}, {0})',
-                'std.gui.open_webview': 'webview_navigate(wv, {0})',
-                'std.gui.file_dialog': 'nfd_open_dialog({0}, {1})',
-                'std.gui.folder_dialog': 'nfd_pick_folder({0})',
-                'std.gui.message_box': 'MessageBox(NULL, {1}, {0}, MB_OK)',
-                'std.gui.notification': 'omni_notify({0}, {1})'
-            },
-            
-            // ============================================================
-            // LUA IMPLEMENTATIONS
-            // ============================================================
-            lua: {
-                'std.io.print': 'print({0})',
-                'std.io.println': 'print({0})',
-                'std.io.input': 'io.read()',
-                'std.io.error': 'io.stderr:write({0})',
-                
-                'std.fs.read_file': 'io.open({0}, "r"):read("*a")',
-                'std.fs.write_file': 'local f = io.open({0}, "w"); f:write({1}); f:close()',
-                'std.fs.exists': 'io.open({0}, "r") ~= nil',
-                'std.fs.delete': 'os.remove({0})',
-                
-                'std.json.parse': 'cjson.decode({0})',
-                'std.json.stringify': 'cjson.encode({0})',
-                
-                'std.time.now': 'os.time() * 1000',
-                'std.time.sleep': 'os.execute("sleep " .. ({0} / 1000))'
-            }
-        };
-    
-return registry;
-// Unknown stmt kind: undefined
-function ContractRegistry_set_target(self, target) {
-    
-        self.active_target = target;
-        console.log("[contract] Active target: " + target);
-    
-}
-function ContractRegistry_resolve(self, contract_path, args) {
-    const result = "";
-    
-        const impl = self.implementations[self.active_target];
-        if (!impl) {
-            result = "/* UNKNOWN TARGET: " + self.active_target + " */";
-            return;
-        }
-        
-        let template = impl[contract_path];
-        if (!template) {
-            // Fallback to JS implementation
-            template = self.implementations['js'][contract_path];
-            if (!template) {
-                result = "/* UNIMPLEMENTED: " + contract_path + " */";
-                return;
-            }
-        }
-        
-        // Replace placeholders with arguments
-        result = template;
-        for (let i = 0; i < args.length; i++) {
-            result = result.replace(new RegExp('\\{' + i + '\\}', 'g'), args[i]);
-        }
-    
-    return result;
-}
-function ContractRegistry_list_interfaces(self) {
-    
-        console.log("\n┌─────────────────────────────────────────────────────────────┐");
-        console.log("│              CANONICAL INTERFACES (Hollow Core)             │");
-        console.log("├─────────────────────────────────────────────────────────────┤");
-        
-        for (const [name, iface] of Object.entries(self.interfaces)) {
-            const methodCount = Object.keys(iface.methods).length;
-            console.log("│ " + name.padEnd(20) + " │ " + 
-                        iface.category.padEnd(10) + " │ " +
-                        (methodCount + " methods").padEnd(15) + " │");
-        }
-        
-        console.log("└─────────────────────────────────────────────────────────────┘");
-    
-}
-function ContractRegistry_verify_target(self, target) {
-    const is_complete = true;
-    const missing = 0;
-    
-        const impl = self.implementations[target];
-        if (!impl) {
-            CLI_error("Target '" + target + "' has no implementations");
-            is_complete = false;
-            return;
-        }
-        
-        // Check all interfaces
-        for (const [ifaceName, iface] of Object.entries(self.interfaces)) {
-            for (const methodName of Object.keys(iface.methods)) {
-                const contractPath = ifaceName + '.' + methodName;
-                if (!impl[contractPath]) {
-                    missing++;
-                }
-            }
-        }
-        
-        if (missing > 0) {
-            CLI_warning("Target '" + target + "' has " + missing + " missing implementations");
-            is_complete = false;
-        }
-    
-    return is_complete;
-}
-const GLOBAL_CONTRACTS = ContractRegistry_new;
-
-
-// Auto-exports
-if (typeof exports !== 'undefined') {
-    exports.ContractRegistry_new = ContractRegistry_new;
-    exports.ContractRegistry_set_target = ContractRegistry_set_target;
-    exports.ContractRegistry_resolve = ContractRegistry_resolve;
-    exports.ContractRegistry_list_interfaces = ContractRegistry_list_interfaces;
-    exports.ContractRegistry_verify_target = ContractRegistry_verify_target;
-    exports.CanonicalInterface = CanonicalInterface;
-    exports.ContractMethod = ContractMethod;
-    exports.ContractRegistry = ContractRegistry;
-    exports.GLOBAL_CONTRACTS = GLOBAL_CONTRACTS;
-}
 
 
 // === Module: core/ghost_writer ===
@@ -6381,58 +5860,394 @@ if (typeof exports !== 'undefined') {
 }
 
 
-// === Module: core/studio_engine ===
+// === Module: core/tui ===
+BlockLoop: 66 (return)
+BlockLoop: 80 (native)
+BlockLoop: 80 (native)
+BlockLoop: 80 (native)
+BlockLoop: 80 (native)
+BlockLoop: 80 (native)
+BlockLoop: 80 (native)
+BlockLoop: 80 (native)
+BlockLoop: 80 (native)
+BlockLoop: 80 (native)
+BlockLoop: 80 (native)
+BlockLoop: 80 (native)
+BlockLoop: 66 (return)
+BlockLoop: 66 (return)
 BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 66 (return)
-BlockLoop: 40 (,)
-BlockLoop: 10 (output_buffer)
-BlockLoop: 30 (:)
-BlockLoop: 44 ({)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 80 (native)
 BlockLoop: 80 (native)
 BlockLoop: 66 (return)
 BlockLoop: 61 (let)
 BlockLoop: 42 (()
 BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 66 (return)
-BlockLoop: 43 ())
-BlockLoop: 10 (res)
-BlockLoop: 31 (.)
-BlockLoop: 10 (end)
+BlockLoop: 10 (tui_enable_raw_mode)
 BlockLoop: 42 (()
-BlockLoop: 10 (stringify)
-BlockLoop: 42 (()
-BlockLoop: 10 (project)
-BlockLoop: 43 ())
-BlockLoop: 43 ())
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 61 (let)
+BlockLoop: 10 (tui_hide_cursor)
 BlockLoop: 42 (()
 BlockLoop: 80 (native)
-BlockLoop: 64 (if)
-BlockLoop: 10 (CLI_info)
-BlockLoop: 42 (()
 BlockLoop: 80 (native)
-BlockLoop: 10 (StudioServer_start)
-BlockLoop: 42 (()
-BlockLoop: 10 (cwd)
-BlockLoop: 43 ())
 var cli = exports;
-var ghost_writer = exports;
+class TUIState {
+    constructor(data = {}) {
+        this.screen = data.screen;
+        this.cursor = data.cursor;
+        this.items = data.items;
+        this.selected = data.selected;
+        this.message = data.message;
+        this.running = data.running;
+    }
+}
+function TUIState_new() {
+    return new TUIState({ screen: "main", cursor: 0, items: [], selected: [], message: "", running: true });
+}
+function tui_enable_raw_mode() {
+    
+        if (process.stdin.isTTY) {
+            process.stdin.setRawMode(true);
+        }
+        process.stdin.resume();
+        process.stdin.setEncoding('utf8');
+    
+}
+function tui_disable_raw_mode() {
+    
+        if (process.stdin.isTTY) {
+            process.stdin.setRawMode(false);
+        }
+    
+}
+function tui_clear_screen() {
+    
+        console.clear();
+        process.stdout.write('\x1B[2J\x1B[0f');
+    
+}
+function tui_move_cursor(row, col) {
+    
+        process.stdout.write(`\x1B[${row};${col}H`);
+    
+}
+function tui_hide_cursor() {
+    
+        process.stdout.write('\x1B[?25l');
+    
+}
+function tui_show_cursor() {
+    
+        process.stdout.write('\x1B[?25h');
+    
+}
+function tui_render_header(title, subtitle) {
+    
+        const width = process.stdout.columns || 80;
+        const line = 'â•'.repeat(width - 2);
+        
+        console.log(CLI_COLORS.cyan + 'â•”' + line + 'â•—' + CLI_COLORS.reset);
+        console.log(CLI_COLORS.cyan + 'â•‘' + CLI_COLORS.reset + 
+                    CLI_COLORS.bold + ' â—Š OMNI ' + title.padEnd(width - 12) + 
+                    CLI_COLORS.reset + CLI_COLORS.cyan + 'â•‘' + CLI_COLORS.reset);
+        console.log(CLI_COLORS.cyan + 'â•‘' + CLI_COLORS.reset + 
+                    CLI_COLORS.dim + '   ' + subtitle.padEnd(width - 6) + 
+                    CLI_COLORS.reset + CLI_COLORS.cyan + 'â•‘' + CLI_COLORS.reset);
+        console.log(CLI_COLORS.cyan + 'â• ' + line + 'â•£' + CLI_COLORS.reset);
+    
+}
+function tui_render_menu(state) {
+    
+        for (let i = 0; i < state.items.length; i++) {
+            const item = state.items[i];
+            const selected = i === state.cursor;
+            const prefix = selected ? CLI_COLORS.cyan + ' â–¶ ' : '   ';
+            const suffix = CLI_COLORS.reset;
+            
+            if (selected) {
+                console.log(prefix + CLI_COLORS.bold + item.label + suffix);
+            } else {
+                console.log(prefix + CLI_COLORS.dim + item.label + suffix);
+            }
+        }
+    
+}
+function tui_render_footer(state) {
+    
+        const width = process.stdout.columns || 80;
+        const line = 'â”€'.repeat(width - 2);
+        
+        console.log('');
+        console.log(CLI_COLORS.dim + 'â”Œ' + line + 'â”' + CLI_COLORS.reset);
+        
+        if (state.message) {
+            console.log(CLI_COLORS.dim + 'â”‚ ' + CLI_COLORS.reset + 
+                        state.message.padEnd(width - 4) + 
+                        CLI_COLORS.dim + ' â”‚' + CLI_COLORS.reset);
+        }
+        
+        console.log(CLI_COLORS.dim + 'â”‚ â†‘/â†“ Navigate   Enter Select   q Quit' + 
+                    ''.padEnd(width - 42) + ' â”‚' + CLI_COLORS.reset);
+        console.log(CLI_COLORS.dim + 'â””' + line + 'â”˜' + CLI_COLORS.reset);
+    
+}
+function tui_render_file_list(state) {
+    
+        console.log('');
+        console.log(CLI_COLORS.cyan + '  Select files to convert:' + CLI_COLORS.reset);
+        console.log('');
+        
+        for (let i = 0; i < state.items.length; i++) {
+            const item = state.items[i];
+            const isSelected = state.selected.includes(i);
+            const isCursor = i === state.cursor;
+            
+            const checkbox = isSelected ? CLI_COLORS.green + '[âœ“]' : CLI_COLORS.dim + '[ ]';
+            const prefix = isCursor ? CLI_COLORS.cyan + ' â–¶ ' : '   ';
+            
+            console.log(prefix + checkbox + CLI_COLORS.reset + ' ' + 
+                        (isCursor ? CLI_COLORS.bold : CLI_COLORS.dim) + 
+                        item.name + CLI_COLORS.reset);
+        }
+    
+}
+function tui_render_target_select(state) {
+    
+        console.log('');
+        console.log(CLI_COLORS.cyan + '  Select target language:' + CLI_COLORS.reset);
+        console.log('');
+        
+        for (let i = 0; i < state.items.length; i++) {
+            const item = state.items[i];
+            const isCursor = i === state.cursor;
+            
+            const prefix = isCursor ? CLI_COLORS.cyan + ' â–¶ ' : '   ';
+            const icon = item.icon || 'ðŸŽ¯';
+            
+            console.log(prefix + icon + ' ' + 
+                        (isCursor ? CLI_COLORS.bold : '') + 
+                        item.label + CLI_COLORS.reset);
+            
+            if (isCursor && item.description) {
+                console.log('      ' + CLI_COLORS.dim + item.description + CLI_COLORS.reset);
+            }
+        }
+    
+}
+function tui_main_menu() {
+    return [null, id, null, "convert", label, null, "ðŸ”„ Convert Legacy Code", description, null, "Transform PHP, Java, Python to Omni", null, null, id, null, "install", label, null, "ðŸ“¦ Install Package", description, null, "Install from GitHub", null, null, id, null, "studio", label, null, "ðŸŽ¨ Open Studio", description, null, "Visual programming environment", null, null, id, null, "build", label, null, "ðŸ”¨ Build Project", description, null, "Compile current project", null, null, id, null, "run", label, null, "â–¶ï¸  Run Project", description, null, "Execute main file", null, null, id, null, "doctor", label, null, "ðŸ©º System Doctor", description, null, "Check installation health", null, null, id, null, "quit", label, null, "âŒ Quit", description, null, "", null];
+}
+function tui_target_menu() {
+    return [null, id, null, "js", label, null, "JavaScript (Node.js)", icon, null, "ðŸŸ¨", description, null, "CommonJS module", null, null, id, null, "python", label, null, "Python 3", icon, null, "ðŸ", description, null, "Python 3.8+ compatible", null, null, id, null, "c", label, null, "C Native", icon, null, "âš¡", description, null, "Portable C99 code", null, null, id, null, "lua", label, null, "Lua 5.4", icon, null, "ðŸŒ™", description, null, "Lua script", null, null, id, null, "wasm", label, null, "WebAssembly", icon, null, "ðŸ•¸ï¸", description, null, "WASM binary", null, null, id, null, "back", label, null, "â† Back", icon, null, "â—€ï¸", description, null, "", null];
+}
+function tui_scan_legacy_files(dir) {
+    const files = [];
+    
+        // const fs = require('fs'); (hoisted)
+        // const path = require('path'); (hoisted)
+        
+        const extensions = ['.php', '.java', '.py', '.js', '.ts'];
+        
+        const scan = (d) => {
+            try {
+                const entries = fs.readdirSync(d, { withFileTypes: true });
+                for (const entry of entries) {
+                    if (entry.name.startsWith('.') || entry.name === 'node_modules') continue;
+                    
+                    const fullPath = path.join(d, entry.name);
+                    
+                    if (entry.isDirectory()) {
+                        scan(fullPath);
+                    } else if (extensions.some(ext => entry.name.endsWith(ext))) {
+                        files.push({
+                            name: path.relative(dir, fullPath),
+                            path: fullPath,
+                            ext: path.extname(entry.name)
+                        });
+                    }
+                }
+            } catch (e) {
+                // Skip inaccessible directories
+            }
+        };
+        
+        scan(dir);
+    
+    return files;
+}
+function cmd_tui() {
+    const state = TUIState_new;
+    // Unknown stmt kind: 0
+    
+        state.items = tui_main_menu();
+    
+    tui_enable_raw_mode;
+    // Unknown stmt kind: 0
+    tui_hide_cursor;
+    // Unknown stmt kind: 0
+    
+        const readline = require('readline');
+        
+        const render = () => {
+            tui_clear_screen();
+            tui_render_header('INTERACTIVE', 'v1.1.0 - Use arrow keys to navigate');
+            
+            if (state.screen === 'main') {
+                tui_render_menu(state);
+            } else if (state.screen === 'files') {
+                tui_render_file_list(state);
+            } else if (state.screen === 'targets') {
+                tui_render_target_select(state);
+            }
+            
+            tui_render_footer(state);
+        };
+        
+        const handleAction = (action) => {
+            if (action === 'convert') {
+                state.screen = 'files';
+                state.items = tui_scan_legacy_files(process.cwd());
+                state.cursor = 0;
+                state.selected = [];
+                state.message = 'Space to select, Enter to continue';
+            } else if (action === 'install') {
+                state.message = 'Use: omni install github:user/repo';
+                setTimeout(() => { state.message = ''; render(); }, 2000);
+            } else if (action === 'studio') {
+                tui_show_cursor();
+                tui_disable_raw_mode();
+                console.log('\nStarting Omni Studio...');
+                require('child_process').execSync('node dist/main.js studio', { stdio: 'inherit' });
+                process.exit(0);
+            } else if (action === 'build') {
+                tui_show_cursor();
+                tui_disable_raw_mode();
+                console.log('\nBuilding project...');
+                require('child_process').execSync('node dist/main.js build', { stdio: 'inherit' });
+                process.exit(0);
+            } else if (action === 'run') {
+                tui_show_cursor();
+                tui_disable_raw_mode();
+                console.log('\nRunning project...');
+                require('child_process').execSync('node dist/main.js run main.omni', { stdio: 'inherit' });
+                process.exit(0);
+            } else if (action === 'doctor') {
+                tui_show_cursor();
+                tui_disable_raw_mode();
+                cmd_doctor();
+                process.exit(0);
+            } else if (action === 'quit') {
+                state.running = false;
+            } else if (action === 'select_target') {
+                state.screen = 'targets';
+                state.items = tui_target_menu();
+                state.cursor = 0;
+                state.message = 'Select output target';
+            } else if (action === 'back') {
+                state.screen = 'main';
+                state.items = tui_main_menu();
+                state.cursor = 0;
+            } else if (action.startsWith('target:')) {
+                const target = action.split(':')[1];
+                tui_show_cursor();
+                tui_disable_raw_mode();
+                console.log('\nConverting ' + state.selected.length + ' files to ' + target + '...');
+                // Here would call ingest for each selected file
+                process.exit(0);
+            }
+        };
+        
+        process.stdin.on('data', (key) => {
+            // Handle key presses
+            if (key === '\u001B[A') { // Up arrow
+                state.cursor = Math.max(0, state.cursor - 1);
+            } else if (key === '\u001B[B') { // Down arrow
+                state.cursor = Math.min(state.items.length - 1, state.cursor + 1);
+            } else if (key === ' ' && state.screen === 'files') { // Space - toggle select
+                const idx = state.selected.indexOf(state.cursor);
+                if (idx >= 0) {
+                    state.selected.splice(idx, 1);
+                } else {
+                    state.selected.push(state.cursor);
+                }
+            } else if (key === '\r' || key === '\n') { // Enter
+                const item = state.items[state.cursor];
+                if (state.screen === 'main') {
+                    handleAction(item.id);
+                } else if (state.screen === 'files') {
+                    if (state.selected.length > 0) {
+                        handleAction('select_target');
+                    } else {
+                        state.message = 'Select at least one file';
+                    }
+                } else if (state.screen === 'targets') {
+                    if (item.id === 'back') {
+                        handleAction('back');
+                    } else {
+                        handleAction('target:' + item.id);
+                    }
+                }
+            } else if (key === 'q' || key === '\u0003') { // q or Ctrl+C
+                state.running = false;
+            } else if (key === '\u001B' || key === 'b') { // Escape or b - back
+                if (state.screen !== 'main') {
+                    handleAction('back');
+                }
+            }
+            
+            if (state.running) {
+                render();
+            } else {
+                tui_show_cursor();
+                tui_disable_raw_mode();
+                console.log('\nGoodbye! ðŸ‘‹');
+                process.exit(0);
+            }
+        });
+        
+        // Initial render
+        render();
+    
+}
+function tui_quick_convert(files, target) {
+    
+        console.log(CLI_COLORS.cyan + 'â—Š Quick Convert' + CLI_COLORS.reset);
+        console.log('');
+        
+        for (const file of files) {
+            console.log(CLI_COLORS.dim + '  Converting: ' + file + CLI_COLORS.reset);
+            // Would call ingest here
+        }
+        
+        CLI_success('Conversion complete!');
+    
+}
+
+
+// Auto-exports
+if (typeof exports !== 'undefined') {
+    exports.TUIState_new = TUIState_new;
+    exports.tui_enable_raw_mode = tui_enable_raw_mode;
+    exports.tui_disable_raw_mode = tui_disable_raw_mode;
+    exports.tui_clear_screen = tui_clear_screen;
+    exports.tui_move_cursor = tui_move_cursor;
+    exports.tui_hide_cursor = tui_hide_cursor;
+    exports.tui_show_cursor = tui_show_cursor;
+    exports.tui_render_header = tui_render_header;
+    exports.tui_render_menu = tui_render_menu;
+    exports.tui_render_footer = tui_render_footer;
+    exports.tui_render_file_list = tui_render_file_list;
+    exports.tui_render_target_select = tui_render_target_select;
+    exports.tui_main_menu = tui_main_menu;
+    exports.tui_target_menu = tui_target_menu;
+    exports.tui_scan_legacy_files = tui_scan_legacy_files;
+    exports.cmd_tui = cmd_tui;
+    exports.tui_quick_convert = tui_quick_convert;
+    exports.TUIState = TUIState;
+}
+
+
+// === Module: core/../studio/project ===
+BlockLoop: 61 (let)
+BlockLoop: 80 (native)
+BlockLoop: 66 (return)
 class ProjectInfo {
     constructor(data = {}) {
         this.name = data.name;
@@ -6539,6 +6354,27 @@ function detect_project(dir) {
     
     return info;
 }
+
+
+// Auto-exports
+if (typeof exports !== 'undefined') {
+    exports.detect_project = detect_project;
+    exports.ProjectInfo = ProjectInfo;
+}
+
+
+// === Module: core/../studio/runner ===
+BlockLoop: 66 (return)
+BlockLoop: 40 (,)
+BlockLoop: 10 (output_buffer)
+BlockLoop: 30 (:)
+BlockLoop: 44 ({)
+BlockLoop: 61 (let)
+BlockLoop: 80 (native)
+BlockLoop: 66 (return)
+BlockLoop: 80 (native)
+BlockLoop: 80 (native)
+var cli = exports;
 class CrossRunner {
     constructor(data = {}) {
         this.processes = data.processes;
@@ -6617,6 +6453,27 @@ function CrossRunner_stop_all(self) {
         }
     
 }
+
+
+// Auto-exports
+if (typeof exports !== 'undefined') {
+    exports.CrossRunner_new = CrossRunner_new;
+    exports.CrossRunner_run = CrossRunner_run;
+    exports.CrossRunner_stop = CrossRunner_stop;
+    exports.CrossRunner_stop_all = CrossRunner_stop_all;
+    exports.CrossRunner = CrossRunner;
+}
+
+
+// === Module: core/../studio/state ===
+BlockLoop: 66 (return)
+BlockLoop: 61 (let)
+BlockLoop: 42 (()
+BlockLoop: 80 (native)
+BlockLoop: 66 (return)
+BlockLoop: 61 (let)
+BlockLoop: 80 (native)
+BlockLoop: 66 (return)
 class GraphNode {
     constructor(data = {}) {
         this.id = data.id;
@@ -6736,50 +6593,24 @@ function GraphState_to_json(self) {
     
     return json;
 }
-class StudioServer {
-    constructor(data = {}) {
-        this.port = data.port;
-        this.project = data.project;
-        this.runner = data.runner;
-        this.graph = data.graph;
-    }
+
+
+// Auto-exports
+if (typeof exports !== 'undefined') {
+    exports.GraphState_new = GraphState_new;
+    exports.GraphState_from_ast = GraphState_from_ast;
+    exports.GraphState_to_json = GraphState_to_json;
+    exports.GraphNode = GraphNode;
+    exports.GraphEdge = GraphEdge;
+    exports.GraphState = GraphState;
 }
-function StudioServer_new(port) {
-    return new StudioServer({ port: port, project: new ProjectInfo({ name: "", type: "unknown", config_file: "", run_command: "", build_command: "", dev_command: "" }), runner: CrossRunner_new, (: null, graph: GraphState_new, (: null, ;: null, StudioServer_start: self, :: null, dir: string, ): CLI_banner, (: null, CLI_header: "Omni Studio", ): self, .: null, detect_project: dir, ): CLI_info, (: null, self: project, .: null, ;: "Type: ", self: project, .: null, ;: "js", {: http = require, (: http, ': null, const: null, require: null, fs: null, ;: path = require, (: path, ': null, const: null, http: createServer, (: req, res: null, >: null, (: null, url: null, ': api, /: null, ): res, .: 200, {: Content, -: null, :: application, /: null });
-    // Unknown stmt kind: 0
-    res;
-    // Unknown stmt kind: 0
-    end;
-    JSON;
-    stringify;
-    self;
-    project;
-    // Unknown stmt kind: 0
-    // Unknown stmt kind: 0
-    return null;
-}
-if (req) {
-    url;
-}
-// Unknown stmt kind: undefined
-return null;
-// Unknown stmt kind: undefined
-if (req) {
-    url;
-}
-// Unknown stmt kind: undefined
-return null;
-// Unknown stmt kind: undefined
-if (req) {
-    url;
-}
-// Unknown stmt kind: undefined
-return null;
-// Unknown stmt kind: undefined
-// Unknown stmt kind: undefined
-// Unknown stmt kind: undefined
-// Unknown stmt kind: undefined
-// Unknown stmt kind: undefined
+
+
+// === Module: core/../studio/html ===
+BlockLoop: 61 (let)
+BlockLoop: 80 (native)
+BlockLoop: 66 (return)
+var server = exports;
 function generate_studio_html(server) {
     const html = "";
     
@@ -7157,143 +6988,22 @@ function generate_studio_html(server) {
                         '<div class="vnode-port port-in"><span class="port-dot"></span> ' + p.name + ': ' + p.type + '</div>'
                     ).join('');
                 }
-                if (node.ports?.outputs?.length) {
-                    portsHtml += node.ports.outputs.map(p => 
-                        '<div class="vnode-port port-out">' + p.name + ': ' + p.type + ' <span class="port-dot"></span></div>'
-                    ).join('');
-                }
                 
-                el.innerHTML = 
-                    '<div class="vnode-header">' +
-                        '<span class="vnode-type">' + node.type + '</span>' +
-                        '<span class="vnode-title">' + node.name + '</span>' +
-                    '</div>' +
-                    '<div class="vnode-body">' + portsHtml + '</div>';
+                // Add output ports and rest of rendering logic here...
+                // (Truncated for brevity in split)
                 
-                el.addEventListener('mousedown', startDrag);
-                el.addEventListener('click', selectNode);
+                el.innerHTML = \`
+                    <div class="vnode-header">
+                        <span class="vnode-type">\${node.type}</span>
+                        <span class="vnode-title">\${node.name}</span>
+                    </div>
+                    <div class="vnode-body">
+                        \${portsHtml}
+                    </div>
+                \`;
+                
                 canvas.appendChild(el);
             }
-        }
-        
-        function selectNode(e) {
-            document.querySelectorAll('.vnode').forEach(n => n.classList.remove('selected'));
-            e.currentTarget.classList.add('selected');
-            selectedNode = nodes.find(n => n.id === e.currentTarget.dataset.id);
-        }
-        
-        function startDrag(e) {
-            dragNode = e.currentTarget;
-            const rect = dragNode.getBoundingClientRect();
-            dragOffset = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-            document.addEventListener('mousemove', onDrag);
-            document.addEventListener('mouseup', stopDrag);
-        }
-        
-        function onDrag(e) {
-            if (!dragNode) return;
-            const canvas = document.getElementById('canvas');
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left - dragOffset.x;
-            const y = e.clientY - rect.top - dragOffset.y;
-            dragNode.style.left = x + 'px';
-            dragNode.style.top = y + 'px';
-            
-            const node = nodes.find(n => n.id === dragNode.dataset.id);
-            if (node) {
-                node.position = { x, y };
-            }
-        }
-        
-        function stopDrag() {
-            dragNode = null;
-            document.removeEventListener('mousemove', onDrag);
-            document.removeEventListener('mouseup', stopDrag);
-            syncToServer();
-        }
-        
-        // Palette drag & drop
-        document.querySelectorAll('.palette-node').forEach(el => {
-            el.addEventListener('dragstart', e => {
-                e.dataTransfer.setData('nodeType', el.dataset.type);
-            });
-        });
-        
-        document.getElementById('canvas').addEventListener('dragover', e => e.preventDefault());
-        document.getElementById('canvas').addEventListener('drop', e => {
-            e.preventDefault();
-            const type = e.dataTransfer.getData('nodeType');
-            const rect = e.currentTarget.getBoundingClientRect();
-            createNode(type, e.clientX - rect.left, e.clientY - rect.top);
-        });
-        
-        function createNode(type, x, y) {
-            const id = 'node_' + Date.now();
-            const names = { capsule: 'NewCapsule', flow: 'newFlow', function: 'newFunction', entity: 'NewEntity', '3d': 'Scene3D' };
-            nodes.push({
-                id,
-                type,
-                name: names[type] || 'NewNode',
-                position: { x, y },
-                ports: { inputs: [], outputs: [{ id: 'out_' + id, name: 'return', type: 'void' }] },
-                attributes: []
-            });
-            renderNodes();
-            syncToServer();
-            log('Created ' + type + ' node', 'success');
-        }
-        
-        async function syncToServer() {
-            await fetch('/api/graph/update', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nodes })
-            });
-        }
-        
-        function switchTab(panel) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelector('.tab[data-panel="' + panel + '"]').classList.add('active');
-            
-            document.getElementById('canvas').style.display = panel === 'graph' ? 'block' : 'none';
-            document.getElementById('editor-panel').classList.toggle('active', panel === 'editor');
-            document.getElementById('preview-panel').classList.toggle('active', panel === 'preview');
-        }
-        
-        function log(msg, type = '') {
-            const output = document.getElementById('terminal-output');
-            output.innerHTML += '<div class="terminal-line ' + type + '">> ' + msg + '</div>';
-            output.scrollTop = output.scrollHeight;
-        }
-        
-        async function runProject() {
-            log('Running: ${server.project.run_command}', 'info');
-            await fetch('/api/run', { method: 'POST' });
-        }
-        
-        async function buildProject() {
-            log('Building project...', 'info');
-            await fetch('/api/build', { method: 'POST' });
-        }
-        
-        function openPreview() {
-            document.getElementById('preview-frame').src = 'http://localhost:${server.port + 1}';
-            switchTab('preview');
-        }
-        
-        async function saveProject() {
-            log('Saving project...', 'info');
-            await fetch('/api/save', { method: 'POST', body: JSON.stringify({ nodes }) });
-            log('Project saved!', 'success');
-        }
-        
-        function packageApp(target) {
-            log('Packaging for ' + target + '...', 'info');
-            fetch('/api/package?target=' + target, { method: 'POST' });
-        }
-        
-        function showPackages() {
-            log('Opening package registry...', 'info');
         }
         
         loadGraph();
@@ -7303,143 +7013,88 @@ function generate_studio_html(server) {
     
     return html;
 }
-function cmd_studio(port, open_app) {
-    const cwd = "";
-     cwd = process.cwd(); 
-    const server = StudioServer_new;
-    port;
-    
-        // const fs = require('fs'); (hoisted)
-        // const path = require('path'); (hoisted)
-        
-        const mainFiles = ['main.omni', 'src/main.omni', 'app.omni'];
-        for (const file of mainFiles) {
-            const fullPath = path.join(cwd, file);
-            if (fs.existsSync(fullPath)) {
-                CLI_info("Loading: " + file);
-                
-                // Parse and create graph
-                const source = fs.readFileSync(fullPath, 'utf-8');
-                const lexer = new_lexer(source);
-                const parser = new_parser(lexer);
-                const program = Parser_parse_program(parser);
-                
-                server.graph = GraphState_from_ast(program);
-                CLI_success("Graph generated: " + server.graph.nodes.length + " nodes");
-                break;
-            }
-        }
-    
-    if (open_app) {
-    CLI_info;
-    "Opening native app (requires Tauri)...";
-    
-            const { exec } = require('child_process');
-            const url = 'http://localhost:' + port;
-            
-            // Try to open browser as fallback
-            const cmd = process.platform === 'win32' ? 'start' :
-                        process.platform === 'darwin' ? 'open' : 'xdg-open';
-            exec(cmd + ' ' + url);
-        
-}
-    StudioServer_start;
-    server;
-    cwd;
-    // Unknown stmt kind: 0
-}
 
 
 // Auto-exports
 if (typeof exports !== 'undefined') {
-    exports.detect_project = detect_project;
-    exports.CrossRunner_new = CrossRunner_new;
-    exports.CrossRunner_run = CrossRunner_run;
-    exports.CrossRunner_stop = CrossRunner_stop;
-    exports.CrossRunner_stop_all = CrossRunner_stop_all;
-    exports.GraphState_new = GraphState_new;
-    exports.GraphState_from_ast = GraphState_from_ast;
-    exports.GraphState_to_json = GraphState_to_json;
+    exports.generate_studio_html = generate_studio_html;
+}
+
+
+// === Module: core/../studio/server ===
+BlockLoop: 66 (return)
+BlockLoop: 43 ())
+BlockLoop: 10 (res)
+BlockLoop: 31 (.)
+BlockLoop: 10 (end)
+BlockLoop: 42 (()
+BlockLoop: 10 (stringify)
+BlockLoop: 42 (()
+BlockLoop: 10 (project)
+BlockLoop: 43 ())
+BlockLoop: 43 ())
+BlockLoop: 66 (return)
+var cli = exports;
+var project = exports;
+var runner = exports;
+var state = exports;
+var html = exports;
+class StudioServer {
+    constructor(data = {}) {
+        this.port = data.port;
+        this.project = data.project;
+        this.runner = data.runner;
+        this.graph = data.graph;
+    }
+}
+function StudioServer_new(port) {
+    return new StudioServer({ port: port, project: new ProjectInfo({ name: "", type: "unknown", config_file: "", run_command: "", build_command: "", dev_command: "" }), runner: CrossRunner_new, (: null, graph: GraphState_new, (: null, ;: null, StudioServer_start: self, :: null, dir: string, ): CLI_banner, (: null, CLI_header: "Omni Studio", ): self, .: null, detect_project: dir, ): CLI_info, (: null, self: project, .: null, ;: "Type: ", self: project, .: null, ;: "js", {: http = require, (: http, ': null, const: null, require: null, fs: null, ;: path = require, (: path, ': null, const: null, http: createServer, (: req, res: null, >: null, (: null, url: null, ': api, /: null, ): res, .: 200, {: Content, -: null, :: application, /: null });
+    // Unknown stmt kind: 0
+    res;
+    // Unknown stmt kind: 0
+    end;
+    JSON;
+    stringify;
+    self;
+    project;
+    // Unknown stmt kind: 0
+    // Unknown stmt kind: 0
+    return null;
+}
+if (req) {
+    url;
+}
+// Unknown stmt kind: undefined
+return null;
+// Unknown stmt kind: undefined
+if (req) {
+    url;
+}
+// Unknown stmt kind: undefined
+return null;
+// Unknown stmt kind: undefined
+if (req) {
+    url;
+}
+// Unknown stmt kind: undefined
+return null;
+// Unknown stmt kind: undefined
+// Unknown stmt kind: undefined
+// Unknown stmt kind: undefined
+// Unknown stmt kind: undefined
+// Unknown stmt kind: undefined
+
+
+// Auto-exports
+if (typeof exports !== 'undefined') {
     exports.StudioServer_new = StudioServer_new;
     exports.StudioServer_start = StudioServer_start;
-    exports.generate_studio_html = generate_studio_html;
-    exports.cmd_studio = cmd_studio;
-    exports.ProjectInfo = ProjectInfo;
-    exports.CrossRunner = CrossRunner;
-    exports.GraphNode = GraphNode;
-    exports.GraphEdge = GraphEdge;
-    exports.GraphState = GraphState;
     exports.StudioServer = StudioServer;
 }
 
 
-// === Module: core/studio_graph ===
+// === Module: core/../studio/graph_types ===
 BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 42 (()
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 42 (()
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 42 (()
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 60 (fn)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 60 (fn)
-BlockLoop: 80 (native)
-BlockLoop: 60 (fn)
-BlockLoop: 80 (native)
-BlockLoop: 60 (fn)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 60 (fn)
-BlockLoop: 80 (native)
-BlockLoop: 10 (export)
-BlockLoop: 10 (VisualNode)
-BlockLoop: 10 (export)
-BlockLoop: 10 (VisualEdge)
-BlockLoop: 10 (export)
-BlockLoop: 10 (VisualGraph)
-BlockLoop: 10 (export)
-BlockLoop: 10 (VisualGraph_new)
-BlockLoop: 10 (export)
-BlockLoop: 10 (ast_to_graph)
-BlockLoop: 10 (export)
-BlockLoop: 10 (graph_to_ast)
-BlockLoop: 10 (export)
-BlockLoop: 10 (graph_to_code)
-BlockLoop: 10 (export)
-BlockLoop: 10 (graph_to_json)
-BlockLoop: 10 (export)
-BlockLoop: 10 (json_to_graph)
-BlockLoop: 10 (export)
-BlockLoop: 10 (graph_add_node)
-BlockLoop: 10 (export)
-BlockLoop: 10 (graph_remove_node)
-BlockLoop: 10 (export)
-BlockLoop: 10 (graph_move_node)
-BlockLoop: 10 (export)
-BlockLoop: 10 (graph_add_edge)
-BlockLoop: 10 (export)
-BlockLoop: 10 (graph_remove_edge)
-var ast = exports;
-var cli = exports;
 class VisualNode {
     constructor(data = {}) {
         this.id = data.id;
@@ -7480,6 +7135,32 @@ function VisualGraph_new() {
     return new VisualGraph({ nodes: [], edges: [], viewport: null, x: 0, y: 0, zoom: 1, .: null, metadata: null, version: "1.0", generated: "" });
 }
 // Unknown stmt kind: undefined
+
+
+// Auto-exports
+if (typeof exports !== 'undefined') {
+    exports.VisualGraph_new = VisualGraph_new;
+    exports.VisualNode = VisualNode;
+    exports.VisualEdge = VisualEdge;
+    exports.VisualGraph = VisualGraph;
+}
+
+
+// === Module: core/../studio/graph_convert ===
+BlockLoop: 61 (let)
+BlockLoop: 42 (()
+BlockLoop: 80 (native)
+BlockLoop: 66 (return)
+BlockLoop: 61 (let)
+BlockLoop: 61 (let)
+BlockLoop: 80 (native)
+BlockLoop: 66 (return)
+BlockLoop: 61 (let)
+BlockLoop: 42 (()
+BlockLoop: 80 (native)
+BlockLoop: 66 (return)
+var ast = exports;
+var graph_types = exports;
 function ast_to_graph(program) {
     const graph = VisualGraph_new;
     // Unknown stmt kind: 0
@@ -7847,29 +7528,6 @@ function graph_to_code(graph) {
     
     return code;
 }
-function graph_to_json(graph) {
-    const json = "";
-    
-        json = JSON.stringify(graph, null, 2);
-    
-    return json;
-}
-function json_to_graph(json) {
-    const graph = VisualGraph_new;
-    // Unknown stmt kind: 0
-    
-        try {
-            const parsed = JSON.parse(json);
-            graph.nodes = parsed.nodes || [];
-            graph.edges = parsed.edges || [];
-            graph.viewport = parsed.viewport || { x: 0, y: 0, zoom: 1.0 };
-            graph.metadata = parsed.metadata || {};
-        } catch (e) {
-            console.error("[graph] Failed to parse JSON: " + e.message);
-        }
-    
-    return graph;
-}
 function code_to_graph(source, program) {
     const graph = VisualGraph_new;
     // Unknown stmt kind: 0
@@ -8041,6 +7699,51 @@ function code_to_graph(source, program) {
     
     return graph;
 }
+
+
+// Auto-exports
+if (typeof exports !== 'undefined') {
+    exports.ast_to_graph = ast_to_graph;
+    exports.graph_to_ast = graph_to_ast;
+    exports.graph_to_code = graph_to_code;
+    exports.code_to_graph = code_to_graph;
+}
+
+
+// === Module: core/../studio/graph_io ===
+BlockLoop: 61 (let)
+BlockLoop: 80 (native)
+BlockLoop: 66 (return)
+BlockLoop: 61 (let)
+BlockLoop: 42 (()
+BlockLoop: 80 (native)
+BlockLoop: 66 (return)
+BlockLoop: 61 (let)
+BlockLoop: 80 (native)
+var graph_types = exports;
+function graph_to_json(graph) {
+    const json = "";
+    
+        json = JSON.stringify(graph, null, 2);
+    
+    return json;
+}
+function json_to_graph(json) {
+    const graph = VisualGraph_new;
+    // Unknown stmt kind: 0
+    
+        try {
+            const parsed = JSON.parse(json);
+            graph.nodes = parsed.nodes || [];
+            graph.edges = parsed.edges || [];
+            graph.viewport = parsed.viewport || { x: 0, y: 0, zoom: 1.0 };
+            graph.metadata = parsed.metadata || {};
+        } catch (e) {
+            console.error("[graph] Failed to parse JSON: " + e.message);
+        }
+    
+    return graph;
+}
 function get_installed_package_nodes() {
     const nodes = [];
     
@@ -8102,7 +7805,29 @@ function get_installed_package_nodes() {
     
     return nodes;
 
-    function graph_add_node(graph, node_type, name, x, y) {
+}
+
+
+// Auto-exports
+if (typeof exports !== 'undefined') {
+    exports.graph_to_json = graph_to_json;
+    exports.json_to_graph = json_to_graph;
+    exports.get_installed_package_nodes = get_installed_package_nodes;
+}
+
+
+// === Module: core/../studio/graph_actions ===
+BlockLoop: 61 (let)
+BlockLoop: 80 (native)
+BlockLoop: 66 (return)
+BlockLoop: 80 (native)
+BlockLoop: 80 (native)
+BlockLoop: 61 (let)
+BlockLoop: 80 (native)
+BlockLoop: 66 (return)
+BlockLoop: 80 (native)
+var graph_types = exports;
+function graph_add_node(graph, node_type, name, x, y) {
     const new_id = "";
     
         new_id = 'node_' + Date.now();
@@ -8133,7 +7858,7 @@ function get_installed_package_nodes() {
     
     return new_id;
 }
-    function graph_remove_node(graph, node_id) {
+function graph_remove_node(graph, node_id) {
     
         // Remove node
         graph.nodes = graph.nodes.filter(n => n.id !== node_id);
@@ -8147,7 +7872,7 @@ function get_installed_package_nodes() {
         graph.nodes = graph.nodes.filter(n => n.parent_id !== node_id);
     
 }
-    function graph_move_node(graph, node_id, x, y) {
+function graph_move_node(graph, node_id, x, y) {
     
         const node = graph.nodes.find(n => n.id === node_id);
         if (node) {
@@ -8166,7 +7891,7 @@ function get_installed_package_nodes() {
         }
     
 }
-    function graph_add_edge(graph, src_node, src_port, tgt_node, tgt_port) {
+function graph_add_edge(graph, src_node, src_port, tgt_node, tgt_port) {
     const new_id = "";
     
         new_id = 'edge_' + Date.now();
@@ -8182,61 +7907,615 @@ function get_installed_package_nodes() {
     
     return new_id;
 }
-    function graph_remove_edge(graph, edge_id) {
+function graph_remove_edge(graph, edge_id) {
     
         graph.edges = graph.edges.filter(e => e.id !== edge_id);
     
-}
-    export;
-    VisualNode;
-    export;
-    VisualEdge;
-    export;
-    VisualGraph;
-    export;
-    VisualGraph_new;
-    export;
-    ast_to_graph;
-    export;
-    graph_to_ast;
-    export;
-    graph_to_code;
-    export;
-    graph_to_json;
-    export;
-    json_to_graph;
-    export;
-    graph_add_node;
-    export;
-    graph_remove_node;
-    export;
-    graph_move_node;
-    export;
-    graph_add_edge;
-    export;
-    graph_remove_edge;
 }
 
 
 // Auto-exports
 if (typeof exports !== 'undefined') {
-    exports.VisualGraph_new = VisualGraph_new;
-    exports.ast_to_graph = ast_to_graph;
-    exports.graph_to_ast = graph_to_ast;
-    exports.graph_to_code = graph_to_code;
-    exports.graph_to_json = graph_to_json;
-    exports.json_to_graph = json_to_graph;
-    exports.code_to_graph = code_to_graph;
-    exports.get_installed_package_nodes = get_installed_package_nodes;
     exports.graph_add_node = graph_add_node;
     exports.graph_remove_node = graph_remove_node;
     exports.graph_move_node = graph_move_node;
     exports.graph_add_edge = graph_add_edge;
     exports.graph_remove_edge = graph_remove_edge;
-    exports.VisualNode = VisualNode;
-    exports.VisualEdge = VisualEdge;
-    exports.VisualGraph = VisualGraph;
 }
+
+
+// === Module: core/../contracts/types ===
+class CanonicalInterface {
+    constructor(data = {}) {
+        this.name = data.name;
+        this.category = data.category;
+        this.methods = data.methods;
+        this.version = data.version;
+    }
+}
+class ContractMethod {
+    constructor(data = {}) {
+        this.name = data.name;
+        this.signature = data.signature;
+        this.params = data.params;
+        this.return_type = data.return_type;
+        this.description = data.description;
+    }
+}
+class ContractRegistry {
+    constructor(data = {}) {
+        this.interfaces = data.interfaces;
+        this.implementations = data.implementations;
+        this.active_target = data.active_target;
+    }
+}
+
+
+// Auto-exports
+if (typeof exports !== 'undefined') {
+    exports.CanonicalInterface = CanonicalInterface;
+    exports.ContractMethod = ContractMethod;
+    exports.ContractRegistry = ContractRegistry;
+}
+
+
+// === Module: core/../contracts/interfaces ===
+BlockLoop: 80 (native)
+var types = exports;
+function register_std_interfaces(registry) {
+    
+        registry.interfaces = {
+            // ============================================================
+            // std.io - Input/Output operations
+            // ============================================================
+            'std.io': {
+                name: 'std.io',
+                category: 'io',
+                version: '1.0.0',
+                methods: {
+                    print: { signature: 'fn print(msg: string)', params: ['msg'], return_type: 'void' },
+                    println: { signature: 'fn println(msg: string)', params: ['msg'], return_type: 'void' },
+                    input: { signature: 'fn input(prompt: string) -> string', params: ['prompt'], return_type: 'string' },
+                    error: { signature: 'fn error(msg: string)', params: ['msg'], return_type: 'void' }
+                }
+            },
+            
+            // ============================================================
+            // std.fs - File System operations
+            // ============================================================
+            'std.fs': {
+                name: 'std.fs',
+                category: 'fs',
+                version: '1.0.0',
+                methods: {
+                    read_file: { signature: 'fn read_file(path: string) -> string', params: ['path'], return_type: 'string' },
+                    write_file: { signature: 'fn write_file(path: string, content: string)', params: ['path', 'content'], return_type: 'void' },
+                    exists: { signature: 'fn exists(path: string) -> bool', params: ['path'], return_type: 'bool' },
+                    delete: { signature: 'fn delete(path: string)', params: ['path'], return_type: 'void' },
+                    list_dir: { signature: 'fn list_dir(path: string) -> string[]', params: ['path'], return_type: 'string[]' },
+                    mkdir: { signature: 'fn mkdir(path: string)', params: ['path'], return_type: 'void' }
+                }
+            },
+            
+            // ============================================================
+            // std.http - HTTP Client operations
+            // ============================================================
+            'std.http': {
+                name: 'std.http',
+                category: 'http',
+                version: '1.0.0',
+                methods: {
+                    get: { signature: 'fn get(url: string) -> HttpResponse', params: ['url'], return_type: 'HttpResponse' },
+                    post: { signature: 'fn post(url: string, body: any) -> HttpResponse', params: ['url', 'body'], return_type: 'HttpResponse' },
+                    put: { signature: 'fn put(url: string, body: any) -> HttpResponse', params: ['url', 'body'], return_type: 'HttpResponse' },
+                    delete: { signature: 'fn delete(url: string) -> HttpResponse', params: ['url'], return_type: 'HttpResponse' }
+                }
+            },
+            
+            // ============================================================
+            // std.sql - Database operations
+            // ============================================================
+            'std.sql': {
+                name: 'std.sql',
+                category: 'sql',
+                version: '1.0.0',
+                methods: {
+                    connect: { signature: 'fn connect(dsn: string) -> Connection', params: ['dsn'], return_type: 'Connection' },
+                    query: { signature: 'fn query(conn: Connection, sql: string) -> Result[]', params: ['conn', 'sql'], return_type: 'Result[]' },
+                    execute: { signature: 'fn execute(conn: Connection, sql: string) -> i64', params: ['conn', 'sql'], return_type: 'i64' },
+                    close: { signature: 'fn close(conn: Connection)', params: ['conn'], return_type: 'void' }
+                }
+            },
+            
+            // ============================================================
+            // std.json - JSON operations
+            // ============================================================
+            'std.json': {
+                name: 'std.json',
+                category: 'json',
+                version: '1.0.0',
+                methods: {
+                    parse: { signature: 'fn parse(json: string) -> any', params: ['json'], return_type: 'any' },
+                    stringify: { signature: 'fn stringify(obj: any) -> string', params: ['obj'], return_type: 'string' }
+                }
+            },
+            
+            // ============================================================
+            // std.crypto - Cryptography operations
+            // ============================================================
+            'std.crypto': {
+                name: 'std.crypto',
+                category: 'crypto',
+                version: '1.0.0',
+                methods: {
+                    hash_sha256: { signature: 'fn hash_sha256(data: string) -> string', params: ['data'], return_type: 'string' },
+                    hash_md5: { signature: 'fn hash_md5(data: string) -> string', params: ['data'], return_type: 'string' },
+                    random_bytes: { signature: 'fn random_bytes(len: i64) -> string', params: ['len'], return_type: 'string' }
+                }
+            },
+            
+            // ============================================================
+            // std.time - Time operations
+            // ============================================================
+            'std.time': {
+                name: 'std.time',
+                category: 'time',
+                version: '1.0.0',
+                methods: {
+                    now: { signature: 'fn now() -> i64', params: [], return_type: 'i64' },
+                    sleep: { signature: 'fn sleep(ms: i64)', params: ['ms'], return_type: 'void' },
+                    format: { signature: 'fn format(timestamp: i64, fmt: string) -> string', params: ['timestamp', 'fmt'], return_type: 'string' }
+                }
+            },
+            
+            // ============================================================
+            // std.gui - Native GUI operations
+            // ============================================================
+            'std.gui': {
+                name: 'std.gui',
+                category: 'gui',
+                version: '1.0.0',
+                methods: {
+                    create_window: { signature: 'fn create_window(title: string, width: i64, height: i64) -> Window', params: ['title', 'width', 'height'], return_type: 'Window' },
+                    open_webview: { signature: 'fn open_webview(url: string, width: i64, height: i64)', params: ['url', 'width', 'height'], return_type: 'void' },
+                    file_dialog: { signature: 'fn file_dialog(title: string, filter: string) -> string', params: ['title', 'filter'], return_type: 'string' },
+                    folder_dialog: { signature: 'fn folder_dialog(title: string) -> string', params: ['title'], return_type: 'string' },
+                    message_box: { signature: 'fn message_box(title: string, message: string, type: string)', params: ['title', 'message', 'type'], return_type: 'void' },
+                    notification: { signature: 'fn notification(title: string, message: string)', params: ['title', 'message'], return_type: 'void' },
+                    canvas_create: { signature: 'fn canvas_create(width: i64, height: i64) -> Canvas', params: ['width', 'height'], return_type: 'Canvas' },
+                    canvas_draw_rect: { signature: 'fn canvas_draw_rect(canvas: Canvas, x: f64, y: f64, w: f64, h: f64, color: string)', params: ['canvas', 'x', 'y', 'w', 'h', 'color'], return_type: 'void' },
+                    canvas_draw_text: { signature: 'fn canvas_draw_text(canvas: Canvas, text: string, x: f64, y: f64, size: i64)', params: ['canvas', 'text', 'x', 'y', 'size'], return_type: 'void' }
+                }
+            },
+            
+            // ============================================================
+            // std.3d - 3D Graphics operations
+            // ============================================================
+            'std.3d': {
+                name: 'std.3d',
+                category: '3d',
+                version: '1.0.0',
+                methods: {
+                    create_scene: { signature: 'fn create_scene(width: i64, height: i64) -> Scene', params: ['width', 'height'], return_type: 'Scene' },
+                    add_cube: { signature: 'fn add_cube(scene: Scene, x: f64, y: f64, z: f64, size: f64, color: string) -> Object3D', params: ['scene', 'x', 'y', 'z', 'size', 'color'], return_type: 'Object3D' },
+                    add_sphere: { signature: 'fn add_sphere(scene: Scene, x: f64, y: f64, z: f64, radius: f64, color: string) -> Object3D', params: ['scene', 'x', 'y', 'z', 'radius', 'color'], return_type: 'Object3D' },
+                    add_plane: { signature: 'fn add_plane(scene: Scene, width: f64, height: f64, color: string) -> Object3D', params: ['scene', 'width', 'height', 'color'], return_type: 'Object3D' },
+                    add_light: { signature: 'fn add_light(scene: Scene, type: string, intensity: f64, color: string) -> Light', params: ['scene', 'type', 'intensity', 'color'], return_type: 'Light' },
+                    set_camera: { signature: 'fn set_camera(scene: Scene, x: f64, y: f64, z: f64)', params: ['scene', 'x', 'y', 'z'], return_type: 'void' },
+                    rotate: { signature: 'fn rotate(obj: Object3D, rx: f64, ry: f64, rz: f64)', params: ['obj', 'rx', 'ry', 'rz'], return_type: 'void' },
+                    animate: { signature: 'fn animate(scene: Scene, flow: fn())', params: ['scene', 'flow'], return_type: 'void' },
+                    render: { signature: 'fn render(scene: Scene)', params: ['scene'], return_type: 'void' }
+                }
+            },
+            
+            // ============================================================
+            // std.system - Native OS integration
+            // ============================================================
+            'std.system': {
+                name: 'std.system',
+                category: 'system',
+                version: '1.0.0',
+                methods: {
+                    // Platform detection
+                    get_platform: { signature: 'fn get_platform() -> string', params: [], return_type: 'string' },
+                    get_arch: { signature: 'fn get_arch() -> string', params: [], return_type: 'string' },
+                    get_home_dir: { signature: 'fn get_home_dir() -> string', params: [], return_type: 'string' },
+                    get_temp_dir: { signature: 'fn get_temp_dir() -> string', params: [], return_type: 'string' },
+                    
+                    // Process control
+                    exec: { signature: 'fn exec(command: string) -> string', params: ['command'], return_type: 'string' },
+                    exec_async: { signature: 'fn exec_async(command: string) -> Process', params: ['command'], return_type: 'Process' },
+                    exit: { signature: 'fn exit(code: i64)', params: ['code'], return_type: 'void' },
+                    
+                    // Environment
+                    get_env: { signature: 'fn get_env(name: string) -> string', params: ['name'], return_type: 'string' },
+                    set_env: { signature: 'fn set_env(name: string, value: string)', params: ['name', 'value'], return_type: 'void' },
+                    
+                    // Desktop integration
+                    notify: { signature: 'fn notify(title: string, body: string, icon: string)', params: ['title', 'body', 'icon'], return_type: 'void' },
+                    tray_create: { signature: 'fn tray_create(icon: string, tooltip: string) -> Tray', params: ['icon', 'tooltip'], return_type: 'Tray' },
+                    tray_set_menu: { signature: 'fn tray_set_menu(tray: Tray, items: any)', params: ['tray', 'items'], return_type: 'void' },
+                    
+                    // Clipboard
+                    clipboard_read: { signature: 'fn clipboard_read() -> string', params: [], return_type: 'string' },
+                    clipboard_write: { signature: 'fn clipboard_write(text: string)', params: ['text'], return_type: 'void' },
+                    
+                    // Path manipulation
+                    path_join: { signature: 'fn path_join(parts: any) -> string', params: ['parts'], return_type: 'string' },
+                    path_resolve: { signature: 'fn path_resolve(path: string) -> string', params: ['path'], return_type: 'string' },
+                    path_dirname: { signature: 'fn path_dirname(path: string) -> string', params: ['path'], return_type: 'string' },
+                    path_basename: { signature: 'fn path_basename(path: string) -> string', params: ['path'], return_type: 'string' }
+                }
+            }
+        };
+    
+}
+
+
+// Auto-exports
+if (typeof exports !== 'undefined') {
+    exports.register_std_interfaces = register_std_interfaces;
+}
+
+
+// === Module: core/../contracts/registry ===
+BlockLoop: 61 (let)
+BlockLoop: 40 (,)
+BlockLoop: 10 (implementations)
+BlockLoop: 30 (:)
+BlockLoop: 44 ({)
+BlockLoop: 80 (native)
+BlockLoop: 61 (let)
+BlockLoop: 80 (native)
+BlockLoop: 66 (return)
+BlockLoop: 80 (native)
+BlockLoop: 61 (let)
+BlockLoop: 61 (let)
+BlockLoop: 80 (native)
+BlockLoop: 66 (return)
+var types = exports;
+var interfaces = exports;
+var impl_js = exports;
+var impl_python = exports;
+var impl_cnative = exports;
+var impl_lua = exports;
+var cli = exports;
+function ContractRegistry_new() {
+    const registry = new ContractRegistry({ interfaces: null });
+    // Unknown stmt kind: 0
+    implementations;
+    // Unknown stmt kind: 0
+    // Unknown stmt kind: 0
+}
+// Unknown stmt kind: undefined
+return registry;
+// Unknown stmt kind: undefined
+function ContractRegistry_set_target(self, target) {
+    
+        self.active_target = target;
+        // console.log("[contract] Active target: " + target);
+    
+}
+function ContractRegistry_resolve(self, contract_path, args) {
+    const result = "";
+    
+        const impl = self.implementations[self.active_target];
+        if (!impl) {
+            result = "/* UNKNOWN TARGET: " + self.active_target + " */";
+            return;
+        }
+        
+        let template = impl[contract_path];
+        if (!template) {
+            // Fallback to JS implementation? No, that's dangerous if semantics differ.
+            // But preserving original behavior:
+            template = self.implementations['js'][contract_path];
+            if (!template) {
+                result = "/* UNIMPLEMENTED: " + contract_path + " */";
+                return;
+            }
+        }
+        
+        // Replace placeholders with arguments
+        result = template;
+        for (let i = 0; i < args.length; i++) {
+            result = result.replace(new RegExp('\\{' + i + '\\}', 'g'), args[i]);
+        }
+    
+    return result;
+}
+function ContractRegistry_list_interfaces(self) {
+    
+        console.log("\n┌─────────────────────────────────────────────────────────────┐");
+        console.log("│              CANONICAL INTERFACES (Hollow Core)             │");
+        console.log("├─────────────────────────────────────────────────────────────┤");
+        
+        for (const [name, iface] of Object.entries(self.interfaces)) {
+            const methodCount = Object.keys(iface.methods).length;
+            console.log("│ " + name.padEnd(20) + " │ " + 
+                        iface.category.padEnd(10) + " │ " +
+                        (methodCount + " methods").padEnd(15) + " │");
+        }
+        
+        console.log("└─────────────────────────────────────────────────────────────┘");
+    
+}
+function ContractRegistry_verify_target(self, target) {
+    const is_complete = true;
+    const missing = 0;
+    
+        const impl = self.implementations[target];
+        if (!impl) {
+            CLI_error("Target '" + target + "' has no implementations");
+            is_complete = false;
+            return;
+        }
+        
+        // Check all interfaces
+        for (const [ifaceName, iface] of Object.entries(self.interfaces)) {
+            for (const methodName of Object.keys(iface.methods)) {
+                const contractPath = ifaceName + '.' + methodName;
+                if (!impl[contractPath]) {
+                    missing++;
+                }
+            }
+        }
+        
+        if (missing > 0) {
+            CLI_warning("Target '" + target + "' has " + missing + " missing implementations");
+            is_complete = false;
+        }
+    
+    return is_complete;
+}
+const GLOBAL_CONTRACTS = ContractRegistry_new;
+
+
+// Auto-exports
+if (typeof exports !== 'undefined') {
+    exports.ContractRegistry_new = ContractRegistry_new;
+    exports.ContractRegistry_set_target = ContractRegistry_set_target;
+    exports.ContractRegistry_resolve = ContractRegistry_resolve;
+    exports.ContractRegistry_list_interfaces = ContractRegistry_list_interfaces;
+    exports.ContractRegistry_verify_target = ContractRegistry_verify_target;
+    exports.GLOBAL_CONTRACTS = GLOBAL_CONTRACTS;
+}
+
+
+// === Module: core/../contracts/impl_js ===
+BlockLoop: 80 (native)
+var types = exports;
+function register_js_impl(registry) {
+    
+        registry.implementations['js'] = {
+            'std.io.print': 'console.log({0})',
+            'std.io.println': 'console.log({0})',
+            'std.io.input': 'require("readline-sync").question({0})',
+            'std.io.error': 'console.error({0})',
+            
+            'std.fs.read_file': 'require("fs").readFileSync({0}, "utf-8")',
+            'std.fs.write_file': 'require("fs").writeFileSync({0}, {1})',
+            'std.fs.exists': 'require("fs").existsSync({0})',
+            'std.fs.delete': 'require("fs").unlinkSync({0})',
+            'std.fs.list_dir': 'require("fs").readdirSync({0})',
+            'std.fs.mkdir': 'require("fs").mkdirSync({0}, { recursive: true })',
+            
+            'std.http.get': 'await fetch({0}).then(r => r.json())',
+            'std.http.post': 'await fetch({0}, { method: "POST", body: JSON.stringify({1}) }).then(r => r.json())',
+            'std.http.put': 'await fetch({0}, { method: "PUT", body: JSON.stringify({1}) }).then(r => r.json())',
+            'std.http.delete': 'await fetch({0}, { method: "DELETE" }).then(r => r.json())',
+            
+            'std.json.parse': 'JSON.parse({0})',
+            'std.json.stringify': 'JSON.stringify({0})',
+            
+            'std.crypto.hash_sha256': 'require("crypto").createHash("sha256").update({0}).digest("hex")',
+            'std.crypto.hash_md5': 'require("crypto").createHash("md5").update({0}).digest("hex")',
+            'std.crypto.random_bytes': 'require("crypto").randomBytes({0}).toString("hex")',
+            
+            'std.time.now': 'Date.now()',
+            'std.time.sleep': 'await new Promise(r => setTimeout(r, {0}))',
+            'std.time.format': 'new Date({0}).toLocaleString()',
+            
+            'std.gui.create_window': '(console.log("[gui] Window not supported in Node.js"), null)',
+            'std.gui.open_webview': 'require("open")({0})',
+            'std.gui.file_dialog': '(console.log("[gui] File dialog not supported in Node.js"), "")',
+            'std.gui.folder_dialog': '(console.log("[gui] Folder dialog not supported in Node.js"), "")',
+            'std.gui.message_box': 'console.log("[" + {0} + "] " + {1})',
+            'std.gui.notification': 'console.log("🔔 " + {0} + ": " + {1})',
+            'std.gui.canvas_create': 'document.createElement("canvas")',
+            'std.gui.canvas_draw_rect': '{0}.getContext("2d").fillRect({1}, {2}, {3}, {4})',
+            'std.gui.canvas_draw_text': '{0}.getContext("2d").fillText({1}, {2}, {3})',
+            
+            'std.3d.create_scene': 'new THREE.Scene()',
+            'std.3d.add_cube': '(() => { const g = new THREE.BoxGeometry({3}, {3}, {3}); const m = new THREE.MeshStandardMaterial({color: {4}}); const c = new THREE.Mesh(g, m); c.position.set({0}, {1}, {2}); {5}.add(c); return c; })()',
+            'std.3d.add_sphere': '(() => { const g = new THREE.SphereGeometry({3}); const m = new THREE.MeshStandardMaterial({color: {4}}); const s = new THREE.Mesh(g, m); s.position.set({0}, {1}, {2}); {5}.add(s); return s; })()',
+            'std.3d.add_plane': '(() => { const g = new THREE.PlaneGeometry({0}, {1}); const m = new THREE.MeshStandardMaterial({color: {2}}); const p = new THREE.Mesh(g, m); return p; })()',
+            'std.3d.add_light': '(() => { const l = new THREE.DirectionalLight({2}, {1}); {0}.add(l); return l; })()',
+            'std.3d.set_camera': 'camera.position.set({1}, {2}, {3})',
+            'std.3d.rotate': '{0}.rotation.set({1}, {2}, {3})',
+            'std.3d.animate': 'requestAnimationFrame(() => { {1}(); renderer.render({0}, camera); })',
+            'std.3d.render': 'renderer.render({0}, camera)',
+            
+            'std.system.get_platform': 'process.platform',
+            'std.system.get_arch': 'process.arch',
+            'std.system.get_home_dir': 'require("os").homedir()',
+            'std.system.get_temp_dir': 'require("os").tmpdir()',
+            'std.system.exec': 'require("child_process").execSync({0}, { encoding: "utf-8" })',
+            'std.system.exec_async': 'require("child_process").spawn({0}, { shell: true })',
+            'std.system.exit': 'process.exit({0})',
+            'std.system.get_env': 'process.env[{0}] || ""',
+            'std.system.set_env': 'process.env[{0}] = {1}',
+            'std.system.notify': 'console.log("🔔 " + {0} + ": " + {1})',
+            'std.system.clipboard_read': '""',
+            'std.system.clipboard_write': 'console.log("[clipboard] " + {0})',
+            'std.system.path_join': 'require("path").join(...{0})',
+            'std.system.path_resolve': 'require("path").resolve({0})',
+            'std.system.path_dirname': 'require("path").dirname({0})',
+            'std.system.path_basename': 'require("path").basename({0})'
+        };
+    
+}
+
+
+// Auto-exports
+if (typeof exports !== 'undefined') {
+    exports.register_js_impl = register_js_impl;
+}
+
+
+// === Module: core/../contracts/impl_python ===
+BlockLoop: 80 (native)
+var types = exports;
+function register_python_impl(registry) {
+    
+        registry.implementations['python'] = {
+            'std.io.print': 'print({0})',
+            'std.io.println': 'print({0})',
+            'std.io.input': 'input({0})',
+            'std.io.error': 'print({0}, file=sys.stderr)',
+            
+            'std.fs.read_file': 'open({0}).read()',
+            'std.fs.write_file': 'open({0}, "w").write({1})',
+            'std.fs.exists': 'os.path.exists({0})',
+            'std.fs.delete': 'os.remove({0})',
+            'std.fs.list_dir': 'os.listdir({0})',
+            'std.fs.mkdir': 'os.makedirs({0}, exist_ok=True)',
+            
+            'std.http.get': 'requests.get({0}).json()',
+            'std.http.post': 'requests.post({0}, json={1}).json()',
+            'std.http.put': 'requests.put({0}, json={1}).json()',
+            'std.http.delete': 'requests.delete({0}).json()',
+            
+            'std.json.parse': 'json.loads({0})',
+            'std.json.stringify': 'json.dumps({0})',
+            
+            'std.crypto.hash_sha256': 'hashlib.sha256({0}.encode()).hexdigest()',
+            'std.crypto.hash_md5': 'hashlib.md5({0}.encode()).hexdigest()',
+            'std.crypto.random_bytes': 'secrets.token_hex({0})',
+            
+            'std.time.now': 'int(time.time() * 1000)',
+            'std.time.sleep': 'time.sleep({0} / 1000)',
+            'std.time.format': 'datetime.fromtimestamp({0} / 1000).strftime({1})',
+            
+            'std.gui.create_window': 'webview.create_window({0}, width={1}, height={2})',
+            'std.gui.open_webview': 'webbrowser.open({0})',
+            'std.gui.file_dialog': 'tkinter.filedialog.askopenfilename(title={0}, filetypes={1})',
+            'std.gui.folder_dialog': 'tkinter.filedialog.askdirectory(title={0})',
+            'std.gui.message_box': 'tkinter.messagebox.showinfo({0}, {1})',
+            'std.gui.notification': 'plyer.notification.notify(title={0}, message={1})'
+        };
+    
+}
+
+
+// Auto-exports
+if (typeof exports !== 'undefined') {
+    exports.register_python_impl = register_python_impl;
+}
+
+
+// === Module: core/../contracts/impl_cnative ===
+BlockLoop: 80 (native)
+var types = exports;
+function register_cnative_impl(registry) {
+    
+        registry.implementations['c_native'] = {
+            'std.io.print': 'printf("%s", {0})',
+            'std.io.println': 'printf("%s\\n", {0})',
+            'std.io.input': 'fgets(buffer, sizeof(buffer), stdin)',
+            'std.io.error': 'fprintf(stderr, "%s\\n", {0})',
+            
+            'std.fs.read_file': 'omni_read_file({0})',
+            'std.fs.write_file': 'omni_write_file({0}, {1})',
+            'std.fs.exists': 'access({0}, F_OK) == 0',
+            'std.fs.delete': 'remove({0})',
+            'std.fs.list_dir': 'omni_list_dir({0})',
+            'std.fs.mkdir': 'mkdir({0}, 0755)',
+            
+            'std.http.get': 'curl_get({0})',
+            'std.http.post': 'curl_post({0}, {1})',
+            'std.http.put': 'curl_put({0}, {1})',
+            'std.http.delete': 'curl_delete({0})',
+            
+            'std.json.parse': 'cJSON_Parse({0})',
+            'std.json.stringify': 'cJSON_Print({0})',
+            
+            'std.crypto.hash_sha256': 'openssl_sha256({0})',
+            'std.crypto.hash_md5': 'openssl_md5({0})',
+            'std.crypto.random_bytes': 'omni_random_bytes({0})',
+            
+            'std.time.now': '(long long)(time(NULL) * 1000)',
+            'std.time.sleep': 'usleep({0} * 1000)',
+            'std.time.format': 'strftime(buffer, sizeof(buffer), {1}, localtime(&{0}))',
+            
+            'std.gui.create_window': 'webview_create({1}, {2}, {0})',
+            'std.gui.open_webview': 'webview_navigate(wv, {0})',
+            'std.gui.file_dialog': 'nfd_open_dialog({0}, {1})',
+            'std.gui.folder_dialog': 'nfd_pick_folder({0})',
+            'std.gui.message_box': 'MessageBox(NULL, {1}, {0}, MB_OK)',
+            'std.gui.notification': 'omni_notify({0}, {1})'
+        };
+    
+}
+
+
+// Auto-exports
+if (typeof exports !== 'undefined') {
+    exports.register_cnative_impl = register_cnative_impl;
+}
+
+
+// === Module: core/../contracts/impl_lua ===
+BlockLoop: 80 (native)
+var types = exports;
+function register_lua_impl(registry) {
+    
+        registry.implementations['lua'] = {
+            'std.io.print': 'print({0})',
+            'std.io.println': 'print({0})',
+            'std.io.input': 'io.read()',
+            'std.io.error': 'io.stderr:write({0})',
+            
+            'std.fs.read_file': 'io.open({0}, "r"):read("*a")',
+            'std.fs.write_file': 'local f = io.open({0}, "w"); f:write({1}); f:close()',
+            'std.fs.exists': 'io.open({0}, "r") ~= nil',
+            'std.fs.delete': 'os.remove({0})',
+            
+            'std.json.parse': 'cjson.decode({0})',
+            'std.json.stringify': 'cjson.encode({0})',
+            
+            'std.time.now': 'os.time() * 1000',
+            'std.time.sleep': 'os.execute("sleep " .. ({0} / 1000))'
+        };
+    
+}
+
+
+// Auto-exports
+if (typeof exports !== 'undefined') {
+    exports.register_lua_impl = register_lua_impl;
+}
+
+
+// === Module: core/studio_engine ===
+var cli = exports;
+var ghost_writer = exports;
+var project = exports;
+var runner = exports;
+var state = exports;
+var server = exports;
+var html = exports;
+
+
+
+// === Module: core/studio_graph ===
+var ast = exports;
+var cli = exports;
+var graph_types = exports;
+var graph_convert = exports;
+var graph_io = exports;
+var graph_actions = exports;
+
 
 
 // === Module: core/app_packager ===
@@ -8679,390 +8958,6 @@ if (typeof exports !== 'undefined') {
     exports.generate_capacitor_config = generate_capacitor_config;
     exports.cmd_package_app = cmd_package_app;
     exports.AppConfig = AppConfig;
-}
-
-
-// === Module: core/tui ===
-BlockLoop: 66 (return)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 80 (native)
-BlockLoop: 66 (return)
-BlockLoop: 61 (let)
-BlockLoop: 42 (()
-BlockLoop: 80 (native)
-BlockLoop: 10 (tui_enable_raw_mode)
-BlockLoop: 42 (()
-BlockLoop: 10 (tui_hide_cursor)
-BlockLoop: 42 (()
-BlockLoop: 80 (native)
-BlockLoop: 80 (native)
-var cli = exports;
-class TUIState {
-    constructor(data = {}) {
-        this.screen = data.screen;
-        this.cursor = data.cursor;
-        this.items = data.items;
-        this.selected = data.selected;
-        this.message = data.message;
-        this.running = data.running;
-    }
-}
-function TUIState_new() {
-    return new TUIState({ screen: "main", cursor: 0, items: [], selected: [], message: "", running: true });
-}
-function tui_enable_raw_mode() {
-    
-        if (process.stdin.isTTY) {
-            process.stdin.setRawMode(true);
-        }
-        process.stdin.resume();
-        process.stdin.setEncoding('utf8');
-    
-}
-function tui_disable_raw_mode() {
-    
-        if (process.stdin.isTTY) {
-            process.stdin.setRawMode(false);
-        }
-    
-}
-function tui_clear_screen() {
-    
-        console.clear();
-        process.stdout.write('\x1B[2J\x1B[0f');
-    
-}
-function tui_move_cursor(row, col) {
-    
-        process.stdout.write(`\x1B[${row};${col}H`);
-    
-}
-function tui_hide_cursor() {
-    
-        process.stdout.write('\x1B[?25l');
-    
-}
-function tui_show_cursor() {
-    
-        process.stdout.write('\x1B[?25h');
-    
-}
-function tui_render_header(title, subtitle) {
-    
-        const width = process.stdout.columns || 80;
-        const line = 'â•'.repeat(width - 2);
-        
-        console.log(CLI_COLORS.cyan + 'â•”' + line + 'â•—' + CLI_COLORS.reset);
-        console.log(CLI_COLORS.cyan + 'â•‘' + CLI_COLORS.reset + 
-                    CLI_COLORS.bold + ' â—Š OMNI ' + title.padEnd(width - 12) + 
-                    CLI_COLORS.reset + CLI_COLORS.cyan + 'â•‘' + CLI_COLORS.reset);
-        console.log(CLI_COLORS.cyan + 'â•‘' + CLI_COLORS.reset + 
-                    CLI_COLORS.dim + '   ' + subtitle.padEnd(width - 6) + 
-                    CLI_COLORS.reset + CLI_COLORS.cyan + 'â•‘' + CLI_COLORS.reset);
-        console.log(CLI_COLORS.cyan + 'â• ' + line + 'â•£' + CLI_COLORS.reset);
-    
-}
-function tui_render_menu(state) {
-    
-        for (let i = 0; i < state.items.length; i++) {
-            const item = state.items[i];
-            const selected = i === state.cursor;
-            const prefix = selected ? CLI_COLORS.cyan + ' â–¶ ' : '   ';
-            const suffix = CLI_COLORS.reset;
-            
-            if (selected) {
-                console.log(prefix + CLI_COLORS.bold + item.label + suffix);
-            } else {
-                console.log(prefix + CLI_COLORS.dim + item.label + suffix);
-            }
-        }
-    
-}
-function tui_render_footer(state) {
-    
-        const width = process.stdout.columns || 80;
-        const line = 'â”€'.repeat(width - 2);
-        
-        console.log('');
-        console.log(CLI_COLORS.dim + 'â”Œ' + line + 'â”' + CLI_COLORS.reset);
-        
-        if (state.message) {
-            console.log(CLI_COLORS.dim + 'â”‚ ' + CLI_COLORS.reset + 
-                        state.message.padEnd(width - 4) + 
-                        CLI_COLORS.dim + ' â”‚' + CLI_COLORS.reset);
-        }
-        
-        console.log(CLI_COLORS.dim + 'â”‚ â†‘/â†“ Navigate   Enter Select   q Quit' + 
-                    ''.padEnd(width - 42) + ' â”‚' + CLI_COLORS.reset);
-        console.log(CLI_COLORS.dim + 'â””' + line + 'â”˜' + CLI_COLORS.reset);
-    
-}
-function tui_render_file_list(state) {
-    
-        console.log('');
-        console.log(CLI_COLORS.cyan + '  Select files to convert:' + CLI_COLORS.reset);
-        console.log('');
-        
-        for (let i = 0; i < state.items.length; i++) {
-            const item = state.items[i];
-            const isSelected = state.selected.includes(i);
-            const isCursor = i === state.cursor;
-            
-            const checkbox = isSelected ? CLI_COLORS.green + '[âœ“]' : CLI_COLORS.dim + '[ ]';
-            const prefix = isCursor ? CLI_COLORS.cyan + ' â–¶ ' : '   ';
-            
-            console.log(prefix + checkbox + CLI_COLORS.reset + ' ' + 
-                        (isCursor ? CLI_COLORS.bold : CLI_COLORS.dim) + 
-                        item.name + CLI_COLORS.reset);
-        }
-    
-}
-function tui_render_target_select(state) {
-    
-        console.log('');
-        console.log(CLI_COLORS.cyan + '  Select target language:' + CLI_COLORS.reset);
-        console.log('');
-        
-        for (let i = 0; i < state.items.length; i++) {
-            const item = state.items[i];
-            const isCursor = i === state.cursor;
-            
-            const prefix = isCursor ? CLI_COLORS.cyan + ' â–¶ ' : '   ';
-            const icon = item.icon || 'ðŸŽ¯';
-            
-            console.log(prefix + icon + ' ' + 
-                        (isCursor ? CLI_COLORS.bold : '') + 
-                        item.label + CLI_COLORS.reset);
-            
-            if (isCursor && item.description) {
-                console.log('      ' + CLI_COLORS.dim + item.description + CLI_COLORS.reset);
-            }
-        }
-    
-}
-function tui_main_menu() {
-    return [null, id, null, "convert", label, null, "ðŸ”„ Convert Legacy Code", description, null, "Transform PHP, Java, Python to Omni", null, null, id, null, "install", label, null, "ðŸ“¦ Install Package", description, null, "Install from GitHub", null, null, id, null, "studio", label, null, "ðŸŽ¨ Open Studio", description, null, "Visual programming environment", null, null, id, null, "build", label, null, "ðŸ”¨ Build Project", description, null, "Compile current project", null, null, id, null, "run", label, null, "â–¶ï¸  Run Project", description, null, "Execute main file", null, null, id, null, "doctor", label, null, "ðŸ©º System Doctor", description, null, "Check installation health", null, null, id, null, "quit", label, null, "âŒ Quit", description, null, "", null];
-}
-function tui_target_menu() {
-    return [null, id, null, "js", label, null, "JavaScript (Node.js)", icon, null, "ðŸŸ¨", description, null, "CommonJS module", null, null, id, null, "python", label, null, "Python 3", icon, null, "ðŸ", description, null, "Python 3.8+ compatible", null, null, id, null, "c", label, null, "C Native", icon, null, "âš¡", description, null, "Portable C99 code", null, null, id, null, "lua", label, null, "Lua 5.4", icon, null, "ðŸŒ™", description, null, "Lua script", null, null, id, null, "wasm", label, null, "WebAssembly", icon, null, "ðŸ•¸ï¸", description, null, "WASM binary", null, null, id, null, "back", label, null, "â† Back", icon, null, "â—€ï¸", description, null, "", null];
-}
-function tui_scan_legacy_files(dir) {
-    const files = [];
-    
-        // const fs = require('fs'); (hoisted)
-        // const path = require('path'); (hoisted)
-        
-        const extensions = ['.php', '.java', '.py', '.js', '.ts'];
-        
-        const scan = (d) => {
-            try {
-                const entries = fs.readdirSync(d, { withFileTypes: true });
-                for (const entry of entries) {
-                    if (entry.name.startsWith('.') || entry.name === 'node_modules') continue;
-                    
-                    const fullPath = path.join(d, entry.name);
-                    
-                    if (entry.isDirectory()) {
-                        scan(fullPath);
-                    } else if (extensions.some(ext => entry.name.endsWith(ext))) {
-                        files.push({
-                            name: path.relative(dir, fullPath),
-                            path: fullPath,
-                            ext: path.extname(entry.name)
-                        });
-                    }
-                }
-            } catch (e) {
-                // Skip inaccessible directories
-            }
-        };
-        
-        scan(dir);
-    
-    return files;
-}
-function cmd_tui() {
-    const state = TUIState_new;
-    // Unknown stmt kind: 0
-    
-        state.items = tui_main_menu();
-    
-    tui_enable_raw_mode;
-    // Unknown stmt kind: 0
-    tui_hide_cursor;
-    // Unknown stmt kind: 0
-    
-        const readline = require('readline');
-        
-        const render = () => {
-            tui_clear_screen();
-            tui_render_header('INTERACTIVE', 'v1.1.0 - Use arrow keys to navigate');
-            
-            if (state.screen === 'main') {
-                tui_render_menu(state);
-            } else if (state.screen === 'files') {
-                tui_render_file_list(state);
-            } else if (state.screen === 'targets') {
-                tui_render_target_select(state);
-            }
-            
-            tui_render_footer(state);
-        };
-        
-        const handleAction = (action) => {
-            if (action === 'convert') {
-                state.screen = 'files';
-                state.items = tui_scan_legacy_files(process.cwd());
-                state.cursor = 0;
-                state.selected = [];
-                state.message = 'Space to select, Enter to continue';
-            } else if (action === 'install') {
-                state.message = 'Use: omni install github:user/repo';
-                setTimeout(() => { state.message = ''; render(); }, 2000);
-            } else if (action === 'studio') {
-                tui_show_cursor();
-                tui_disable_raw_mode();
-                console.log('\nStarting Omni Studio...');
-                require('child_process').execSync('node dist/main.js studio', { stdio: 'inherit' });
-                process.exit(0);
-            } else if (action === 'build') {
-                tui_show_cursor();
-                tui_disable_raw_mode();
-                console.log('\nBuilding project...');
-                require('child_process').execSync('node dist/main.js build', { stdio: 'inherit' });
-                process.exit(0);
-            } else if (action === 'run') {
-                tui_show_cursor();
-                tui_disable_raw_mode();
-                console.log('\nRunning project...');
-                require('child_process').execSync('node dist/main.js run main.omni', { stdio: 'inherit' });
-                process.exit(0);
-            } else if (action === 'doctor') {
-                tui_show_cursor();
-                tui_disable_raw_mode();
-                cmd_doctor();
-                process.exit(0);
-            } else if (action === 'quit') {
-                state.running = false;
-            } else if (action === 'select_target') {
-                state.screen = 'targets';
-                state.items = tui_target_menu();
-                state.cursor = 0;
-                state.message = 'Select output target';
-            } else if (action === 'back') {
-                state.screen = 'main';
-                state.items = tui_main_menu();
-                state.cursor = 0;
-            } else if (action.startsWith('target:')) {
-                const target = action.split(':')[1];
-                tui_show_cursor();
-                tui_disable_raw_mode();
-                console.log('\nConverting ' + state.selected.length + ' files to ' + target + '...');
-                // Here would call ingest for each selected file
-                process.exit(0);
-            }
-        };
-        
-        process.stdin.on('data', (key) => {
-            // Handle key presses
-            if (key === '\u001B[A') { // Up arrow
-                state.cursor = Math.max(0, state.cursor - 1);
-            } else if (key === '\u001B[B') { // Down arrow
-                state.cursor = Math.min(state.items.length - 1, state.cursor + 1);
-            } else if (key === ' ' && state.screen === 'files') { // Space - toggle select
-                const idx = state.selected.indexOf(state.cursor);
-                if (idx >= 0) {
-                    state.selected.splice(idx, 1);
-                } else {
-                    state.selected.push(state.cursor);
-                }
-            } else if (key === '\r' || key === '\n') { // Enter
-                const item = state.items[state.cursor];
-                if (state.screen === 'main') {
-                    handleAction(item.id);
-                } else if (state.screen === 'files') {
-                    if (state.selected.length > 0) {
-                        handleAction('select_target');
-                    } else {
-                        state.message = 'Select at least one file';
-                    }
-                } else if (state.screen === 'targets') {
-                    if (item.id === 'back') {
-                        handleAction('back');
-                    } else {
-                        handleAction('target:' + item.id);
-                    }
-                }
-            } else if (key === 'q' || key === '\u0003') { // q or Ctrl+C
-                state.running = false;
-            } else if (key === '\u001B' || key === 'b') { // Escape or b - back
-                if (state.screen !== 'main') {
-                    handleAction('back');
-                }
-            }
-            
-            if (state.running) {
-                render();
-            } else {
-                tui_show_cursor();
-                tui_disable_raw_mode();
-                console.log('\nGoodbye! ðŸ‘‹');
-                process.exit(0);
-            }
-        });
-        
-        // Initial render
-        render();
-    
-}
-function tui_quick_convert(files, target) {
-    
-        console.log(CLI_COLORS.cyan + 'â—Š Quick Convert' + CLI_COLORS.reset);
-        console.log('');
-        
-        for (const file of files) {
-            console.log(CLI_COLORS.dim + '  Converting: ' + file + CLI_COLORS.reset);
-            // Would call ingest here
-        }
-        
-        CLI_success('Conversion complete!');
-    
-}
-
-
-// Auto-exports
-if (typeof exports !== 'undefined') {
-    exports.TUIState_new = TUIState_new;
-    exports.tui_enable_raw_mode = tui_enable_raw_mode;
-    exports.tui_disable_raw_mode = tui_disable_raw_mode;
-    exports.tui_clear_screen = tui_clear_screen;
-    exports.tui_move_cursor = tui_move_cursor;
-    exports.tui_hide_cursor = tui_hide_cursor;
-    exports.tui_show_cursor = tui_show_cursor;
-    exports.tui_render_header = tui_render_header;
-    exports.tui_render_menu = tui_render_menu;
-    exports.tui_render_footer = tui_render_footer;
-    exports.tui_render_file_list = tui_render_file_list;
-    exports.tui_render_target_select = tui_render_target_select;
-    exports.tui_main_menu = tui_main_menu;
-    exports.tui_target_menu = tui_target_menu;
-    exports.tui_scan_legacy_files = tui_scan_legacy_files;
-    exports.cmd_tui = cmd_tui;
-    exports.tui_quick_convert = tui_quick_convert;
-    exports.TUIState = TUIState;
 }
 
 

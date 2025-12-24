@@ -1,0 +1,123 @@
+
+import "contracts/types.omni";
+import "contracts/interfaces.omni";
+import "contracts/impl_js.omni";
+import "contracts/impl_python.omni";
+import "contracts/impl_cnative.omni";
+import "contracts/impl_lua.omni";
+import "lib/cli.omni";
+
+// ============================================================================
+// CONTRACT REGISTRY
+// ============================================================================
+
+fn ContractRegistry_new() -> ContractRegistry {
+    let registry = ContractRegistry {
+        interfaces: {},
+        implementations: {},
+        active_target: "js"
+    };
+    
+    // Register Canonical Interfaces
+    register_std_interfaces(registry);
+    
+    // Register Implementations
+    register_js_impl(registry);
+    register_python_impl(registry);
+    register_cnative_impl(registry);
+    register_lua_impl(registry);
+    
+    return registry;
+}
+
+fn ContractRegistry_set_target(self: ContractRegistry, target: string) {
+    native "js" {
+        self.active_target = target;
+        // console.log("[contract] Active target: " + target);
+    }
+}
+
+fn ContractRegistry_resolve(self: ContractRegistry, contract_path: string, args: any) -> string {
+    let result = "";
+    
+    native "js" {
+        const impl = self.implementations[self.active_target];
+        if (!impl) {
+            result = "/* UNKNOWN TARGET: " + self.active_target + " */";
+            return;
+        }
+        
+        let template = impl[contract_path];
+        if (!template) {
+            // Fallback to JS implementation? No, that's dangerous if semantics differ.
+            // But preserving original behavior:
+            template = self.implementations['js'][contract_path];
+            if (!template) {
+                result = "/* UNIMPLEMENTED: " + contract_path + " */";
+                return;
+            }
+        }
+        
+        // Replace placeholders with arguments
+        result = template;
+        for (let i = 0; i < args.length; i++) {
+            result = result.replace(new RegExp('\\{' + i + '\\}', 'g'), args[i]);
+        }
+    }
+    
+    return result;
+}
+
+fn ContractRegistry_list_interfaces(self: ContractRegistry) {
+    native "js" {
+        console.log("\n┌─────────────────────────────────────────────────────────────┐");
+        console.log("│              CANONICAL INTERFACES (Hollow Core)             │");
+        console.log("├─────────────────────────────────────────────────────────────┤");
+        
+        for (const [name, iface] of Object.entries(self.interfaces)) {
+            const methodCount = Object.keys(iface.methods).length;
+            console.log("│ " + name.padEnd(20) + " │ " + 
+                        iface.category.padEnd(10) + " │ " +
+                        (methodCount + " methods").padEnd(15) + " │");
+        }
+        
+        console.log("└─────────────────────────────────────────────────────────────┘");
+    }
+}
+
+fn ContractRegistry_verify_target(self: ContractRegistry, target: string) -> bool {
+    let is_complete = true;
+    let missing = 0;
+    
+    native "js" {
+        const impl = self.implementations[target];
+        if (!impl) {
+            CLI_error("Target '" + target + "' has no implementations");
+            is_complete = false;
+            return;
+        }
+        
+        // Check all interfaces
+        for (const [ifaceName, iface] of Object.entries(self.interfaces)) {
+            for (const methodName of Object.keys(iface.methods)) {
+                const contractPath = ifaceName + '.' + methodName;
+                if (!impl[contractPath]) {
+                    missing++;
+                }
+            }
+        }
+        
+        if (missing > 0) {
+            CLI_warning("Target '" + target + "' has " + missing + " missing implementations");
+            is_complete = false;
+        }
+    }
+    
+    return is_complete;
+}
+
+// ============================================================================
+// GLOBAL REGISTRY INSTANCE
+// ============================================================================
+
+let GLOBAL_CONTRACTS = ContractRegistry_new();

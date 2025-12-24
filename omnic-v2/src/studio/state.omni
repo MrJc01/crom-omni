@@ -1,0 +1,128 @@
+
+// ============================================================================
+// GRAPH STATE - Visual Programming State
+// ============================================================================
+
+struct GraphNode {
+    id: string,
+    type: string,           // "function", "capsule", "entity", "flow", "condition"
+    name: string,
+    position: any,
+    ports: any,
+    attributes: any,
+    ast_ref: any
+}
+
+struct GraphEdge {
+    id: string,
+    source: any,
+    target: any,
+    edge_type: string       // "execution", "data", "dependency"
+}
+
+struct GraphState {
+    nodes: any,
+    edges: any,
+    selected: any,
+    viewport: any
+}
+
+fn GraphState_new() -> GraphState {
+    return GraphState {
+        nodes: [],
+        edges: [],
+        selected: [],
+        viewport: { x: 0, y: 0, zoom: 1 }
+    };
+}
+
+fn GraphState_from_ast(program: any) -> GraphState {
+    let state = GraphState_new();
+    
+    native "js" {
+        if (!program || !program.statements) return;
+        
+        let nodeId = 0;
+        let y = 50;
+        
+        for (const stmt of program.statements) {
+            const node = {
+                id: 'node_' + (++nodeId),
+                type: 'unknown',
+                name: stmt.name || 'anonymous',
+                position: { x: 100, y: y },
+                ports: { inputs: [], outputs: [] },
+                attributes: stmt.attributes || [],
+                ast_ref: { kind: stmt.kind, line: stmt.line || 0 }
+            };
+            
+            // Determine type
+            if (stmt.kind === 93) {
+                node.type = 'capsule';
+                node.position.x = 50;
+                
+                // Add flows as child nodes
+                for (const flow of (stmt.flows || [])) {
+                    y += 60;
+                    state.nodes.push({
+                        id: 'node_' + (++nodeId),
+                        type: 'flow',
+                        name: flow.name,
+                        position: { x: 150, y: y },
+                        ports: {
+                            inputs: (flow.params || []).map((p, i) => ({
+                                id: 'port_in_' + nodeId + '_' + i,
+                                name: typeof p === 'string' ? p : p.name,
+                                type: typeof p === 'object' ? p.type : 'any'
+                            })),
+                            outputs: [{
+                                id: 'port_out_' + nodeId,
+                                name: 'return',
+                                type: flow.return_type || 'void'
+                            }]
+                        },
+                        attributes: flow.attributes || [],
+                        ast_ref: { kind: 94, line: flow.line || 0 },
+                        parent: node.id
+                    });
+                }
+            } else if (stmt.kind === 70) {
+                node.type = 'entity';
+                node.ports.outputs = (stmt.fields || []).map((f, i) => ({
+                    id: 'port_field_' + nodeId + '_' + i,
+                    name: typeof f === 'string' ? f : f.name,
+                    type: typeof f === 'object' ? f.type : 'any'
+                }));
+            } else if (stmt.kind === 4) {
+                node.type = 'function';
+                node.ports.inputs = (stmt.params || []).map((p, i) => ({
+                    id: 'port_in_' + nodeId + '_' + i,
+                    name: typeof p === 'string' ? p : p.name,
+                    type: typeof p === 'object' ? p.type : 'any'
+                }));
+                node.ports.outputs = [{
+                    id: 'port_out_' + nodeId,
+                    name: 'return',
+                    type: stmt.return_type || 'void'
+                }];
+            }
+            
+            state.nodes.push(node);
+            y += 100;
+        }
+    }
+    
+    return state;
+}
+
+fn GraphState_to_json(self: GraphState) -> string {
+    let json = "";
+    native "js" {
+        json = JSON.stringify({
+            nodes: self.nodes,
+            edges: self.edges,
+            viewport: self.viewport
+        }, null, 2);
+    }
+    return json;
+}

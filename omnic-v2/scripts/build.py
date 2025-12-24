@@ -79,11 +79,14 @@ def main():
         pass
 
 
+
     # Create directories
     os.makedirs(os.path.join(DIST_DIR, "core"), exist_ok=True)
     os.makedirs(os.path.join(DIST_DIR, "core", "codegen"), exist_ok=True)
     os.makedirs(os.path.join(DIST_DIR, "lib"), exist_ok=True)
     os.makedirs(os.path.join(DIST_DIR, "commands"), exist_ok=True)
+    os.makedirs(os.path.join(DIST_DIR, "studio"), exist_ok=True)
+    os.makedirs(os.path.join(DIST_DIR, "contracts"), exist_ok=True)
 
     # Core
     print("Step 1: Compiling core modules...")
@@ -99,10 +102,54 @@ def main():
         "codegen/base", "codegen/js", "codegen/python", "codegen",
         "vm", "framework_adapter", "ingestion", "package_manager", 
         "contracts", "ghost_writer", "bootstrap", 
-        "studio_engine", "studio_graph", "app_packager", "tui"
+        "tui"
+    ]
+    
+    # Studio modules (compile to dist/studio/)
+    studio_modules = [
+        "project", "runner", "state", "html", "server",
+        "graph_types", "graph_convert", "graph_io", "graph_actions"
+    ]
+    
+    # Contract modules (compile to dist/contracts/)
+    contract_modules = [
+        "types", "interfaces", "registry",
+        "impl_js", "impl_python", "impl_cnative", "impl_lua"
     ]
 
     for mod in full_core_modules:
+        if compile_file(os.path.join(SRC_DIR, "core", f"{mod}.omni"), os.path.join(DIST_DIR, "core", f"{mod}.js"), auto_export=True):
+            compiled_core.append(mod)
+            
+    # Compiling Studio Submodules
+    print("Step 1.1: Compiling studio modules...")
+    for mod in studio_modules:
+        if compile_file(os.path.join(SRC_DIR, "studio", f"{mod}.omni"), os.path.join(DIST_DIR, "studio", f"{mod}.js"), auto_export=True):
+            compiled_core.append(f"../studio/{mod}") # Add to core bundle list? Or separate? 
+            # If main.js or other core modules require them via "studio/...", they need to be resolveable.
+            # In node, require("studio/project.omni") -> if we patch paths it works.
+            # But here "studio_engine.omni" imports "studio/project.omni".
+            # The compiler might resolve this relative to src?
+            # If I compile to dist/studio/project.js
+            # And dist/core/studio_engine.js requires "../studio/project.js"?
+            # Omni compiler handles imports by preserving path string usually?
+            # Let's see how `compile_file` works. It just runs the shim. 
+            pass
+            
+    # Compiling Contract Submodules
+    print("Step 1.2: Compiling contract modules...")
+    for mod in contract_modules:
+         if compile_file(os.path.join(SRC_DIR, "contracts", f"{mod}.omni"), os.path.join(DIST_DIR, "contracts", f"{mod}.js"), auto_export=True):
+            compiled_core.append(f"../contracts/{mod}")
+            pass
+
+    # Compile Facades (studio_engine, studio_graph) LAST so they can find dependencies if checked?
+    # Actually, they are in core/ so they are in full_core_modules list... wait, I removed them from list above.
+    # I replaced "studio_engine", "studio_graph" with "tui".
+    # I should add them back to full_core_modules.
+    
+    extra_core = ["studio_engine", "studio_graph", "app_packager"]
+    for mod in extra_core:
         if compile_file(os.path.join(SRC_DIR, "core", f"{mod}.omni"), os.path.join(DIST_DIR, "core", f"{mod}.js"), auto_export=True):
             compiled_core.append(mod)
 

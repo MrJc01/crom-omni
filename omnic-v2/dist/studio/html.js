@@ -1,0 +1,412 @@
+BlockLoop: 61 (let)
+BlockLoop: 80 (native)
+BlockLoop: 66 (return)
+const server = require("./studio/server.js");
+function generate_studio_html(server) {
+    const html = "";
+    
+        html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Omni Studio - ${server.project.name}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --border: #30363d;
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-green: #7ee787;
+            --accent-purple: #a371f7;
+            --accent-orange: #d29922;
+            --accent-red: #f85149;
+        }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .header {
+            background: var(--bg-secondary);
+            padding: 10px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .logo { font-weight: bold; font-size: 18px; color: var(--accent-blue); }
+        .project-info { color: var(--text-secondary); font-size: 14px; }
+        .header-actions { margin-left: auto; display: flex; gap: 8px; }
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-primary { background: #238636; color: white; }
+        .btn-primary:hover { background: #2ea043; }
+        .btn-secondary { background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border); }
+        .btn-danger { background: #da3633; color: white; }
+        
+        .main { flex: 1; display: flex; overflow: hidden; }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar-section { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+        .sidebar-title { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px; }
+        .sidebar-item {
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 2px;
+        }
+        .sidebar-item:hover { background: var(--bg-tertiary); }
+        .sidebar-item.active { background: var(--bg-tertiary); color: var(--accent-blue); }
+        
+        /* Node Palette */
+        .node-palette { flex: 1; overflow-y: auto; }
+        .palette-node {
+            padding: 10px 12px;
+            margin: 4px 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: grab;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .palette-node:hover { border-color: var(--accent-blue); }
+        .palette-node[data-type="capsule"] { border-left: 3px solid var(--accent-blue); }
+        .palette-node[data-type="flow"] { border-left: 3px solid var(--accent-purple); }
+        .palette-node[data-type="function"] { border-left: 3px solid var(--accent-orange); }
+        .palette-node[data-type="entity"] { border-left: 3px solid var(--accent-green); }
+        .palette-node[data-type="3d"] { border-left: 3px solid #ff6b6b; }
+        
+        /* Workspace */
+        .workspace { flex: 1; display: flex; flex-direction: column; }
+        .tabs { background: var(--bg-secondary); padding: 0 16px; display: flex; gap: 0; border-bottom: 1px solid var(--border); }
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            font-size: 13px;
+            border-bottom: 2px solid transparent;
+            color: var(--text-secondary);
+        }
+        .tab:hover { color: var(--text-primary); }
+        .tab.active { color: var(--accent-blue); border-bottom-color: var(--accent-blue); }
+        
+        /* Canvas */
+        .canvas-container { flex: 1; position: relative; overflow: hidden; }
+        #canvas {
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(var(--bg-primary) 1px, transparent 1px),
+                linear-gradient(90deg, var(--bg-primary) 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-color: #010409;
+            position: relative;
+        }
+        
+        /* Visual Nodes */
+        .vnode {
+            position: absolute;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            min-width: 180px;
+            cursor: move;
+            user-select: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .vnode.selected { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(88,166,255,0.3); }
+        .vnode.capsule { border-color: var(--accent-blue); }
+        .vnode.flow { border-color: var(--accent-purple); }
+        .vnode.function { border-color: var(--accent-orange); }
+        .vnode.entity { border-color: var(--accent-green); }
+        .vnode-header {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .vnode-type { font-size: 9px; text-transform: uppercase; color: var(--text-secondary); }
+        .vnode-title { font-weight: 600; font-size: 13px; }
+        .vnode-body { padding: 8px 12px; font-size: 12px; }
+        .vnode-port {
+            padding: 4px 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .port-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--border);
+            border: 2px solid var(--bg-tertiary);
+        }
+        .port-in .port-dot { background: var(--accent-green); }
+        .port-out .port-dot { background: var(--accent-orange); }
+        
+        /* Editor Panel */
+        .editor-panel { display: none; height: 100%; }
+        .editor-panel.active { display: flex; flex-direction: column; }
+        #code-editor {
+            flex: 1;
+            background: var(--bg-primary);
+            padding: 16px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            overflow: auto;
+            white-space: pre;
+            color: var(--text-primary);
+        }
+        
+        /* Terminal Panel */
+        .terminal-container {
+            height: 200px;
+            background: #010409;
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+        .terminal-tabs { display: flex; gap: 0; background: var(--bg-secondary); }
+        .terminal-tab {
+            padding: 8px 16px;
+            font-size: 12px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            border-right: 1px solid var(--border);
+        }
+        .terminal-tab.active { background: #010409; color: var(--accent-green); }
+        .terminal-tab .status { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-left: 6px; }
+        .terminal-tab .status.running { background: var(--accent-green); }
+        .terminal-tab .status.stopped { background: var(--text-secondary); }
+        #terminal-output {
+            flex: 1;
+            padding: 12px;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .terminal-line { padding: 2px 0; }
+        .terminal-line.info { color: var(--accent-blue); }
+        .terminal-line.success { color: var(--accent-green); }
+        .terminal-line.error { color: var(--accent-red); }
+        .terminal-line.warning { color: var(--accent-orange); }
+        
+        /* Right Panel - Cross-Runner */
+        .right-panel {
+            width: 280px;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+        }
+        .runner-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .runner-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        .runner-name { font-weight: 600; font-size: 13px; }
+        .runner-status { font-size: 11px; padding: 2px 8px; border-radius: 4px; }
+        .runner-status.running { background: rgba(126,231,135,0.2); color: var(--accent-green); }
+        .runner-status.stopped { background: rgba(139,148,158,0.2); color: var(--text-secondary); }
+        .runner-cmd { font-size: 11px; color: var(--text-secondary); font-family: monospace; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">◊ OMNI STUDIO</div>
+        <div class="project-info">${server.project.name} <span style="color:var(--text-secondary)">(${server.project.type})</span></div>
+        <div class="header-actions">
+            <button class="btn btn-secondary" onclick="saveProject()">💾 Save</button>
+            <button class="btn btn-primary" onclick="runProject()">▶ Run</button>
+            <button class="btn btn-secondary" onclick="buildProject()">📦 Build</button>
+            <button class="btn btn-secondary" onclick="openPreview()">🌐 Preview</button>
+        </div>
+    </div>
+    
+    <div class="main">
+        <!-- Left Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">Explorer</div>
+                <div class="sidebar-item" onclick="loadFile('main.omni')">📄 main.omni</div>
+                <div class="sidebar-item" onclick="loadFile('omni.config.json')">⚙️ omni.config.json</div>
+            </div>
+            
+            <div class="sidebar-section">
+                <div class="sidebar-title">Node Palette</div>
+            </div>
+            
+            <div class="node-palette">
+                <div class="palette-node" data-type="capsule" draggable="true">📦 Capsule</div>
+                <div class="palette-node" data-type="flow" draggable="true">⚡ Flow</div>
+                <div class="palette-node" data-type="function" draggable="true">ƒ Function</div>
+                <div class="palette-node" data-type="entity" draggable="true">📋 Entity</div>
+                <div class="palette-node" data-type="3d" draggable="true">🎮 3D Scene</div>
+                <div class="palette-node" data-type="3d" draggable="true">🧊 3D Cube</div>
+                <div class="palette-node" data-type="3d" draggable="true">🔵 3D Sphere</div>
+                <div class="palette-node" data-type="3d" draggable="true">💡 3D Light</div>
+            </div>
+            
+            <div class="sidebar-section">
+                <div class="sidebar-title">Packages</div>
+                <div class="sidebar-item" onclick="showPackages()">📦 Browse Registry</div>
+            </div>
+        </div>
+        
+        <!-- Workspace -->
+        <div class="workspace">
+            <div class="tabs">
+                <div class="tab active" data-panel="graph" onclick="switchTab('graph')">🔗 Graph</div>
+                <div class="tab" data-panel="editor" onclick="switchTab('editor')">📝 Editor</div>
+                <div class="tab" data-panel="preview" onclick="switchTab('preview')">👁 Preview</div>
+            </div>
+            
+            <div class="canvas-container">
+                <div id="canvas"></div>
+                <div class="editor-panel" id="editor-panel">
+                    <div id="code-editor" contenteditable="true"></div>
+                </div>
+                <div class="editor-panel" id="preview-panel">
+                    <iframe id="preview-frame" style="width:100%;height:100%;border:none;background:#fff"></iframe>
+                </div>
+            </div>
+            
+            <div class="terminal-container">
+                <div class="terminal-tabs">
+                    <div class="terminal-tab active">Output <span class="status running"></span></div>
+                    <div class="terminal-tab">Problems</div>
+                    <div class="terminal-tab">Debug</div>
+                </div>
+                <div id="terminal-output">
+                    <div class="terminal-line info">◊ Omni Studio v1.1.0</div>
+                    <div class="terminal-line">Project: ${server.project.name}</div>
+                    <div class="terminal-line">Ready to run: ${server.project.run_command}</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Panel - Cross-Runner -->
+        <div class="right-panel">
+            <div class="sidebar-section">
+                <div class="sidebar-title">Cross-Runner</div>
+            </div>
+            
+            <div class="runner-item">
+                <div class="runner-header">
+                    <span class="runner-name">Main Process</span>
+                    <span class="runner-status stopped">Stopped</span>
+                </div>
+                <div class="runner-cmd">${server.project.run_command}</div>
+            </div>
+            
+            <div class="runner-item">
+                <div class="runner-header">
+                    <span class="runner-name">Dev Server</span>
+                    <span class="runner-status stopped">Stopped</span>
+                </div>
+                <div class="runner-cmd">${server.project.dev_command}</div>
+            </div>
+            
+            <div class="sidebar-section" style="margin-top:auto">
+                <button class="btn btn-secondary" style="width:100%" onclick="packageApp('windows')">📦 Package Windows</button>
+                <button class="btn btn-secondary" style="width:100%;margin-top:8px" onclick="packageApp('android')">📱 Package Android</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let nodes = [];
+        let selectedNode = null;
+        let dragNode = null;
+        let dragOffset = { x: 0, y: 0 };
+        let codeContent = '';
+        
+        // Load initial graph
+        async function loadGraph() {
+            const res = await fetch('/api/graph');
+            const graph = await res.json();
+            nodes = graph.nodes || [];
+            renderNodes();
+        }
+        
+        function renderNodes() {
+            const canvas = document.getElementById('canvas');
+            canvas.innerHTML = '';
+            
+            for (const node of nodes) {
+                const el = document.createElement('div');
+                el.className = 'vnode ' + node.type;
+                el.dataset.id = node.id;
+                el.style.left = (node.position?.x || 100) + 'px';
+                el.style.top = (node.position?.y || 100) + 'px';
+                
+                let portsHtml = '';
+                if (node.ports?.inputs?.length) {
+                    portsHtml += node.ports.inputs.map(p => 
+                        '<div class="vnode-port port-in"><span class="port-dot"></span> ' + p.name + ': ' + p.type + '</div>'
+                    ).join('');
+                }
+                
+                // Add output ports and rest of rendering logic here...
+                // (Truncated for brevity in split)
+                
+                el.innerHTML = \`
+                    <div class="vnode-header">
+                        <span class="vnode-type">\${node.type}</span>
+                        <span class="vnode-title">\${node.name}</span>
+                    </div>
+                    <div class="vnode-body">
+                        \${portsHtml}
+                    </div>
+                \`;
+                
+                canvas.appendChild(el);
+            }
+        }
+        
+        loadGraph();
+    </script>
+</body>
+</html>`;
+    
+    return html;
+}
+
+
+// Auto-exports
+if (typeof exports !== 'undefined') {
+    exports.generate_studio_html = generate_studio_html;
+}
