@@ -38,6 +38,16 @@ fn Parser_parse_program(p: Parser) -> Program {
 }
 
 fn Parser_parse_statement(p: Parser) -> any {
+    if (p.cur_token.kind == 95) { // TOKEN_AT
+        let decorators = [];
+        while (p.cur_token.kind == 95) {
+             native "js" { decorators.push(Parser_parse_decorator(p)); }
+        }
+        let stmt = Parser_parse_statement(p);
+        native "js" { if (stmt) stmt.decorators = decorators; }
+        return stmt;
+    }
+
     if (p.cur_token.kind == 92) { // TOKEN_EXPORT
         Parser_next_token(p); // consume 'export'
         let stmt = Parser_parse_statement(p);
@@ -162,7 +172,7 @@ fn Parser_parse_fn(p: Parser) -> FunctionDecl {
     }
     
     let body = Parser_parse_block(p);
-    return FunctionDecl { kind: NODE_FUNCTION, name: name, params: params, body: body, is_exported: false };
+    return FunctionDecl { kind: NODE_FUNCTION, name: name, params: params, body: body, is_exported: false, decorators: [] };
 }
 
 fn Parser_parse_struct(p: Parser) -> StructDecl {
@@ -192,7 +202,7 @@ fn Parser_parse_struct(p: Parser) -> StructDecl {
     }
     Parser_next_token(p); // consume }
     
-    return StructDecl { kind: NODE_STRUCT, name: name, fields: fields, is_exported: false };
+    return StructDecl { kind: NODE_STRUCT, name: name, fields: fields, is_exported: false, decorators: [] };
 }
 
 fn Parser_parse_native_block(p: Parser) -> NativeStmt {
@@ -477,4 +487,45 @@ fn Parser_parse_while(p: Parser) -> any {
     let cond = Parser_parse_expression(p);
     let body = Parser_parse_block(p);
     return WhileStmt { kind: NODE_WHILE, condition: cond, body: body };
+}
+
+fn Parser_parse_decorator(p: Parser) -> Decorator {
+    Parser_next_token(p); // skip @
+    let name = p.cur_token.lexeme;
+    Parser_next_token(p); // skip name
+    
+    let args = [];
+    if (p.cur_token.kind == TOKEN_LPAREN) {
+        Parser_next_token(p); // skip (
+        while (p.cur_token.kind != TOKEN_RPAREN && p.cur_token.kind != TOKEN_EOF) {
+             let arg_name = "";
+             let arg_val: any = 0;
+             
+             // Check for named arg: name = val
+             let is_named = false;
+             if (p.cur_token.kind == TOKEN_IDENTIFIER) {
+                 if (p.peek_token.kind == TOKEN_ASSIGN) {
+                      is_named = true;
+                 }
+             }
+
+             if (is_named) {
+                  arg_name = p.cur_token.lexeme;
+                  Parser_next_token(p); // skip name
+                  Parser_next_token(p); // skip =
+                  arg_val = Parser_parse_expression(p);
+             } else {
+                  arg_val = Parser_parse_expression(p);
+             }
+             
+             let field = StructInitField { name: arg_name, value: arg_val };
+             native "js" { args.push(field); }
+             
+             if (p.cur_token.kind == TOKEN_COMMA) {
+                 Parser_next_token(p);
+             }
+        }
+        Parser_next_token(p); // skip )
+    }
+    return Decorator { name: name, args: args };
 }

@@ -46,48 +46,33 @@ fn main() {
         print("O futuro chegou.");
     }
 }
-
 ```
 
-Compile e rode instantaneamente:
+Rode instantaneamente com o comando `run`:
 
 ```bash
-omnic build hello.omni --target python
-# Gera: dist/hello.py
+# Executa direto na VM (Simulada via Node.js)
+./omni run hello.omni
 
+# Ou inicie o modo visual (web)
+./omni run hello.omni --web
+
+# Ou simule um App Desktop (janela nativa)
+./omni run hello.omni --app
 ```
 
-### 2. O Modo Projeto (Power User)
-
-Para projetos reais, use o `omni.config.json`.
-
-```json
-{
-  "project": { "name": "SistemaSolar", "version": "1.0" },
-  "targets": {
-    "servidor": {
-      "format": "python",
-      "output": "dist/bin",
-      "source": "src/main.omni",
-      "bundle": true
-    }
-  }
-}
-```
-
-Rode o build:
+Compile para JavaScript:
 
 ```bash
-omnic build
-
+./omni compile hello.omni hello.js --target js
 ```
 
-Isso gerará um arquivo executável:
+### 2. O Modo Projeto
+
+Para ver a lista completa de comandos e opções da nova CLI v1.2.0:
 
 ```bash
-./dist/bin/servidor.run
-# Saída: "Olá, Omni!..."
-
+./omni --help
 ```
 
 ## 🏗️ Arquitetura

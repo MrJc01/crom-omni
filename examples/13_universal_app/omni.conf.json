@@ -1,0 +1,7 @@
+{
+  "name": "UniversalApp",
+  "version": "1.0.0",
+  "targets": ["web", "app"],
+  "entry": "src/main.omni",
+  "assets": "assets/"
+}

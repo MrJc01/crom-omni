@@ -372,3 +372,14 @@ script:
         CLI_info("Available targets: windows, android, linux");
 }
 
+
+// Auto-exports
+if (typeof exports !== 'undefined') {
+    exports.AppConfig_default = AppConfig_default;
+    exports.detect_platform = detect_platform;
+    exports.detect_build_tools = detect_build_tools;
+    exports.generate_tauri_config = generate_tauri_config;
+    exports.generate_capacitor_config = generate_capacitor_config;
+    exports.cmd_package_app = cmd_package_app;
+    exports.AppConfig = AppConfig;
+}

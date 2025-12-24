@@ -32,5 +32,10 @@ const fs = require("fs");
 }
 
 
-module.exports = { print, read_file, write_file };
 
+// Auto-exports
+if (typeof exports !== 'undefined') {
+    exports.print = print;
+    exports.read_file = read_file;
+    exports.write_file = write_file;
+}

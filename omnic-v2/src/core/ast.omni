@@ -99,7 +99,8 @@ struct FunctionDecl {
     name: string,
     params: any,
     body: any,
-    is_exported: bool
+    is_exported: bool,
+    decorators: any // List<Decorator>
 }
 
 struct Block {
@@ -137,12 +138,18 @@ struct StructDecl {
     kind: i64,
     name: string,
     fields: any,
-    is_exported: bool
+    is_exported: bool,
+    decorators: any // List<Decorator>
 }
 
 struct StructField {
     name: string,
     typename: string
+}
+
+struct Decorator {
+    name: string,
+    args: any // List<KeyValue> or List<Expr>? For now keeping it simple: List<StructInitField>
 }
 
 // Helper para instanciar struct field

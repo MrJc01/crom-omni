@@ -1,0 +1,12 @@
+// ============================================================================
+// STD/CORE.omni - Standard Core Library
+// ============================================================================
+// Provides basic, cross-platform utilities.
+
+fn print(msg: string) {
+    native "js" { console.log(msg); }
+    native "python" { 
+        import sys
+        sys.stdout.write(str(msg) + '\n') 
+    }
+}

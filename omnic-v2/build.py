@@ -1,0 +1,168 @@
+
+import os
+import subprocess
+import sys
+
+# Configuration
+OMNIC_PATH = os.path.join("..", "omnic", "target", "release", "omnic.exe")
+SRC_DIR = "src"
+DIST_DIR = "dist"
+CORE_MODULES = [
+    "token", "lexer", "parser", "ast", "codegen",
+    "vm", "framework_adapter", "ingestion", "package_manager", 
+    "contracts", "ghost_writer", "bootstrap", 
+    "studio_engine", "studio_graph", "app_packager", "tui"
+]
+LIB_MODULES = ["std", "cli"]
+
+import re
+
+def compile_file(src, dest, auto_export=False):
+    print(f"  Compiling: {src}")
+    try:
+        # Capture output to avoid clutter, unless error
+        cmd = ["node", "compile_shim.js", "build", "--target", "js", src]
+        result = subprocess.run(cmd, capture_output=True, text=True, encoding='utf-8', errors='replace')
+        if result.returncode != 0:
+            print(f"Error compiling {src}:")
+            print(result.stderr)
+            print(result.stdout)
+            return False
+        
+        content = result.stdout
+        
+        if auto_export:
+            # Simple regex to find top-level declarations
+            # This is heuristic but should work for core modules
+            
+            with open(src, "r", encoding="utf-8") as s:
+                src_content = s.read()
+            
+            exports = []
+            
+            # Find functions: fn Name
+            funcs = re.findall(r'^fn\s+(\w+)\s*\(', src_content, re.MULTILINE)
+            exports.extend(funcs)
+            
+            # Find structs: struct Name
+            structs = re.findall(r'^struct\s+(\w+)', src_content, re.MULTILINE)
+            exports.extend(structs)
+            
+            # Find let constants: let Name =
+            lets = re.findall(r'^let\s+(\w+)\s*=', src_content, re.MULTILINE)
+            exports.extend(lets)
+            
+            if exports:
+                export_code = "\n// Auto-exports\nif (typeof exports !== 'undefined') {\n"
+                for name in exports:
+                    # Filter internal names?
+                    export_code += f"    exports.{name} = {name};\n"
+                export_code += "}\n"
+                content += export_code
+        
+        with open(dest, "w", encoding="utf-8") as f:
+            f.write(content)
+        return True
+    except Exception as e:
+        print(f"Error executing omnic: {e}")
+        return False
+
+def main():
+    if not os.path.exists(OMNIC_PATH):
+        print(f"Error: Rust compiler not found at {OMNIC_PATH}")
+        return
+
+    # Create directories
+    os.makedirs(os.path.join(DIST_DIR, "core"), exist_ok=True)
+    os.makedirs(os.path.join(DIST_DIR, "lib"), exist_ok=True)
+
+    # Core
+    print("Step 1: Compiling core modules (SKIPPED)...")
+    compiled_core = CORE_MODULES # Assume existing
+    # compiled_core = []
+    # for mod in CORE_MODULES:
+    #     if compile_file(os.path.join(SRC_DIR, "core", f"{mod}.omni"), os.path.join(DIST_DIR, "core", f"{mod}.js"), auto_export=True):
+    #         compiled_core.append(mod)
+
+    # Lib
+    print("Step 2: Compiling lib modules (SKIPPED)...")
+    compiled_lib = LIB_MODULES # Assume existing
+    # compiled_lib = []
+    # for mod in LIB_MODULES:
+    #     if compile_file(os.path.join(SRC_DIR, "lib", f"{mod}.omni"), os.path.join(DIST_DIR, "lib", f"{mod}.js"), auto_export=True):
+    #         compiled_lib.append(mod)
+
+    # Main
+    print("Step 3: Compiling main.omni (SKIPPED)...")
+    # compile_file(os.path.join(SRC_DIR, "main.omni"), os.path.join(DIST_DIR, "main.js"))
+
+    # Bundle
+    print("Step 4: Creating bundle...")
+    bundle_content = [
+        "// OMNI v1.2.0 - Unified Bundle",
+        "const OMNI = {};",
+        
+        # Hoist common Node.js modules to global scope to avoid collision
+        # Hoist common Node.js modules to global scope to avoid listening
+        "const fs = require('fs');",
+        "const path = require('path');",
+        "const os = require('os');",
+        "const child_process = require('child_process');",
+        "",
+        "var exports = module.exports; // Shared exports object",
+    ]
+
+    def process_module(mod_path):
+        with open(mod_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        
+        # Strip 'use strict'
+        content = content.replace("'use strict';", "")
+        
+        # Remove generated imports (const x = require('./x.js');)
+        # We assume dependencies are already loaded in scope due to order
+        # 1. Internal Modules: const token = require('./token.js') -> var token = exports;
+        content = re.sub(r"const (\w+) = require\(['\"](\./|\../).*?['\"]\);", r"var \1 = exports;", content)
+
+        # 2. Node Modules: const fs = require('fs') -> // const fs = ... (removed, used global)
+        content = re.sub(r"const \w+ = require\(['\"](fs|path|os|child_process)['\"]\);", r"// \g<0> (hoisted)", content)
+        
+        # 3. Remove module.exports assignment (generated by codegen)
+        content = re.sub(r"module\.exports\s*=\s*\{[^}]*\};?", "", content)
+
+        return content
+
+    for mod in compiled_core:
+        bundle_content.append(f"\n// === Module: core/{mod} ===")
+        content = process_module(os.path.join(DIST_DIR, "core", f"{mod}.js"))
+        bundle_content.append(content)
+
+    for mod in compiled_lib:
+        bundle_content.append(f"\n// === Module: lib/{mod} ===")
+        content = process_module(os.path.join(DIST_DIR, "lib", f"{mod}.js"))
+        bundle_content.append(content)
+            
+    # Main Entry
+    if os.path.exists(os.path.join(DIST_DIR, "main.js")):
+        with open(os.path.join(DIST_DIR, "main.js"), "r", encoding="utf-8") as f:
+            bundle_content.append("\n// === Main Entry ===")
+            content = f.read().replace("'use strict';", "")
+            
+            # Apply same replacements
+            content = re.sub(r"const (\w+) = require\(['\"](\./|\../).*?['\"]\);", r"var \1 = exports;", content)
+            content = re.sub(r"const \w+ = require\(['\"](fs|path|os|child_process)['\"]\);", r"// \g<0> (hoisted)", content)
+            
+            bundle_content.append(content)
+
+    # Add footer to expose all exports globally
+    bundle_content.append("\n// Expose all exports globally")
+    bundle_content.append("if (typeof global !== 'undefined') Object.assign(global, exports);")
+    bundle_content.append("console.log('Bundle exports:', Object.keys(exports));") 
+    
+    with open(os.path.join(DIST_DIR, "omni_bundle.js"), "w", encoding="utf-8") as f:
+        f.write("\n".join(bundle_content))
+    
+    print("Build Complete.")
+
+if __name__ == "__main__":
+    main()

@@ -3,7 +3,6 @@
 
 const token = require('./token.js');
 
-
 function char_at(s, i) {
 if (i >= s.length) return "\0";
         return s.charAt(i);
@@ -29,7 +28,6 @@ class Lexer {
         this.ch = data.ch;
         this.line = data.line;
     }
-
 }
 
 function new_lexer(input) {
@@ -39,7 +37,7 @@ function new_lexer(input) {
 }
 
 function Lexer_read_char(l) {
-    if ((l.read_position >= 999999)) {
+    if (l.read_position >= 999999) {
     l.ch = "\0";
 }
  else {
@@ -53,7 +51,7 @@ is_eof = l.ch === "\0";
 }
  else {
     l.position = l.read_position;
-    l.read_position = (l.read_position + 1);
+    l.read_position = l.read_position + 1;
 }
 
 }
@@ -62,8 +60,8 @@ function Lexer_skip_whitespace(l) {
     let is_ws = false;
 is_ws = l.ch === ' ' || l.ch === '\t' || l.ch === '\n' || l.ch === '\r';
     while (is_ws) {
-    if ((l.ch === "\n")) {
-    l.line = (l.line + 1);
+    if (l.ch === "\n") {
+    l.line = l.line + 1;
 }
 
     Lexer_read_char(l);
@@ -74,7 +72,7 @@ is_ws = l.ch === ' ' || l.ch === '\t' || l.ch === '\n' || l.ch === '\r';
 
 function Lexer_read_identifier(l) {
     let start_pos = l.position;
-    while ((is_letter(l.ch) || is_digit(l.ch))) {
+    while (is_letter(l.ch) || is_digit(l.ch)) {
     Lexer_read_char(l);
 }
 
@@ -95,68 +93,56 @@ num_str = l.input.substring(Number(start_pos), Number(l.position));
 }
 
 function Lexer_lookup_ident(ident) {
-    if ((ident === "fn")) {
+    if (ident === "fn") {
     return TOKEN_FN;
 }
 
-    if ((ident === "let")) {
+    if (ident === "let") {
     return TOKEN_LET;
 }
 
-    if ((ident === "struct")) {
+    if (ident === "struct") {
     return TOKEN_STRUCT;
 }
 
-    if ((ident === "if")) {
+    if (ident === "if") {
     return TOKEN_IF;
 }
 
-    if ((ident === "else")) {
+    if (ident === "else") {
     return TOKEN_ELSE;
 }
 
-    if ((ident === "return")) {
+    if (ident === "return") {
     return TOKEN_RETURN;
 }
 
-    if ((ident === "true")) {
+    if (ident === "true") {
     return TOKEN_TRUE;
 }
 
-    if ((ident === "false")) {
+    if (ident === "false") {
     return TOKEN_FALSE;
 }
 
-    if ((ident === "native")) {
+    if (ident === "native") {
     return TOKEN_NATIVE;
 }
 
-    if ((ident === "import")) {
+    if (ident === "import") {
     return 90;
 }
 
-    if ((ident === "package")) {
+    if (ident === "package") {
     return 91;
 }
 
-    if ((ident === "export")) {
+    if (ident === "export") {
     return 92;
 }
 
-    if ((ident === "while")) {
+    if (ident === "while") {
     return TOKEN_WHILE;
-}
-
-    if ((ident === "capsule")) {
-    return TOKEN_CAPSULE;
-}
-
-    if ((ident === "flow")) {
-    return TOKEN_FLOW;
-}
-
-    if ((ident === "entity")) {
-    return TOKEN_ENTITY;
 }
 
     return TOKEN_IDENTIFIER;
@@ -164,19 +150,29 @@ function Lexer_lookup_ident(ident) {
 
 function Lexer_next_token(l) {
     Lexer_skip_whitespace(l);
+    if (l.ch === "/") {
+    let peek = char_at(l.input, l.read_position);
+    if (peek === "/") {
+    while (l.ch !== "\n" && l.ch !== "\0") {
+    Lexer_read_char(l);
+}
 
+    Lexer_skip_whitespace(l);
+}
+
+}
 
     let tok = new_token(TOKEN_ILLEGAL, l.ch, l.line);
     tok.start = l.position;
-    if ((l.ch === "\0")) {
+    if (l.ch === "\0") {
     tok.kind = TOKEN_EOF;
     tok.lexeme = "";
     return tok;
 }
 
-    if ((l.ch === "=")) {
+    if (l.ch === "=") {
     let peek_eq = char_at(l.input, l.read_position);
-    if ((peek_eq === "=")) {
+    if (peek_eq === "=") {
     Lexer_read_char(l);
     tok.kind = TOKEN_EQ;
     tok.lexeme = "==";
@@ -188,9 +184,9 @@ function Lexer_next_token(l) {
 
 }
  else {
-    if ((l.ch === "!")) {
+    if (l.ch === "!") {
     let peek_bang = char_at(l.input, l.read_position);
-    if ((peek_bang === "=")) {
+    if (peek_bang === "=") {
     Lexer_read_char(l);
     tok.kind = TOKEN_NOT_EQ;
     tok.lexeme = "!=";
@@ -202,74 +198,64 @@ function Lexer_next_token(l) {
 
 }
  else {
-    if ((l.ch === ";")) {
+    if (l.ch === ";") {
     tok.kind = TOKEN_SEMICOLON;
     tok.lexeme = ";";
 }
  else {
-    if ((l.ch === "(")) {
+    if (l.ch === "(") {
     tok.kind = TOKEN_LPAREN;
     tok.lexeme = "(";
 }
  else {
-    if ((l.ch === ")")) {
+    if (l.ch === ")") {
     tok.kind = TOKEN_RPAREN;
     tok.lexeme = ")";
 }
  else {
-    if ((l.ch === "{")) {
+    if (l.ch === "{") {
     tok.kind = TOKEN_LBRACE;
     tok.lexeme = "{";
 }
  else {
-    if ((l.ch === "}")) {
+    if (l.ch === "}") {
     tok.kind = TOKEN_RBRACE;
     tok.lexeme = "}";
 }
  else {
-    if ((l.ch === ",")) {
+    if (l.ch === ",") {
     tok.kind = TOKEN_COMMA;
     tok.lexeme = ",";
 }
  else {
-    if ((l.ch === ":")) {
+    if (l.ch === ":") {
     tok.kind = 30;
     tok.lexeme = ":";
 }
  else {
-    if ((l.ch === ".")) {
+    if (l.ch === ".") {
     tok.kind = 31;
     tok.lexeme = ".";
 }
  else {
-    if ((l.ch === "[")) {
+    if (l.ch === "[") {
     tok.kind = TOKEN_LBRACKET;
     tok.lexeme = "[";
 }
  else {
-    if ((l.ch === "]")) {
+    if (l.ch === "]") {
     tok.kind = TOKEN_RBRACKET;
     tok.lexeme = "]";
 }
  else {
-    if ((l.ch === "+")) {
+    if (l.ch === "+") {
     tok.kind = TOKEN_PLUS;
     tok.lexeme = "+";
 }
  else {
-    if ((l.ch === "-")) {
-    tok.kind = TOKEN_MINUS;
-    tok.lexeme = "-";
-}
- else {
-    if ((l.ch === "*")) {
-    tok.kind = TOKEN_ASTERISK;
-    tok.lexeme = "*";
-}
- else {
-    if ((l.ch === "/")) {
+    if (l.ch === "/") {
     let peek_slash = char_at(l.input, l.read_position);
-    if ((peek_slash === "/")) {
+    if (peek_slash === "/") {
     Lexer_read_char(l);
     Lexer_read_char(l);
     while (l.ch !== "\n" && l.ch !== "\0") {
@@ -289,22 +275,19 @@ function Lexer_next_token(l) {
     let str_val = "";
     Lexer_read_char(l);
     let start = l.position;
-    while ((is_quote(l.ch) === false)) {
-        if (l.ch === "\\") {
-            Lexer_read_char(l); // consume backslash
-        }
-        Lexer_read_char(l); // consume char (or escaped char)
-    }
+    while (is_quote(l.ch) === false) {
+    Lexer_read_char(l);
+}
 
     let end = l.position;
-    str_val = l.input.substring(Number(start), Number(end));
+str_val = l.input.substring(Number(start), Number(end));
     tok.kind = TOKEN_STRING;
     tok.lexeme = str_val;
 }
  else {
-    if ((l.ch === "&")) {
+    if (l.ch === "&") {
     let peek_and = char_at(l.input, l.read_position);
-    if ((peek_and === "&")) {
+    if (peek_and === "&") {
     Lexer_read_char(l);
     tok.kind = TOKEN_AND;
     tok.lexeme = "&&";
@@ -316,9 +299,9 @@ function Lexer_next_token(l) {
 
 }
  else {
-    if ((l.ch === "|")) {
+    if (l.ch === "|") {
     let peek_or = char_at(l.input, l.read_position);
-    if ((peek_or === "|")) {
+    if (peek_or === "|") {
     Lexer_read_char(l);
     tok.kind = TOKEN_OR;
     tok.lexeme = "||";
@@ -330,9 +313,9 @@ function Lexer_next_token(l) {
 
 }
  else {
-    if ((l.ch === "<")) {
+    if (l.ch === "<") {
     let peek_lt = char_at(l.input, l.read_position);
-    if ((peek_lt === "=")) {
+    if (peek_lt === "=") {
     Lexer_read_char(l);
     tok.kind = TOKEN_LE;
     tok.lexeme = "<=";
@@ -344,9 +327,14 @@ function Lexer_next_token(l) {
 
 }
  else {
-    if ((l.ch === ">")) {
+    if (l.ch === "@") {
+    tok.kind = 95;
+    tok.lexeme = "@";
+}
+ else {
+    if (l.ch === ">") {
     let peek_gt = char_at(l.input, l.read_position);
-    if ((peek_gt === "=")) {
+    if (peek_gt === "=") {
     Lexer_read_char(l);
     tok.kind = TOKEN_GE;
     tok.lexeme = ">=";
@@ -369,11 +357,6 @@ function Lexer_next_token(l) {
     tok.kind = TOKEN_INT;
     tok.lexeme = Lexer_read_number(l);
     return tok;
-}
- else {
-    if ((l.ch === "@")) {
-    tok.kind = 95; // TOKEN_AT
-    tok.lexeme = "@";
 }
  else {
     tok.kind = TOKEN_ILLEGAL;
@@ -422,26 +405,24 @@ function Lexer_next_token(l) {
 
 }
 
-
-    }
-    }
     Lexer_read_char(l);
     return tok;
 }
 
-module.exports = { 
-    char_at, 
-    is_letter, 
-    is_digit, 
-    is_quote, 
-    Lexer, 
-    new_lexer, 
-    Lexer_read_char, 
-    Lexer_skip_whitespace, 
-    Lexer_read_identifier, 
-    Lexer_read_number, 
-    Lexer_lookup_ident, 
-    Lexer_next_token 
-};
-Object.assign(global, module.exports);
 
+
+// Auto-exports
+if (typeof exports !== 'undefined') {
+    exports.char_at = char_at;
+    exports.is_letter = is_letter;
+    exports.is_digit = is_digit;
+    exports.is_quote = is_quote;
+    exports.new_lexer = new_lexer;
+    exports.Lexer_read_char = Lexer_read_char;
+    exports.Lexer_skip_whitespace = Lexer_skip_whitespace;
+    exports.Lexer_read_identifier = Lexer_read_identifier;
+    exports.Lexer_read_number = Lexer_read_number;
+    exports.Lexer_lookup_ident = Lexer_lookup_ident;
+    exports.Lexer_next_token = Lexer_next_token;
+    exports.Lexer = Lexer;
+}

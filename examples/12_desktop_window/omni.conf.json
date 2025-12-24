@@ -1,0 +1,6 @@
+{
+  "name": "DesktopWindowExample",
+  "version": "1.0.0",
+  "targets": ["app", "web"],
+  "entry": "src/main.omni"
+}

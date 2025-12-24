@@ -654,22 +654,68 @@ fn main() {
         return 0;
     }
     
-    // Check for 'run' command (VM mode)
+    // Check for 'run' command (VM mode or JIT compile)
     if (command == "run") {
         let run_file = "";
-        native "js" { run_file = process.argv[3] || ''; }
+        let is_app = false;
+        let target = "js";
         
-        if (run_file == "") {
-            CLI_error("Usage: omni run <file.omni>");
-            return 1;
+        native "js" { 
+             run_file = process.argv[3] || ''; 
+             if (process.argv.includes("--app")) {
+                 is_app = true;
+                 target = "python"; // Default Native App target
+             }
+             // Check custom target
+             let t_idx = process.argv.indexOf("--target");
+             if (t_idx > -1 && process.argv[t_idx+1]) {
+                 target = process.argv[t_idx+1];
+             }
         }
         
-        CLI_info("VM Mode - Executing: " + run_file);
+        if (run_file == "") {
+            CLI_error("Usage: omni run <file.omni> [--app] [--target python]");
+            return 1;
+        }
         
         let source = read_file(run_file);
         let l = new_lexer(source);
         let p = new_parser(l);
         let program = Parser_parse_program(p);
+        
+        if (is_app || target == "python") {
+             CLI_info("Compiling Native App (" + target + ")...");
+             let gen = new_code_generator(target);
+             let code = CodeGenerator_generate(gen, program);
+             
+             // Run the generated code
+             native "js" {
+                 const fs = require('fs');
+                 const path = require('path');
+                 const { spawn } = require('child_process');
+                 
+                 const ext = target == "python" ? ".py" : ".js";
+                 const outFile = run_file.replace(".omni", ext); 
+                 fs.writeFileSync(outFile, code);
+                 
+                 // CLI_success("Generated: " + outFile);
+                 
+                 let cmd = "node";
+                 let args = [outFile];
+                 if (target == "python") {
+                     cmd = "python";
+                     args = [outFile];
+                 }
+                 
+                 const proc = spawn(cmd, args, { stdio: 'inherit' });
+                 proc.on('close', (code) => {
+                     // process.exit(code); 
+                 });
+             }
+             return 0;
+        }
+        
+        CLI_info("VM Mode - Executing: " + run_file);
         
         let vm = OmniVM_new();
         OmniVM_run(vm, program);
@@ -896,8 +942,8 @@ fn main() {
     let p = new_parser(l);
     let program = Parser_parse_program(p);
 
-    // Code Generation with Hybrid Generator
-    let gen = HybridCodeGenerator_new(target_lang);
+    // Code Generation - use basic CodeGenerator (always available)
+    let gen = new_code_generator(target_lang);
     
     // Set framework if specified
     native "js" {
@@ -906,7 +952,7 @@ fn main() {
         }
     }
     
-    let code = HybridCodeGenerator_generate(gen, program);
+    let code = CodeGenerator_generate(gen, program);
 
     // AST Coverage Report
     native "js" {
@@ -931,4 +977,4 @@ fn main() {
 }
 
 // Entry point - wrapped for Rust parser compatibility
-let _ = main();
+// Entry point handled by native block or manual call

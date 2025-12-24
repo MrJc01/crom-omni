@@ -1,0 +1,206 @@
+// ============================================================================
+// STD/UI.omni - Universal UI Framework
+// ============================================================================
+// wraps Tkinter (Python) and DOM (JS)
+
+import "core.omni";
+
+// Global state for UI (Python side will use its own globals via imports or these)
+// We rely on Python keeping state in module scope if we can't use top-level native.
+// But we can't emit top-level native.
+// Hack: we import tkinter in every function.
+
+let ui_root_ref: any = 0;
+
+
+struct WindowConfig {
+    title: string,
+    width: i64,
+    height: i64,
+    background: string
+}
+
+struct Window {
+    handle: any,
+    id: string
+}
+
+struct Button {
+    handle: any,
+    id: string,
+    text: string
+}
+
+struct Label {
+    handle: any,
+    id: string,
+    text: string
+}
+
+struct TextInput {
+    handle: any,
+    id: string
+}
+
+// ============================================================================
+// WINDOW
+// ============================================================================
+
+fn Window_create(config: WindowConfig) -> Window {
+    let win = Window { handle: 0, id: "main" };
+    
+    native "js" {
+        if (typeof document !== 'undefined') {
+            const div = document.createElement('div');
+            div.style.width = config.width + 'px';
+            div.style.height = config.height + 'px';
+            div.style.backgroundColor = config.background;
+            div.style.position = 'relative';
+            div.style.border = '1px solid #ccc';
+            div.style.margin = '20px auto';
+            div.id = 'omni-window-main';
+            document.body.appendChild(div);
+            win.handle = div;
+        }
+    }
+
+    native "python" {
+        import tkinter as tk
+        global ui_root_ref
+        if ui_root_ref == 0 or ui_root_ref is None:
+            ui_root_ref = tk.Tk()
+        
+        ui_root_ref.title(config.title)
+        ui_root_ref.geometry(f"{config.width}x{config.height}")
+        if config.background:
+            ui_root_ref.configure(bg=config.background)
+            
+        win.handle = ui_root_ref
+    }
+
+    return win;
+}
+
+// ============================================================================
+// WIDGETS
+// ============================================================================
+
+fn Button_create(win: Window, text: string, x: i64, y: i64) -> Button {
+    let btn = Button { handle: 0, id: "btn_" + text, text: text };
+
+    native "js" {
+        const b = document.createElement('button');
+        b.innerText = text;
+        b.style.position = 'absolute';
+        b.style.left = x + 'px';
+        b.style.top = y + 'px';
+        if (win.handle) win.handle.appendChild(b);
+        btn.handle = b;
+    }
+
+    native "python" {
+        import tkinter as tk
+        from tkinter import ttk
+        b = ttk.Button(ui_root_ref, text=text)
+        b.place(x=x, y=y)
+        btn.handle = b
+    }
+
+    return btn;
+}
+
+fn Button_on_click(btn: Button, callback: any) {
+    native "js" {
+        if (btn.handle) {
+            btn.handle.onclick = callback;
+        }
+    }
+
+    native "python" {
+        def wrapper():
+            callback()
+        btn.handle.config(command=wrapper)
+    }
+}
+
+fn Label_create(win: Window, text: string, x: i64, y: i64) -> Label {
+    let lbl = Label { handle: 0, id: "lbl", text: text };
+
+    native "js" {
+        const l = document.createElement('div');
+        l.innerText = text;
+        l.style.position = 'absolute';
+        l.style.left = x + 'px';
+        l.style.top = y + 'px';
+        if (win.handle) win.handle.appendChild(l);
+        lbl.handle = l;
+    }
+
+    native "python" {
+        import tkinter as tk
+        bg = ui_root_ref.cget('bg')
+        l = tk.Label(ui_root_ref, text=text, bg=bg)
+        l.place(x=x, y=y)
+        lbl.handle = l
+    }
+    return lbl;
+}
+
+fn Label_set_text(lbl: Label, text: string) {
+    native "js" {
+        if (lbl.handle) lbl.handle.innerText = text;
+    }
+    native "python" {
+        lbl.handle.config(text=text)
+    }
+}
+
+fn TextInput_create(win: Window, x: i64, y: i64, width: i64) -> TextInput {
+    let input = TextInput { handle: 0, id: "input" };
+
+    native "js" {
+        const i = document.createElement('input');
+        i.type = 'text';
+        i.style.position = 'absolute';
+        i.style.left = x + 'px';
+        i.style.top = y + 'px';
+        i.style.width = width + 'px';
+        if (win.handle) win.handle.appendChild(i);
+        input.handle = i;
+    }
+
+    native "python" {
+        import tkinter as tk
+        from tkinter import ttk
+        i = ttk.Entry(ui_root_ref)
+        i.place(x=x, y=y, width=width)
+        input.handle = i
+    }
+    return input;
+}
+
+fn TextInput_get_value(input: TextInput) -> string {
+    let val = "";
+    native "js" {
+        if (input.handle) val = input.handle.value;
+    }
+    native "python" {
+        val = input.handle.get()
+    }
+    return val;
+}
+
+// ============================================================================
+// RUNLOOP
+// ============================================================================
+
+fn UI_run() {
+    native "js" {
+        console.log("UI Running (Web)");
+    }
+    native "python" {
+        # global ui_root
+        if ui_root_ref:
+            ui_root_ref.mainloop()
+    }
+}

@@ -495,3 +495,16 @@ const impl = self.implementations[target];
 
 let GLOBAL_CONTRACTS = ContractRegistry_new();
 
+
+// Auto-exports
+if (typeof exports !== 'undefined') {
+    exports.ContractRegistry_new = ContractRegistry_new;
+    exports.ContractRegistry_set_target = ContractRegistry_set_target;
+    exports.ContractRegistry_resolve = ContractRegistry_resolve;
+    exports.ContractRegistry_list_interfaces = ContractRegistry_list_interfaces;
+    exports.ContractRegistry_verify_target = ContractRegistry_verify_target;
+    exports.CanonicalInterface = CanonicalInterface;
+    exports.ContractMethod = ContractMethod;
+    exports.ContractRegistry = ContractRegistry;
+    exports.GLOBAL_CONTRACTS = GLOBAL_CONTRACTS;
+}

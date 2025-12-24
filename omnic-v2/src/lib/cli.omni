@@ -428,3 +428,4 @@ fn CLI_banner() {
 fn CLI_version() -> string {
     return "1.2.0";
 }
+

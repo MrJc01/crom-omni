@@ -49,6 +49,7 @@ let TOKEN_NATIVE = 80;
 let TOKEN_IMPORT = 90;
 let TOKEN_PACKAGE = 91;
 let TOKEN_EXPORT = 92;
+let TOKEN_AT = 95; // @
 
 struct Token {
     kind: i64,

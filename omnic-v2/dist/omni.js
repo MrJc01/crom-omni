@@ -2351,55 +2351,401 @@ function main() {
 
 
 
+
+  // Config Generate Command
+  if (command === "config" && process.argv[3] === "generate") {
+      const fs = require('fs');
+      const path = require('path');
+      const inputFile = process.argv[4];
+      
+      if (!inputFile) {
+          CLI_error("Usage: omni config generate <file.omni>");
+          return 1;
+      }
+      
+      if (!fs.existsSync(inputFile)) {
+           CLI_error(`File not found: ${inputFile}`);
+           return 1;
+      }
+      
+      const content = fs.readFileSync(inputFile, 'utf-8');
+      
+      // Analyze content for decorators
+      let type = "app";
+      let frameworks = ["web", "desktop"];
+      
+      if (content.includes('@serve')) {
+          type = "server";
+          frameworks = ["server"];
+      }
+      
+      const config = {
+          "name": path.basename(inputFile, '.omni'),
+          "version": "1.0.0",
+          "type": type,
+          "targets": {},
+          "entry": inputFile.replace(/\\/g, '/')
+      };
+      
+      if (type === "app") {
+          config.targets.web = { "framework": "react", "output": "dist/web", "dependencies": { "ui": "std/ui" } };
+          config.targets.desktop = { "framework": "tkinter", "output": "dist/app" };
+      } else {
+          config.targets.server = { "framework": "express", "port": 3000 };
+          config.targets.laravel = { "framework": "laravel", "db": "mysql", "output": "dist/server", "dependencies": { "auth": "sanctum" } };
+      }
+      
+      fs.writeFileSync('omni.conf.json', JSON.stringify(config, null, 2));
+      CLI_success("Generated omni.conf.json");
+      return 0;
+  }
+
   // Check for 'compile' command
   if (command === "run") {
     const path = require('path');
     const fs = require('fs');
     const os = require('os');
+    const { execSync } = require('child_process');
     
-    const input_file = process.argv[3];
+    let input_file = process.argv[3];
+    const isApp = process.argv.includes('--app');
+    const isWeb = process.argv.includes('--web');
+    const isCmd = process.argv.includes('--cmd');
+    let target = isApp ? 'python' : 'js';
+    const ext = isApp ? '.py' : '.js';
+    
+    // Config Loading Support
+    let config = null;
+    let projectRoot = process.cwd();
+    
+    // Parse extra args manually since command loop logic is messy
+    for (let i = 4; i < process.argv.length; i++) {
+        if (process.argv[i] === '--target' && i + 1 < process.argv.length) {
+            target = process.argv[++i];
+        }
+    }
+    
+    const compilerPath = path.join(process.cwd(), "omnic/target/release/omnic.exe");
+    
+    if (input_file && !input_file.endsWith('.omni')) {
+        // If argument is a directory, look for omni.conf.json
+        const possibleConfig = path.join(input_file, 'omni.conf.json');
+        if (fs.existsSync(possibleConfig)) {
+            projectRoot = input_file;
+            config = JSON.parse(fs.readFileSync(possibleConfig, 'utf8'));
+            if (config.entry) {
+                 input_file = path.join(projectRoot, config.entry);
+            } else {
+                 CLI_error("omni.conf.json missing 'entry' field");
+                 return 1;
+            }
+            
+            // Auto-detect target from config if not specified
+            if (!isApp && !isWeb && config.targets) {
+                if (config.targets.includes('app')) {
+                    target = 'python';
+                    console.log(CLI_COLORS().blue + "Auto-selecting Native App target from config..." + CLI_COLORS().reset);
+                }
+            }
+        }
+    }
+    // Fallback: Check current dir for config if input file is relative
+    else if (input_file && fs.existsSync(path.join(process.cwd(), 'omni.conf.json'))) {
+         config = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'omni.conf.json'), 'utf8'));
+         // If input file matches config entry, use config settings?
+    }
+
     if (!input_file) {
-      CLI_error("Usage: omni run <file.omni>");
+      if (fs.existsSync('omni.conf.json')) {
+          config = JSON.parse(fs.readFileSync('omni.conf.json', 'utf8'));
+          if (config.entry) {
+               input_file = config.entry;
+               if (config.targets && config.targets.includes('app') && !isWeb) {
+                   target = 'python';
+               }
+          }
+      }
+    }
+
+    if (!input_file) {
+      CLI_error("Usage: omni run <file.omni|project_dir> [--web|--app]");
+      CLI_info("Or run in a folder with omni.conf.json");
       return 1;
     }
     
-    // Temp output file - use .js extension
-    const runFile = path.join(os.tmpdir(), 'omni_run_' + Date.now() + '.js');
-    const omniScript = __filename; 
+    // Temp output file
+    const timestamp = Date.now();
+    const runFile = path.join(os.tmpdir(), 'omni_run_' + timestamp + ext);
+    const omniScript = __filename;
     
+    let output = "";
     try {
-      // 1. Compile using the existing compile command logic
-      // We invoke: node omni.js compile <input> <output> --target js
-      const cmd = `node "${omniScript}" compile "${input_file}" "${runFile}" --target js`;
+      // Base command construction
+      // We assume compilerPath is defined in outer scope now (moved previously)
+      // Actually we need to ensure compilerPath is available or defined here if I removed it earlier
+      // My previous edit MOVED it to top of run block (Line 2430).
+      // So it is available.
       
-      // Inherit stdio so compilation progress/errors are visible
-      execSync(cmd, { 
-        cwd: process.cwd(),
-        stdio: 'inherit' 
-      });
+      let cmd = `"${compilerPath}" build "${input_file}" --target js`;
+
+      if (target === 'python') {
+           if (!fs.existsSync(compilerPath)) {
+               CLI_error("Rust compiler required for Native App mode. Run 'cargo build --release' in omnic/");
+               return 1;
+           }
+           cmd = `"${compilerPath}" build "${input_file}" --target python`;
+           console.log(CLI_COLORS().magenta + "Compiling Native App (Python/Tkinter)..." + CLI_COLORS().reset);
+      }
+
+      // Framework Adapter Logic
+      if (target === 'laravel') {
+           const buildDir = config && config.targets && config.targets.laravel && config.targets.laravel.output ? config.targets.laravel.output : "dist/server";
+           cmd = `php artisan serve`; 
+           console.log(CLI_COLORS().blue + "Target: Laravel (Adapter Active)" + CLI_COLORS().reset);
+      }
       
-      // 2. Execute the compiled file
-      console.log("");
-      console.log(CLI_COLORS.dim + "Running [" + input_file + "]..." + CLI_COLORS.reset);
-      console.log("");
+      if (isCmd) {
+           console.log(CLI_COLORS().cyan + "Command to execute:" + CLI_COLORS().reset);
+           console.log(cmd);
+           return 0;
+      }
+
+      // Execution
+      if (target === 'laravel') {
+            console.log("Starting Laravel Server (Mock)...");
+            return 0;
+      }
       
-      execSync(`node "${runFile}"`, {
-        cwd: process.cwd(),
-        stdio: 'inherit'
-      });
-      
-      // Cleanup
-      try { fs.unlinkSync(runFile); } catch (e) {}
-      
+      // Standard Compilation
+      if (target === 'python' || target === 'js') {
+          output = execSync(cmd, { 
+             cwd: process.cwd(),
+             encoding: 'utf-8',
+             stdio: ['ignore', 'pipe', 'ignore'] 
+          });
+          CLI_success("Build complete.");
+      }
+
     } catch (e) {
-      // Cleanup
-      try { fs.unlinkSync(runFile); } catch (ex) {}
-      
-      // If execSync throws, it means exit code non-zero
-      // Error message likely already printed due to stdio: inherit
-      if (e.status) return e.status;
-      return 1;
+       CLI_error("Compilation failed: " + e.message);
+       return 1;
     }
+    
+    // Ensure output is defined for post-process (which uses output)
+    if (!output) output = "";
+
+// Post-process
+           if (target === 'python') {
+           // PATCH: Fix broken Struct init in Python (omnic bug)
+           // Replace 'def __init__(self, data=None):' with 'def __init__(self, **data):'
+           output = output.replace(/def __init__\(self, data=None\):/g, "def __init__(self, **data):");
+
+           const lines = output.split(/(\r\n|\n)/);
+           const cleanLines = lines.filter(l => {
+              const t = l.trim();
+              return t && !t.startsWith('Compilando') && !t.startsWith('//'); 
+           });
+           
+           // Fix standard issues in generated python
+           // 1. Fix Comments/Empty blocks for native
+           //    The generator might produce:
+           //    def foo():
+           //        # native "js" ...
+           //    (This is error in python, needs pass)
+           
+           // Robust Python Indentation Fixer
+           // Ensures that blocks ending in ':' have at least one indented line following them
+           const fixedLines = [];
+           const linesToProcess = cleanLines; // or code.split('\n')
+           const debugLog = [];
+           
+           for (let i = 0; i < linesToProcess.length; i++) {
+               let line = linesToProcess[i];
+               
+               // PATCH: Smart Dedenting v2
+               if (fixedLines.length > 0) {
+                   // Find last content line
+                   let lastContentLine = null;
+                   for (let k = fixedLines.length - 1; k >= 0; k--) {
+                       const l = fixedLines[k];
+                       if (l.trim().length > 0 && !l.trim().startsWith('#')) {
+                           lastContentLine = l;
+                           break;
+                       }
+                   }
+                   
+                   const currTrimmed = line.trim();
+                   
+                   if (lastContentLine && currTrimmed.length > 0 && !currTrimmed.startsWith('#')) {
+                       const prevTrimmed = lastContentLine.trim();
+                       const prevContent = prevTrimmed.split('#')[0].trim();
+                       
+                       if (!prevContent.endsWith(':')) {
+                            const prevIndent = lastContentLine.match(/^(\s*)/)[1];
+                            const currIndent = line.match(/^(\s*)/)[1];
+                            
+                            
+                            if (currIndent.length > prevIndent.length) {
+                                  // Suspicious indent increase!
+                                  // Check for explicit continuation (parenthesis, backslash)
+                                  // This is a naive check but works for typical imperative code
+                                  const escapes = prevContent.endsWith('\\') || prevContent.endsWith('(') || prevContent.endsWith('[') || prevContent.endsWith('{') || prevContent.endsWith(',');
+                                  
+                                  if (!escapes) {
+                                      // It's likely an artifact. Dedent to match previous.
+                                      line = prevIndent + currTrimmed;
+                                  }
+                            }
+                       }
+                   }
+               }
+
+               // PATCH: Fix indentation for print function native block
+               // omnic seems to double-indent or mess up indentation for the second line of the block
+               if (line.trim().startsWith('sys.stdout.write')) {
+                   const prev = fixedLines[fixedLines.length-1];
+                   if (prev && prev.trim() === 'import sys') {
+                        const prevIndent = prev.match(/^(\s*)/)[1];
+                        line = prevIndent + line.trim();
+                   }
+               }
+
+               fixedLines.push(line);
+
+               
+               // Check if this line starts a block
+               const trimmed = line.trim();
+               // Remove comments from check
+               const content = trimmed.split('#')[0].trim();
+               
+               if (content.endsWith(':')) {
+                   // Calculate current indent
+                   const indentMatch = line.match(/^(\s*)/);
+                   const currentIndent = indentMatch ? indentMatch[1] : "";
+                   
+                   // Look ahead for next non-empty, non-comment line
+                   let nextContentIndex = -1;
+                   for (let j = i + 1; j < linesToProcess.length; j++) {
+                       const nextTrimmed = linesToProcess[j].trim();
+                       if (nextTrimmed && !nextTrimmed.startsWith('#')) {
+                           nextContentIndex = j;
+                           break;
+                       }
+                   }
+                   
+                   let needsPass = false;
+                   if (nextContentIndex === -1) {
+                       // End of file after colon -> needs pass
+                       needsPass = true;
+                   } else {
+                       const nextLine = linesToProcess[nextContentIndex];
+                       const nextIndentMatch = nextLine.match(/^(\s*)/);
+                       const nextIndent = nextIndentMatch ? nextIndentMatch[1] : "";
+                       
+                       // If next line is not more indented than current, we have an empty block
+                       if (nextIndent.length <= currentIndent.length) {
+                           needsPass = true;
+                       }
+                   }
+                   
+                   if (needsPass) {
+                       // Determine indentation for pass (4 spaces + current)
+                       // Or just use tab? Let's use 4 spaces standard
+                       fixedLines.push(currentIndent + "    pass");
+                   }
+               }
+           }
+           
+           fs.writeFileSync(runFile, fixedLines.join('\n') + "\n\nif __name__ == '__main__':\n    try:\n        main()\n    except Exception:\n        import traceback\n        traceback.print_exc()");
+           
+           try {
+             execSync(`python "${runFile}"`, { stdio: 'inherit' });
+           } catch(e) {
+               console.log(CLI_COLORS().red + "Native App Crashed. Dumping code:" + CLI_COLORS().reset);
+               console.log(fs.readFileSync(runFile, 'utf8'));
+               throw e;
+           }
+           
+      } else {
+          // JS/Web Mode
+          // 1. Compile (JS)
+          const cmd = `node "${omniScript}" compile "${input_file}" "${runFile}" --target js`;
+          execSync(cmd, { cwd: process.cwd(), stdio: 'inherit' });
+          
+          // 2. Post-process: Append main() call
+          let jsContent = fs.readFileSync(runFile, 'utf8');
+          jsContent += "\n\n// Auto-generated entry point\nif (typeof main === 'function') { main(); }";
+          fs.writeFileSync(runFile, jsContent);
+          
+          const c = CLI_COLORS();
+          console.log("");
+          console.log(c.dim + "Running [" + input_file + "]..." + c.reset);
+          console.log("");
+          
+          if (isWeb) {
+              // Web Mode: Serve via HTTP
+             // ... [Existing Web Logic] ...
+             const htmlFile = path.join(os.tmpdir(), 'omni_run_' + timestamp + '.html');
+              const htmlContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Omni Web App: ${path.basename(input_file)}</title>
+                    <style>body { font-family: sans-serif; background: #222; color: #fff; margin: 0; padding: 20px; display: flex; justify-content: center; }</style>
+                </head>
+                <body>
+                    <div id="app"></div>
+                    <script>
+                        const log = console.log;
+                        console.log = function() {
+                            log.apply(console, arguments);
+                        };
+                    </script>
+                    <script src="${path.basename(runFile)}"></script>
+                </body>
+                </html>
+              `;
+              fs.writeFileSync(htmlFile, htmlContent);
+              
+              console.log(c.green + "Starting local web server..." + c.reset);
+              
+              const http = require('http');
+              const server = http.createServer((req, res) => {
+                  if (req.url === '/') {
+                      res.writeHead(200, {'Content-Type': 'text/html'});
+                      res.end(htmlContent);
+                  } else if (req.url === '/' + path.basename(runFile)) {
+                      res.writeHead(200, {'Content-Type': 'application/javascript'});
+                      res.end(jsContent);
+                  } else {
+                      res.writeHead(404);
+                      res.end('Not Found');
+                  }
+              });
+              
+              server.listen(0, () => {
+                  const port = server.address().port;
+                  const url = `http://localhost:${port}`;
+                  console.log(c.cyan + "Serving at " + url + c.reset);
+                  console.log(c.dim + "(Press Ctrl+C to stop)" + c.reset);
+                  
+                  const startCmd = process.platform === 'win32' ? 'start' : (process.platform === 'darwin' ? 'open' : 'xdg-open');
+                  try { execSync(`${startCmd} ${url}`); } catch(e) {}
+              });
+              return; // Keep alive
+          }
+          
+          // Node Mode
+          execSync(`node "${runFile}"`, { cwd: process.cwd(), stdio: 'inherit' });
+      }
+
+      
+      // Cleanup (only if not web, web needs files to persist for the server)
+      if (!isWeb) {
+          try { fs.unlinkSync(runFile); } catch (e) {}
+      }
+      
+
     
     return 0;
   }
@@ -2440,8 +2786,28 @@ function main() {
     CLI_info("Target: " + target_lang);
     CLI_info("Output: " + output_file);
     
-    // Find Rust compiler
+    // Use JS Compiler (Self-Hosted) if available
     const { execSync } = require('child_process');
+    const jsCompiler = path.join(__dirname, 'main.js');
+    
+    if (fs.existsSync(jsCompiler)) {
+       // CLI_info("Using JS Compiler: " + path.basename(jsCompiler)); // Optional clutter
+       try {
+           // main.js usage: node main.js <input> <output>
+           const cmd = `node "${jsCompiler}" "${path.resolve(input_file)}" "${path.resolve(output_file)}"`;
+           execSync(cmd, { 
+               cwd: process.cwd(),
+               stdio: 'inherit' 
+           });
+           // CLI_success("Output: " + output_file); // main.js might print success
+           return 0;
+       } catch (e) {
+           CLI_error("Compilation failed.");
+           return 1;
+       }
+    }
+
+    // Fallback: Find Rust compiler
     const compilerPaths = [
       path.join(process.cwd(), "omnic", "target", "release", "omnic.exe"),
       path.join(__dirname, "..", "..", "omnic", "target", "release", "omnic.exe"),

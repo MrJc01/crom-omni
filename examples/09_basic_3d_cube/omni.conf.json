@@ -1,0 +1,6 @@
+{
+  "name": "Basic3DCube",
+  "version": "1.0.0",
+  "targets": ["web"],
+  "entry": "src/main.omni"
+}

@@ -155,20 +155,20 @@ if (self.trace) {
         
         // Let declaration
         if (stmt.kind === 2) { // NODE_LET
-            const value = OmniVM_eval_expression_DEBUG(self, stmt.value);
+            const value = OmniVM_eval_expression(self, stmt.value);
             VMEnvironment_set(self.env, stmt.name, value);
             return null;
         }
         
         // Return statement
         if (stmt.kind === 7) { // NODE_RETURN
-            const value = OmniVM_eval_expression_DEBUG(self, stmt.value);
+            const value = OmniVM_eval_expression(self, stmt.value);
             throw { _omni_return: true, value: value };
         }
         
         // If statement
         if (stmt.kind === 13) { // NODE_IF
-            const condition = OmniVM_eval_expression_DEBUG(self, stmt.condition);
+            const condition = OmniVM_eval_expression(self, stmt.condition);
             if (condition) {
                 return OmniVM_exec_block(self, stmt.consequence);
             } else if (stmt.alternative) {
@@ -180,7 +180,7 @@ if (self.trace) {
         // While statement
         if (stmt.kind === 14) { // NODE_WHILE
             let loopResult = null;
-            while (OmniVM_eval_expression_DEBUG(self, stmt.condition)) {
+            while (OmniVM_eval_expression(self, stmt.condition)) {
                 loopResult = OmniVM_exec_block(self, stmt.body);
                 self.step_count++;
                 // Safety limit
@@ -193,14 +193,14 @@ if (self.trace) {
         
         // Assignment
         if (stmt.kind === 16) { // NODE_ASSIGNMENT
-            const value = OmniVM_eval_expression_DEBUG(self, stmt.value);
+            const value = OmniVM_eval_expression(self, stmt.value);
             VMEnvironment_set(self.env, stmt.name, value);
             return null;
         }
         
         // Call as statement
         if (stmt.kind === 6) { // NODE_CALL
-            return OmniVM_eval_expression_DEBUG(self, stmt);
+            return OmniVM_eval_expression(self, stmt);
         }
         
         // Import (skip for VM)
@@ -232,7 +232,7 @@ if (self.trace) {
         
         // Expression statement
         if (stmt.kind === 0) { // ExpressionStmt
-            return OmniVM_eval_expression_DEBUG(self, stmt.expr);
+            return OmniVM_eval_expression(self, stmt.expr);
         }
 
         console.warn("[vm] Unknown statement kind:", stmt.kind);
@@ -253,7 +253,7 @@ if (!block) return null;
     return result;
 }
 
-function OmniVM_eval_expression_DEBUG(self, expr) {
+function OmniVM_eval_expression(self, expr) {
     let result = 0;
 if (!expr) return null;
         
@@ -284,7 +284,7 @@ if (!expr) return null;
 
         // Assignment
         if (expr.kind === 16) { // NODE_ASSIGNMENT
-            const right = OmniVM_eval_expression_DEBUG(self, expr.right);
+            const right = OmniVM_eval_expression(self, expr.right);
             const left = expr.left;
             
             if (left.kind === 15) { // Identifier
@@ -292,7 +292,7 @@ if (!expr) return null;
                 VMEnvironment_set(self.env, name, right);
                 return right;
             } else if (left.kind === 9) { // Member
-                const obj = OmniVM_eval_expression_DEBUG(self, left.object);
+                const obj = OmniVM_eval_expression(self, left.object);
                 if (obj) {
                     obj[left.member] = right;
                     return right;
@@ -303,7 +303,7 @@ if (!expr) return null;
         
         // Prefix expression
         if (expr.kind === 19) { // NODE_PREFIX
-            const right = OmniVM_eval_expression_DEBUG(self, expr.right);
+            const right = OmniVM_eval_expression(self, expr.right);
             if (expr.op === '-') return -right;
             if (expr.op === '!') return !right;
             if (expr.op === '+') return +right;
@@ -312,8 +312,8 @@ if (!expr) return null;
         
         // Binary expression
         if (expr.kind === 8) { // NODE_BINARY
-            const left = OmniVM_eval_expression_DEBUG(self, expr.left);
-            const right = OmniVM_eval_expression_DEBUG(self, expr.right);
+            const left = OmniVM_eval_expression(self, expr.left);
+            const right = OmniVM_eval_expression(self, expr.right);
             const op = expr.op;
             
             switch (op) {
@@ -337,7 +337,7 @@ if (!expr) return null;
         // Call expression
         if (expr.kind === 6) { // NODE_CALL
             const fnName = expr.name || (expr.function ? expr.function.value : '') || (expr.callee ? expr.callee.value : '');
-            const args = (expr.args || []).map(a => OmniVM_eval_expression_DEBUG(self, a));
+            const args = (expr.args || []).map(a => OmniVM_eval_expression(self, a));
             
             // Check builtin
             const builtin = VMEnvironment_get_function(self.env, fnName);
@@ -356,13 +356,13 @@ if (!expr) return null;
         
         // Member access
         if (expr.kind === 9) { // NODE_MEMBER
-            const obj = OmniVM_eval_expression_DEBUG(self, expr.object);
+            const obj = OmniVM_eval_expression(self, expr.object);
             return obj ? obj[expr.member] : undefined;
         }
         
         // Array literal
         if (expr.kind === 11) { // NODE_ARRAY
-            return (expr.elements || []).map(e => OmniVM_eval_expression_DEBUG(self, e));
+            return (expr.elements || []).map(e => OmniVM_eval_expression(self, e));
         }
         
         // Struct init
@@ -370,7 +370,7 @@ if (!expr) return null;
             const obj = {};
             if (expr.fields) {
                 for (const [k, v] of Object.entries(expr.fields)) {
-                    obj[k] = OmniVM_eval_expression_DEBUG(self, v);
+                    obj[k] = OmniVM_eval_expression(self, v);
                 }
             }
             return obj;
@@ -412,7 +412,24 @@ module.exports = {
     VMEnvironment, VMEnvironment_new, VMEnvironment_get, VMEnvironment_set,
     VMEnvironment_get_function, VMEnvironment_set_function,
     OmniVM, OmniVM_new, OmniVM_run, OmniVM_exec_statement,
-    OmniVM_exec_block, OmniVM_eval_expression_DEBUG, OmniVM_call_function
+    OmniVM_exec_block, OmniVM_eval_expression, OmniVM_call_function
 };
 Object.assign(global, module.exports);
 
+
+// Auto-exports
+if (typeof exports !== 'undefined') {
+    exports.VMEnvironment_new = VMEnvironment_new;
+    exports.VMEnvironment_get = VMEnvironment_get;
+    exports.VMEnvironment_set = VMEnvironment_set;
+    exports.VMEnvironment_get_function = VMEnvironment_get_function;
+    exports.VMEnvironment_set_function = VMEnvironment_set_function;
+    exports.OmniVM_new = OmniVM_new;
+    exports.OmniVM_run = OmniVM_run;
+    exports.OmniVM_exec_statement = OmniVM_exec_statement;
+    exports.OmniVM_exec_block = OmniVM_exec_block;
+    exports.OmniVM_eval_expression = OmniVM_eval_expression;
+    exports.OmniVM_call_function = OmniVM_call_function;
+    exports.VMEnvironment = VMEnvironment;
+    exports.OmniVM = OmniVM;
+}

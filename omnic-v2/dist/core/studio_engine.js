@@ -930,3 +930,25 @@ const { exec } = require('child_process');
     StudioServer_start(server, cwd);
 }
 
+
+// Auto-exports
+if (typeof exports !== 'undefined') {
+    exports.detect_project = detect_project;
+    exports.CrossRunner_new = CrossRunner_new;
+    exports.CrossRunner_run = CrossRunner_run;
+    exports.CrossRunner_stop = CrossRunner_stop;
+    exports.CrossRunner_stop_all = CrossRunner_stop_all;
+    exports.GraphState_new = GraphState_new;
+    exports.GraphState_from_ast = GraphState_from_ast;
+    exports.GraphState_to_json = GraphState_to_json;
+    exports.StudioServer_new = StudioServer_new;
+    exports.StudioServer_start = StudioServer_start;
+    exports.generate_studio_html = generate_studio_html;
+    exports.cmd_studio = cmd_studio;
+    exports.ProjectInfo = ProjectInfo;
+    exports.CrossRunner = CrossRunner;
+    exports.GraphNode = GraphNode;
+    exports.GraphEdge = GraphEdge;
+    exports.GraphState = GraphState;
+    exports.StudioServer = StudioServer;
+}

@@ -249,6 +249,9 @@ fn Lexer_next_token(l: Lexer) -> Token {
             tok.kind = TOKEN_LT;
             tok.lexeme = "<";
         }
+    } else if (l.ch == "@") {
+        tok.kind = 95; // TOKEN_AT
+        tok.lexeme = "@";
     } else if (l.ch == ">") {
         let peek_gt = char_at(l.input, l.read_position);
         if (peek_gt == "=") {

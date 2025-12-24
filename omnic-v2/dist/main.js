@@ -9,7 +9,6 @@ const vm = require('./core/vm.js');
 const framework_adapter = require('./core/framework_adapter.js');
 const ingestion = require('./core/ingestion.js');
 const package_manager = require('./core/package_manager.js');
-Object.assign(global, package_manager);
 const contracts = require('./core/contracts.js');
 const ghost_writer = require('./core/ghost_writer.js');
 const bootstrap = require('./core/bootstrap.js');
@@ -17,11 +16,8 @@ const studio_engine = require('./core/studio_engine.js');
 const studio_graph = require('./core/studio_graph.js');
 const app_packager = require('./core/app_packager.js');
 const tui = require('./core/tui.js');
-Object.assign(global, tui);
 const std = require('./lib/std.js');
-Object.assign(global, std);
 const cli = require('./lib/cli.js');
-Object.assign(global, cli);
 
 function get_omni_home() {
     let home = "";
@@ -296,7 +292,7 @@ node "${path.join(omniDir, 'dist', 'main.js')}" "$@"`;
 
 function cmd_version() {
     CLI_banner();
-    print(("Version: " + CLI_version()));
+    print("Version: " + CLI_version());
     print("");
 console.log(CLI_COLORS.dim + "Node.js: " + process.version + CLI_COLORS.reset);
         console.log(CLI_COLORS.dim + "Platform: " + process.platform + CLI_COLORS.reset);
@@ -385,17 +381,17 @@ function main() {
 args_len = process.argv.length;
     let command = "";
 command = process.argv[2] || '';
-    if ((command === "setup")) {
+    if (command === "setup") {
     cmd_setup();
     return 0;
 }
 
-    if (command === "--version" || command === "-v" || command === "version") {
+    if (((command === "--version" || command) === "-v" || command) === "version") {
     cmd_version();
     return 0;
 }
 
-    if ((command === "package")) {
+    if (command === "package") {
     let self_package = false;
 self_package = process.argv[3] === '--self';
     if (self_package) {
@@ -405,7 +401,7 @@ self_package = process.argv[3] === '--self';
 
 }
 
-    if ((command === "setup")) {
+    if (command === "setup") {
     let is_global = false;
 for (let i = 3; i < process.argv.length; i++) {
                 if (process.argv[i] === '--global' || process.argv[i] === '-g') {
@@ -416,17 +412,17 @@ for (let i = 3; i < process.argv.length; i++) {
     return 0;
 }
 
-    if ((command === "install")) {
+    if (command === "install") {
     let package_spec = "";
 package_spec = process.argv[3] || '';
     cmd_install(package_spec);
     return 0;
 }
 
-    if ((command === "uninstall")) {
+    if (command === "uninstall") {
     let package_name = "";
 package_name = process.argv[3] || '';
-    if ((package_name === "")) {
+    if (package_name === "") {
     CLI_error("Usage: omni uninstall <package_name>");
     return 1;
 }
@@ -435,48 +431,48 @@ package_name = process.argv[3] || '';
     return 0;
 }
 
-    if ((command === "list")) {
+    if (command === "list") {
     cmd_list();
     return 0;
 }
 
-    if ((command === "update")) {
+    if (command === "update") {
     let package_name = "";
 package_name = process.argv[3] || '';
     cmd_update(package_name);
     return 0;
 }
 
-    if ((command === "search")) {
+    if (command === "search") {
     let query = "";
 query = process.argv[3] || '';
     cmd_search(query);
     return 0;
 }
 
-    if ((command === "doctor")) {
+    if (command === "doctor") {
     cmd_doctor();
     return 0;
 }
 
-    if ((command === "contracts")) {
+    if (command === "contracts") {
 const registry = ContractRegistry_new();
             ContractRegistry_list_interfaces(registry);
     return 0;
 }
 
-    if ((command === "graph")) {
+    if (command === "graph") {
     let input_file = "";
     let output_file = "";
 input_file = process.argv[3] || '';
             output_file = process.argv[4] || '';
-    if ((input_file === "")) {
+    if (input_file === "") {
     CLI_error("Usage: omni graph <input.omni> [output.md]");
     CLI_info("Generates architecture diagrams in Mermaid format");
     return 1;
 }
 
-    if ((output_file === "")) {
+    if (output_file === "") {
 const path = require('path');
                 output_file = path.basename(input_file, '.omni') + '_architecture.md';
 }
@@ -485,12 +481,12 @@ const path = require('path');
     return 0;
 }
 
-    if ((command === "bootstrap")) {
+    if (command === "bootstrap") {
     cmd_bootstrap();
     return 0;
 }
 
-    if ((command === "studio")) {
+    if (command === "studio") {
     let port = 3000;
     let open_app = false;
 for (let i = 3; i < process.argv.length; i++) {
@@ -510,12 +506,12 @@ for (let i = 3; i < process.argv.length; i++) {
     return 0;
 }
 
-    if ((command === "ui")) {
+    if (command === "ui") {
     cmd_tui();
     return 0;
 }
 
-    if ((command === "package")) {
+    if (command === "package") {
     let target = "";
 for (let i = 3; i < process.argv.length; i++) {
                 if (process.argv[i] === '--app' && process.argv[i + 1]) {
@@ -549,18 +545,18 @@ const fs = require('fs');
     return 0;
 }
 
-    if ((command === "ingest")) {
+    if (command === "ingest") {
     let input_file = "";
     let output_file = "";
 input_file = process.argv[3] || '';
             output_file = process.argv[4] || '';
-    if ((input_file === "")) {
+    if (input_file === "") {
     CLI_error("Usage: omni ingest <legacy_file> <output.omni>");
     CLI_info("Transforms PHP, Java, Python, or JS code to Omni");
     return 1;
 }
 
-    if ((output_file === "")) {
+    if (output_file === "") {
 const path = require('path');
                 output_file = path.basename(input_file).replace(/\.[^.]+$/, '.omni');
 }
@@ -569,16 +565,15 @@ const path = require('path');
     return 0;
 }
 
-    if ((command === "run")) {
+    if (command === "run") {
     let run_file = "";
 run_file = process.argv[3] || '';
-    if ((run_file === "")) {
+    if (run_file === "") {
     CLI_error("Usage: omni run <file.omni>");
     return 1;
 }
 
-    CLI_info(("VM Mode - Executing: " + run_file));
-    
+    CLI_info("VM Mode - Executing: " + run_file);
     let source = read_file(run_file);
     let l = new_lexer(source);
     let p = new_parser(l);
@@ -588,14 +583,106 @@ run_file = process.argv[3] || '';
     return 0;
 }
 
-    if ((command === "build")) {
+    if (command === "build") {
     CLI_info("Building from omni.config.json...");
+    return 0;
+}
+
+    if (command === "test-all") {
+    CLI_banner();
+    CLI_header("Testing All Examples");
+const fs = require('fs');
+            const path = require('path');
+            
+            // Find examples directory
+            const possiblePaths = [
+                path.join(process.cwd(), 'examples'),
+                path.join(__dirname, '..', '..', 'examples'),
+                path.join(__dirname, '..', 'examples')
+            ];
+            
+            let examplesDir = null;
+            for (const p of possiblePaths) {
+                if (fs.existsSync(p)) {
+                    examplesDir = p;
+                    break;
+                }
+            }
+            
+            if (!examplesDir) {
+                CLI_error("Examples directory not found");
+                CLI_info("Run from project root: .\\omni test-all");
+                return 1;
+            }
+            
+            CLI_info("Examples directory: " + examplesDir);
+            console.log("");
+            
+            // Get all .omni files
+            const files = fs.readdirSync(examplesDir)
+                .filter(f => f.endsWith('.omni'))
+                .sort();
+            
+            CLI_info("Found " + files.length + " example files");
+            console.log("");
+            
+            let passed = 0;
+            let failed = 0;
+            const failures = [];
+            
+            for (const file of files) {
+                const filePath = path.join(examplesDir, file);
+                const outputPath = path.join(examplesDir, file.replace('.omni', '.test.js'));
+                
+                try {
+                    // Read and parse
+                    const source = fs.readFileSync(filePath, 'utf-8');
+                    const l = new_lexer(source);
+                    const p = new_parser(l);
+                    const program = Parser_parse_program(p);
+                    
+                    // Generate code
+                    const gen = HybridCodeGenerator_new('js');
+                    const code = HybridCodeGenerator_generate(gen, program);
+                    
+                    // Check if code was generated
+                    if (code && code.length > 0) {
+                        passed++;
+                        console.log(CLI_COLORS().green + "  ✓ " + CLI_COLORS().reset + file);
+                    } else {
+                        failed++;
+                        failures.push({ file, error: "Empty output" });
+                        console.log(CLI_COLORS().red + "  ✗ " + CLI_COLORS().reset + file + CLI_COLORS().dim + " (empty output)" + CLI_COLORS().reset);
+                    }
+                } catch (e) {
+                    failed++;
+                    failures.push({ file, error: e.message });
+                    console.log(CLI_COLORS().red + "  ✗ " + CLI_COLORS().reset + file + CLI_COLORS().dim + " (" + e.message.substring(0, 40) + ")" + CLI_COLORS().reset);
+                }
+            }
+            
+            console.log("");
+            console.log("────────────────────────────────────────");
+            console.log("Results: " + CLI_COLORS().green + passed + " passed" + CLI_COLORS().reset + ", " + 
+                (failed > 0 ? CLI_COLORS().red + failed + " failed" + CLI_COLORS().reset : "0 failed"));
+            console.log("");
+            
+            if (failed > 0) {
+                CLI_warning("Some examples failed to compile");
+                for (const f of failures) {
+                    console.log(CLI_COLORS().dim + "  " + f.file + ": " + f.error + CLI_COLORS().reset);
+                }
+                return 1;
+            } else {
+                CLI_success("All examples compiled successfully!");
+                return 0;
+            }
     return 0;
 }
 
     let show_help = false;
 show_help = command === 'help' || command === '--help' || command === '-h';
-    if ((((command === "") || args_len) < 3)) {
+    if ((command === "" || args_len) < 3) {
     CLI_info("Launching interactive mode...");
     cmd_tui();
     return 0;
@@ -607,6 +694,7 @@ show_help = command === 'help' || command === '--help' || command === '-h';
     print("  setup                          Install Omni globally");
     print("  run <file.omni>                Execute instantly via VM");
     print("  build                          Build from omni.config.json");
+    print("  test-all                       Validate all examples compile");
     print("  package --self                 Create self-contained package");
     print("  <input> <output> [options]     Compile to target");
     print("");
@@ -634,12 +722,6 @@ console.log(CLI_COLORS.dim + "  omni run app.omni                       # Execut
     let show_coverage = false;
 input_path = process.argv[2];
         output_path = process.argv[3];
-
-        if (!output_path && input_path) {
-            const path = require('path');
-            const ext = target_lang === 'js' ? '.js' : (target_lang === 'python' ? '.py' : '.out');
-            output_path = path.join(path.dirname(input_path), path.basename(input_path, path.extname(input_path)) + ext);
-        }
         
         for (let i = 4; i < process.argv.length; i++) {
             const arg = process.argv[i];
@@ -653,8 +735,8 @@ input_path = process.argv[2];
                 show_coverage = true;
             }
         }
-    CLI_info(("Compiling: " + input_path));
-    CLI_info(("Target: " + target_lang));
+    CLI_info("Compiling: " + input_path);
+    CLI_info("Target: " + target_lang);
 if (package_path) {
             const fs = require('fs');
             const path = require('path');
@@ -690,11 +772,11 @@ if (package_path) {
     let l = new_lexer(source);
     let p = new_parser(l);
     let program = Parser_parse_program(p);
-    let gen = HybridCodeGenerator_new(target_lang);
+    let gen = new_code_generator(target_lang);
 if (framework) {
             gen.framework = framework;
         }
-    let code = HybridCodeGenerator_generate(gen, program);
+    let code = CodeGenerator_generate(gen, program);
 if (show_coverage || gen.ast_node_count > 0) {
             const coverage = gen.ast_node_count > 0 
                 ? (gen.generated_count / gen.ast_node_count * 100).toFixed(1)
@@ -707,14 +789,13 @@ if (show_coverage || gen.ast_node_count > 0) {
             }
         }
     write_file(output_path, code);
-    CLI_success(("Output: " + output_path));
+    CLI_success("Output: " + output_path);
     CLI_success("Compiled successfully!");
 }
-
-let _ = main();
 
 
 // Entry Point
 if (require.main === module) {
     main();
 }
+

@@ -1,86 +1,50 @@
-├óÔÇ×┬╣ VM Mode - Executing: ../examples/02_flow_control.omni
-Unexpected token in expression: Kind 43, Lexeme: )
-Unexpected token in expression: Kind 44, Lexeme: {
-Unexpected token in expression: Kind 65, Lexeme: else
-Unexpected token in expression: Kind 43, Lexeme: )
-Unexpected token in expression: Kind 44, Lexeme: {
-Unexpected token in expression: Kind 65, Lexeme: else
-Unexpected token in expression: Kind 43, Lexeme: )
-Unexpected token in expression: Kind 44, Lexeme: {
-Unexpected token in expression: Kind 65, Lexeme: else
-Unexpected token in expression: Kind 43, Lexeme: )
-Unexpected token in expression: Kind 44, Lexeme: {
-Unexpected token in expression: Kind 65, Lexeme: else
-Unexpected token in expression: Kind 44, Lexeme: {
-Unexpected token in expression: Kind 43, Lexeme: )
-Unexpected token in expression: Kind 44, Lexeme: {
-Unexpected token in expression: Kind 1, Lexeme: *
-Unexpected token in expression: Kind 21, Lexeme: +
-Unexpected token in expression: Kind 43, Lexeme: )
-Unexpected token in expression: Kind 44, Lexeme: {
-Unexpected token in expression: Kind 1, Lexeme: -
-Unexpected token in expression: Kind 21, Lexeme: +
-Unexpected token in expression: Kind 1, Lexeme: -
-Unexpected token in expression: Kind 43, Lexeme: )
-Unexpected token in expression: Kind 44, Lexeme: {
-Unexpected token in expression: Kind 43, Lexeme: )
-Unexpected token in expression: Kind 44, Lexeme: {
-Unexpected token in expression: Kind 1, Lexeme: *
-Unexpected token in expression: Kind 21, Lexeme: +
-Unexpected token in expression: Kind 21, Lexeme: +
-Unexpected token in expression: Kind 21, Lexeme: +
-Unexpected token in expression: Kind 43, Lexeme: )
-Unexpected token in expression: Kind 44, Lexeme: {
-Unexpected token in expression: Kind 21, Lexeme: +
-Unexpected token in expression: Kind 1, Lexeme: -
-Unexpected token in expression: Kind 21, Lexeme: +
-Unexpected token in expression: Kind 1, Lexeme: -
-Unexpected token in expression: Kind 21, Lexeme: +
-Unexpected token in expression: Kind 21, Lexeme: +
-Unexpected token in expression: Kind 21, Lexeme: +
-Unexpected token in expression: Kind 21, Lexeme: +
-[vm] Starting execution...
-[vm] OUTER CAUGHT: { _omni_return: true, value: 'zero' } TYPE: object
-├óÔÇ×┬╣ VM Mode - Executing: ../examples/02_flow_control.omni
-Unexpected token in expression: Kind 43, Lexeme: )
-Unexpected token in expression: Kind 44, Lexeme: {
-Unexpected token in expression: Kind 65, Lexeme: else
-Unexpected token in expression: Kind 43, Lexeme: )
-Unexpected token in expression: Kind 44, Lexeme: {
-Unexpected token in expression: Kind 65, Lexeme: else
-Unexpected token in expression: Kind 43, Lexeme: )
-Unexpected token in expression: Kind 44, Lexeme: {
-Unexpected token in expression: Kind 65, Lexeme: else
-Unexpected token in expression: Kind 43, Lexeme: )
-Unexpected token in expression: Kind 44, Lexeme: {
-Unexpected token in expression: Kind 65, Lexeme: else
-Unexpected token in expression: Kind 44, Lexeme: {
-Unexpected token in expression: Kind 43, Lexeme: )
-Unexpected token in expression: Kind 44, Lexeme: {
-Unexpected token in expression: Kind 1, Lexeme: *
-Unexpected token in expression: Kind 21, Lexeme: +
-Unexpected token in expression: Kind 43, Lexeme: )
-Unexpected token in expression: Kind 44, Lexeme: {
-Unexpected token in expression: Kind 1, Lexeme: -
-Unexpected token in expression: Kind 21, Lexeme: +
-Unexpected token in expression: Kind 1, Lexeme: -
-Unexpected token in expression: Kind 43, Lexeme: )
-Unexpected token in expression: Kind 44, Lexeme: {
-Unexpected token in expression: Kind 43, Lexeme: )
-Unexpected token in expression: Kind 44, Lexeme: {
-Unexpected token in expression: Kind 1, Lexeme: *
-Unexpected token in expression: Kind 21, Lexeme: +
-Unexpected token in expression: Kind 21, Lexeme: +
-Unexpected token in expression: Kind 21, Lexeme: +
-Unexpected token in expression: Kind 43, Lexeme: )
-Unexpected token in expression: Kind 44, Lexeme: {
-Unexpected token in expression: Kind 21, Lexeme: +
-Unexpected token in expression: Kind 1, Lexeme: -
-Unexpected token in expression: Kind 21, Lexeme: +
-Unexpected token in expression: Kind 1, Lexeme: -
-Unexpected token in expression: Kind 21, Lexeme: +
-Unexpected token in expression: Kind 21, Lexeme: +
-Unexpected token in expression: Kind 21, Lexeme: +
-Unexpected token in expression: Kind 21, Lexeme: +
-[vm] Starting execution...
-[vm] OUTER CAUGHT: { _omni_return: true, value: 'zero' } TYPE: object
+1631:     if (stmt.kind === NODE_LET) {
+1632:     return "let " + stmt.name + " = " + CodeGenerator_gen_expression(self, stmt.value) + ";";
+1633: }
+1634: 
+1635:     if (stmt.kind === NODE_RETURN) {
+1636:     return "return " + CodeGenerator_gen_expression(self, stmt.value) + ";";
+1637: }
+1638: 
+1639:     if (stmt.kind === NODE_FUNCTION) {
+1640:     let params = "";
+1641: params = stmt.params.join(", ");
+1642:     let body = CodeGenerator_gen_block(self, stmt.body);
+1643:     let decl = "function " + stmt.name + "(" + params + ") " + body;
+1644:     let decorators_code = CodeGenerator_gen_decorators(self, stmt.name, stmt.decorators);
+1645:     if (decorators_code !== "") {
+1646:     decl = decl + "\n" + decorators_code;
+1647: }
+1648: 
+1649:     return decl;
+1650: }
+1651: 
+1652:     if (stmt.kind === NODE_STRUCT) {
+1653:     let decl = CodeGenerator_gen_struct(self, stmt);
+1654:     let decorators_code = CodeGenerator_gen_decorators(self, stmt.name, stmt.decorators);
+1655:     if (decorators_code !== "") {
+1656:     decl = decl + "\n" + decorators_code;
+1657: }
+1658: 
+1659:     return decl;
+1660: }
+1661: 
+1662:     if (stmt.kind === NODE_IF) {
+1663:     let cond = CodeGenerator_gen_expression(self, stmt.condition);
+1664:     let cons = CodeGenerator_gen_block(self, stmt.consequence);
+1665:     let alt = "";
+1666:     if (stmt.alternative) {
+1667:     alt = " else " + CodeGenerator_gen_block(self, stmt.alternative);
+1668: }
+1669: 
+1670:     return "if (" + cond + ") " + cons + alt;
+1671: }
+1672: 
+1673:     if (stmt.kind === NODE_WHILE) {
+1674:     let cond = CodeGenerator_gen_expression(self, stmt.condition);
+1675:     let body = CodeGenerator_gen_block(self, stmt.body);
+1676:     return "while (" + cond + ") " + body;
+1677: }
+1678: 
+1679:     if (stmt.expr) {
+1680:     return CodeGenerator_gen_expression(self, stmt.expr) + ";";

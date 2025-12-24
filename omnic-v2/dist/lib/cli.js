@@ -65,7 +65,7 @@ let CLI_COLORS_INIT = false;
 let CLI_COLORS_CACHE = new Colors({ reset: "", bold: "", dim: "", underline: "", black: "", red: "", green: "", yellow: "", blue: "", magenta: "", cyan: "", white: "", bg_black: "", bg_red: "", bg_green: "", bg_yellow: "", bg_blue: "", bg_magenta: "", bg_cyan: "", bg_white: "" });
 
 function CLI_COLORS() {
-    if ((CLI_COLORS_INIT === false)) {
+    if (CLI_COLORS_INIT === false) {
     CLI_COLORS_CACHE = Colors_new();
     CLI_COLORS_INIT = true;
 }
@@ -75,22 +75,22 @@ function CLI_COLORS() {
 
 function CLI_success(msg) {
 const c = CLI_COLORS();
-        console.log(c.green + '├ó┼ôÔÇ£' + c.reset + ' ' + msg);
+        console.log(c.green + 'âœ“' + c.reset + ' ' + msg);
 }
 
 function CLI_error(msg) {
 const c = CLI_COLORS();
-        console.error(c.red + '├ó┼ôÔÇö' + c.reset + ' ' + msg);
+        console.error(c.red + 'âœ—' + c.reset + ' ' + msg);
 }
 
 function CLI_warning(msg) {
 const c = CLI_COLORS();
-        console.log(c.yellow + '├ó┼í┬á' + c.reset + ' ' + msg);
+        console.log(c.yellow + 'âš ' + c.reset + ' ' + msg);
 }
 
 function CLI_info(msg) {
 const c = CLI_COLORS();
-        console.log(c.blue + '├óÔÇ×┬╣' + c.reset + ' ' + msg);
+        console.log(c.blue + 'â„¹' + c.reset + ' ' + msg);
 }
 
 function CLI_step(step, total, msg) {
@@ -102,7 +102,7 @@ const c = CLI_COLORS();
 function CLI_header(title) {
 const c = CLI_COLORS();
         console.log('');
-        console.log(c.bold + c.cyan + '├óÔÇó┬É├óÔÇó┬É├óÔÇó┬É ' + title + ' ├óÔÇó┬É├óÔÇó┬É├óÔÇó┬É' + c.reset);
+        console.log(c.bold + c.cyan + 'â•â•â• ' + title + ' â•â•â•' + c.reset);
         console.log('');
 }
 
@@ -159,7 +159,7 @@ class Spinner {
 }
 
 function Spinner_new(message) {
-    let spinner = new Spinner({ frames: "├ó┬áÔÇ╣├ó┬áÔäó├ó┬á┬╣├ó┬á┬©├ó┬á┬╝├ó┬á┬┤├ó┬á┬ª├ó┬á┬º├ó┬áÔÇí├ó┬á┬Å", current: 0, interval: 0, message: message, running: false });
+    let spinner = new Spinner({ frames: "â ‹â ™â ¹â ¸â ¼â ´â ¦â §â ‡â ", current: 0, interval: 0, message: message, running: false });
     return spinner;
 }
 
@@ -185,8 +185,8 @@ if (!self.running) return;
         const c = CLI_COLORS();
         
         const icon = success 
-            ? c.green + '├ó┼ôÔÇ£' + c.reset 
-            : c.red + '├ó┼ôÔÇö' + c.reset;
+            ? c.green + 'âœ“' + c.reset 
+            : c.red + 'âœ—' + c.reset;
         
         process.stdout.write('\r' + icon + ' ' + self.message + '\n');
 }
@@ -198,8 +198,8 @@ const c = CLI_COLORS();
         const filled = Math.floor((current / total) * width);
         const empty = width - filled;
         
-        const bar = c.green + '├óÔÇô╦å'.repeat(filled) + 
-                    c.dim + '├óÔÇôÔÇÿ'.repeat(empty) + c.reset;
+        const bar = c.green + 'â–ˆ'.repeat(filled) + 
+                    c.dim + 'â–‘'.repeat(empty) + c.reset;
         
         result = bar + ' ' + percent + '%';
     return result;
@@ -270,7 +270,7 @@ function CLI_table_header(title) {
 const c = CLI_COLORS();
         console.log('');
         console.log(c.bold + title + c.reset);
-        console.log('├óÔÇØÔé¼'.repeat(50));
+        console.log('â”€'.repeat(50));
 }
 
 function CLI_banner() {
@@ -297,5 +297,35 @@ function CLI_version() {
 }
 
 
-module.exports = { Colors, Colors_new, CLI_COLORS, CLI_success, CLI_error, CLI_warning, CLI_info, CLI_step, CLI_header, CLI_dim, CLI_bold, CLI_green, CLI_red, CLI_yellow, CLI_cyan, CLI_progress_bar, Spinner, Spinner_new, Spinner_start, Spinner_stop, ParsedArgs, ParsedArgs_new, CLI_table_simple, CLI_table_header, CLI_banner, CLI_version };
 
+// Auto-exports
+if (typeof exports !== 'undefined') {
+    exports.Colors_new = Colors_new;
+    exports.CLI_COLORS = CLI_COLORS;
+    exports.CLI_success = CLI_success;
+    exports.CLI_error = CLI_error;
+    exports.CLI_warning = CLI_warning;
+    exports.CLI_info = CLI_info;
+    exports.CLI_step = CLI_step;
+    exports.CLI_header = CLI_header;
+    exports.CLI_dim = CLI_dim;
+    exports.CLI_bold = CLI_bold;
+    exports.CLI_green = CLI_green;
+    exports.CLI_red = CLI_red;
+    exports.CLI_yellow = CLI_yellow;
+    exports.CLI_cyan = CLI_cyan;
+    exports.Spinner_new = Spinner_new;
+    exports.Spinner_start = Spinner_start;
+    exports.Spinner_stop = Spinner_stop;
+    exports.CLI_progress_bar = CLI_progress_bar;
+    exports.ParsedArgs_new = ParsedArgs_new;
+    exports.CLI_table_simple = CLI_table_simple;
+    exports.CLI_table_header = CLI_table_header;
+    exports.CLI_banner = CLI_banner;
+    exports.CLI_version = CLI_version;
+    exports.Colors = Colors;
+    exports.Spinner = Spinner;
+    exports.ParsedArgs = ParsedArgs;
+    exports.CLI_COLORS_INIT = CLI_COLORS_INIT;
+    exports.CLI_COLORS_CACHE = CLI_COLORS_CACHE;
+}

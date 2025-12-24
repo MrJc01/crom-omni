@@ -736,3 +736,23 @@ function graph_remove_edge(graph, edge_id) {
 graph.edges = graph.edges.filter(e => e.id !== edge_id);
 }
 
+
+// Auto-exports
+if (typeof exports !== 'undefined') {
+    exports.VisualGraph_new = VisualGraph_new;
+    exports.ast_to_graph = ast_to_graph;
+    exports.graph_to_ast = graph_to_ast;
+    exports.graph_to_code = graph_to_code;
+    exports.graph_to_json = graph_to_json;
+    exports.json_to_graph = json_to_graph;
+    exports.code_to_graph = code_to_graph;
+    exports.get_installed_package_nodes = get_installed_package_nodes;
+    exports.graph_add_node = graph_add_node;
+    exports.graph_remove_node = graph_remove_node;
+    exports.graph_move_node = graph_move_node;
+    exports.graph_add_edge = graph_add_edge;
+    exports.graph_remove_edge = graph_remove_edge;
+    exports.VisualNode = VisualNode;
+    exports.VisualEdge = VisualEdge;
+    exports.VisualGraph = VisualGraph;
+}
