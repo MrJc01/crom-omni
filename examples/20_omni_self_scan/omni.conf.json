@@ -1,0 +1,8 @@
+{
+  "name": "OmniSelfScan",
+  "version": "1.0.0",
+  "description": "Meta-programming: Omni analyzes Omni code",
+  "entry": "src/main.omni",
+  "defaultMode": "cmd",
+  "targets": ["cmd"]
+}

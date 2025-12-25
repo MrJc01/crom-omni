@@ -1,0 +1,52 @@
+// ============================================================================
+// 03_CAPSULE_ARCHITECTURE - Modular Organization
+// ============================================================================
+
+fn print(msg: string) {
+    native "js" { console.log(msg); }
+    native "python" {
+print(msg)
+    }
+}
+
+capsule math {
+    fn add(a: i64, b: i64) -> i64 { return a + b; }
+    fn sub(a: i64, b: i64) -> i64 { return a - b; }
+    fn mul(a: i64, b: i64) -> i64 { return a * b; }
+}
+
+capsule string_utils {
+    fn repeat(s: string, n: i64) -> string {
+        let result = "";
+        let i = 0;
+        while (i < n) {
+            result = result + s;
+            i = i + 1;
+        }
+        return result;
+    }
+    
+    fn banner(text: string) -> string {
+        let border = repeat("=", 40);
+        return border + "\n" + text + "\n" + border;
+    }
+}
+
+fn main() {
+    print("╔══════════════════════════════════════╗");
+    print("║   OMNI - Capsule Architecture        ║");
+    print("╚══════════════════════════════════════╝");
+    print("");
+    
+    print("Using math capsule:");
+    print("  10 + 5 = " + math.add(10, 5));
+    print("  10 - 5 = " + math.sub(10, 5));
+    print("  10 * 5 = " + math.mul(10, 5));
+    print("");
+    
+    print("Using string_utils capsule:");
+    print("  repeat('*', 10) = " + string_utils.repeat("*", 10));
+    print("");
+    
+    print("✓ Capsule architecture example completed!");
+}

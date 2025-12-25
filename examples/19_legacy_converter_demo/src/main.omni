@@ -1,0 +1,37 @@
+// ============================================================================
+// 19_LEGACY_CONVERTER_DEMO - Code Ingestion
+// ============================================================================
+
+fn print(msg: string) {
+    native "js" { console.log(msg); }
+    native "python" {
+print(msg)
+    }
+}
+
+fn simulate_legacy_php() -> string {
+    return "<?php function hello() { return 'Hello'; } ?>";
+}
+
+fn simulate_conversion(php_code: string) -> string {
+    return "fn hello() -> string { return \"Hello\"; }";
+}
+
+fn main() {
+    print("╔══════════════════════════════════════╗");
+    print("║   OMNI - Legacy Converter Demo       ║");
+    print("╚══════════════════════════════════════╝");
+    print("");
+    
+    let legacy = simulate_legacy_php();
+    print("Original PHP:");
+    print("  " + legacy);
+    print("");
+    
+    let converted = simulate_conversion(legacy);
+    print("Converted to Omni:");
+    print("  " + converted);
+    print("");
+    
+    print("✓ Legacy converter demo completed!");
+}

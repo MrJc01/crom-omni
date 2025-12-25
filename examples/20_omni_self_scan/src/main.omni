@@ -1,0 +1,55 @@
+// ============================================================================
+// 20_OMNI_SELF_SCAN - Meta-programming
+// ============================================================================
+
+fn print(msg: string) {
+    native "js" { console.log(msg); }
+    native "python" {
+print(msg)
+    }
+}
+
+fn count_functions(source: string) -> i64 {
+    let count = 0;
+    native "js" {
+        const matches = source.match(/fn\s+\w+/g);
+        count = matches ? matches.length : 0;
+    }
+    native "python" {
+import re
+count = len(re.findall(r'fn\s+\w+', source))
+    }
+    return count;
+}
+
+fn count_structs(source: string) -> i64 {
+    let count = 0;
+    native "js" {
+        const matches = source.match(/struct\s+\w+/g);
+        count = matches ? matches.length : 0;
+    }
+    native "python" {
+import re
+count = len(re.findall(r'struct\s+\w+', source))
+    }
+    return count;
+}
+
+fn main() {
+    print("╔══════════════════════════════════════╗");
+    print("║   OMNI - Self Scan                   ║");
+    print("╚══════════════════════════════════════╝");
+    print("");
+    
+    let sample = "fn main() {} fn helper() {} struct User {} struct Task {}";
+    
+    let fn_count = count_functions(sample);
+    let struct_count = count_structs(sample);
+    
+    print("Sample code analysis:");
+    print("  Functions: " + fn_count);
+    print("  Structs: " + struct_count);
+    print("");
+    
+    print("✓ Self scan example completed!");
+}

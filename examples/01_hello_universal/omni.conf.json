@@ -1,0 +1,8 @@
+{
+  "name": "HelloUniversal",
+  "version": "1.0.0",
+  "description": "Demonstrates Omni's core philosophy: write once, run anywhere. Compiles to JS, Python, or C.",
+  "entry": "src/main.omni",
+  "defaultMode": "cmd",
+  "targets": ["cmd", "app", "web", "web-app"]
+}

@@ -1,120 +1,126 @@
 # 🎨 Omni Examples Gallery
 
-A curated collection of 20 examples showcasing Omni's capabilities, from basic syntax to complete applications.
+A curated collection of 26 examples showcasing Omni's capabilities.
 
-## Quick Start
+## 🚀 Quick Start - Examples Hub
 
-```powershell
-# From crom-omni root directory
-.\omni compile examples/01_hello_universal.omni --target js
-node output.js
-```
-
-## Multi-Target Compilation
-
-The same `.omni` file can compile to different targets:
+Run the interactive hub to explore all examples:
 
 ```powershell
-# JavaScript (Node.js)
-.\omni compile examples/01_hello_universal.omni --target js
-
-# Python
-.\omni compile examples/01_hello_universal.omni --target python
-
-# C (coming soon)
-.\omni compile examples/01_hello_universal.omni --target c
+node examples\hub.js
 ```
+
+This opens a menu where you can:
+
+1. Browse all examples with descriptions
+2. See which modes each example supports
+3. Select and run any example instantly
 
 ---
 
-## Examples Reference
+## Run Modes Explained
 
-| #                                        | Example                                                        | What It Proves                           | Command                                                 |
-| ---------------------------------------- | -------------------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------- |
-| **Level 1: Core Fundamentals**           |                                                                |                                          |
-| 01                                       | [01_hello_universal.omni](01_hello_universal.omni)             | Multi-target compilation (JS/Python/C)   | `.\omni compile examples/01_hello_universal.omni`       |
-| 02                                       | [02_flow_control.omni](02_flow_control.omni)                   | if/else, while loops, recursion          | `.\omni compile examples/02_flow_control.omni`          |
-| 03                                       | [03_capsule_architecture.omni](03_capsule_architecture.omni)   | Modular organization with capsules       | `.\omni compile examples/03_capsule_architecture.omni`  |
-| 04                                       | [04_types_and_structs.omni](04_types_and_structs.omni)         | Type system: primitives, structs, arrays | `.\omni compile examples/04_types_and_structs.omni`     |
-| **Level 2: Integration & Metamorphosis** |                                                                |                                          |
-| 05                                       | [05_http_api_client.omni](05_http_api_client.omni)             | HTTP requests (std.http)                 | `.\omni compile examples/05_http_api_client.omni`       |
-| 06                                       | [06_file_system_master.omni](06_file_system_master.omni)       | File I/O operations                      | `.\omni compile examples/06_file_system_master.omni`    |
-| 07                                       | [07_json_transformer.omni](07_json_transformer.omni)           | JSON parsing & transformation            | `.\omni compile examples/07_json_transformer.omni`      |
-| 08                                       | [08_native_bridge.omni](08_native_bridge.omni)                 | Native code injection (JS/Python/C)      | `.\omni compile examples/08_native_bridge.omni`         |
-| **Level 3: Visual & 3D Experience**      |                                                                |                                          |
-| 09                                       | [09_basic_3d_cube.omni](09_basic_3d_cube.omni)                 | Three.js 3D scene                        | `.\omni compile examples/09_basic_3d_cube.omni`         |
-| 10                                       | [10_animated_solar_system.omni](10_animated_solar_system.omni) | Complex 3D animation, physics            | `.\omni compile examples/10_animated_solar_system.omni` |
-| 11                                       | [11_interactive_ui_nodes.omni](11_interactive_ui_nodes.omni)   | Visual editor with @visual:\*            | `.\omni studio examples/11_interactive_ui_nodes.omni`   |
-| 12                                       | [12_desktop_window.omni](12_desktop_window.omni)               | Native GUI (std.gui)                     | `.\omni compile examples/12_desktop_window.omni`        |
-| **Level 4: Systems & Networks**          |                                                                |                                          |
-| 13                                       | [13_secure_hasher.omni](13_secure_hasher.omni)                 | SHA-256, HMAC (std.crypto)               | `.\omni compile examples/13_secure_hasher.omni`         |
-| 14                                       | [14_sql_agnostic_query.omni](14_sql_agnostic_query.omni)       | Database abstraction layer               | `.\omni compile examples/14_sql_agnostic_query.omni`    |
-| 15                                       | [15_p2p_mesh_node.omni](15_p2p_mesh_node.omni)                 | P2P mesh networking                      | `.\omni compile examples/15_p2p_mesh_node.omni`         |
-| 16                                       | [16_background_worker.omni](16_background_worker.omni)         | Worker pools, parallelism                | `.\omni compile examples/16_background_worker.omni`     |
-| **Level 5: Showroom (Complete Systems)** |                                                                |                                          |
-| 17                                       | [17_mini_game_3d.omni](17_mini_game_3d.omni)                   | Full 3D game with collision              | `.\omni compile examples/17_mini_game_3d.omni`          |
-| 18                                       | [18_payment_flow.omni](18_payment_flow.omni)                   | Payment server with audit trail          | `.\omni compile examples/18_payment_flow.omni`          |
-| 19                                       | [19_legacy_converter_demo.omni](19_legacy_converter_demo.omni) | PHP/JS to Omni ingestion                 | `.\omni compile examples/19_legacy_converter_demo.omni` |
-| 20                                       | [20_omni_self_scan.omni](20_omni_self_scan.omni)               | Meta-programming: Omni analyzes Omni     | `.\omni compile examples/20_omni_self_scan.omni`        |
+| Mode           | Flag        | What It Does                      |
+| -------------- | ----------- | --------------------------------- |
+| **Terminal**   | `--cmd`     | Runs in terminal (Node.js/Python) |
+| **Native App** | `--app`     | Opens Tkinter window (Python)     |
+| **Web Server** | `--web`     | Starts HTTP server on port 3000   |
+| **Web App**    | `--web-app` | Starts server + opens browser     |
 
 ---
 
-## Running in Omni Studio
+## Examples by Category
 
-Open any example in the visual 3D editor:
+### Level 1: Core Fundamentals (Terminal)
 
-```powershell
-.\omni studio examples/11_interactive_ui_nodes.omni
-```
+| #   | Example              | Modes | Run                                                               |
+| --- | -------------------- | ----- | ----------------------------------------------------------------- |
+| 01  | hello_universal      | cmd   | `.\omni run examples\01_hello_universal\src\main.omni --cmd`      |
+| 02  | flow_control         | cmd   | `.\omni run examples\02_flow_control\src\main.omni --cmd`         |
+| 03  | capsule_architecture | cmd   | `.\omni run examples\03_capsule_architecture\src\main.omni --cmd` |
+| 04  | types_and_structs    | cmd   | `.\omni run examples\04_types_and_structs\src\main.omni --cmd`    |
 
-Examples with `@visual:position` annotations will render as visual nodes on the canvas.
+### Level 2: Integration (Terminal)
 
----
+| #   | Example            | Modes    | Description        |
+| --- | ------------------ | -------- | ------------------ |
+| 05  | http_api_client    | cmd      | HTTP requests      |
+| 06  | file_system_master | cmd      | File I/O           |
+| 07  | json_transformer   | cmd      | JSON parsing       |
+| 08  | native_bridge      | cmd, app | Native code blocks |
 
-## Test All Examples
+### Level 3: Visual & 3D (Web/App)
 
-Validate all examples compile correctly:
+| #      | Example               | Modes            | Run                                                         |
+| ------ | --------------------- | ---------------- | ----------------------------------------------------------- |
+| 09     | basic_3d_cube         | **web, web-app** | `.\omni run examples\09_basic_3d_cube\src\main.omni --web`  |
+| 10     | animated_solar_system | **web, web-app** | 3D orbital animation                                        |
+| 11     | interactive_ui_nodes  | **web, web-app** | Visual node editor                                          |
+| **12** | desktop_window        | **app**          | `.\omni run examples\12_desktop_window\src\main.omni --app` |
 
-```powershell
-.\omni test-all
-```
+### Level 4: Systems & Networks (Terminal)
 
-This compiles all 20 examples and reports success/failure for each.
-
----
-
-## Categories Explained
-
-### Level 1: Core Fundamentals
-
-Basic language features every Omni developer should know.
-
-### Level 2: Integration & Metamorphosis
-
-Connecting Omni to the outside world: HTTP, files, JSON, native code.
-
-### Level 3: Visual & 3D Experience
-
-The unique differentiator: 3D programming, visual nodes, desktop GUIs.
-
-### Level 4: Systems & Networks
-
-Building robust systems: crypto, databases, P2P, concurrency.
+| #   | Example            | Modes | Description          |
+| --- | ------------------ | ----- | -------------------- |
+| 13  | secure_hasher      | cmd   | SHA-256 crypto       |
+| 14  | sql_agnostic_query | cmd   | Database abstraction |
+| 15  | p2p_mesh_node      | cmd   | P2P networking       |
+| 16  | background_worker  | cmd   | Worker pools         |
 
 ### Level 5: Showroom
 
-Complete, functional systems demonstrating Omni's full power.
+| #      | Example               | Modes       | Run                                                           |
+| ------ | --------------------- | ----------- | ------------------------------------------------------------- |
+| **17** | mini_game_3d          | **web-app** | `.\omni run examples\17_mini_game_3d\src\main.omni --web-app` |
+| **18** | payment_flow          | **web-app** | Payment UI demo                                               |
+| 19     | legacy_converter_demo | cmd         | Code ingestion                                                |
+| 20     | omni_self_scan        | cmd         | Meta-programming                                              |
+| 21     | stress_nesting        | cmd         | Stress test                                                   |
+| 22     | stress_types          | cmd         | Type stress test                                              |
+| **23** | hub_navigation        | **web-app** | Navigation hub                                                |
+
+### Level 6: Standard Library & Adapters
+
+| #      | Example           | Modes        | What It Shows                          |
+| ------ | ----------------- | ------------ | -------------------------------------- |
+| **24** | std_ui_demo       | **app, web** | `import std/ui` - Global UI functions  |
+| **25** | adapters_showcase | cmd          | `@entity`, `@server`, `@ui` decorators |
+| **26** | fullstack_app     | **web-app**  | Complete Task Manager with all layers  |
 
 ---
 
-## Contributing
+## Standard Library Usage
 
-Add new examples following the naming convention:
+Instead of writing `native` blocks, use global library functions:
 
-- `NN_descriptive_name.omni`
-- Include header comments explaining the example
-- Add `@visual:position` annotations for Studio compatibility
-- Update this README with the new entry
+```omni
+import "std/ui.omni";
+import "std/core.omni";
+
+let win = Window_create(config);
+let btn = Button_create(win, "Click", 20, 20);
+UI_run();
+```
+
+**Same code runs on Tkinter (Python) AND Browser (JS)!**
+
+---
+
+## Adapter Decorators
+
+Write framework-agnostic code:
+
+```omni
+@entity struct User { id: i64, name: string }
+
+@server.get("/users")
+fn getUsers() { ... }
+
+@ui.screen("Dashboard")
+capsule Dashboard { ... }
+```
+
+Omni compiles this to: React, Laravel, FastAPI, or any configured target.
 
 ---
 

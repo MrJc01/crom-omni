@@ -1,0 +1,8 @@
+{
+  "name": "InteractiveUINodes",
+  "version": "1.0.0",
+  "description": "Visual editor with @visual:* annotations",
+  "entry": "src/main.omni",
+  "defaultMode": "web",
+  "targets": ["web", "web-app"]
+}

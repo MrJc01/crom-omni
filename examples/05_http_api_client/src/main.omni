@@ -1,0 +1,36 @@
+// ============================================================================
+// 05_HTTP_API_CLIENT - HTTP Requests
+// ============================================================================
+
+fn print(msg: string) {
+    native "js" { console.log(msg); }
+    native "python" {
+print(msg)
+    }
+}
+
+fn http_get(url: string) -> string {
+    let result = "";
+    native "js" {
+        // Simulated HTTP response for demo
+        result = '{"status": "ok", "message": "Hello from API"}';
+    }
+    native "python" {
+result = '{"status": "ok", "message": "Hello from API"}'
+    }
+    return result;
+}
+
+fn main() {
+    print("╔══════════════════════════════════════╗");
+    print("║   OMNI - HTTP API Client             ║");
+    print("╚══════════════════════════════════════╝");
+    print("");
+    
+    print("Making API request...");
+    let response = http_get("https://api.example.com/data");
+    print("Response: " + response);
+    print("");
+    
+    print("✓ HTTP example completed!");
+}

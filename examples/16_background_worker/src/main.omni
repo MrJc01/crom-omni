@@ -1,0 +1,46 @@
+// ============================================================================
+// 16_BACKGROUND_WORKER - Worker Pools
+// ============================================================================
+
+fn print(msg: string) {
+    native "js" { console.log(msg); }
+    native "python" {
+print(msg)
+    }
+}
+
+struct Task {
+    id: i64,
+    name: string,
+    status: string
+}
+
+fn process_task(task: Task) -> Task {
+    print("Processing task: " + task.name);
+    task.status = "completed";
+    return task;
+}
+
+fn main() {
+    print("╔══════════════════════════════════════╗");
+    print("║   OMNI - Background Worker           ║");
+    print("╚══════════════════════════════════════╝");
+    print("");
+    
+    let task1 = Task { id: 1, name: "Process Data", status: "pending" };
+    let task2 = Task { id: 2, name: "Generate Report", status: "pending" };
+    let task3 = Task { id: 3, name: "Send Email", status: "pending" };
+    
+    print("Queue: 3 tasks");
+    print("");
+    
+    task1 = process_task(task1);
+    task2 = process_task(task2);
+    task3 = process_task(task3);
+    
+    print("");
+    print("All tasks completed!");
+    print("");
+    
+    print("✓ Background worker example completed!");
+}

@@ -1,0 +1,8 @@
+{
+  "name": "TypesAndStructs",
+  "version": "1.0.0",
+  "description": "Demonstrates type system: primitives, structs, arrays",
+  "entry": "src/main.omni",
+  "defaultMode": "cmd",
+  "targets": ["cmd"]
+}

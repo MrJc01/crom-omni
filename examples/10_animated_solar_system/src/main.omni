@@ -1,0 +1,68 @@
+// ============================================================================
+// 10_ANIMATED_SOLAR_SYSTEM - 3D Animation
+// ============================================================================
+
+fn print(msg: string) {
+    native "js" { console.log(msg); }
+}
+
+fn create_solar_system() {
+    native "js" {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+        script.onload = initSolarSystem;
+        document.head.appendChild(script);
+    }
+}
+
+fn initSolarSystem() {
+    native "js" {
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+        
+        // Sun
+        const sunGeometry = new THREE.SphereGeometry(2, 32, 32);
+        const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+        const sun = new THREE.Mesh(sunGeometry, sunMaterial);
+        scene.add(sun);
+        
+        // Earth
+        const earthGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+        const earthMaterial = new THREE.MeshBasicMaterial({ color: 0x0077ff });
+        const earth = new THREE.Mesh(earthGeometry, earthMaterial);
+        scene.add(earth);
+        
+        // Moon
+        const moonGeometry = new THREE.SphereGeometry(0.15, 32, 32);
+        const moonMaterial = new THREE.MeshBasicMaterial({ color: 0x888888 });
+        const moon = new THREE.Mesh(moonGeometry, moonMaterial);
+        scene.add(moon);
+        
+        camera.position.z = 15;
+        
+        let time = 0;
+        function animate() {
+            requestAnimationFrame(animate);
+            time += 0.01;
+            
+            // Earth orbits sun
+            earth.position.x = Math.cos(time) * 7;
+            earth.position.z = Math.sin(time) * 7;
+            
+            // Moon orbits earth
+            moon.position.x = earth.position.x + Math.cos(time * 5) * 1;
+            moon.position.z = earth.position.z + Math.sin(time * 5) * 1;
+            
+            renderer.render(scene, camera);
+        }
+        animate();
+    }
+}
+
+fn main() {
+    print("Starting Solar System Animation...");
+    create_solar_system();
+}

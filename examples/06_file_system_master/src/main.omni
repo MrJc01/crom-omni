@@ -1,0 +1,58 @@
+// ============================================================================
+// 06_FILE_SYSTEM_MASTER - File I/O Operations
+// ============================================================================
+
+fn print(msg: string) {
+    native "js" { console.log(msg); }
+    native "python" {
+print(msg)
+    }
+}
+
+fn read_file(path: string) -> string {
+    let content = "";
+    native "js" {
+        const fs = require('fs');
+        if (fs.existsSync(path)) {
+            content = fs.readFileSync(path, 'utf-8');
+        }
+    }
+    native "python" {
+try:
+    with open(path, 'r') as f:
+        content = f.read()
+except:
+    content = ""
+    }
+    return content;
+}
+
+fn write_file(path: string, content: string) -> bool {
+    native "js" {
+        const fs = require('fs');
+        fs.writeFileSync(path, content);
+        return true;
+    }
+    native "python" {
+with open(path, 'w') as f:
+    f.write(content)
+return True
+    }
+    return false;
+}
+
+fn main() {
+    print("╔══════════════════════════════════════╗");
+    print("║   OMNI - File System Master          ║");
+    print("╚══════════════════════════════════════╝");
+    print("");
+    
+    print("Writing test file...");
+    write_file("test_output.txt", "Hello from Omni!");
+    print("Reading test file...");
+    let content = read_file("test_output.txt");
+    print("Content: " + content);
+    print("");
+    
+    print("✓ File system example completed!");
+}

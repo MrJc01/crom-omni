@@ -1,0 +1,75 @@
+// ============================================================================
+// 24_STD_UI_DEMO - Using Standard Library for Cross-Platform GUI
+// ============================================================================
+// Shows how to use std/ui.omni instead of writing native blocks
+// 
+// Run with:
+//   omni run examples/24_std_ui_demo/src/main.omni --app   (Tkinter)
+//   omni run examples/24_std_ui_demo/src/main.omni --web   (Browser)
+// ============================================================================
+
+// Import the standard UI library - provides cross-platform functions
+import "std/ui.omni";
+import "std/core.omni";
+
+// Global state for callback access
+let name_input: TextInput = TextInput { handle: 0, id: "" };
+let greeting_label: Label = Label { handle: 0, id: "", text: "" };
+
+// Button click handler
+fn on_greet_click() {
+    let name = TextInput_get_value(name_input);
+    if (name == "") {
+        name = "World";
+    }
+    Label_set_text(greeting_label, "Hello, " + name + "!");
+    print("Greeted: " + name);
+}
+
+fn on_clear_click() {
+    Label_set_text(greeting_label, "");
+    print("Cleared greeting");
+}
+
+fn main() {
+    print("╔══════════════════════════════════════╗");
+    print("║   OMNI - STD/UI Library Demo         ║");
+    print("╚══════════════════════════════════════╝");
+    print("");
+    
+    // Create window using std/ui (works on Python AND JS)
+    let config = WindowConfig {
+        title: "STD/UI Demo App",
+        width: 400,
+        height: 300,
+        background: "#f0f0f0"
+    };
+    
+    let win = Window_create(config);
+    print("[OK] Window created using Window_create()");
+    
+    // Create UI elements using std/ui functions
+    let title_label = Label_create(win, "Welcome to Omni STD/UI", 20, 20);
+    print("[OK] Label created using Label_create()");
+    
+    let name_label = Label_create(win, "Enter your name:", 20, 60);
+    name_input = TextInput_create(win, 20, 90, 200);
+    print("[OK] TextInput created using TextInput_create()");
+    
+    let greet_btn = Button_create(win, "Greet", 20, 130);
+    Button_on_click(greet_btn, on_greet_click);
+    print("[OK] Button created with Button_on_click()");
+    
+    let clear_btn = Button_create(win, "Clear", 100, 130);
+    Button_on_click(clear_btn, on_clear_click);
+    
+    greeting_label = Label_create(win, "", 20, 180);
+    
+    print("");
+    print("All UI created using std/ui library functions!");
+    print("No native blocks needed in main code.");
+    print("");
+    
+    // Start the event loop
+    UI_run();
+}

@@ -1,0 +1,68 @@
+// ============================================================================
+// 01_HELLO_UNIVERSAL - The Universal Hello World
+// ============================================================================
+// Demonstrates Omni's core philosophy: write once, run anywhere.
+// The same logic compiles to JavaScript, Python, or C with zero changes.
+//
+// Run with:
+//   omni run examples/01_hello_universal/src/main.omni --cmd
+//   omni run examples/01_hello_universal/src/main.omni --app
+//   omni run examples/01_hello_universal/src/main.omni --web
+// ============================================================================
+
+// @visual:position(100, 100)
+fn print_universal(msg: string) {
+    native "js" {
+        console.log(msg);
+    }
+    native "python" {
+print(msg)
+    }
+    native "c" {
+        printf("%s\n", msg);
+    }
+}
+
+// @visual:position(100, 200)
+fn add(a: i64, b: i64) -> i64 {
+    return a + b;
+}
+
+// @visual:position(100, 300)
+fn greet(name: string) -> string {
+    let greeting = "Hello, " + name + "! Welcome to Omni.";
+    return greeting;
+}
+
+// @visual:position(300, 100)
+fn main() {
+    print_universal("╔══════════════════════════════════════╗");
+    print_universal("║   OMNI - Universal Code Example      ║");
+    print_universal("╚══════════════════════════════════════╝");
+    print_universal("");
+    
+    print_universal("1. Basic Output:");
+    print_universal("   Hello, World!");
+    print_universal("");
+    
+    print_universal("2. Arithmetic:");
+    let result = add(42, 58);
+    print_universal("   42 + 58 = 100");
+    print_universal("");
+    
+    print_universal("3. String Operations:");
+    let message = greet("Developer");
+    print_universal("   " + message);
+    print_universal("");
+    
+    print_universal("4. Variables:");
+    let count: i64 = 10;
+    let pi: f64 = 3.14159;
+    let active: bool = true;
+    let name: string = "Omni";
+    print_universal("   count=10, pi=3.14159, active=true");
+    print_universal("");
+    
+    print_universal("✓ Example completed successfully!");
+    print_universal("  This same code runs on JS, Python, and C.");
+}

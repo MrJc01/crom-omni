@@ -1,0 +1,8 @@
+{
+  "name": "AdaptersShowcase",
+  "version": "1.0.0",
+  "description": "Shows @ui, @server, @entity decorators for framework-agnostic code",
+  "entry": "src/main.omni",
+  "defaultMode": "cmd",
+  "targets": ["cmd", "web"]
+}

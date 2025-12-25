@@ -1,0 +1,53 @@
+// ============================================================================
+// 07_JSON_TRANSFORMER - JSON Parsing & Transformation
+// ============================================================================
+
+fn print(msg: string) {
+    native "js" { console.log(msg); }
+    native "python" {
+print(msg)
+    }
+}
+
+fn json_parse(str: string) -> any {
+    native "js" {
+        return JSON.parse(str);
+    }
+    native "python" {
+import json
+return json.loads(str)
+    }
+}
+
+fn json_stringify(obj: any) -> string {
+    native "js" {
+        return JSON.stringify(obj, null, 2);
+    }
+    native "python" {
+import json
+return json.dumps(obj, indent=2)
+    }
+    return "";
+}
+
+fn main() {
+    print("╔══════════════════════════════════════╗");
+    print("║   OMNI - JSON Transformer            ║");
+    print("╚══════════════════════════════════════╝");
+    print("");
+    
+    let json_str = '{"name": "Alice", "age": 30, "active": true}';
+    print("Input JSON: " + json_str);
+    print("");
+    
+    let obj = json_parse(json_str);
+    print("Parsed object accessed");
+    print("");
+    
+    let output = json_stringify(obj);
+    print("Pretty printed:");
+    print(output);
+    print("");
+    
+    print("✓ JSON transformer example completed!");
+}

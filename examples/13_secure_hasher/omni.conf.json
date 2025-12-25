@@ -1,0 +1,8 @@
+{
+  "name": "SecureHasher",
+  "version": "1.0.0",
+  "description": "SHA-256, HMAC with std.crypto",
+  "entry": "src/main.omni",
+  "defaultMode": "cmd",
+  "targets": ["cmd"]
+}

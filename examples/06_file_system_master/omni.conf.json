@@ -1,0 +1,8 @@
+{
+  "name": "FileSystemMaster",
+  "version": "1.0.0",
+  "description": "Demonstrates file I/O operations",
+  "entry": "src/main.omni",
+  "defaultMode": "cmd",
+  "targets": ["cmd", "app"]
+}

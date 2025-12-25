@@ -1,6 +1,8 @@
 {
-  "name": "DesktopWindowExample",
+  "name": "DesktopWindow",
   "version": "1.0.0",
-  "targets": ["app", "web"],
-  "entry": "src/main.omni"
+  "description": "Native GUI with std.gui (Python/Tkinter)",
+  "entry": "src/main.omni",
+  "defaultMode": "app",
+  "targets": ["app"]
 }

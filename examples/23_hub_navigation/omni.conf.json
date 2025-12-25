@@ -1,0 +1,8 @@
+{
+  "name": "HubNavigation",
+  "version": "1.0.0",
+  "description": "Navigation hub example with routing",
+  "entry": "src/main.omni",
+  "defaultMode": "web",
+  "targets": ["web", "web-app"]
+}

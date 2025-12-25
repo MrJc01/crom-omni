@@ -1,0 +1,8 @@
+{
+  "name": "MiniGame3D",
+  "version": "1.0.0",
+  "description": "Full 3D game with collision detection",
+  "entry": "src/main.omni",
+  "defaultMode": "web",
+  "targets": ["web", "web-app"]
+}

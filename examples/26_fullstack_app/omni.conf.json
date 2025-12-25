@@ -1,0 +1,8 @@
+{
+  "name": "FullstackApp",
+  "version": "1.0.0",
+  "description": "Complete fullstack app showing all layers: Entity, Server, UI",
+  "entry": "src/main.omni",
+  "defaultMode": "web",
+  "targets": ["cmd", "web", "web-app"]
+}

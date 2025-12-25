@@ -1,0 +1,8 @@
+{
+  "name": "SqlAgnosticQuery",
+  "version": "1.0.0",
+  "description": "Database abstraction layer",
+  "entry": "src/main.omni",
+  "defaultMode": "cmd",
+  "targets": ["cmd"]
+}

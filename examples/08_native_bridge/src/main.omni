@@ -1,0 +1,63 @@
+// ============================================================================
+// 08_NATIVE_BRIDGE - Native Code Injection
+// ============================================================================
+
+fn print(msg: string) {
+    native "js" { console.log(msg); }
+    native "python" {
+print(msg)
+    }
+}
+
+fn get_platform() -> string {
+    let platform = "unknown";
+    native "js" {
+        platform = process.platform;
+    }
+    native "python" {
+import sys
+platform = sys.platform
+    }
+    return platform;
+}
+
+fn get_timestamp() -> i64 {
+    let ts = 0;
+    native "js" {
+        ts = Date.now();
+    }
+    native "python" {
+import time
+ts = int(time.time() * 1000)
+    }
+    return ts;
+}
+
+fn main() {
+    print("╔══════════════════════════════════════╗");
+    print("║   OMNI - Native Bridge               ║");
+    print("╚══════════════════════════════════════╝");
+    print("");
+    
+    print("1. Platform Detection:");
+    let platform = get_platform();
+    print("   Platform: " + platform);
+    print("");
+    
+    print("2. Timestamp:");
+    let ts = get_timestamp();
+    print("   Current timestamp obtained");
+    print("");
+    
+    print("3. Native Blocks:");
+    native "js" {
+        console.log("   [JS] Running in Node.js v" + process.version);
+    }
+    native "python" {
+import sys
+print("   [Python] Running Python " + sys.version.split()[0])
+    }
+    print("");
+    
+    print("✓ Native bridge example completed!");
+}

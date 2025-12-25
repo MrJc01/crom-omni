@@ -1,0 +1,81 @@
+// ============================================================================
+// 02_FLOW_CONTROL - Control Flow Structures
+// ============================================================================
+// Demonstrates if/else, while loops, and recursion.
+// ============================================================================
+
+fn print(msg: string) {
+    native "js" { console.log(msg); }
+    native "python" {
+print(msg)
+    }
+}
+
+fn classify_number(n: i64) -> string {
+    if (n < 0) {
+        return "negative";
+    } else if (n == 0) {
+        return "zero";
+    } else {
+        return "positive";
+    }
+}
+
+fn countdown(n: i64) {
+    let i = n;
+    while (i > 0) {
+        print("Countdown: " + i);
+        i = i - 1;
+    }
+    print("Liftoff!");
+}
+
+fn factorial(n: i64) -> i64 {
+    if (n <= 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}
+
+fn fizzbuzz(n: i64) {
+    let i = 1;
+    while (i <= n) {
+        if (i % 15 == 0) {
+            print("FizzBuzz");
+        } else if (i % 3 == 0) {
+            print("Fizz");
+        } else if (i % 5 == 0) {
+            print("Buzz");
+        } else {
+            print("Number: " + i);
+        }
+        i = i + 1;
+    }
+}
+
+fn main() {
+    print("╔══════════════════════════════════════╗");
+    print("║   OMNI - Flow Control Example        ║");
+    print("╚══════════════════════════════════════╝");
+    print("");
+    
+    print("1. Number Classification:");
+    print("   -5 is " + classify_number(-5));
+    print("   0 is " + classify_number(0));
+    print("   10 is " + classify_number(10));
+    print("");
+    
+    print("2. While Loop - Countdown:");
+    countdown(3);
+    print("");
+    
+    print("3. Recursion - Factorial:");
+    print("   5! = " + factorial(5));
+    print("");
+    
+    print("4. FizzBuzz (1-15):");
+    fizzbuzz(15);
+    print("");
+    
+    print("✓ Flow control examples completed!");
+}

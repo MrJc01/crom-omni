@@ -1,0 +1,56 @@
+// ============================================================================
+// 14_SQL_AGNOSTIC_QUERY - Database Abstraction
+// ============================================================================
+
+fn print(msg: string) {
+    native "js" { console.log(msg); }
+    native "python" {
+print(msg)
+    }
+}
+
+struct QueryBuilder {
+    table: string,
+    conditions: string,
+    columns: string
+}
+
+fn select(columns: string) -> QueryBuilder {
+    return QueryBuilder { table: "", conditions: "", columns: columns };
+}
+
+fn from(q: QueryBuilder, table: string) -> QueryBuilder {
+    q.table = table;
+    return q;
+}
+
+fn where_clause(q: QueryBuilder, condition: string) -> QueryBuilder {
+    q.conditions = condition;
+    return q;
+}
+
+fn build_sql(q: QueryBuilder) -> string {
+    let sql = "SELECT " + q.columns + " FROM " + q.table;
+    if (q.conditions != "") {
+        sql = sql + " WHERE " + q.conditions;
+    }
+    return sql;
+}
+
+fn main() {
+    print("╔══════════════════════════════════════╗");
+    print("║   OMNI - SQL Agnostic Query          ║");
+    print("╚══════════════════════════════════════╝");
+    print("");
+    
+    let query = select("id, name, email");
+    query = from(query, "users");
+    query = where_clause(query, "active = true");
+    
+    let sql = build_sql(query);
+    print("Generated SQL:");
+    print("  " + sql);
+    print("");
+    
+    print("✓ SQL agnostic query example completed!");
+}

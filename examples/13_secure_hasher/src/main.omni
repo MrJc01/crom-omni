@@ -1,0 +1,39 @@
+// ============================================================================
+// 13_SECURE_HASHER - Cryptography
+// ============================================================================
+
+fn print(msg: string) {
+    native "js" { console.log(msg); }
+    native "python" {
+print(msg)
+    }
+}
+
+fn sha256(input: string) -> string {
+    let hash = "";
+    native "js" {
+        const crypto = require('crypto');
+        hash = crypto.createHash('sha256').update(input).digest('hex');
+    }
+    native "python" {
+import hashlib
+hash = hashlib.sha256(input.encode()).hexdigest()
+    }
+    return hash;
+}
+
+fn main() {
+    print("╔══════════════════════════════════════╗");
+    print("║   OMNI - Secure Hasher               ║");
+    print("╚══════════════════════════════════════╝");
+    print("");
+    
+    let message = "Hello, Omni!";
+    print("Input: " + message);
+    
+    let hash = sha256(message);
+    print("SHA-256: " + hash);
+    print("");
+    
+    print("✓ Secure hasher example completed!");
+}

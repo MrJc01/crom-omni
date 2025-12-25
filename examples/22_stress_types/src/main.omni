@@ -1,0 +1,57 @@
+// ============================================================================
+// 22_STRESS_TYPES - Type System Stress Test
+// ============================================================================
+
+fn print(msg: string) {
+    native "js" { console.log(msg); }
+    native "python" {
+print(msg)
+    }
+}
+
+struct Level3 {
+    value: i64
+}
+
+struct Level2 {
+    inner: Level3
+}
+
+struct Level1 {
+    inner: Level2,
+    name: string
+}
+
+fn create_nested() -> Level1 {
+    return Level1 {
+        name: "Root",
+        inner: Level2 {
+            inner: Level3 {
+                value: 42
+            }
+        }
+    };
+}
+
+fn main() {
+    print("╔══════════════════════════════════════╗");
+    print("║   OMNI - Stress Types                ║");
+    print("╚══════════════════════════════════════╝");
+    print("");
+    
+    print("1. Primitive Types:");
+    let a: i64 = 100;
+    let b: f64 = 3.14;
+    let c: bool = true;
+    let d: string = "test";
+    print("   i64=100, f64=3.14, bool=true, string=test");
+    print("");
+    
+    print("2. Nested Structs:");
+    let nested = create_nested();
+    print("   Created 3-level nested struct");
+    print("   Root name: " + nested.name);
+    print("");
+    
+    print("✓ Stress types test completed!");
+}

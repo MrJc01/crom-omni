@@ -37,46 +37,89 @@ function cmd_test_all() {
         CLI_info("Examples directory: " + examplesDir);
         console.log("");
         
-        // Get all .omni files
-        let files = fs.readdirSync(examplesDir)
-            .filter(f => f.endsWith('.omni'))
-            .sort();
+        // Find all example folders (with omni.conf.json)
+        let entries = fs.readdirSync(examplesDir, { withFileTypes: true });
+        let examples = [];
         
-        CLI_info("Found " + files.length + " example files");
+        for (const entry of entries) {
+            if (entry.isDirectory()) {
+                let confPath = path.join(examplesDir, entry.name, 'omni.conf.json');
+                if (fs.existsSync(confPath)) {
+                    try {
+                        let conf = JSON.parse(fs.readFileSync(confPath, 'utf-8'));
+                        examples.push({
+                            name: entry.name,
+                            conf: conf,
+                            entryPath: path.join(examplesDir, entry.name, conf.entry || 'src/main.omni'),
+                            modes: conf.targets || ['cmd']
+                        });
+                    } catch(e) {
+                        console.log(CLI_COLORS().yellow + "  ⚠ " + CLI_COLORS().reset + entry.name + " (invalid config)");
+                    }
+                }
+            }
+        }
+        
+        // Sort by name
+        examples.sort((a, b) => a.name.localeCompare(b.name));
+        
+        CLI_info("Found " + examples.length + " example folders");
         console.log("");
         
         let passed = 0;
         let failed = 0;
         let failures = [];
+        let results = {};
         
-        for (const file of files) {
-            let filePath = path.join(examplesDir, file);
-            let outputPath = path.join(examplesDir, file.replace('.omni', '.test.js'));
+        for (const ex of examples) {
+            let modeResults = [];
             
-            try {
-                // Read and parse
-                let source = fs.readFileSync(filePath, 'utf-8');
-                let l = new_lexer(source);
-                let p = new_parser(l);
-                let program = Parser_parse_program(p);
-                
-                // Generate code
-                let gen = HybridCodeGenerator_new('js');
-                let code = HybridCodeGenerator_generate(gen, program);
-                
-                // Check if code was generated
-                if (code && code.length > 0) {
-                    passed++;
-                    console.log(CLI_COLORS().green + "  ✓ " + CLI_COLORS().reset + file);
-                } else {
-                    failed++;
-                    failures.push({ file, error: "Empty output" });
-                    console.log(CLI_COLORS().red + "  ✗ " + CLI_COLORS().reset + file + CLI_COLORS().dim + " (empty output)" + CLI_COLORS().reset);
+            for (const mode of ex.modes) {
+                try {
+                    // Read and parse
+                    if (!fs.existsSync(ex.entryPath)) {
+                        throw new Error("Entry file not found: " + ex.entryPath);
+                    }
+                    
+                    let source = fs.readFileSync(ex.entryPath, 'utf-8');
+                    let l = new_lexer(source);
+                    let p = new_parser(l);
+                    let program = Parser_parse_program(p);
+                    
+                    // Determine target based on mode
+                    let target = "js";
+                    if (mode === "app") target = "python";
+                    
+                    // Generate code
+                    let gen = HybridCodeGenerator_new(target);
+                    let code = HybridCodeGenerator_generate(gen, program);
+                    
+                    // Check if code was generated
+                    if (code && code.length > 0) {
+                        modeResults.push({ mode, success: true });
+                    } else {
+                        modeResults.push({ mode, success: false, error: "Empty output" });
+                    }
+                } catch (e) {
+                    modeResults.push({ mode, success: false, error: e.message });
                 }
-            } catch (e) {
+            }
+            
+            // Report results for this example
+            let allPassed = modeResults.every(r => r.success);
+            let modeStr = modeResults.map(r => 
+                r.success ? CLI_COLORS().green + r.mode + CLI_COLORS().reset 
+                          : CLI_COLORS().red + r.mode + CLI_COLORS().reset
+            ).join(", ");
+            
+            if (allPassed) {
+                passed++;
+                console.log(CLI_COLORS().green + "  ✓ " + CLI_COLORS().reset + ex.name + CLI_COLORS().dim + " [" + modeStr + "]" + CLI_COLORS().reset);
+            } else {
                 failed++;
-                failures.push({ file, error: e.message });
-                console.log(CLI_COLORS().red + "  ✗ " + CLI_COLORS().reset + file + CLI_COLORS().dim + " (" + e.message.substring(0, 40) + ")" + CLI_COLORS().reset);
+                let failedModes = modeResults.filter(r => !r.success);
+                failures.push({ name: ex.name, errors: failedModes });
+                console.log(CLI_COLORS().red + "  ✗ " + CLI_COLORS().reset + ex.name + CLI_COLORS().dim + " [" + modeStr + "]" + CLI_COLORS().reset);
             }
         }
         
@@ -89,7 +132,10 @@ function cmd_test_all() {
         if (failed > 0) {
             CLI_warning("Some examples failed to compile");
             for (const f of failures) {
-                console.log(CLI_COLORS().dim + "  " + f.file + ": " + f.error + CLI_COLORS().reset);
+                console.log(CLI_COLORS().dim + "  " + f.name + ":" + CLI_COLORS().reset);
+                for (const err of f.errors) {
+                    console.log(CLI_COLORS().dim + "    [" + err.mode + "] " + err.error.substring(0, 60) + CLI_COLORS().reset);
+                }
             }
             return 1;
         } else {

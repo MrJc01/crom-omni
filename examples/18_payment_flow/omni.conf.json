@@ -1,0 +1,8 @@
+{
+  "name": "PaymentFlow",
+  "version": "1.0.0",
+  "description": "Payment server with audit trail",
+  "entry": "src/main.omni",
+  "defaultMode": "web",
+  "targets": ["web", "web-app"]
+}

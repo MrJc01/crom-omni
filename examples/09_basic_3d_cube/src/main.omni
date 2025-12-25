@@ -1,271 +1,53 @@
 // ============================================================================
-// 09_BASIC_3D_CUBE.omni - Introduction to 3D Programming
+// 09_BASIC_3D_CUBE - Three.js 3D Scene
 // ============================================================================
-// Creates a simple 3D scene with a rotating cube using Three.js bindings.
-// This is the foundation for Omni's visual 3D programming experience.
-//
-// Run with:
-//   .\omni compile examples/09_basic_3d_cube.omni --target js
-//   Then open the generated HTML in a browser with Three.js loaded.
+// Run with: omni run examples/09_basic_3d_cube/src/main.omni --web
 // ============================================================================
 
-// @visual:position(50, 50)
 fn print(msg: string) {
     native "js" { console.log(msg); }
 }
 
-// ============================================================================
-// 3D TYPES
-// ============================================================================
-
-// @visual:position(100, 150)
-struct Vector3 {
-    x: f64,
-    y: f64,
-    z: f64
-}
-
-// @visual:position(250, 150)
-struct Color {
-    r: f64,
-    g: f64,
-    b: f64
-}
-
-// @visual:position(400, 150)
-struct Transform {
-    position: Vector3,
-    rotation: Vector3,
-    scale: Vector3
-}
-
-// ============================================================================
-// SCENE OBJECTS
-// ============================================================================
-
-// @visual:position(100, 300)
-@entity
-struct Scene3D {
-    handle: any,
-    camera: any,
-    renderer: any
-}
-
-// @visual:position(300, 300)
-@entity
-struct Mesh3D {
-    handle: any,
-    transform: Transform
-}
-
-// @visual:position(500, 300)
-@entity
-struct Light3D {
-    handle: any,
-    intensity: f64,
-    color: Color
-}
-
-// ============================================================================
-// 3D ENGINE CAPSULE
-// ============================================================================
-
-// @visual:position(100, 500)
-capsule Engine3D {
-    let scene: Scene3D = Scene3D { handle: 0, camera: 0, renderer: 0 };
-    let meshes: Mesh3D[] = [];
-    let running: bool = false;
-    
-    // @visual:position(150, 550)
-    // Initialize the 3D scene
-    flow init(width: i64, height: i64, bg_color: string) -> Scene3D {
-        native "js" {
-            // Create container
-            const container = document.createElement('div');
-            container.id = 'omni-3d-container';
-            container.style.cssText = 'width:' + width + 'px;height:' + height + 'px;margin:auto;';
-            document.body.appendChild(container);
-            
-            // Three.js setup
-            const THREE = window.THREE;
-            
-            // Scene
-            const sceneObj = new THREE.Scene();
-            sceneObj.background = new THREE.Color(bg_color);
-            
-            // Camera
-            const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-            camera.position.z = 5;
-            
-            // Renderer
-            const renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(width, height);
-            container.appendChild(renderer.domElement);
-            
-            Engine3D.scene.handle = sceneObj;
-            Engine3D.scene.camera = camera;
-            Engine3D.scene.renderer = renderer;
-        }
-        
-        return Engine3D.scene;
-    }
-    
-    // @visual:position(400, 550)
-    // Create a cube mesh
-    flow create_cube(size: f64, color: string) -> Mesh3D {
-        let mesh = Mesh3D {
-            handle: 0,
-            transform: Transform {
-                position: Vector3 { x: 0.0, y: 0.0, z: 0.0 },
-                rotation: Vector3 { x: 0.0, y: 0.0, z: 0.0 },
-                scale: Vector3 { x: 1.0, y: 1.0, z: 1.0 }
-            }
+fn create_scene() {
+    native "js" {
+        // Dynamically load Three.js
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+        script.onload = function() {
+            initScene();
         };
-        
-        native "js" {
-            const THREE = window.THREE;
-            const geometry = new THREE.BoxGeometry(size, size, size);
-            const material = new THREE.MeshStandardMaterial({ 
-                color: color,
-                metalness: 0.3,
-                roughness: 0.7
-            });
-            mesh.handle = new THREE.Mesh(geometry, material);
-            Engine3D.scene.handle.add(mesh.handle);
-            Engine3D.meshes.push(mesh);
-        }
-
-        
-        return mesh;
-    }
-    
-    // @visual:position(150, 700)
-    // Add ambient light
-    flow add_ambient_light(color: string, intensity: f64) -> Light3D {
-        let light = Light3D {
-            handle: 0,
-            intensity: intensity,
-            color: Color { r: 1.0, g: 1.0, b: 1.0 }
-        };
-        
-        native "js" {
-            const THREE = window.THREE;
-            light.handle = new THREE.AmbientLight(color, intensity);
-            Engine3D.scene.handle.add(light.handle);
-        }
-        
-        return light;
-    }
-    
-    // @visual:position(400, 700)
-    // Add directional light
-    flow add_directional_light(color: string, intensity: f64, x: f64, y: f64, z: f64) -> Light3D {
-        let light = Light3D {
-            handle: 0,
-            intensity: intensity,
-            color: Color { r: 1.0, g: 1.0, b: 1.0 }
-        };
-        
-        native "js" {
-            const THREE = window.THREE;
-            const dirLight = new THREE.DirectionalLight(color, intensity);
-            dirLight.position.set(x, y, z);
-            light.handle = dirLight;
-            Engine3D.scene.handle.add(dirLight);
-        }
-        
-        return light;
-    }
-    
-    // @visual:position(150, 850)
-    // Set mesh position
-    flow set_position(mesh: Mesh3D, x: f64, y: f64, z: f64) {
-        mesh.transform.position.x = x;
-        mesh.transform.position.y = y;
-        mesh.transform.position.z = z;
-        
-        native "js" {
-            mesh.handle.position.set(x, y, z);
-        }
-    }
-    
-    // @visual:position(400, 850)
-    // Rotate mesh
-    flow rotate(mesh: Mesh3D, dx: f64, dy: f64, dz: f64) {
-        native "js" {
-            mesh.handle.rotation.x += dx;
-            mesh.handle.rotation.y += dy;
-            mesh.handle.rotation.z += dz;
-        }
-    }
-    
-    // @visual:position(650, 700)
-    // Start animation loop
-    flow start() {
-        running = true;
-        
-        native "js" {
-            function animate() {
-                if (!running) return;
-                requestAnimationFrame(animate);
-                
-                // Rotate all meshes
-                for (const mesh of Engine3D.meshes) {
-                    mesh.handle.rotation.x += 0.01;
-                    mesh.handle.rotation.y += 0.01;
-                }
-                
-                Engine3D.scene.renderer.render(Engine3D.scene.handle, Engine3D.scene.camera);
-            }
-            animate();
-        }
-    }
-    
-    // @visual:position(650, 850)
-    // Stop animation loop
-    flow stop() {
-        running = false;
+        document.head.appendChild(script);
     }
 }
 
-// ============================================================================
-// MAIN - Demo Application
-// ============================================================================
+fn initScene() {
+    native "js" {
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+        
+        // Create cube
+        const geometry = new THREE.BoxGeometry();
+        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: true });
+        const cube = new THREE.Mesh(geometry, material);
+        scene.add(cube);
+        
+        camera.position.z = 5;
+        
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            cube.rotation.x += 0.01;
+            cube.rotation.y += 0.01;
+            renderer.render(scene, camera);
+        }
+        animate();
+    }
+}
 
-// @visual:position(400, 1050)
 fn main() {
-    print("╔══════════════════════════════════════╗");
-    print("║   OMNI - Basic 3D Cube               ║");
-    print("╚══════════════════════════════════════╝");
-    print("");
-    
-    print("Creating 3D scene...");
-    
-    // Initialize scene
-    let scene = Engine3D.init(800, 600, "#1a1a2e");
-    print("  ✓ Scene created (800x600)");
-    
-    // Add lighting
-    Engine3D.add_ambient_light("#404040", 0.5);
-    Engine3D.add_directional_light("#ffffff", 1.0, 5.0, 10.0, 7.5);
-    print("  ✓ Lighting added");
-    
-    // Create cube
-    let cube = Engine3D.create_cube(2.0, "#58a6ff");
-    print("  ✓ Cube created (size: 2.0, color: blue)");
-    
-    // Start animation
-    Engine3D.start();
-    print("  ✓ Animation started");
-    print("");
-    
-    print("Scene Structure:");
-    print("  Engine3D.init()           - Create scene");
-    print("  Engine3D.create_cube()    - Add cube mesh");
-    print("  Engine3D.add_*_light()    - Add lighting");
-    print("  Engine3D.start()          - Begin render loop");
-    print("");
-    
-    print("✓ 3D cube demo running!");
-    print("  Open in browser with Three.js to see the result.");
+    print("Starting 3D Cube Demo...");
+    create_scene();
 }

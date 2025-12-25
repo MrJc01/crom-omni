@@ -1,6 +1,8 @@
 {
   "name": "Basic3DCube",
   "version": "1.0.0",
-  "targets": ["web"],
-  "entry": "src/main.omni"
+  "description": "Demonstrates Three.js 3D scene rendering",
+  "entry": "src/main.omni",
+  "defaultMode": "web",
+  "targets": ["web", "web-app"]
 }

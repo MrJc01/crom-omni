@@ -1,0 +1,8 @@
+{
+  "name": "CapsuleArchitecture",
+  "version": "1.0.0",
+  "description": "Demonstrates modular organization with capsules",
+  "entry": "src/main.omni",
+  "defaultMode": "cmd",
+  "targets": ["cmd"]
+}
