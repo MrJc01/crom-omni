@@ -1,12 +1,39 @@
 // ============================================================================
-// 01_HELLO_UNIVERSAL - Demonstrates std/core library
+// 01_HELLO_UNIVERSAL - Works on --cmd, --web, --app
 // ============================================================================
-// This example shows the core philosophy: one code, multiple targets.
-// Uses std/tui for formatted output.
+// Uses different output methods per mode:
+// --cmd: console output
+// --web: displays in browser DOM
+// --app: opens Tkinter window
 
 fn log(msg: string) {
-    native "js" { console.log(msg); }
-    native "python" { print(msg) }
+    native "js" {
+        console.log(msg);
+        // Also display in DOM for web mode
+        if (typeof document !== 'undefined') {
+            let container = document.getElementById('output');
+            if (!container) {
+                container = document.createElement('pre');
+                container.id = 'output';
+                container.style.cssText = 'padding: 20px; font-family: monospace; font-size: 14px; background: #1a1a2e; color: #0f0; max-width: 600px; margin: 40px auto; border-radius: 8px;';
+                document.body.style.background = '#0f0f23';
+                document.body.appendChild(container);
+            }
+            container.textContent += msg + '\n';
+        }
+    }
+    native "python" {
+print(str(msg))
+    }
+}
+
+fn to_str(n: i64) -> string {
+    let result = "";
+    native "js" { result = String(n); }
+    native "python" {
+result = str(n)
+    }
+    return result;
 }
 
 fn header(text: string) {
@@ -38,8 +65,8 @@ fn main() {
     log("2. Arithmetic (pure Omni):");
     let sum = add(42, 58);
     let product = multiply(7, 6);
-    log("   42 + 58 = " + sum);
-    log("   7 * 6 = " + product);
+    log("   42 + 58 = " + to_str(sum));
+    log("   7 * 6 = " + to_str(product));
     log("");
     
     log("3. String Operations:");
@@ -50,9 +77,9 @@ fn main() {
     log("4. Variables:");
     let count: i64 = 10;
     let name: string = "Omni";
-    log("   count = " + count);
+    log("   count = " + to_str(count));
     log("   name = " + name);
     log("");
     
-    log("✓ Same code runs on --cmd, --web, and --app!");
+    log("✓ Works on --cmd, --web, and --app!");
 }

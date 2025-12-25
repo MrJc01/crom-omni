@@ -72,7 +72,7 @@ function CodeGenerator_gen_stmt_py(self, stmt) {
     let decl = indent_str + "def " + stmt.name + "(" + params + "):\n";
     self.indent = self.indent + 1;
     let body = CodeGenerator_gen_block_py(self, stmt.body);
-    self.indent = self.indent;
+    self.indent = self.indent - 1;
     // Unknown stmt kind: 0
     1;
     return decorators + decl + body;
@@ -96,7 +96,7 @@ function CodeGenerator_gen_stmt_py(self, stmt) {
     let init_fn = init_indent + "def __init__(self, data=None):\n";
     init_fn = init_fn + init_indent + "    if data is None: data = {}\n";
     init_fn = init_fn + assignments + "\n";
-    self.indent = self.indent;
+    self.indent = self.indent - 1;
     // Unknown stmt kind: 0
     1;
     return decorators + decl + init_fn;
@@ -106,14 +106,14 @@ function CodeGenerator_gen_stmt_py(self, stmt) {
     let out = indent_str + "if " + cond + ":\n";
     self.indent = self.indent + 1;
     out = out + CodeGenerator_gen_block_py(self, stmt.consequence);
-    self.indent = self.indent;
+    self.indent = self.indent - 1;
     // Unknown stmt kind: 0
     1;
     if (stmt.alternative) {
     out = out + "\n" + indent_str + "else:\n";
     self.indent = self.indent + 1;
     out = out + CodeGenerator_gen_block_py(self, stmt.alternative);
-    self.indent = self.indent;
+    self.indent = self.indent - 1;
     // Unknown stmt kind: 0
     1;
 }
@@ -124,7 +124,7 @@ function CodeGenerator_gen_stmt_py(self, stmt) {
     let out = indent_str + "while " + cond + ":\n";
     self.indent = self.indent + 1;
     out = out + CodeGenerator_gen_block_py(self, stmt.body);
-    self.indent = self.indent;
+    self.indent = self.indent - 1;
     // Unknown stmt kind: 0
     1;
     return out;

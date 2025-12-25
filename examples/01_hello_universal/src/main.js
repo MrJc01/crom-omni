@@ -2,46 +2,54 @@
 'use strict';
 
 function log(msg) {{
-     console.log(msg); 
+    
+            console.log(msg);
+            // Also display in DOM for web mode
+          
+        
 
+}}
+function to_str(n) {{
+        let result = "";
+         result = String(n); 
+
+        return result;
 }}
 function header(text) {{
-        log("╔══════════════════════════════════════╗");
-        log("║   " + text);
-        log("╚══════════════════════════════════════╝");
+            log("╔══════════════════════════════════════╗");
+            log("║   " + text);
+            log("╚══════════════════════════════════════╝");
 }}
 function greet(name) {{
-            return "Hello, " + name + "! Welcome to Omni.";
+                return "Hello, " + name + "! Welcome to Omni.";
 }}
 function add(a, b) {{
-                return a + b;
+                    return a + b;
 }}
 function multiply(a, b) {{
-                    return a * b;
+                        return a * b;
 }}
 function main() {{
-                        header("OMNI - Hello Universal");
-                        log("");
-                        log("1. Simple Output:");
-                        log("   Hello, World!");
-                        log("");
-                        log("2. Arithmetic (pure Omni):");
-                        let sum = add(42, 58);
-                        let product = multiply(7, 6);
-                        log("   42 + 58 = " + sum);
-                        log("   7 * 6 = " + product);
-                        log("");
-                        log("3. String Operations:");
-                        let message = greet("Developer");
-                        log("   " + message);
-                        log("");
-                        log("4. Variables:");
-                        let count = 10;
-                        let name = "Omni";
-                        log("   count = " + count);
-                        log("   name = " + name);
-                        log("");
-                        log("✓ Same code runs on --cmd, --web, and --app!");
+                            header("OMNI - Hello Universal");
+                            log("");
+                            log("1. Simple Output:");
+                            log("   Hello, World!");
+                            log("");
+                            log("2. Arithmetic (pure Omni):");
+                            let sum = add(42, 58);
+                            let product = multiply(7, 6);
+                            log("   42 + 58 = " + to_str(sum));
+                            log("   7 * 6 = " + to_str(product));
+                            log("");
+                            log("3. String Operations:");
+                            let message = greet("Developer");
+                            log("   " + message);
+                            log("");
+                            log("4. Variables:");
+                            let count = 10;
+                            let name = "Omni";
+                            log("   count = " + to_str(count));
+                            log("   name = " + name);
+                            log("");
+                            log("✓ Works on --cmd, --web, and --app!");
 }}
-
-if (typeof main === 'function') main();

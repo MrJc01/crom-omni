@@ -18,5 +18,3 @@ function main() {{
             log("");
             log("✓ Desktop window closed.");
 }}
-
-if (typeof main === 'function') main();
