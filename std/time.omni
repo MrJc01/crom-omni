@@ -1,0 +1,54 @@
+// ============================================================================
+// STD/TIME.omni - Time and Date Library
+// ============================================================================
+// Cross-platform time operations
+
+fn now() -> i64 {
+    let timestamp = 0;
+    native "js" {
+        timestamp = Date.now();
+    }
+    native "python" {
+import time
+timestamp = int(time.time() * 1000)
+    }
+    return timestamp;
+}
+
+fn now_iso() -> string {
+    let iso = "";
+    native "js" {
+        iso = new Date().toISOString();
+    }
+    native "python" {
+from datetime import datetime
+iso = datetime.now().isoformat()
+    }
+    return iso;
+}
+
+fn sleep(ms: i64) {
+    native "js" {
+        // Note: This is synchronous sleep for demo
+        const end = Date.now() + ms;
+        while (Date.now() < end) {}
+    }
+    native "python" {
+import time
+time.sleep(ms / 1000)
+    }
+}
+
+fn format_date(timestamp: i64, format: string) -> string {
+    let result = "";
+    native "js" {
+        const d = new Date(timestamp);
+        result = d.toLocaleDateString();
+    }
+    native "python" {
+from datetime import datetime
+d = datetime.fromtimestamp(timestamp / 1000)
+result = d.strftime(format)
+    }
+    return result;
+}

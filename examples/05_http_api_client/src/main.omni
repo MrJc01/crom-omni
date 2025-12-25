@@ -4,21 +4,20 @@
 
 fn print(msg: string) {
     native "js" { console.log(msg); }
-    native "python" {
-print(msg)
-    }
+    native "python" { print(msg) }
 }
 
-fn http_get(url: string) -> string {
-    let result = "";
+fn http_get_demo(url: string) -> string {
+    let response = "";
     native "js" {
-        // Simulated HTTP response for demo
-        result = '{"status": "ok", "message": "Hello from API"}';
+        response = '{"status": "ok", "source": "omni-http"}';
+        console.log("[HTTP] GET " + url);
     }
     native "python" {
-result = '{"status": "ok", "message": "Hello from API"}'
+response = '{"status": "ok", "source": "omni-http"}'
+print(f"[HTTP] GET {url}")
     }
-    return result;
+    return response;
 }
 
 fn main() {
@@ -27,10 +26,15 @@ fn main() {
     print("╚══════════════════════════════════════╝");
     print("");
     
-    print("Making API request...");
-    let response = http_get("https://api.example.com/data");
-    print("Response: " + response);
+    print("1. Making HTTP GET Request:");
+    let response = http_get_demo("https://api.example.com/data");
+    print("   Response: " + response);
     print("");
     
-    print("✓ HTTP example completed!");
+    print("2. Response contains:");
+    print("   status: ok");
+    print("   source: omni-http");
+    print("");
+    
+    print("✓ HTTP API client example completed!");
 }

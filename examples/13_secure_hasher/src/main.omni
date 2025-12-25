@@ -4,22 +4,33 @@
 
 fn print(msg: string) {
     native "js" { console.log(msg); }
-    native "python" {
-print(msg)
-    }
+    native "python" { print(msg) }
 }
 
-fn sha256(input: string) -> string {
-    let hash = "";
+fn sha256_hash(input: string) -> string {
+    let result = "";
     native "js" {
         const crypto = require('crypto');
-        hash = crypto.createHash('sha256').update(input).digest('hex');
+        result = crypto.createHash('sha256').update(input).digest('hex');
     }
     native "python" {
 import hashlib
-hash = hashlib.sha256(input.encode()).hexdigest()
+result = hashlib.sha256(input.encode()).hexdigest()
     }
-    return hash;
+    return result;
+}
+
+fn md5_hash(input: string) -> string {
+    let result = "";
+    native "js" {
+        const crypto = require('crypto');
+        result = crypto.createHash('md5').update(input).digest('hex');
+    }
+    native "python" {
+import hashlib
+result = hashlib.md5(input.encode()).hexdigest()
+    }
+    return result;
 }
 
 fn main() {
@@ -28,12 +39,19 @@ fn main() {
     print("╚══════════════════════════════════════╝");
     print("");
     
-    let message = "Hello, Omni!";
-    print("Input: " + message);
-    
-    let hash = sha256(message);
-    print("SHA-256: " + hash);
+    let input = "Hello, Omni!";
+    print("Input: " + input);
     print("");
     
-    print("✓ Secure hasher example completed!");
+    print("1. SHA-256:");
+    let sha = sha256_hash(input);
+    print("   " + sha);
+    print("");
+    
+    print("2. MD5:");
+    let md = md5_hash(input);
+    print("   " + md);
+    print("");
+    
+    print("✓ Crypto example completed!");
 }

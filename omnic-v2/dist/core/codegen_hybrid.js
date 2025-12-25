@@ -393,7 +393,7 @@ function HybridCodeGenerator_gen_struct(self, stmt) {
     let class_body = "    constructor(data = {}) {\n" + constructor_body + "    }\n";
     let out = "";
     
-        const impl = require('./codegen_hybrid_impl.js');
+        // impl already declared above
         out = impl.LanguageProfile_render_impl(self.profile, "class_decl", {
             name: stmt.name,
             body: class_body

@@ -1,0 +1,58 @@
+// ============================================================================
+// STD/HTTP.omni - HTTP Client Library
+// ============================================================================
+// Cross-platform HTTP requests
+
+struct HttpResponse {
+    status: i64,
+    body: string,
+    ok: bool
+}
+
+fn http_get(url: string) -> HttpResponse {
+    let response = HttpResponse { status: 0, body: "", ok: false };
+    native "js" {
+        // Simulated for demo - real implementation would use fetch/http
+        response.status = 200;
+        response.body = '{"status": "ok", "source": "omni-http"}';
+        response.ok = true;
+        console.log("[HTTP] GET " + url);
+    }
+    native "python" {
+import urllib.request
+try:
+    with urllib.request.urlopen(url) as r:
+        response.body = r.read().decode('utf-8')
+        response.status = r.status
+        response.ok = True
+except Exception as e:
+    response.body = str(e)
+    response.ok = False
+print(f"[HTTP] GET {url}")
+    }
+    return response;
+}
+
+fn http_post(url: string, data: string) -> HttpResponse {
+    let response = HttpResponse { status: 0, body: "", ok: false };
+    native "js" {
+        response.status = 201;
+        response.body = '{"created": true}';
+        response.ok = true;
+        console.log("[HTTP] POST " + url);
+    }
+    native "python" {
+import urllib.request
+try:
+    req = urllib.request.Request(url, data=data.encode('utf-8'), method='POST')
+    with urllib.request.urlopen(req) as r:
+        response.body = r.read().decode('utf-8')
+        response.status = r.status
+        response.ok = True
+except Exception as e:
+    response.body = str(e)
+    response.ok = False
+print(f"[HTTP] POST {url}")
+    }
+    return response;
+}

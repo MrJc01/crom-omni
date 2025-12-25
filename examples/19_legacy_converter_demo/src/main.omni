@@ -4,17 +4,18 @@
 
 fn print(msg: string) {
     native "js" { console.log(msg); }
-    native "python" {
-print(msg)
+    native "python" { print(msg) }
+}
+
+fn convert_php_line(line: string) -> string {
+    let result = "// Converted: ";
+    native "js" {
+        result = result + line.replace('$', 'let ').replace('->', '.');
     }
-}
-
-fn simulate_legacy_php() -> string {
-    return "<?php function hello() { return 'Hello'; } ?>";
-}
-
-fn simulate_conversion(php_code: string) -> string {
-    return "fn hello() -> string { return \"Hello\"; }";
+    native "python" {
+result = result + line.replace('$', 'let ').replace('->', '.')
+    }
+    return result;
 }
 
 fn main() {
@@ -23,15 +24,21 @@ fn main() {
     print("╚══════════════════════════════════════╝");
     print("");
     
-    let legacy = simulate_legacy_php();
-    print("Original PHP:");
-    print("  " + legacy);
+    print("1. Original PHP Code:");
+    print("   $user = new User();");
+    print("   $user->name = 'Alice';");
     print("");
     
-    let converted = simulate_conversion(legacy);
-    print("Converted to Omni:");
-    print("  " + converted);
+    print("2. Converted to Omni-style:");
+    print("   let user = User {};");
+    print("   user.name = 'Alice';");
     print("");
     
-    print("✓ Legacy converter demo completed!");
+    print("3. Conversion Features:");
+    print("   - Variable prefix $ removed");
+    print("   - Arrow -> becomes dot .");
+    print("   - New syntax adapted");
+    print("");
+    
+    print("✓ Legacy converter example completed!");
 }

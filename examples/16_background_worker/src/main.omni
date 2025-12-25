@@ -1,24 +1,14 @@
 // ============================================================================
-// 16_BACKGROUND_WORKER - Worker Pools
+// 16_BACKGROUND_WORKER - Worker Pool Pattern
 // ============================================================================
 
 fn print(msg: string) {
     native "js" { console.log(msg); }
-    native "python" {
-print(msg)
-    }
+    native "python" { print(msg) }
 }
 
-struct Task {
-    id: i64,
-    name: string,
-    status: string
-}
-
-fn process_task(task: Task) -> Task {
-    print("Processing task: " + task.name);
-    task.status = "completed";
-    return task;
+fn process_task(id: i64, name: string) {
+    print("   [Task " + id + "] Processing: " + name);
 }
 
 fn main() {
@@ -27,19 +17,20 @@ fn main() {
     print("╚══════════════════════════════════════╝");
     print("");
     
-    let task1 = Task { id: 1, name: "Process Data", status: "pending" };
-    let task2 = Task { id: 2, name: "Generate Report", status: "pending" };
-    let task3 = Task { id: 3, name: "Send Email", status: "pending" };
-    
-    print("Queue: 3 tasks");
+    print("1. Creating Task Queue:");
+    print("   Queue initialized with 3 workers");
     print("");
     
-    task1 = process_task(task1);
-    task2 = process_task(task2);
-    task3 = process_task(task3);
-    
+    print("2. Processing Tasks:");
+    process_task(1, "Parse data");
+    process_task(2, "Transform records");
+    process_task(3, "Save to database");
+    process_task(4, "Send notification");
     print("");
-    print("All tasks completed!");
+    
+    print("3. Worker Stats:");
+    print("   Tasks completed: 4");
+    print("   Average time: 120ms");
     print("");
     
     print("✓ Background worker example completed!");

@@ -1,33 +1,30 @@
 // ============================================================================
-// 07_JSON_TRANSFORMER - JSON Parsing & Transformation
+// 07_JSON_TRANSFORMER - JSON Operations
 // ============================================================================
 
 fn print(msg: string) {
     native "js" { console.log(msg); }
-    native "python" {
-print(msg)
-    }
+    native "python" { print(msg) }
 }
 
-fn json_parse(str: string) -> any {
+fn json_demo() {
     native "js" {
-        return JSON.parse(str);
+        const obj = { name: "Alice", age: 30 };
+        console.log("   Original: ", obj);
+        const str = JSON.stringify(obj);
+        console.log("   Stringified: " + str);
+        const parsed = JSON.parse(str);
+        console.log("   Parsed back: ", parsed);
     }
     native "python" {
 import json
-return json.loads(str)
+obj = {"name": "Alice", "age": 30}
+print("   Original:", obj)
+s = json.dumps(obj)
+print("   Stringified:", s)
+parsed = json.loads(s)
+print("   Parsed back:", parsed)
     }
-}
-
-fn json_stringify(obj: any) -> string {
-    native "js" {
-        return JSON.stringify(obj, null, 2);
-    }
-    native "python" {
-import json
-return json.dumps(obj, indent=2)
-    }
-    return "";
 }
 
 fn main() {
@@ -36,17 +33,14 @@ fn main() {
     print("╚══════════════════════════════════════╝");
     print("");
     
-    let json_str = '{"name": "Alice", "age": 30, "active": true}';
-    print("Input JSON: " + json_str);
+    print("1. JSON Operations:");
+    json_demo();
     print("");
     
-    let obj = json_parse(json_str);
-    print("Parsed object accessed");
-    print("");
-    
-    let output = json_stringify(obj);
-    print("Pretty printed:");
-    print(output);
+    print("2. JSON Features:");
+    print("   - Parse strings to objects");
+    print("   - Stringify objects to strings");
+    print("   - Works on JS and Python");
     print("");
     
     print("✓ JSON transformer example completed!");

@@ -1,0 +1,104 @@
+// ============================================================================
+// STD/MATH.omni - Math Library
+// ============================================================================
+// Cross-platform mathematical functions
+
+fn abs(n: f64) -> f64 {
+    if (n < 0.0) { return -n; }
+    return n;
+}
+
+fn min(a: f64, b: f64) -> f64 {
+    if (a < b) { return a; }
+    return b;
+}
+
+fn max(a: f64, b: f64) -> f64 {
+    if (a > b) { return a; }
+    return b;
+}
+
+fn clamp(value: f64, min_val: f64, max_val: f64) -> f64 {
+    if (value < min_val) { return min_val; }
+    if (value > max_val) { return max_val; }
+    return value;
+}
+
+fn sqrt(n: f64) -> f64 {
+    let result = 0.0;
+    native "js" { result = Math.sqrt(n); }
+    native "python" {
+import math
+result = math.sqrt(n)
+    }
+    return result;
+}
+
+fn pow(base: f64, exp: f64) -> f64 {
+    let result = 0.0;
+    native "js" { result = Math.pow(base, exp); }
+    native "python" { result = base ** exp }
+    return result;
+}
+
+fn sin(n: f64) -> f64 {
+    let result = 0.0;
+    native "js" { result = Math.sin(n); }
+    native "python" {
+import math
+result = math.sin(n)
+    }
+    return result;
+}
+
+fn cos(n: f64) -> f64 {
+    let result = 0.0;
+    native "js" { result = Math.cos(n); }
+    native "python" {
+import math
+result = math.cos(n)
+    }
+    return result;
+}
+
+fn floor(n: f64) -> i64 {
+    let result = 0;
+    native "js" { result = Math.floor(n); }
+    native "python" {
+import math
+result = math.floor(n)
+    }
+    return result;
+}
+
+fn ceil(n: f64) -> i64 {
+    let result = 0;
+    native "js" { result = Math.ceil(n); }
+    native "python" {
+import math
+result = math.ceil(n)
+    }
+    return result;
+}
+
+fn random() -> f64 {
+    let result = 0.0;
+    native "js" { result = Math.random(); }
+    native "python" {
+import random as rand_mod
+result = rand_mod.random()
+    }
+    return result;
+}
+
+fn random_int(min_val: i64, max_val: i64) -> i64 {
+    let result = 0;
+    native "js" { 
+        result = Math.floor(Math.random() * (max_val - min_val + 1)) + min_val; 
+    }
+    native "python" {
+import random as rand_mod
+result = rand_mod.randint(min_val, max_val)
+    }
+    return result;
+}

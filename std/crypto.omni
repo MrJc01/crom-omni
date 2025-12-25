@@ -1,0 +1,56 @@
+// ============================================================================
+// STD/CRYPTO.omni - Cryptography Library
+// ============================================================================
+// Cross-platform hashing and encryption
+
+fn sha256(input: string) -> string {
+    let hash = "";
+    native "js" {
+        const crypto = require('crypto');
+        hash = crypto.createHash('sha256').update(input).digest('hex');
+    }
+    native "python" {
+import hashlib
+hash = hashlib.sha256(input.encode()).hexdigest()
+    }
+    return hash;
+}
+
+fn md5(input: string) -> string {
+    let hash = "";
+    native "js" {
+        const crypto = require('crypto');
+        hash = crypto.createHash('md5').update(input).digest('hex');
+    }
+    native "python" {
+import hashlib
+hash = hashlib.md5(input.encode()).hexdigest()
+    }
+    return hash;
+}
+
+fn random_bytes(length: i64) -> string {
+    let bytes = "";
+    native "js" {
+        const crypto = require('crypto');
+        bytes = crypto.randomBytes(length).toString('hex');
+    }
+    native "python" {
+import secrets
+bytes = secrets.token_hex(length)
+    }
+    return bytes;
+}
+
+fn uuid() -> string {
+    let id = "";
+    native "js" {
+        const crypto = require('crypto');
+        id = crypto.randomUUID();
+    }
+    native "python" {
+import uuid as uuid_mod
+id = str(uuid_mod.uuid4())
+    }
+    return id;
+}

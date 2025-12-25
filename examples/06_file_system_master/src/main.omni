@@ -1,20 +1,20 @@
 // ============================================================================
-// 06_FILE_SYSTEM_MASTER - File I/O Operations
+// 06_FILE_SYSTEM_MASTER - File I/O
 // ============================================================================
 
 fn print(msg: string) {
     native "js" { console.log(msg); }
-    native "python" {
-print(msg)
-    }
+    native "python" { print(msg) }
 }
 
-fn read_file(path: string) -> string {
+fn read_file_demo(path: string) -> string {
     let content = "";
     native "js" {
         const fs = require('fs');
-        if (fs.existsSync(path)) {
-            content = fs.readFileSync(path, 'utf-8');
+        try {
+            content = fs.readFileSync(path, 'utf8');
+        } catch (e) {
+            content = "[Error reading file]";
         }
     }
     native "python" {
@@ -22,23 +22,29 @@ try:
     with open(path, 'r') as f:
         content = f.read()
 except:
-    content = ""
+    content = '[Error reading file]'
     }
     return content;
 }
 
-fn write_file(path: string, content: string) -> bool {
+fn write_file_demo(path: string, content: string) -> bool {
+    let success = false;
     native "js" {
         const fs = require('fs');
-        fs.writeFileSync(path, content);
-        return true;
+        try {
+            fs.writeFileSync(path, content);
+            success = true;
+        } catch (e) {}
     }
     native "python" {
-with open(path, 'w') as f:
-    f.write(content)
-return True
+try:
+    with open(path, 'w') as f:
+        f.write(content)
+    success = True
+except:
+    pass
     }
-    return false;
+    return success;
 }
 
 fn main() {
@@ -47,11 +53,19 @@ fn main() {
     print("╚══════════════════════════════════════╝");
     print("");
     
-    print("Writing test file...");
-    write_file("test_output.txt", "Hello from Omni!");
-    print("Reading test file...");
-    let content = read_file("test_output.txt");
-    print("Content: " + content);
+    let test_file = "omni_test_output.txt";
+    let test_content = "Hello from Omni!";
+    
+    print("1. Writing File:");
+    let wrote = write_file_demo(test_file, test_content);
+    if (wrote) {
+        print("   Written to: " + test_file);
+    }
+    print("");
+    
+    print("2. Reading File:");
+    let read_content = read_file_demo(test_file);
+    print("   Content: " + read_content);
     print("");
     
     print("✓ File system example completed!");

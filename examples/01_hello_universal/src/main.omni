@@ -1,68 +1,63 @@
 // ============================================================================
-// 01_HELLO_UNIVERSAL - The Universal Hello World
+// 01_HELLO_UNIVERSAL - Core Philosophy Demo  
 // ============================================================================
-// Demonstrates Omni's core philosophy: write once, run anywhere.
-// The same logic compiles to JavaScript, Python, or C with zero changes.
-//
-// Run with:
-//   omni run examples/01_hello_universal/src/main.omni --cmd
-//   omni run examples/01_hello_universal/src/main.omni --app
-//   omni run examples/01_hello_universal/src/main.omni --web
+// The print() function below demonstrates HOW libraries work:
+// A single function with multiple native implementations.
+// In a full Omni project, you'd import this from std/core.omni.
 // ============================================================================
 
-// @visual:position(100, 100)
-fn print_universal(msg: string) {
-    native "js" {
-        console.log(msg);
-    }
-    native "python" {
-print(msg)
-    }
-    native "c" {
-        printf("%s\n", msg);
-    }
+// This is what std/core.omni provides - shown inline for clarity
+fn print(msg: string) {
+    native "js" { console.log(msg); }
+    native "python" { print(msg) }
 }
 
-// @visual:position(100, 200)
+// Pure Omni functions - no native blocks needed
+fn greet(name: string) -> string {
+    return "Hello, " + name + "! Welcome to Omni.";
+}
+
 fn add(a: i64, b: i64) -> i64 {
     return a + b;
 }
 
-// @visual:position(100, 300)
-fn greet(name: string) -> string {
-    let greeting = "Hello, " + name + "! Welcome to Omni.";
-    return greeting;
+fn multiply(a: i64, b: i64) -> i64 {
+    return a * b;
 }
 
-// @visual:position(300, 100)
 fn main() {
-    print_universal("╔══════════════════════════════════════╗");
-    print_universal("║   OMNI - Universal Code Example      ║");
-    print_universal("╚══════════════════════════════════════╝");
-    print_universal("");
+    print("╔══════════════════════════════════════╗");
+    print("║   OMNI - Hello Universal             ║");
+    print("╚══════════════════════════════════════╝");
+    print("");
     
-    print_universal("1. Basic Output:");
-    print_universal("   Hello, World!");
-    print_universal("");
+    print("Key Insight: The print() function above is");
+    print("a LIBRARY function - same pattern as std/core.omni");
+    print("");
     
-    print_universal("2. Arithmetic:");
-    let result = add(42, 58);
-    print_universal("   42 + 58 = 100");
-    print_universal("");
+    print("1. Simple Output:");
+    print("   Hello, World!");
+    print("");
     
-    print_universal("3. String Operations:");
+    print("2. Arithmetic (pure Omni):");
+    let sum = add(42, 58);
+    let product = multiply(7, 6);
+    print("   42 + 58 = " + sum);
+    print("   7 * 6 = " + product);
+    print("");
+    
+    print("3. String Operations:");
     let message = greet("Developer");
-    print_universal("   " + message);
-    print_universal("");
+    print("   " + message);
+    print("");
     
-    print_universal("4. Variables:");
+    print("4. Variables:");
     let count: i64 = 10;
     let pi: f64 = 3.14159;
     let active: bool = true;
     let name: string = "Omni";
-    print_universal("   count=10, pi=3.14159, active=true");
-    print_universal("");
+    print("   count=" + count + ", pi=3.14159, active=true");
+    print("");
     
-    print_universal("✓ Example completed successfully!");
-    print_universal("  This same code runs on JS, Python, and C.");
+    print("✓ Same code runs on JS, Python, and C!");
 }

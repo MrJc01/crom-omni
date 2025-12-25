@@ -1,31 +1,27 @@
 // ============================================================================
-// 15_P2P_MESH_NODE - P2P Networking
+// 15_P2P_MESH_NODE - P2P Networking Concepts
 // ============================================================================
 
 fn print(msg: string) {
     native "js" { console.log(msg); }
-    native "python" {
-print(msg)
-    }
+    native "python" { print(msg) }
 }
 
-struct PeerNode {
-    id: string,
-    address: string,
-    connected: bool
-}
-
-fn generate_peer_id() -> string {
+fn generate_node_id() -> string {
     let id = "";
     native "js" {
-        id = 'peer_' + Math.random().toString(36).substring(7);
+        id = 'node_' + Math.random().toString(36).substring(7);
     }
     native "python" {
 import random
 import string
-id = 'peer_' + ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
+id = 'node_' + ''.join(random.choices(string.ascii_lowercase, k=6))
     }
     return id;
+}
+
+fn simulate_broadcast(from: string, msg: string) {
+    print("   [" + from + "] Broadcasting: " + msg);
 }
 
 fn main() {
@@ -34,18 +30,20 @@ fn main() {
     print("╚══════════════════════════════════════╝");
     print("");
     
-    let peer_id = generate_peer_id();
-    print("Node ID: " + peer_id);
-    
-    let node = PeerNode { 
-        id: peer_id, 
-        address: "127.0.0.1:9000", 
-        connected: false 
-    };
-    
-    print("Address: " + node.address);
-    print("Status: Waiting for peers...");
+    print("1. Creating Nodes:");
+    let node1 = generate_node_id();
+    let node2 = generate_node_id();
+    let node3 = generate_node_id();
+    print("   Node 1: " + node1);
+    print("   Node 2: " + node2);
+    print("   Node 3: " + node3);
     print("");
     
-    print("✓ P2P mesh node example completed!");
+    print("2. Simulating Network:");
+    simulate_broadcast(node1, "Hello mesh!");
+    simulate_broadcast(node2, "ACK received");
+    simulate_broadcast(node3, "Joining network");
+    print("");
+    
+    print("✓ P2P mesh example completed!");
 }

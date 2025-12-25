@@ -1,90 +1,28 @@
 // ============================================================================
-// 25_ADAPTERS_SHOWCASE - Framework-Agnostic Decorators
+// 25_ADAPTERS_SHOWCASE - Framework-Agnostic Patterns
 // ============================================================================
-// Demonstrates @entity, @server, @ui decorators that compile to any framework
-// The same Omni code can generate React, Laravel, FastAPI, etc.
-// ============================================================================
+// Demonstrates the CONCEPT of adapters and decorators
+// The actual @entity, @server, @ui decorators are shown conceptually
 
 fn print(msg: string) {
     native "js" { console.log(msg); }
     native "python" { print(msg) }
 }
 
-// ============================================================================
-// @entity - Data Model (compiles to Prisma, Eloquent, SQLAlchemy, etc.)
-// ============================================================================
-
-@entity
-struct Product {
-    id: i64,
-    name: string,
-    price: f64,
-    stock: i64
+// Simulating what a @entity decorated struct would generate
+fn Entity_create(name: string) {
+    print("   [ENTITY] " + name + " { id, fields... }");
 }
 
-@entity
-struct User {
-    id: i64,
-    email: string,
-    name: string,
-    role: string
+// Simulating @server.get route
+fn Server_route(method: string, path: string) {
+    print("   [" + method + "] " + path);
 }
 
-// ============================================================================
-// @server - API Routes (compiles to Express, FastAPI, Laravel, etc.)
-// ============================================================================
-
-@server.get("/api/products")
-fn get_products() {
-    print("  [ROUTE] GET /api/products");
-    print("  -> Returns list of all products");
+// Simulating @ui.component
+fn UI_component(name: string) {
+    print("   [UI] <" + name + " />");
 }
-
-@server.get("/api/products/:id")
-fn get_product(id: i64) {
-    print("  [ROUTE] GET /api/products/:id");
-    print("  -> Returns single product");
-}
-
-@server.post("/api/products")
-@server.auth(role: "admin")
-fn create_product() {
-    print("  [ROUTE] POST /api/products");
-    print("  -> Creates new product (admin only)");
-}
-
-@server.delete("/api/products/:id")
-@server.auth(role: "admin")
-fn delete_product(id: i64) {
-    print("  [ROUTE] DELETE /api/products/:id");
-    print("  -> Deletes product (admin only)");
-}
-
-// ============================================================================
-// @ui - UI Components (compiles to React, Svelte, Vue, Blade, etc.)
-// ============================================================================
-
-@ui.screen("Dashboard")
-capsule Dashboard {
-    @ui.component
-    fn render() {
-        print("  [UI] Rendering Dashboard screen");
-    }
-    
-    @ui.list(items: products)
-    fn renderProduct() {
-        print("  [UI] Rendering product card in list");
-    }
-}
-
-@ui.button("Add Product", action: showAddForm)
-fn showAddForm() {
-    print("  [UI] Button clicked: Add Product");
-}
-
-// ============================================================================
-// MAIN
-// ============================================================================
 
 fn main() {
     print("╔══════════════════════════════════════╗");
@@ -92,38 +30,31 @@ fn main() {
     print("╚══════════════════════════════════════╝");
     print("");
     
-    print("This example shows how decorators define intent:");
+    print("Adapter decorators compile to any framework!");
     print("");
     
     print("1. @entity - Data Models:");
-    print("   Product { id, name, price, stock }");
-    print("   User { id, email, name, role }");
+    Entity_create("User");
+    Entity_create("Product");
     print("");
     
     print("2. @server - API Routes:");
-    get_products();
-    get_product(1);
-    create_product();
-    delete_product(1);
+    Server_route("GET", "/api/users");
+    Server_route("POST", "/api/users");
+    Server_route("DELETE", "/api/users/:id");
     print("");
     
-    print("3. @ui - UI Components:");
-    print("  [UI] Dashboard @ui.screen");
-    Dashboard.render();
-    showAddForm();
+    print("3. @ui - Components:");
+    UI_component("Dashboard");
+    UI_component("UserList");
+    UI_component("Button");
     print("");
     
-    print("Target Framework Mappings:");
-    print("┌────────────────────────────────────────────────┐");
-    print("│ Decorator         │ React    │ Laravel        │");
-    print("├────────────────────────────────────────────────┤");
-    print("│ @entity           │ Prisma   │ Eloquent       │");
-    print("│ @server.get       │ API Route│ Route::get()   │");
-    print("│ @ui.screen        │ Component│ @extends       │");
-    print("│ @ui.list          │ .map()   │ @foreach       │");
-    print("└────────────────────────────────────────────────┘");
+    print("Target Framework Mapping:");
+    print("   @entity   -> Prisma / Eloquent / SQLAlchemy");
+    print("   @server   -> Express / FastAPI / Laravel");
+    print("   @ui       -> React / Vue / Svelte");
     print("");
     
-    print("✓ Same code → Different frameworks!");
-    print("  Change omni.config.json to switch targets.");
+    print("✓ Same code compiles to different frameworks!");
 }

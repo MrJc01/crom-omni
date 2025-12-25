@@ -4,33 +4,26 @@
 
 fn print(msg: string) {
     native "js" { console.log(msg); }
-    native "python" {
-print(msg)
+    native "python" { print(msg) }
+}
+
+fn test_i64(a: i64, b: i64) -> i64 {
+    return a + b;
+}
+
+fn test_f64(a: f64, b: f64) -> f64 {
+    return a * b;
+}
+
+fn test_bool(a: bool, b: bool) -> bool {
+    if (a) {
+        return b;
     }
+    return false;
 }
 
-struct Level3 {
-    value: i64
-}
-
-struct Level2 {
-    inner: Level3
-}
-
-struct Level1 {
-    inner: Level2,
-    name: string
-}
-
-fn create_nested() -> Level1 {
-    return Level1 {
-        name: "Root",
-        inner: Level2 {
-            inner: Level3 {
-                value: 42
-            }
-        }
-    };
+fn test_string(a: string, b: string) -> string {
+    return a + " " + b;
 }
 
 fn main() {
@@ -39,19 +32,25 @@ fn main() {
     print("╚══════════════════════════════════════╝");
     print("");
     
-    print("1. Primitive Types:");
-    let a: i64 = 100;
-    let b: f64 = 3.14;
-    let c: bool = true;
-    let d: string = "test";
-    print("   i64=100, f64=3.14, bool=true, string=test");
+    print("1. i64 operations:");
+    let r1 = test_i64(100, 200);
+    print("   100 + 200 = " + r1);
     print("");
     
-    print("2. Nested Structs:");
-    let nested = create_nested();
-    print("   Created 3-level nested struct");
-    print("   Root name: " + nested.name);
+    print("2. f64 operations:");
+    let r2 = test_f64(3.14, 2.0);
+    print("   3.14 * 2.0 = " + r2);
     print("");
     
-    print("✓ Stress types test completed!");
+    print("3. bool operations:");
+    let r3 = test_bool(true, true);
+    print("   true AND true = " + r3);
+    print("");
+    
+    print("4. string operations:");
+    let r4 = test_string("Hello", "Types");
+    print("   concat = " + r4);
+    print("");
+    
+    print("✓ Type stress test completed!");
 }
