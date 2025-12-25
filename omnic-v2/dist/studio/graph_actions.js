@@ -1,11 +1,11 @@
 const graph_types = require("./graph_types.js");
 if (typeof global !== 'undefined') Object.assign(global, graph_types);
 function graph_add_node(graph, node_type, name, x, y) {
-    const new_id = "";
+    let new_id = "";
     
         new_id = 'node_' + Date.now();
         
-        const node = {
+        let node = {
             id: new_id,
             type: node_type,
             name: name,
@@ -47,10 +47,10 @@ function graph_remove_node(graph, node_id) {
 }
 function graph_move_node(graph, node_id, x, y) {
     
-        const node = graph.nodes.find(n => n.id === node_id);
+        let node = graph.nodes.find(n => n.id === node_id);
         if (node) {
-            const dx = x - node.x;
-            const dy = y - node.y;
+            let dx = x - node.x;
+            let dy = y - node.y;
             node.x = x;
             node.y = y;
             
@@ -65,7 +65,7 @@ function graph_move_node(graph, node_id, x, y) {
     
 }
 function graph_add_edge(graph, src_node, src_port, tgt_node, tgt_port) {
-    const new_id = "";
+    let new_id = "";
     
         new_id = 'edge_' + Date.now();
         

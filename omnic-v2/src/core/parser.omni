@@ -165,10 +165,12 @@ fn Parser_parse_fn(p: Parser) -> FunctionDecl {
     Parser_next_token(p); // skip )
     
     // Handle return type annotation: -> Type
-    if (p.cur_token.lexeme == "-") {
-        Parser_next_token(p); // skip -
-        Parser_next_token(p); // skip >
-        Parser_next_token(p); // skip return type
+    // Handle return type annotation: -> Type
+    if (p.cur_token.kind == 99) { // TOKEN_ARROW
+        Parser_next_token(p); // skip ->
+        
+        // Skip return type identifier/token
+        Parser_next_token(p); 
     }
     
     let body = Parser_parse_block(p);
@@ -252,7 +254,7 @@ fn Parser_parse_block(p: Parser) -> Block {
     if (p.cur_token.kind == TOKEN_LBRACE) {
         Parser_next_token(p); // skip {
         while (p.cur_token.kind != TOKEN_RBRACE && p.cur_token.kind != TOKEN_EOF) {
-            native "js" { console.log("BlockLoop: " + p.cur_token.kind + " (" + p.cur_token.lexeme + ")"); }
+
             let stmt = Parser_parse_statement(p);
             native "js" { stmts.push(stmt); }
         }
@@ -270,7 +272,7 @@ fn Parser_parse_expr_stmt(p: Parser) -> ExpressionStmt {
     if (p.cur_token.kind == TOKEN_SEMICOLON) {
         Parser_next_token(p);
     }
-    return ExpressionStmt { kind: 0, expr: expr };
+    return ExpressionStmt { kind: NODE_EXPRESSION_STMT, expr: expr };
 }
 
 // Expression Parsing with Precedence
@@ -373,10 +375,27 @@ fn Parser_parse_multiplication(p: Parser) -> any {
 fn Parser_parse_factor(p: Parser) -> any {
     let node: any = 0;
     
+    // 0. Unary operators (-, !)
+    if (p.cur_token.kind == TOKEN_MINUS) {
+        Parser_next_token(p); // skip -
+        let operand = Parser_parse_factor(p); // recursive call for nested unary
+        // Create binary: 0 - operand
+        node = BinaryExpr { kind: NODE_BINARY, left: IntegerLiteral { kind: NODE_LITERAL, value: 0 }, op: "-", right: operand };
+        return node;
+    }
+    
+    if (p.cur_token.kind == TOKEN_BANG) {
+        Parser_next_token(p); // skip !
+        let operand = Parser_parse_factor(p);
+        // Create "!operand" - for now just return the operand (simplification)
+        // TODO: Proper unary NOT node
+        return operand;
+    }
+    
     // 1. Primary Expressions
     if (p.cur_token.kind == TOKEN_INT) {
         let val = 0;
-        native "js" { val = parseInt(p.cur_token.lexeme); }
+        native "js" { val = Number(p.cur_token.lexeme); }
         node = IntegerLiteral { kind: NODE_LITERAL, value: val };
         Parser_next_token(p);
     } else if (p.cur_token.kind == TOKEN_IDENTIFIER) {

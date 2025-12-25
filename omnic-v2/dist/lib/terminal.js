@@ -23,10 +23,10 @@ class Colors {
     }
 }
 function Colors_new() {
-    const c = new Colors({ reset: "", bold: "", dim: "", underline: "", black: "", red: "", green: "", yellow: "", blue: "", magenta: "", cyan: "", white: "", bg_black: "", bg_red: "", bg_green: "", bg_yellow: "", bg_blue: "", bg_magenta: "", bg_cyan: "", bg_white: "" });
+    let c = new Colors({ reset: "", bold: "", dim: "", underline: "", black: "", red: "", green: "", yellow: "", blue: "", magenta: "", cyan: "", white: "", bg_black: "", bg_red: "", bg_green: "", bg_yellow: "", bg_blue: "", bg_magenta: "", bg_cyan: "", bg_white: "" });
     
         // Check if terminal supports colors
-        const supportsColor = process.stdout.isTTY && 
+        let supportsColor = process.stdout.isTTY && 
             (process.env.TERM !== 'dumb') && 
             !process.env.NO_COLOR;
         
@@ -57,8 +57,8 @@ function Colors_new() {
     
     return c;
 }
-const CLI_COLORS_INIT = false;
-const CLI_COLORS_CACHE = new Colors({ reset: "", bold: "", dim: "", underline: "", black: "", red: "", green: "", yellow: "", blue: "", magenta: "", cyan: "", white: "", bg_black: "", bg_red: "", bg_green: "", bg_yellow: "", bg_blue: "", bg_magenta: "", bg_cyan: "", bg_white: "" });
+let CLI_COLORS_INIT = false;
+let CLI_COLORS_CACHE = new Colors({ reset: "", bold: "", dim: "", underline: "", black: "", red: "", green: "", yellow: "", blue: "", magenta: "", cyan: "", white: "", bg_black: "", bg_red: "", bg_green: "", bg_yellow: "", bg_blue: "", bg_magenta: "", bg_cyan: "", bg_white: "" });
 function CLI_COLORS() {
     if (CLI_COLORS_INIT == false) {
     CLI_COLORS_CACHE = Colors_new();
@@ -68,87 +68,87 @@ function CLI_COLORS() {
 }
 function CLI_success(msg) {
     
-        const c = CLI_COLORS();
+        let c = CLI_COLORS();
         console.log(c.green + 'âœ“' + c.reset + ' ' + msg);
     
 }
 function CLI_error(msg) {
     
-        const c = CLI_COLORS();
+        let c = CLI_COLORS();
         console.error(c.red + 'âœ—' + c.reset + ' ' + msg);
     
 }
 function CLI_warning(msg) {
     
-        const c = CLI_COLORS();
+        let c = CLI_COLORS();
         console.log(c.yellow + 'âš ' + c.reset + ' ' + msg);
     
 }
 function CLI_info(msg) {
     
-        const c = CLI_COLORS();
+        let c = CLI_COLORS();
         console.log(c.blue + 'â„¹' + c.reset + ' ' + msg);
     
 }
 function CLI_step(step, total, msg) {
     
-        const c = CLI_COLORS();
-        const prefix = c.cyan + '[' + step + '/' + total + ']' + c.reset;
+        let c = CLI_COLORS();
+        let prefix = c.cyan + '[' + step + '/' + total + ']' + c.reset;
         console.log(prefix + ' ' + msg);
     
 }
 function CLI_header(title) {
     
-        const c = CLI_COLORS();
+        let c = CLI_COLORS();
         console.log('');
         console.log(c.bold + c.cyan + 'â•â•â• ' + title + ' â•â•â•' + c.reset);
         console.log('');
     
 }
 function CLI_dim(msg) {
-    const result = "";
+    let result = "";
     
-        const c = CLI_COLORS();
+        let c = CLI_COLORS();
         result = c.dim + msg + c.reset;
     
     return result;
 }
 function CLI_bold(msg) {
-    const result = "";
+    let result = "";
     
-        const c = CLI_COLORS();
+        let c = CLI_COLORS();
         result = c.bold + msg + c.reset;
     
     return result;
 }
 function CLI_green(msg) {
-    const result = "";
+    let result = "";
     
-        const c = CLI_COLORS();
+        let c = CLI_COLORS();
         result = c.green + msg + c.reset;
     
     return result;
 }
 function CLI_red(msg) {
-    const result = "";
+    let result = "";
     
-        const c = CLI_COLORS();
+        let c = CLI_COLORS();
         result = c.red + msg + c.reset;
     
     return result;
 }
 function CLI_yellow(msg) {
-    const result = "";
+    let result = "";
     
-        const c = CLI_COLORS();
+        let c = CLI_COLORS();
         result = c.yellow + msg + c.reset;
     
     return result;
 }
 function CLI_cyan(msg) {
-    const result = "";
+    let result = "";
     
-        const c = CLI_COLORS();
+        let c = CLI_COLORS();
         result = c.cyan + msg + c.reset;
     
     return result;
@@ -163,15 +163,15 @@ class Spinner {
     }
 }
 function Spinner_new(message) {
-    const spinner = new Spinner({ frames: "â ‹â ™â ¹â ¸â ¼â ´â ¦â §â ‡â ", current: 0, interval: 0, message: message, running: false });
+    let spinner = new Spinner({ frames: "â ‹â ™â ¹â ¸â ¼â ´â ¦â §â ‡â ", current: 0, interval: 0, message: message, running: false });
     return spinner;
 }
 function Spinner_start(self) {
     
         if (self.running) return;
         self.running = true;
-        const frames = self.frames.split('');
-        const c = CLI_COLORS();
+        let frames = self.frames.split('');
+        let c = CLI_COLORS();
         
         self.interval = setInterval(() => {
             process.stdout.write('\r' + c.cyan + 
@@ -187,9 +187,9 @@ function Spinner_stop(self, success) {
         
         clearInterval(self.interval);
         self.running = false;
-        const c = CLI_COLORS();
+        let c = CLI_COLORS();
         
-        const icon = success 
+        let icon = success 
             ? c.green + 'âœ“' + c.reset 
             : c.red + 'âœ—' + c.reset;
         
@@ -197,14 +197,14 @@ function Spinner_stop(self, success) {
     
 }
 function CLI_progress_bar(current, total, width) {
-    const result = "";
+    let result = "";
     
-        const c = CLI_COLORS();
-        const percent = Math.floor((current / total) * 100);
-        const filled = Math.floor((current / total) * width);
-        const empty = width - filled;
+        let c = CLI_COLORS();
+        let percent = Math.floor((current / total) * 100);
+        let filled = Math.floor((current / total) * width);
+        let empty = width - filled;
         
-        const bar = c.green + 'â–ˆ'.repeat(filled) + 
+        let bar = c.green + 'â–ˆ'.repeat(filled) + 
                     c.dim + 'â–‘'.repeat(empty) + c.reset;
         
         result = bar + ' ' + percent + '%';
@@ -229,13 +229,13 @@ class ParsedArgs {
     }
 }
 function ParsedArgs_new() {
-    const args = new ParsedArgs({ command: "", arg1: "", arg2: "", arg3: "", flag_help: false, flag_version: false, flag_verbose: false, flag_global: false, flag_app: false, flag_tui: false, opt_target: "js", opt_port: "3000", opt_framework: "" });
+    let args = new ParsedArgs({ command: "", arg1: "", arg2: "", arg3: "", flag_help: false, flag_version: false, flag_verbose: false, flag_global: false, flag_app: false, flag_tui: false, opt_target: "js", opt_port: "3000", opt_framework: "" });
     
-        const argv = process.argv.slice(2);
+        let argv = process.argv.slice(2);
         
         let positional = [];
         for (let i = 0; i < argv.length; i++) {
-            const arg = argv[i];
+            let arg = argv[i];
             
             if (arg === '--help' || arg === '-h') {
                 args.flag_help = true;
@@ -269,13 +269,13 @@ function ParsedArgs_new() {
 }
 function CLI_table_simple(col1, col2) {
     
-        const c = CLI_COLORS();
+        let c = CLI_COLORS();
         console.log('  ' + c.cyan + col1.padEnd(20) + c.reset + col2);
     
 }
 function CLI_table_header(title) {
     
-        const c = CLI_COLORS();
+        let c = CLI_COLORS();
         console.log('');
         console.log(c.bold + title + c.reset);
         console.log('â”€'.repeat(50));
@@ -283,7 +283,7 @@ function CLI_table_header(title) {
 }
 function CLI_banner() {
     
-        const c = CLI_COLORS();
+        let c = CLI_COLORS();
         console.log('');
         console.log(c.cyan + c.bold + 
             '   ____  __  __ _   _ ___ ' + c.reset);

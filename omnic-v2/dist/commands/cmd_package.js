@@ -7,19 +7,19 @@ function cmd_package_self() {
         const path = require('path');
         const { execSync } = require('child_process');
         
-        const omniDir = path.dirname(path.dirname(__filename));
-        const version = CLI_version();
-        const platform = process.platform;
+        let omniDir = path.dirname(path.dirname(__filename));
+        let version = CLI_version();
+        let platform = process.platform;
         
         terminal.CLI_step(1, 4, "Collecting source files...");
         
         // Files to include
-        const distDir = path.join(omniDir, 'dist');
-        const targetsDir = path.join(omniDir, 'targets');
+        let distDir = path.join(omniDir, 'dist');
+        let targetsDir = path.join(omniDir, 'targets');
         
         terminal.CLI_step(2, 4, "Creating package manifest...");
         
-        const manifest = {
+        let manifest = {
             name: 'omni-compiler',
             version: version,
             platform: platform,
@@ -29,20 +29,20 @@ function cmd_package_self() {
         
         // List dist files
         if (fs.existsSync(distDir)) {
-            const files = fs.readdirSync(distDir, { recursive: true });
+            let files = fs.readdirSync(distDir, { recursive: true });
             manifest.files.push(...files.map(f => 'dist/' + f));
         }
         
         // List target profiles
         if (fs.existsSync(targetsDir)) {
-            const files = fs.readdirSync(targetsDir);
+            let files = fs.readdirSync(targetsDir);
             manifest.files.push(...files.map(f => 'targets/' + f));
         }
         
         CLI_step(3, 4, "Writing package...");
         
-        const packageName = `omni-${version}-${platform}`;
-        const packageDir = path.join(omniDir, 'packages');
+        let packageName = `omni-${version}-${platform}`;
+        let packageDir = path.join(omniDir, 'packages');
         
         if (!fs.existsSync(packageDir)) {
             fs.mkdirSync(packageDir, { recursive: true });
@@ -58,16 +58,16 @@ function cmd_package_self() {
         
         // Create .run file (Unix) or .cmd (Windows)
         if (platform === 'win32') {
-            const runContent = `@echo off
+            let runContent = `@echo off
 set OMNI_HOME=%~dp0
 node "%OMNI_HOME%dist\\main.js" %*`;
             fs.writeFileSync(path.join(packageDir, packageName + '.cmd'), runContent);
             CLI_success("Package created: packages/" + packageName + ".cmd");
         } else {
-            const runContent = `#!/bin/bash
+            let runContent = `#!/bin/bash
 OMNI_HOME="$(dirname "$(readlink -f "$0")")"
 node "$OMNI_HOME/dist/main.js" "$@"`;
-            const runPath = path.join(packageDir, packageName + '.run');
+            let runPath = path.join(packageDir, packageName + '.run');
             fs.writeFileSync(runPath, runContent);
             fs.chmodSync(runPath, '755');
             CLI_success("Package created: packages/" + packageName + ".run");

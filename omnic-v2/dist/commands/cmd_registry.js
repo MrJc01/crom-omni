@@ -2,7 +2,7 @@ const contracts = require("../core/contracts.js");
 if (typeof global !== 'undefined') Object.assign(global, contracts);
 function cmd_contracts() {
     
-        const registry = ContractRegistry_new();
+        let registry = ContractRegistry_new();
         ContractRegistry_list_interfaces(registry);
     
 }

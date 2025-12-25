@@ -1,10 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 
-const HybridImpl = {
-    LanguageProfile_load: function(self) {
+let HybridImpl = {
+    LanguageProfile_load_impl: function(self) {
         // Try multiple paths for profile
-        const paths = [
+        let paths = [
             path.join(__dirname, '..', 'targets', self.name + '.json'),
             path.join(__dirname, '..', '..', 'targets', self.name + '.json'),
             path.join(process.cwd(), 'targets', self.name + '.json')
@@ -51,8 +51,8 @@ const HybridImpl = {
         return self;
     },
 
-    LanguageProfile_render: function(self, template_name, data) {
-        const template = self.templates[template_name];
+    LanguageProfile_render_impl: function(self, template_name, data) {
+        let template = self.templates[template_name];
         if (!template) {
             return "/* Template '" + template_name + "' not found */";
         }
@@ -61,17 +61,17 @@ const HybridImpl = {
         });
     },
 
-    LanguageProfile_map_operator: function(self, op) {
-        const opMap = { '==': 'eq', '!=': 'neq', '&&': 'and', '||': 'or', '<': 'lt', '>': 'gt' };
-        const key = opMap[op];
+    LanguageProfile_map_operator_impl: function(self, op) {
+        let opMap = { '==': 'eq', '!=': 'neq', '&&': 'and', '||': 'or', '<': 'lt', '>': 'gt' };
+        let key = opMap[op];
         if (key && self.operators[key]) {
             return self.operators[key];
         }
         return op;
     },
 
-    HybridCodeGenerator_indent: function(self, code) {
-        const prefix = self.profile.indent_str.repeat(self.indent_level);
+    HybridCodeGenerator_indent_impl: function(self, code) {
+        let prefix = self.profile.indent_str.repeat(self.indent_level);
         return code.split('\n').map(line => line ? prefix + line : line).join('\n');
     },
 
@@ -82,7 +82,7 @@ const HybridImpl = {
             lang = lang.substring(1, lang.length - 1);
         }
         
-        const targetLang = self.profile.name;
+        let targetLang = self.profile.name;
         
         if (lang === 'js' || lang === 'javascript') {
             if (targetLang === 'js' || targetLang === 'javascript') {
@@ -121,40 +121,40 @@ const HybridImpl = {
     },
 
     gen_entity_repo: function(stmt) {
-        const name = stmt.name;
-        const fields = (stmt.fields || []).filter(f => f.name !== 'id').map(f => f.name);
+        let name = stmt.name;
+        let fields = (stmt.fields || []).filter(f => f.name !== 'id').map(f => f.name);
         // field_names unused in original code logic?
         
         let out = "\n// @entity Repository: " + name + "\n";
         out += name + ".find = async (id) => {\n";
-        out += "    const db = await Database.get('main_db');\n";
-        out += "    const row = await db.get('SELECT * FROM " + name + " WHERE id = ?', [id]);\n";
+        out += "    let db = await Database.get('main_db');\n";
+        out += "    let row = await db.get('SELECT * FROM " + name + " WHERE id = ?', [id]);\n";
         out += "    return row ? new " + name + "(row) : null;\n";
         out += "};\n\n";
         
         out += name + ".all = async () => {\n";
-        out += "    const db = await Database.get('main_db');\n";
+        out += "    let db = await Database.get('main_db');\n";
         out += "    return (await db.all('SELECT * FROM " + name + "')).map(r => new " + name + "(r));\n";
         out += "};\n";
         return out;
     },
 
     gen_capsule: function(stmt) {
-        const name = stmt.name;
+        let name = stmt.name;
         let flows = "";
-        const flowDefs = stmt.flows || [];
-        const flow_list = flowDefs.map(f => "'" + f.name + "'").join(', ');
+        let flowDefs = stmt.flows || [];
+        let flow_list = flowDefs.map(f => "'" + f.name + "'").join(', ');
         
         for (const flow of flowDefs) {
-            const params = flow.params.map(p => p.name).join(', ');
-            const paramJson = flow.params.map(p => p.name + ": " + p.name).join(', ');
+            let params = flow.params.map(p => p.name).join(', ');
+            let paramJson = flow.params.map(p => p.name + ": " + p.name).join(', ');
             
             flows += "    async " + flow.name + "(" + params + ") {\n";
-            flows += "        const route = TopologyResolver.resolve('" + name + "');\n";
+            flows += "        let route = TopologyResolver.resolve('" + name + "');\n";
             flows += "        if (route.local) {\n";
             flows += "            return this._impl_" + flow.name + "(" + params + ");\n";
             flows += "        } else {\n";
-            flows += "            const response = await fetch(route.url + '/" + name + "/" + flow.name + "', {\n";
+            flows += "            let response = await fetch(route.url + '/" + name + "/" + flow.name + "', {\n";
             flows += "                method: 'POST',\n";
             flows += "                headers: { 'Content-Type': 'application/json' },\n";
             flows += "                body: JSON.stringify({ " + paramJson + " })\n";
@@ -180,7 +180,7 @@ const HybridImpl = {
     gen_spawn_code: function(fn_name, args_str) {
         let out = "(() => {\n";
         out += "    const { Worker } = require('worker_threads');\n";
-        out += "    const worker = new Worker(__filename, {\n";
+        out += "    let worker = new Worker(__filename, {\n";
         out += "        workerData: { fn: '" + fn_name + "', args: [" + args_str + "] }\n";
         out += "    });\n";
         out += "    worker.on('message', r => console.log('[spawn] " + fn_name + " done:', r));\n";
@@ -190,14 +190,14 @@ const HybridImpl = {
     },
 
     gen_service_client: function(stmt) {
-        const name = stmt.name;
+        let name = stmt.name;
         let methods = "";
         
         for (const method of stmt.methods || []) {
-            const params = method.params ? method.params.map(p => p.name).join(', ') : '';
+            let params = method.params ? method.params.map(p => p.name).join(', ') : '';
             methods += "    async " + method.name + "(" + params + ") {\n";
-            methods += "        const url = Discovery.resolve('" + name + "');\n";
-            methods += "        const response = await fetch(url + '/" + name + "/" + method.name + "', {\n";
+            methods += "        let url = Discovery.resolve('" + name + "');\n";
+            methods += "        let response = await fetch(url + '/" + name + "/" + method.name + "', {\n";
             methods += "            method: 'POST',\n";
             methods += "            headers: { 'Content-Type': 'application/json' },\n";
             methods += "            body: JSON.stringify({ " + params + " })\n";
@@ -213,7 +213,7 @@ const HybridImpl = {
     gen_import: function(stmt) {
         let module_path = stmt.path || stmt.module || '';
         module_path = module_path.replace(/^['"]|['"]$/g, '');
-        const alias = stmt.alias || module_path.split('/').pop().replace('.omni', '');
+        let alias = stmt.alias || module_path.split('/').pop().replace('.omni', '');
         
         return "// MARKER: Hybrid Import\n" + 
                "const " + alias + " = require(\"" + module_path + "\");\n" +

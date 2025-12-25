@@ -1,7 +1,7 @@
 const server = require("./server.js");
 if (typeof global !== 'undefined') Object.assign(global, server);
 function generate_studio_html(server) {
-    const html = "";
+    let html = "";
     
         html = `<!DOCTYPE html>
 <html lang="en">
@@ -354,18 +354,18 @@ function generate_studio_html(server) {
         
         // Load initial graph
         async function loadGraph() {
-            const res = await fetch('/api/graph');
-            const graph = await res.json();
+            let res = await fetch('/api/graph');
+            let graph = await res.json();
             nodes = graph.nodes || [];
             renderNodes();
         }
         
         function renderNodes() {
-            const canvas = document.getElementById('canvas');
+            let canvas = document.getElementById('canvas');
             canvas.innerHTML = '';
             
             for (const node of nodes) {
-                const el = document.createElement('div');
+                let el = document.createElement('div');
                 el.className = 'vnode ' + node.type;
                 el.dataset.id = node.id;
                 el.style.left = (node.position?.x || 100) + 'px';

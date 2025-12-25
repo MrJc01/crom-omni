@@ -3,10 +3,10 @@ if (typeof global !== 'undefined') Object.assign(global, ast);
 const graph_types = require("./graph_types.js");
 if (typeof global !== 'undefined') Object.assign(global, graph_types);
 
-    const { VisualGraph_new, VisualGraph } = graph_types;
+    var { VisualGraph_new, VisualGraph: VisualGraph_Class } = graph_types;
 
 function ast_to_graph(program) {
-    const graph = VisualGraph_new();
+    let graph = VisualGraph_new();
     
         if (!program || !program.statements) {
             console.error("[graph] Invalid program AST");
@@ -18,12 +18,12 @@ function ast_to_graph(program) {
         let nodeId = 0;
         let edgeId = 0;
         let y = 50;
-        const NODE_HEIGHT = 80;
-        const NODE_WIDTH = 200;
-        const CAPSULE_PADDING = 40;
+        let NODE_HEIGHT = 80;
+        let NODE_WIDTH = 200;
+        let CAPSULE_PADDING = 40;
         
         // Helper to create node
-        const createNode = (type, name, x, y, astKind, astLine, parentId = null) => {
+        let createNode = (type, name, x, y, astKind, astLine, parentId = null) => {
             return {
                 id: 'node_' + (++nodeId),
                 type: type,
@@ -43,7 +43,7 @@ function ast_to_graph(program) {
         };
         
         // Helper to create edge
-        const createEdge = (srcNode, srcPort, tgtNode, tgtPort, type) => {
+        let createEdge = (srcNode, srcPort, tgtNode, tgtPort, type) => {
             return {
                 id: 'edge_' + (++edgeId),
                 source_node: srcNode,
@@ -58,7 +58,7 @@ function ast_to_graph(program) {
         for (const stmt of program.statements) {
             // Import
             if (stmt.kind === 10) { // NODE_IMPORT
-                const node = createNode('import', stmt.path || stmt.value, 50, y, 10, stmt.line);
+                let node = createNode('import', stmt.path || stmt.value, 50, y, 10, stmt.line);
                 node.width = 150;
                 node.height = 40;
                 graph.nodes.push(node);
@@ -68,13 +68,13 @@ function ast_to_graph(program) {
             
             // Struct / Entity
             if (stmt.kind === 70) { // NODE_STRUCT
-                const isEntity = (stmt.attributes || []).some(a => a.name === 'entity');
-                const node = createNode(isEntity ? 'entity' : 'struct', stmt.name, 400, y, 70, stmt.line);
+                let isEntity = (stmt.attributes || []).some(a => a.name === 'entity');
+                let node = createNode(isEntity ? 'entity' : 'struct', stmt.name, 400, y, 70, stmt.line);
                 
                 // Add fields as ports
                 for (const field of (stmt.fields || [])) {
-                    const fieldName = typeof field === 'string' ? field : field.name;
-                    const fieldType = typeof field === 'object' ? field.type : 'any';
+                    let fieldName = typeof field === 'string' ? field : field.name;
+                    let fieldType = typeof field === 'object' ? field.type : 'any';
                     node.ports_out.push({
                         id: 'port_' + (++nodeId),
                         name: fieldName,
@@ -91,21 +91,21 @@ function ast_to_graph(program) {
             
             // Capsule
             if (stmt.kind === 93) { // NODE_CAPSULE
-                const capsuleNode = createNode('capsule', stmt.name, 50, y, 93, stmt.line);
+                let capsuleNode = createNode('capsule', stmt.name, 50, y, 93, stmt.line);
                 capsuleNode.width = 350;
                 
                 let innerY = y + CAPSULE_PADDING;
-                const flowNodes = [];
+                let flowNodes = [];
                 
                 // Process flows inside capsule
                 for (const flow of (stmt.flows || [])) {
-                    const flowNode = createNode('flow', flow.name, 70, innerY, 94, flow.line, capsuleNode.id);
+                    let flowNode = createNode('flow', flow.name, 70, innerY, 94, flow.line, capsuleNode.id);
                     flowNode.width = 280;
                     
                     // Input ports (params)
                     for (const param of (flow.params || [])) {
-                        const paramName = typeof param === 'string' ? param : param.name;
-                        const paramType = typeof param === 'object' ? param.type : 'any';
+                        let paramName = typeof param === 'string' ? param : param.name;
+                        let paramType = typeof param === 'object' ? param.type : 'any';
                         flowNode.ports_in.push({
                             id: 'port_' + (++nodeId),
                             name: paramName,
@@ -134,7 +134,7 @@ function ast_to_graph(program) {
                 
                 // Create execution edges between flows
                 for (let i = 0; i < flowNodes.length - 1; i++) {
-                    const edge = createEdge(
+                    let edge = createEdge(
                         flowNodes[i].id, 'exec_out',
                         flowNodes[i + 1].id, 'exec_in',
                         'execution'
@@ -148,12 +148,12 @@ function ast_to_graph(program) {
             
             // Function
             if (stmt.kind === 4) { // NODE_FUNCTION
-                const node = createNode('function', stmt.name, 50, y, 4, stmt.line);
+                let node = createNode('function', stmt.name, 50, y, 4, stmt.line);
                 
                 // Input ports (params)
                 for (const param of (stmt.params || [])) {
-                    const paramName = typeof param === 'string' ? param : param.name;
-                    const paramType = typeof param === 'object' ? param.type : 'any';
+                    let paramName = typeof param === 'string' ? param : param.name;
+                    let paramType = typeof param === 'object' ? param.type : 'any';
                     node.ports_in.push({
                         id: 'port_' + (++nodeId),
                         name: paramName,
@@ -182,7 +182,7 @@ function new_map() {
     return 0;
 }
 function graph_to_ast(graph) {
-    const program = new_map();
+    let program = new_map();
     
         program = {
             kind: 1, // NODE_PROGRAM
@@ -190,10 +190,10 @@ function graph_to_ast(graph) {
         };
         
         // Sort nodes by y position for correct order
-        const sortedNodes = [...graph.nodes].sort((a, b) => a.y - b.y);
+        let sortedNodes = [...graph.nodes].sort((a, b) => a.y - b.y);
         
         // Group child nodes by parent
-        const childrenMap = {};
+        let childrenMap = {};
         for (const node of sortedNodes) {
             if (node.parent_id) {
                 if (!childrenMap[node.parent_id]) {
@@ -219,7 +219,7 @@ function graph_to_ast(graph) {
             
             // Struct / Entity
             if (node.type === 'struct' || node.type === 'entity') {
-                const stmt = {
+                let stmt = {
                     kind: 70,
                     name: node.name,
                     fields: node.ports_out.map(p => ({ name: p.name, type: p.type })),
@@ -232,7 +232,7 @@ function graph_to_ast(graph) {
             
             // Capsule
             if (node.type === 'capsule') {
-                const flows = (childrenMap[node.id] || [])
+                let flows = (childrenMap[node.id] || [])
                     .filter(n => n.type === 'flow')
                     .sort((a, b) => a.y - b.y)
                     .map(flowNode => ({
@@ -272,18 +272,18 @@ function graph_to_ast(graph) {
     return program;
 }
 function graph_to_code(graph) {
-    const code = "";
+    let code = "";
     
-        const lines = [];
+        let lines = [];
         lines.push("// Generated by Omni Studio Visual Editor");
         lines.push("// " + new Date().toISOString());
         lines.push("");
         
         // Sort nodes by y position
-        const sortedNodes = [...graph.nodes].sort((a, b) => a.y - b.y);
+        let sortedNodes = [...graph.nodes].sort((a, b) => a.y - b.y);
         
         // Group children by parent
-        const childrenMap = {};
+        let childrenMap = {};
         for (const node of sortedNodes) {
             if (node.parent_id) {
                 if (!childrenMap[node.parent_id]) {
@@ -325,7 +325,7 @@ function graph_to_code(graph) {
             if (node.type === 'capsule') {
                 lines.push(`capsule ${node.name} {`);
                 
-                const children = (childrenMap[node.id] || []).sort((a, b) => a.y - b.y);
+                let children = (childrenMap[node.id] || []).sort((a, b) => a.y - b.y);
                 for (const child of children) {
                     if (child.type === 'flow') {
                         // Position comment
@@ -334,15 +334,15 @@ function graph_to_code(graph) {
                         // Attributes
                         for (const attr of (child.attributes || [])) {
                             if (attr.name) {
-                                const args = (attr.args || []).map(a => `"${a}"`).join(', ');
+                                let args = (attr.args || []).map(a => `"${a}"`).join(', ');
                                 lines.push(`    @${attr.name}${args ? '(' + args + ')' : ''}`);
                             }
                         }
                         
                         // Flow signature
-                        const params = child.ports_in.map(p => `${p.name}: ${p.type}`).join(', ');
-                        const returnType = child.ports_out[0]?.type || 'void';
-                        const returnStr = returnType !== 'void' ? ` -> ${returnType}` : '';
+                        let params = child.ports_in.map(p => `${p.name}: ${p.type}`).join(', ');
+                        let returnType = child.ports_out[0]?.type || 'void';
+                        let returnStr = returnType !== 'void' ? ` -> ${returnType}` : '';
                         
                         lines.push(`    flow ${child.name}(${params})${returnStr} {`);
                         lines.push(`        // TODO: Implement`);
@@ -358,9 +358,9 @@ function graph_to_code(graph) {
             
             // Function
             if (node.type === 'function') {
-                const params = node.ports_in.map(p => `${p.name}: ${p.type}`).join(', ');
-                const returnType = node.ports_out[0]?.type || 'void';
-                const returnStr = returnType !== 'void' ? ` -> ${returnType}` : '';
+                let params = node.ports_in.map(p => `${p.name}: ${p.type}`).join(', ');
+                let returnType = node.ports_out[0]?.type || 'void';
+                let returnStr = returnType !== 'void' ? ` -> ${returnType}` : '';
                 
                 lines.push(`fn ${node.name}(${params})${returnStr} {`);
                 lines.push(`    // TODO: Implement`);
@@ -375,7 +375,7 @@ function graph_to_code(graph) {
     return code;
 }
 function code_to_graph(source, program) {
-    const graph = VisualGraph_new();
+    let graph = VisualGraph_new();
     
         if (!program || !program.statements) {
             console.error("[graph] Invalid program AST");
@@ -383,20 +383,20 @@ function code_to_graph(source, program) {
         }
         
         // Parse @visual:position comments from source
-        const positionMap = {};
-        const lines = source.split('\n');
+        let positionMap = {};
+        let lines = source.split('\n');
         
         for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
-            const match = line.match(new RegExp("@visual:position\\((\\d+),\\s*(\\d+)\\)"));
+            let line = lines[i];
+            let match = line.match(new RegExp("@visual:position\\((\\d+),\\s*(\\d+)\\)"));
             if (match) {
                 // Position applies to next non-comment line
-                const x = parseInt(match[1]);
-                const y = parseInt(match[2]);
+                let x = parseInt(match[1]);
+                let y = parseInt(match[2]);
                 
                 // Find next statement line
                 for (let j = i + 1; j < lines.length; j++) {
-                    const nextLine = lines[j].trim();
+                    let nextLine = lines[j].trim();
                     if (nextLine && !nextLine.startsWith('//') && !nextLine.startsWith('@')) {
                         positionMap[j + 1] = { x, y }; // 1-indexed
                         break;
@@ -411,10 +411,10 @@ function code_to_graph(source, program) {
         let nodeId = 0;
         let edgeId = 0;
         let defaultY = 50;
-        const NODE_HEIGHT = 80;
-        const NODE_WIDTH = 200;
+        let NODE_HEIGHT = 80;
+        let NODE_WIDTH = 200;
         
-        const createNode = (type, name, x, y, astKind, astLine, parentId = null) => {
+        let createNode = (type, name, x, y, astKind, astLine, parentId = null) => {
             return {
                 id: 'node_' + (++nodeId),
                 type: type,
@@ -435,13 +435,13 @@ function code_to_graph(source, program) {
         
         for (const stmt of program.statements) {
             // Get saved position or use default
-            const savedPos = positionMap[stmt.line];
-            const x = savedPos ? savedPos.x : 50;
-            const y = savedPos ? savedPos.y : defaultY;
+            let savedPos = positionMap[stmt.line];
+            let x = savedPos ? savedPos.x : 50;
+            let y = savedPos ? savedPos.y : defaultY;
             
             // Import
             if (stmt.kind === 10) {
-                const node = createNode('import', stmt.path || stmt.value, x, y, 10, stmt.line);
+                let node = createNode('import', stmt.path || stmt.value, x, y, 10, stmt.line);
                 node.width = 150;
                 node.height = 40;
                 graph.nodes.push(node);
@@ -451,12 +451,12 @@ function code_to_graph(source, program) {
             
             // Struct / Entity
             if (stmt.kind === 70) {
-                const isEntity = (stmt.attributes || []).some(a => a.name === 'entity');
-                const node = createNode(isEntity ? 'entity' : 'struct', stmt.name, x, y, 70, stmt.line);
+                let isEntity = (stmt.attributes || []).some(a => a.name === 'entity');
+                let node = createNode(isEntity ? 'entity' : 'struct', stmt.name, x, y, 70, stmt.line);
                 
                 for (const field of (stmt.fields || [])) {
-                    const fieldName = typeof field === 'string' ? field : field.name;
-                    const fieldType = typeof field === 'object' ? field.type : 'any';
+                    let fieldName = typeof field === 'string' ? field : field.name;
+                    let fieldType = typeof field === 'object' ? field.type : 'any';
                     node.ports_out.push({
                         id: 'port_' + (++nodeId),
                         name: fieldName,
@@ -473,22 +473,22 @@ function code_to_graph(source, program) {
             
             // Capsule
             if (stmt.kind === 93) {
-                const capsuleNode = createNode('capsule', stmt.name, x, y, 93, stmt.line);
+                let capsuleNode = createNode('capsule', stmt.name, x, y, 93, stmt.line);
                 capsuleNode.width = 350;
                 
                 let innerY = y + 40;
                 
                 for (const flow of (stmt.flows || [])) {
-                    const flowPos = positionMap[flow.line];
-                    const fx = flowPos ? flowPos.x : x + 20;
-                    const fy = flowPos ? flowPos.y : innerY;
+                    let flowPos = positionMap[flow.line];
+                    let fx = flowPos ? flowPos.x : x + 20;
+                    let fy = flowPos ? flowPos.y : innerY;
                     
-                    const flowNode = createNode('flow', flow.name, fx, fy, 94, flow.line, capsuleNode.id);
+                    let flowNode = createNode('flow', flow.name, fx, fy, 94, flow.line, capsuleNode.id);
                     flowNode.width = 280;
                     
                     for (const param of (flow.params || [])) {
-                        const paramName = typeof param === 'string' ? param : param.name;
-                        const paramType = typeof param === 'object' ? param.type : 'any';
+                        let paramName = typeof param === 'string' ? param : param.name;
+                        let paramType = typeof param === 'object' ? param.type : 'any';
                         flowNode.ports_in.push({
                             id: 'port_' + (++nodeId),
                             name: paramName,
@@ -517,11 +517,11 @@ function code_to_graph(source, program) {
             
             // Function
             if (stmt.kind === 4) {
-                const node = createNode('function', stmt.name, x, y, 4, stmt.line);
+                let node = createNode('function', stmt.name, x, y, 4, stmt.line);
                 
                 for (const param of (stmt.params || [])) {
-                    const paramName = typeof param === 'string' ? param : param.name;
-                    const paramType = typeof param === 'object' ? param.type : 'any';
+                    let paramName = typeof param === 'string' ? param : param.name;
+                    let paramType = typeof param === 'object' ? param.type : 'any';
                     node.ports_in.push({
                         id: 'port_' + (++nodeId),
                         name: paramName,

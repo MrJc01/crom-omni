@@ -14,19 +14,17 @@ function AppConfig_default() {
     return new AppConfig({ name: "OmniApp", version: "1.0.0", icon: "", description: "Built with Omni", author: "Omni Developer", bundle_id: "org.omni.app" });
 }
 function detect_platform() {
-    const platform = "unknown";
+    let platform = "unknown";
     
         platform = process.platform;
     
     return platform;
 }
 function detect_build_tools() {
-    const tools = null;
-}
-
+    
         const { execSync } = require('child_process');
         
-        tools = {
+        let tools = {
             gcc: false,
             clang: false,
             cargo: false,
@@ -35,7 +33,7 @@ function detect_build_tools() {
             wix: false
         };
         
-        const check = (cmd) => {
+        let check = (cmd) => {
             try {
                 execSync(cmd + ' --version', { stdio: 'ignore' });
                 return true;
@@ -60,13 +58,15 @@ function detect_build_tools() {
         if (process.platform === 'win32') {
             tools.wix = check('candle');
         }
+
+        return tools;
     
-return tools;
-// Unknown stmt kind: undefined
+    return 0;
+}
 function generate_tauri_config(config, is_studio) {
-    const json = "";
+    let json = "";
     
-        const tauriConfig = {
+        let tauriConfig = {
             "build": {
                 "distDir": is_studio ? "../studio/dist" : "../dist",
                 "devPath": is_studio ? "http://localhost:3000" : "http://localhost:8080"
@@ -106,9 +106,9 @@ function generate_tauri_config(config, is_studio) {
     return json;
 }
 function generate_capacitor_config(config) {
-    const json = "";
+    let json = "";
     
-        const capConfig = {
+        let capConfig = {
             "appId": config.bundle_id,
             "appName": config.name,
             "webDir": "dist",
@@ -132,16 +132,16 @@ function cmd_package_app(target, config) {
     CLI_header("Omni App Packager");
     CLI_info("Target: " + target);
     CLI_info("App: " + config.name + " v" + config.version);
-    const tools = detect_build_tools();
-    const platform = detect_platform();
+    let tools = detect_build_tools();
+    let platform = detect_platform();
     
         const fs = require('fs');
         const path = require('path');
         const { execSync } = require('child_process');
         
-        const omniDir = path.join(__dirname, '..');
-        const buildDir = path.join(omniDir, 'build');
-        const distDir = path.join(omniDir, 'dist', 'app');
+        let omniDir = path.join(__dirname, '..');
+        let buildDir = path.join(omniDir, 'build');
+        let distDir = path.join(omniDir, 'dist', 'app');
         
         // Create build directories
         [buildDir, distDir].forEach(dir => {
@@ -157,26 +157,26 @@ function cmd_package_app(target, config) {
             CLI_step(1, 4, "Generating Windows project...");
             
             // Create Tauri project structure
-            const tauriDir = path.join(buildDir, 'tauri');
+            let tauriDir = path.join(buildDir, 'tauri');
             if (!fs.existsSync(tauriDir)) {
                 fs.mkdirSync(tauriDir, { recursive: true });
             }
             
             // Write tauri.conf.json
-            const tauriConfig = generate_tauri_config(config, true);
+            let tauriConfig = generate_tauri_config(config, true);
             fs.writeFileSync(path.join(tauriDir, 'tauri.conf.json'), tauriConfig);
             CLI_success("Generated: build/tauri/tauri.conf.json");
             
             CLI_step(2, 4, "Copying Studio UI...");
             
             // Copy Studio files
-            const studioDistDir = path.join(tauriDir, 'studio', 'dist');
+            let studioDistDir = path.join(tauriDir, 'studio', 'dist');
             if (!fs.existsSync(studioDistDir)) {
                 fs.mkdirSync(studioDistDir, { recursive: true });
             }
             
             // Generate minimal index.html that loads Studio
-            const indexHtml = `<!DOCTYPE html>
+            let indexHtml = `<!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"><title>${config.name}</title></head>
 <body>
@@ -219,18 +219,18 @@ function cmd_package_app(target, config) {
         if (target === 'android' || target === 'apk') {
             CLI_step(1, 5, "Generating Capacitor project...");
             
-            const capDir = path.join(buildDir, 'capacitor');
+            let capDir = path.join(buildDir, 'capacitor');
             if (!fs.existsSync(capDir)) {
                 fs.mkdirSync(capDir, { recursive: true });
             }
             
             // Write capacitor.config.json
-            const capConfig = generate_capacitor_config(config);
+            let capConfig = generate_capacitor_config(config);
             fs.writeFileSync(path.join(capDir, 'capacitor.config.json'), capConfig);
             CLI_success("Generated: build/capacitor/capacitor.config.json");
             
             // Create package.json
-            const packageJson = {
+            let packageJson = {
                 "name": config.bundle_id.replace(/\./g, '-'),
                 "version": config.version,
                 "scripts": {
@@ -249,13 +249,13 @@ function cmd_package_app(target, config) {
             
             CLI_step(2, 5, "Creating dist folder...");
             
-            const distFolder = path.join(capDir, 'dist');
+            let distFolder = path.join(capDir, 'dist');
             if (!fs.existsSync(distFolder)) {
                 fs.mkdirSync(distFolder, { recursive: true });
             }
             
             // Create minimal index.html
-            const indexHtml = `<!DOCTYPE html>
+            let indexHtml = `<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -326,13 +326,13 @@ function cmd_package_app(target, config) {
         if (target === 'linux' || target === 'appimage') {
             CLI_step(1, 3, "Generating Linux project...");
             
-            const linuxDir = path.join(buildDir, 'linux');
+            let linuxDir = path.join(buildDir, 'linux');
             if (!fs.existsSync(linuxDir)) {
                 fs.mkdirSync(linuxDir, { recursive: true });
             }
             
             // Write desktop file
-            const desktopEntry = `[Desktop Entry]
+            let desktopEntry = `[Desktop Entry]
 Name=${config.name}
 Comment=${config.description}
 Exec=omni
@@ -343,7 +343,7 @@ Categories=Development;IDE;
             fs.writeFileSync(path.join(linuxDir, config.name + '.desktop'), desktopEntry);
             
             // Write AppImage recipe
-            const appImageYml = `app: ${config.name}
+            let appImageYml = `app: ${config.name}
 ingredients:
   dist: omni-installer
   script:

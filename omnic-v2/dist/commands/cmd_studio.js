@@ -3,9 +3,9 @@ if (typeof global !== 'undefined') Object.assign(global, studio_engine);
 const tui = require("../core/tui.js");
 if (typeof global !== 'undefined') Object.assign(global, tui);
 function cmd_studio_cli() {
-    const port = 3000;
-    const open_app = false;
-    const run_tui = false;
+    let port = 3000;
+    let open_app = false;
+    let run_tui = false;
     
         // Parse port option
         for (let i = 3; i < process.argv.length; i++) {

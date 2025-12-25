@@ -52,8 +52,8 @@ function tui_show_cursor() {
 }
 function tui_render_header(title, subtitle) {
     
-        const width = process.stdout.columns || 80;
-        const line = 'â•'.repeat(width - 2);
+        let width = process.stdout.columns || 80;
+        let line = 'â•'.repeat(width - 2);
         
         console.log(CLI_COLORS.cyan + 'â•”' + line + 'â•—' + CLI_COLORS.reset);
         console.log(CLI_COLORS.cyan + 'â•‘' + CLI_COLORS.reset + 
@@ -68,10 +68,10 @@ function tui_render_header(title, subtitle) {
 function tui_render_menu(state) {
     
         for (let i = 0; i < state.items.length; i++) {
-            const item = state.items[i];
-            const selected = i === state.cursor;
-            const prefix = selected ? CLI_COLORS.cyan + ' â–¶ ' : '   ';
-            const suffix = CLI_COLORS.reset;
+            let item = state.items[i];
+            let selected = i === state.cursor;
+            let prefix = selected ? CLI_COLORS.cyan + ' â–¶ ' : '   ';
+            let suffix = CLI_COLORS.reset;
             
             if (selected) {
                 console.log(prefix + CLI_COLORS.bold + item.label + suffix);
@@ -83,8 +83,8 @@ function tui_render_menu(state) {
 }
 function tui_render_footer(state) {
     
-        const width = process.stdout.columns || 80;
-        const line = 'â”€'.repeat(width - 2);
+        let width = process.stdout.columns || 80;
+        let line = 'â”€'.repeat(width - 2);
         
         console.log('');
         console.log(CLI_COLORS.dim + 'â”Œ' + line + 'â”' + CLI_COLORS.reset);
@@ -107,12 +107,12 @@ function tui_render_file_list(state) {
         console.log('');
         
         for (let i = 0; i < state.items.length; i++) {
-            const item = state.items[i];
-            const isSelected = state.selected.includes(i);
-            const isCursor = i === state.cursor;
+            let item = state.items[i];
+            let isSelected = state.selected.includes(i);
+            let isCursor = i === state.cursor;
             
-            const checkbox = isSelected ? CLI_COLORS.green + '[âœ“]' : CLI_COLORS.dim + '[ ]';
-            const prefix = isCursor ? CLI_COLORS.cyan + ' â–¶ ' : '   ';
+            let checkbox = isSelected ? CLI_COLORS.green + '[âœ“]' : CLI_COLORS.dim + '[ ]';
+            let prefix = isCursor ? CLI_COLORS.cyan + ' â–¶ ' : '   ';
             
             console.log(prefix + checkbox + CLI_COLORS.reset + ' ' + 
                         (isCursor ? CLI_COLORS.bold : CLI_COLORS.dim) + 
@@ -127,11 +127,11 @@ function tui_render_target_select(state) {
         console.log('');
         
         for (let i = 0; i < state.items.length; i++) {
-            const item = state.items[i];
-            const isCursor = i === state.cursor;
+            let item = state.items[i];
+            let isCursor = i === state.cursor;
             
-            const prefix = isCursor ? CLI_COLORS.cyan + ' â–¶ ' : '   ';
-            const icon = item.icon || 'ðŸŽ¯';
+            let prefix = isCursor ? CLI_COLORS.cyan + ' â–¶ ' : '   ';
+            let icon = item.icon || 'ðŸŽ¯';
             
             console.log(prefix + icon + ' ' + 
                         (isCursor ? CLI_COLORS.bold : '') + 
@@ -150,20 +150,20 @@ function tui_target_menu() {
     return [null, id, null, "js", label, null, "JavaScript (Node.js)", icon, null, "ðŸŸ¨", description, null, "CommonJS module", null, null, id, null, "python", label, null, "Python 3", icon, null, "ðŸ", description, null, "Python 3.8+ compatible", null, null, id, null, "c", label, null, "C Native", icon, null, "âš¡", description, null, "Portable C99 code", null, null, id, null, "lua", label, null, "Lua 5.4", icon, null, "ðŸŒ™", description, null, "Lua script", null, null, id, null, "wasm", label, null, "WebAssembly", icon, null, "ðŸ•¸ï¸", description, null, "WASM binary", null, null, id, null, "back", label, null, "â† Back", icon, null, "â—€ï¸", description, null, "", null];
 }
 function tui_scan_legacy_files(dir) {
-    const files = [];
+    let files = [];
     
         const fs = require('fs');
         const path = require('path');
         
-        const extensions = ['.php', '.java', '.py', '.js', '.ts'];
+        let extensions = ['.php', '.java', '.py', '.js', '.ts'];
         
-        const scan = (d) => {
+        let scan = (d) => {
             try {
-                const entries = fs.readdirSync(d, { withFileTypes: true });
+                let entries = fs.readdirSync(d, { withFileTypes: true });
                 for (const entry of entries) {
                     if (entry.name.startsWith('.') || entry.name === 'node_modules') continue;
                     
-                    const fullPath = path.join(d, entry.name);
+                    let fullPath = path.join(d, entry.name);
                     
                     if (entry.isDirectory()) {
                         scan(fullPath);
@@ -185,7 +185,7 @@ function tui_scan_legacy_files(dir) {
     return files;
 }
 function cmd_tui() {
-    const state = TUIState_new();
+    let state = TUIState_new();
     
         state.items = tui_main_menu();
     
@@ -194,7 +194,7 @@ function cmd_tui() {
     
         const readline = require('readline');
         
-        const render = () => {
+        let render = () => {
             tui_clear_screen();
             tui_render_header('INTERACTIVE', 'v1.1.0 - Use arrow keys to navigate');
             
@@ -209,7 +209,7 @@ function cmd_tui() {
             tui_render_footer(state);
         };
         
-        const handleAction = (action) => {
+        let handleAction = (action) => {
             if (action === 'convert') {
                 state.screen = 'files';
                 state.items = tui_scan_legacy_files(process.cwd());
@@ -254,7 +254,7 @@ function cmd_tui() {
                 state.items = tui_main_menu();
                 state.cursor = 0;
             } else if (action.startsWith('target:')) {
-                const target = action.split(':')[1];
+                let target = action.split(':')[1];
                 tui_show_cursor();
                 tui_disable_raw_mode();
                 console.log('\nConverting ' + state.selected.length + ' files to ' + target + '...');
@@ -270,14 +270,14 @@ function cmd_tui() {
             } else if (key === '\u001B[B') { // Down arrow
                 state.cursor = Math.min(state.items.length - 1, state.cursor + 1);
             } else if (key === ' ' && state.screen === 'files') { // Space - toggle select
-                const idx = state.selected.indexOf(state.cursor);
+                let idx = state.selected.indexOf(state.cursor);
                 if (idx >= 0) {
                     state.selected.splice(idx, 1);
                 } else {
                     state.selected.push(state.cursor);
                 }
             } else if (key === '\r' || key === '\n') { // Enter
-                const item = state.items[state.cursor];
+                let item = state.items[state.cursor];
                 if (state.screen === 'main') {
                     handleAction(item.id);
                 } else if (state.screen === 'files') {

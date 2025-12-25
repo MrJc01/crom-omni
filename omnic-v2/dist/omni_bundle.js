@@ -8,49 +8,50 @@ const child_process = require('child_process');
 var exports = module.exports; // Shared exports object
 
 // === Module: core/token ===
-const TOKEN_EOF = 0;
-const TOKEN_ILLEGAL = 1;
-const TOKEN_IDENTIFIER = 10;
-const TOKEN_INT = 11;
-const TOKEN_STRING = 12;
-const TOKEN_ASSIGN = 20;
-const TOKEN_PLUS = 21;
-const TOKEN_MINUS = 22;
-const TOKEN_BANG = 23;
-const TOKEN_ASTERISK = 24;
-const TOKEN_SLASH = 25;
-const TOKEN_LT = 26;
-const TOKEN_GT = 27;
-const TOKEN_EQ = 28;
-const TOKEN_NOT_EQ = 29;
-const TOKEN_COLON = 30;
-const TOKEN_DOT = 31;
-const TOKEN_AND = 32;
-const TOKEN_OR = 33;
-const TOKEN_LE = 34;
-const TOKEN_GE = 35;
-const TOKEN_COMMA = 40;
-const TOKEN_SEMICOLON = 41;
-const TOKEN_LPAREN = 42;
-const TOKEN_RPAREN = 43;
-const TOKEN_LBRACE = 44;
-const TOKEN_RBRACE = 45;
-const TOKEN_LBRACKET = 46;
-const TOKEN_RBRACKET = 47;
-const TOKEN_FN = 60;
-const TOKEN_LET = 61;
-const TOKEN_TRUE = 62;
-const TOKEN_FALSE = 63;
-const TOKEN_IF = 64;
-const TOKEN_ELSE = 65;
-const TOKEN_RETURN = 66;
-const TOKEN_WHILE = 67;
-const TOKEN_STRUCT = 70;
-const TOKEN_NATIVE = 80;
-const TOKEN_IMPORT = 90;
-const TOKEN_PACKAGE = 91;
-const TOKEN_EXPORT = 92;
-const TOKEN_AT = 95;
+let TOKEN_EOF = 0;
+let TOKEN_ILLEGAL = 1;
+let TOKEN_IDENTIFIER = 10;
+let TOKEN_INT = 11;
+let TOKEN_STRING = 12;
+let TOKEN_ASSIGN = 20;
+let TOKEN_PLUS = 21;
+let TOKEN_MINUS = 22;
+let TOKEN_BANG = 23;
+let TOKEN_ASTERISK = 24;
+let TOKEN_SLASH = 25;
+let TOKEN_LT = 26;
+let TOKEN_GT = 27;
+let TOKEN_EQ = 28;
+let TOKEN_NOT_EQ = 29;
+let TOKEN_COLON = 30;
+let TOKEN_DOT = 31;
+let TOKEN_AND = 32;
+let TOKEN_OR = 33;
+let TOKEN_LE = 34;
+let TOKEN_GE = 35;
+let TOKEN_COMMA = 40;
+let TOKEN_SEMICOLON = 41;
+let TOKEN_LPAREN = 42;
+let TOKEN_RPAREN = 43;
+let TOKEN_LBRACE = 44;
+let TOKEN_RBRACE = 45;
+let TOKEN_LBRACKET = 46;
+let TOKEN_RBRACKET = 47;
+let TOKEN_FN = 60;
+let TOKEN_LET = 61;
+let TOKEN_TRUE = 62;
+let TOKEN_FALSE = 63;
+let TOKEN_IF = 64;
+let TOKEN_ELSE = 65;
+let TOKEN_RETURN = 66;
+let TOKEN_WHILE = 67;
+let TOKEN_STRUCT = 70;
+let TOKEN_NATIVE = 80;
+let TOKEN_IMPORT = 90;
+let TOKEN_PACKAGE = 91;
+let TOKEN_EXPORT = 92;
+let TOKEN_AT = 95;
+let TOKEN_ARROW = 99;
 class Token {
     constructor(data = {}) {
         this.kind = data.kind;
@@ -112,6 +113,7 @@ if (typeof exports !== 'undefined') {
     exports.TOKEN_PACKAGE = TOKEN_PACKAGE;
     exports.TOKEN_EXPORT = TOKEN_EXPORT;
     exports.TOKEN_AT = TOKEN_AT;
+    exports.TOKEN_ARROW = TOKEN_ARROW;
 }
 
 
@@ -143,7 +145,7 @@ class Lexer {
     }
 }
 function new_lexer(input) {
-    const l = new Lexer({ input: input, position: 0, read_position: 0, ch: "\0", line: 1 });
+    let l = new Lexer({ input: input, position: 0, read_position: 0, ch: "\0", line: 1 });
     Lexer_read_char(l);
     return l;
 }
@@ -153,7 +155,7 @@ function Lexer_read_char(l) {
 } else {
     l.ch = char_at(l.input, l.read_position);
 }
-    const is_eof = false;
+    let is_eof = false;
      is_eof = l.ch === "\0"; 
     if (is_eof) {
     l.ch = "\0";
@@ -163,7 +165,7 @@ function Lexer_read_char(l) {
 }
 }
 function Lexer_skip_whitespace(l) {
-    const is_ws = false;
+    let is_ws = false;
     
         is_ws = l.ch === ' ' || l.ch === '\t' || l.ch === '\n' || l.ch === '\r';
     
@@ -178,22 +180,31 @@ function Lexer_skip_whitespace(l) {
 }
 }
 function Lexer_read_identifier(l) {
-    const start_pos = l.position;
+    let start_pos = l.position;
     while (is_letter(l.ch) || is_digit(l.ch)) {
     Lexer_read_char(l);
 }
-    const ident = "";
+    let ident = "";
     
         ident = l.input.substring(Number(start_pos), Number(l.position));
     
     return ident;
 }
 function Lexer_read_number(l) {
-    const start_pos = l.position;
+    let start_pos = l.position;
     while (is_digit(l.ch)) {
     Lexer_read_char(l);
 }
-    const num_str = "";
+    if (l.ch == ".") {
+    let peek_next = char_at(l.input, l.read_position);
+    if (is_digit(peek_next)) {
+    Lexer_read_char(l);
+    while (is_digit(l.ch)) {
+    Lexer_read_char(l);
+}
+}
+}
+    let num_str = "";
     
         num_str = l.input.substring(Number(start_pos), Number(l.position));
     
@@ -244,7 +255,7 @@ function Lexer_lookup_ident(ident) {
 function Lexer_next_token(l) {
     Lexer_skip_whitespace(l);
     if (l.ch == "/") {
-    const peek = char_at(l.input, l.read_position);
+    let peek = char_at(l.input, l.read_position);
     if (peek == "/") {
     while (l.ch != "\n" && l.ch != "\0") {
     Lexer_read_char(l);
@@ -252,7 +263,7 @@ function Lexer_next_token(l) {
     Lexer_skip_whitespace(l);
 }
 }
-    const tok = new_token(TOKEN_ILLEGAL, l.ch, l.line);
+    let tok = new_token(TOKEN_ILLEGAL, l.ch, l.line);
     tok.start = l.position;
     if (l.ch == "\0") {
     tok.kind = TOKEN_EOF;
@@ -260,7 +271,7 @@ function Lexer_next_token(l) {
     return tok;
 }
     if (l.ch == "=") {
-    const peek_eq = char_at(l.input, l.read_position);
+    let peek_eq = char_at(l.input, l.read_position);
     if (peek_eq == "=") {
     Lexer_read_char(l);
     tok.kind = TOKEN_EQ;
@@ -271,7 +282,7 @@ function Lexer_next_token(l) {
 }
 } else {
     if (l.ch == "!") {
-    const peek_bang = char_at(l.input, l.read_position);
+    let peek_bang = char_at(l.input, l.read_position);
     if (peek_bang == "=") {
     Lexer_read_char(l);
     tok.kind = TOKEN_NOT_EQ;
@@ -326,7 +337,7 @@ function Lexer_next_token(l) {
     tok.lexeme = "+";
 } else {
     if (l.ch == "-") {
-    const peek_arrow = char_at(l.input, l.read_position);
+    let peek_arrow = char_at(l.input, l.read_position);
     if (peek_arrow == ">") {
     Lexer_read_char(l);
     tok.kind = 99;
@@ -341,7 +352,7 @@ function Lexer_next_token(l) {
     tok.lexeme = "*";
 } else {
     if (l.ch == "/") {
-    const peek_slash = char_at(l.input, l.read_position);
+    let peek_slash = char_at(l.input, l.read_position);
     if (peek_slash == "/") {
     Lexer_read_char(l);
     Lexer_read_char(l);
@@ -355,13 +366,13 @@ function Lexer_next_token(l) {
 }
 } else {
     if (is_quote(l.ch)) {
-    const str_val = "";
+    let str_val = "";
     Lexer_read_char(l);
-    const start = l.position;
+    let start = l.position;
     while (is_quote(l.ch) == false) {
     Lexer_read_char(l);
 }
-    const end = l.position;
+    let end = l.position;
     
             str_val = l.input.substring(Number(start), Number(end));
         
@@ -369,7 +380,7 @@ function Lexer_next_token(l) {
     tok.lexeme = str_val;
 } else {
     if (l.ch == "&") {
-    const peek_and = char_at(l.input, l.read_position);
+    let peek_and = char_at(l.input, l.read_position);
     if (peek_and == "&") {
     Lexer_read_char(l);
     tok.kind = TOKEN_AND;
@@ -380,7 +391,7 @@ function Lexer_next_token(l) {
 }
 } else {
     if (l.ch == "|") {
-    const peek_or = char_at(l.input, l.read_position);
+    let peek_or = char_at(l.input, l.read_position);
     if (peek_or == "|") {
     Lexer_read_char(l);
     tok.kind = TOKEN_OR;
@@ -391,7 +402,7 @@ function Lexer_next_token(l) {
 }
 } else {
     if (l.ch == "<") {
-    const peek_lt = char_at(l.input, l.read_position);
+    let peek_lt = char_at(l.input, l.read_position);
     if (peek_lt == "=") {
     Lexer_read_char(l);
     tok.kind = TOKEN_LE;
@@ -406,7 +417,7 @@ function Lexer_next_token(l) {
     tok.lexeme = "@";
 } else {
     if (l.ch == ">") {
-    const peek_gt = char_at(l.input, l.read_position);
+    let peek_gt = char_at(l.input, l.read_position);
     if (peek_gt == "=") {
     Lexer_read_char(l);
     tok.kind = TOKEN_GE;
@@ -417,7 +428,7 @@ function Lexer_next_token(l) {
 }
 } else {
     if (is_letter(l.ch)) {
-    const literal = Lexer_read_identifier(l);
+    let literal = Lexer_read_identifier(l);
     tok.kind = Lexer_lookup_ident(literal);
     tok.lexeme = literal;
     return tok;
@@ -490,7 +501,7 @@ class Parser {
     }
 }
 function new_parser(l) {
-    const p = new Parser({ lexer: l, cur_token: new_token(0, "", 0), peek_token: new_token(0, "", 0) });
+    let p = new Parser({ lexer: l, cur_token: new_token(0, "", 0), peek_token: new_token(0, "", 0) });
     Parser_next_token(p);
     Parser_next_token(p);
     return p;
@@ -500,9 +511,9 @@ function Parser_next_token(p) {
     p.peek_token = Lexer_next_token(p.lexer);
 }
 function Parser_parse_program(p) {
-    const stmts = [];
+    let stmts = [];
     while (p.cur_token.kind != TOKEN_EOF) {
-    const stmt = Parser_parse_statement(p);
+    let stmt = Parser_parse_statement(p);
     if (stmt != 0) {
     if (stmt.kind != 0) {
      stmts.push(stmt); 
@@ -513,17 +524,17 @@ function Parser_parse_program(p) {
 }
 function Parser_parse_statement(p) {
     if (p.cur_token.kind == 95) {
-    const decorators = [];
+    let decorators = [];
     while (p.cur_token.kind == 95) {
      decorators.push(Parser_parse_decorator(p)); 
 }
-    const stmt = Parser_parse_statement(p);
+    let stmt = Parser_parse_statement(p);
      if (stmt) stmt.decorators = decorators; 
     return stmt;
 }
     if (p.cur_token.kind == 92) {
     Parser_next_token(p);
-    const stmt = Parser_parse_statement(p);
+    let stmt = Parser_parse_statement(p);
      if (stmt) stmt.is_exported = true; 
     return stmt;
 }
@@ -562,7 +573,7 @@ function Parser_parse_statement(p) {
 }
 function Parser_parse_import(p) {
     Parser_next_token(p);
-    const path = p.cur_token.lexeme;
+    let path = p.cur_token.lexeme;
     Parser_next_token(p);
     if (p.cur_token.kind == TOKEN_SEMICOLON) {
     Parser_next_token(p);
@@ -581,14 +592,14 @@ function Parser_parse_package(p) {
 }
 function Parser_parse_let(p) {
     Parser_next_token(p);
-    const name = p.cur_token.lexeme;
+    let name = p.cur_token.lexeme;
     Parser_next_token(p);
     if (p.cur_token.kind == 30) {
     Parser_next_token(p);
     Parser_next_token(p);
 }
     Parser_next_token(p);
-    const val = Parser_parse_expression(p);
+    let val = Parser_parse_expression(p);
     if (p.cur_token.kind == TOKEN_SEMICOLON) {
     Parser_next_token(p);
 }
@@ -596,7 +607,7 @@ function Parser_parse_let(p) {
 }
 function Parser_parse_return(p) {
     Parser_next_token(p);
-    const val = Parser_parse_expression(p);
+    let val = Parser_parse_expression(p);
     if (p.cur_token.kind == TOKEN_SEMICOLON) {
     Parser_next_token(p);
 }
@@ -604,10 +615,10 @@ function Parser_parse_return(p) {
 }
 function Parser_parse_fn(p) {
     Parser_next_token(p);
-    const name = p.cur_token.lexeme;
+    let name = p.cur_token.lexeme;
     Parser_next_token(p);
     Parser_next_token(p);
-    const params = [];
+    let params = [];
     while (p.cur_token.kind != TOKEN_RPAREN) {
      params.push(p.cur_token.lexeme); 
     Parser_next_token(p);
@@ -620,30 +631,29 @@ function Parser_parse_fn(p) {
 }
 }
     Parser_next_token(p);
-    if (p.cur_token.lexeme == "-") {
-    Parser_next_token(p);
+    if (p.cur_token.kind == 99) {
     Parser_next_token(p);
     Parser_next_token(p);
 }
-    const body = Parser_parse_block(p);
+    let body = Parser_parse_block(p);
     return new FunctionDecl({ kind: NODE_FUNCTION, name: name, params: params, body: body, is_exported: false, decorators: [] });
 }
 function Parser_parse_struct(p) {
     Parser_next_token(p);
-    const name = p.cur_token.lexeme;
+    let name = p.cur_token.lexeme;
     Parser_next_token(p);
     Parser_next_token(p);
-    const fields = [];
+    let fields = [];
     while (p.cur_token.kind != TOKEN_RBRACE && p.cur_token.kind != TOKEN_EOF) {
     if (p.cur_token.kind == TOKEN_RBRACE) {
     break;
 }
-    const field_name = p.cur_token.lexeme;
+    let field_name = p.cur_token.lexeme;
     Parser_next_token(p);
     Parser_next_token(p);
-    const field_type = p.cur_token.lexeme;
+    let field_type = p.cur_token.lexeme;
     Parser_next_token(p);
-    const f = new_struct_field(field_name, field_type);
+    let f = new_struct_field(field_name, field_type);
      fields.push(f); 
     if (p.cur_token.kind == TOKEN_COMMA) {
     Parser_next_token(p);
@@ -654,7 +664,7 @@ function Parser_parse_struct(p) {
 }
 function Parser_parse_native_block(p) {
     Parser_next_token(p);
-    const lang = "js";
+    let lang = "js";
     if (p.cur_token.kind == TOKEN_STRING) {
     lang = p.cur_token.lexeme;
     Parser_next_token(p);
@@ -662,17 +672,17 @@ function Parser_parse_native_block(p) {
     if (p.cur_token.kind != TOKEN_LBRACE) {
     return new NativeStmt({ kind: 0, lang: "", code: "" });
 }
-    const start_pos = p.cur_token.start;
-    const code = "";
-    const end_pos = 0;
+    let start_pos = p.cur_token.start;
+    let code = "";
+    let end_pos = 0;
     
-        const input = p.lexer.input;
+        let input = p.lexer.input;
         let pos = Number(start_pos) + 1;
         let brace_count = 1;
         let start_extract = pos;
         
         while (pos < input.length && brace_count > 0) {
-            const char = input[pos];
+            let char = input[pos];
             if (char === '{') brace_count++;
             if (char === '}') brace_count--;
             pos++;
@@ -690,130 +700,140 @@ function Parser_parse_native_block(p) {
     return new NativeStmt({ kind: NODE_NATIVE, lang: lang, code: code });
 }
 function Parser_parse_block(p) {
-    const stmts = [];
+    let stmts = [];
     if (p.cur_token.kind == TOKEN_LBRACE) {
     Parser_next_token(p);
     while (p.cur_token.kind != TOKEN_RBRACE && p.cur_token.kind != TOKEN_EOF) {
-     console.log("BlockLoop: " + p.cur_token.kind + " (" + p.cur_token.lexeme + ")"); 
-    const stmt = Parser_parse_statement(p);
+    let stmt = Parser_parse_statement(p);
      stmts.push(stmt); 
 }
     Parser_next_token(p);
 } else {
-    const stmt = Parser_parse_statement(p);
+    let stmt = Parser_parse_statement(p);
      stmts.push(stmt); 
 }
     return new Block({ kind: NODE_BLOCK, statements: stmts });
 }
 function Parser_parse_expr_stmt(p) {
-    const expr = Parser_parse_expression(p);
+    let expr = Parser_parse_expression(p);
     if (p.cur_token.kind == TOKEN_SEMICOLON) {
     Parser_next_token(p);
 }
-    return new ExpressionStmt({ kind: 0, expr: expr });
+    return new ExpressionStmt({ kind: NODE_EXPRESSION_STMT, expr: expr });
 }
 function Parser_parse_expression(p) {
     return Parser_parse_assignment(p);
 }
 function Parser_parse_assignment(p) {
-    const left = Parser_parse_logic(p);
+    let left = Parser_parse_logic(p);
     if (p.cur_token.kind == TOKEN_ASSIGN) {
     Parser_next_token(p);
-    const right = Parser_parse_assignment(p);
+    let right = Parser_parse_assignment(p);
     return new AssignmentExpr({ kind: NODE_ASSIGNMENT, left: left, right: right });
 }
     return left;
 }
 function Parser_parse_equality(p) {
-    const left = Parser_parse_relational(p);
+    let left = Parser_parse_relational(p);
     while (true) {
-    const k = p.cur_token.kind;
+    let k = p.cur_token.kind;
     if (k != TOKEN_EQ && k != TOKEN_NOT_EQ) {
     break;
 }
-    const op = p.cur_token.lexeme;
+    let op = p.cur_token.lexeme;
     Parser_next_token(p);
-    const right = Parser_parse_relational(p);
+    let right = Parser_parse_relational(p);
     left = new BinaryExpr({ kind: NODE_BINARY, left: left, op: op, right: right });
 }
     return left;
 }
 function Parser_parse_relational(p) {
-    const left = Parser_parse_term(p);
+    let left = Parser_parse_term(p);
     while (true) {
-    const k = p.cur_token.kind;
+    let k = p.cur_token.kind;
     if (k != TOKEN_LT && k != TOKEN_GT && k != TOKEN_LE && k != TOKEN_GE) {
     break;
 }
-    const op = p.cur_token.lexeme;
+    let op = p.cur_token.lexeme;
     Parser_next_token(p);
-    const right = Parser_parse_term(p);
+    let right = Parser_parse_term(p);
     left = new BinaryExpr({ kind: NODE_BINARY, left: left, op: op, right: right });
 }
     return left;
 }
 function Parser_parse_logic(p) {
-    const left = Parser_parse_equality(p);
+    let left = Parser_parse_equality(p);
     while (true) {
-    const k = p.cur_token.kind;
+    let k = p.cur_token.kind;
     if (k != TOKEN_AND && k != TOKEN_OR) {
     break;
 }
-    const op = p.cur_token.lexeme;
+    let op = p.cur_token.lexeme;
     Parser_next_token(p);
-    const right = Parser_parse_equality(p);
+    let right = Parser_parse_equality(p);
     left = new BinaryExpr({ kind: NODE_BINARY, left: left, op: op, right: right });
 }
     return left;
 }
 function Parser_parse_term(p) {
-    const left = Parser_parse_multiplication(p);
+    let left = Parser_parse_multiplication(p);
     while (true) {
-    const k = p.cur_token.kind;
+    let k = p.cur_token.kind;
     if (k != TOKEN_PLUS && k != TOKEN_MINUS) {
     break;
 }
-    const op = p.cur_token.lexeme;
+    let op = p.cur_token.lexeme;
     Parser_next_token(p);
-    const right = Parser_parse_multiplication(p);
+    let right = Parser_parse_multiplication(p);
     left = new BinaryExpr({ kind: NODE_BINARY, left: left, op: op, right: right });
 }
     return left;
 }
 function Parser_parse_multiplication(p) {
-    const left = Parser_parse_factor(p);
+    let left = Parser_parse_factor(p);
     while (true) {
-    const k = p.cur_token.kind;
+    let k = p.cur_token.kind;
     if (k != TOKEN_ASTERISK && k != TOKEN_SLASH) {
     break;
 }
-    const op = p.cur_token.lexeme;
+    let op = p.cur_token.lexeme;
     Parser_next_token(p);
-    const right = Parser_parse_factor(p);
+    let right = Parser_parse_factor(p);
     left = new BinaryExpr({ kind: NODE_BINARY, left: left, op: op, right: right });
 }
     return left;
 }
 function Parser_parse_factor(p) {
-    const node = 0;
+    let node = 0;
+    if (p.cur_token.kind == TOKEN_MINUS) {
+    Parser_next_token(p);
+    let operand = Parser_parse_factor(p);
+    node = new BinaryExpr({ kind: NODE_BINARY, left: new IntegerLiteral({ kind: NODE_LITERAL, value: 0 }), op: "-", right: operand });
+    return node;
+}
+    if (p.cur_token.kind == TOKEN_BANG) {
+    Parser_next_token(p);
+    let operand = Parser_parse_factor(p);
+    return operand;
+}
     if (p.cur_token.kind == TOKEN_INT) {
-    const val = 0;
-     val = parseInt(p.cur_token.lexeme); 
+    let val = 0;
+     val = Number(p.cur_token.lexeme); 
     node = new IntegerLiteral({ kind: NODE_LITERAL, value: val });
     Parser_next_token(p);
 } else {
     if (p.cur_token.kind == TOKEN_IDENTIFIER) {
-    const name = p.cur_token.lexeme;
+    let name = p.cur_token.lexeme;
     Parser_next_token(p);
     if (p.cur_token.kind == TOKEN_LBRACE) {
     Parser_next_token(p);
-    const init_fields = [];
+    let init_fields = [];
     while (p.cur_token.kind != TOKEN_RBRACE && p.cur_token.kind != TOKEN_EOF) {
-    const field_name = p.cur_token.lexeme;
+    let field_name = p.cur_token.lexeme;
     Parser_next_token(p);
     Parser_next_token(p);
-    const field_val = Parser_parse_expression(p);
-    const field = new StructInitField({ name: field_name, value: field_val });
+    let field_val = Parser_parse_expression(p);
+    let field = new StructInitField({ name: field_name, value: field_val });
      init_fields.push(field); 
     if (p.cur_token.kind == TOKEN_COMMA) {
     Parser_next_token(p);
@@ -831,7 +851,7 @@ function Parser_parse_factor(p) {
     Parser_next_token(p);
 } else {
     if (p.cur_token.kind == TOKEN_STRING) {
-    const str_val = p.cur_token.lexeme;
+    let str_val = p.cur_token.lexeme;
     node = new StringLiteral({ kind: NODE_STRING, value: str_val });
     Parser_next_token(p);
 } else {
@@ -845,7 +865,7 @@ function Parser_parse_factor(p) {
 } else {
     if (p.cur_token.kind == TOKEN_LBRACKET) {
     Parser_next_token(p);
-    const elements = [];
+    let elements = [];
     while (p.cur_token.kind != TOKEN_RBRACKET && p.cur_token.kind != TOKEN_EOF) {
      elements.push(Parser_parse_expression(p)); 
     if (p.cur_token.kind == TOKEN_COMMA) {
@@ -865,17 +885,17 @@ function Parser_parse_factor(p) {
 }
 }
 }
-    const continue_loop = true;
+    let continue_loop = true;
     while (continue_loop) {
     if (p.cur_token.kind == 31) {
     Parser_next_token(p);
-    const prop = p.cur_token.lexeme;
+    let prop = p.cur_token.lexeme;
     Parser_next_token(p);
     node = new MemberExpr({ kind: NODE_MEMBER, target: node, property: prop });
 } else {
     if (p.cur_token.kind == TOKEN_LPAREN) {
     Parser_next_token(p);
-    const args = [];
+    let args = [];
     while (p.cur_token.kind != TOKEN_RPAREN && p.cur_token.kind != TOKEN_EOF) {
      args.push(Parser_parse_expression(p)); 
     if (p.cur_token.kind == TOKEN_COMMA) {
@@ -893,14 +913,14 @@ function Parser_parse_factor(p) {
 }
 function Parser_parse_if(p) {
     Parser_next_token(p);
-    const cond = Parser_parse_expression(p);
-    const cons = Parser_parse_block(p);
-    const alt = 0;
+    let cond = Parser_parse_expression(p);
+    let cons = Parser_parse_block(p);
+    let alt = 0;
     if (p.cur_token.kind == TOKEN_ELSE) {
     Parser_next_token(p);
     if (p.cur_token.kind == TOKEN_IF) {
-    const if_stmt = Parser_parse_if(p);
-    const stmts = [];
+    let if_stmt = Parser_parse_if(p);
+    let stmts = [];
      stmts.push(if_stmt); 
     alt = new Block({ kind: NODE_BLOCK, statements: stmts });
 } else {
@@ -911,21 +931,21 @@ function Parser_parse_if(p) {
 }
 function Parser_parse_while(p) {
     Parser_next_token(p);
-    const cond = Parser_parse_expression(p);
-    const body = Parser_parse_block(p);
+    let cond = Parser_parse_expression(p);
+    let body = Parser_parse_block(p);
     return new WhileStmt({ kind: NODE_WHILE, condition: cond, body: body });
 }
 function Parser_parse_decorator(p) {
     Parser_next_token(p);
-    const name = p.cur_token.lexeme;
+    let name = p.cur_token.lexeme;
     Parser_next_token(p);
-    const args = [];
+    let args = [];
     if (p.cur_token.kind == TOKEN_LPAREN) {
     Parser_next_token(p);
     while (p.cur_token.kind != TOKEN_RPAREN && p.cur_token.kind != TOKEN_EOF) {
-    const arg_name = "";
-    const arg_val = 0;
-    const is_named = false;
+    let arg_name = "";
+    let arg_val = 0;
+    let is_named = false;
     if (p.cur_token.kind == TOKEN_IDENTIFIER) {
     if (p.peek_token.kind == TOKEN_ASSIGN) {
     is_named = true;
@@ -939,7 +959,7 @@ function Parser_parse_decorator(p) {
 } else {
     arg_val = Parser_parse_expression(p);
 }
-    const field = new StructInitField({ name: arg_name, value: arg_val });
+    let field = new StructInitField({ name: arg_name, value: arg_val });
      args.push(field); 
     if (p.cur_token.kind == TOKEN_COMMA) {
     Parser_next_token(p);
@@ -982,26 +1002,30 @@ if (typeof exports !== 'undefined') {
 
 
 // === Module: core/ast ===
-const NODE_PROGRAM = 1;
-const NODE_LET = 2;
-const NODE_LITERAL = 3;
-const NODE_FUNCTION = 4;
-const NODE_BLOCK = 5;
-const NODE_CALL = 6;
-const NODE_RETURN = 7;
-const NODE_BINARY = 8;
-const NODE_MEMBER = 9;
-const NODE_IMPORT = 10;
-const NODE_ARRAY = 11;
-const NODE_STRUCT_INIT = 12;
-const NODE_IF = 13;
-const NODE_WHILE = 14;
-const NODE_IDENTIFIER = 15;
-const NODE_ASSIGNMENT = 16;
-const NODE_STRING = 17;
-const NODE_BOOL = 18;
-const NODE_STRUCT = 70;
-const NODE_NATIVE = 80;
+let NODE_PROGRAM = 1;
+let NODE_LET = 2;
+let NODE_LITERAL = 3;
+let NODE_FUNCTION = 4;
+let NODE_BLOCK = 5;
+let NODE_CALL = 6;
+let NODE_RETURN = 7;
+let NODE_BINARY = 8;
+let NODE_MEMBER = 9;
+let NODE_IMPORT = 10;
+let NODE_ARRAY = 11;
+let NODE_STRUCT_INIT = 12;
+let NODE_IF = 13;
+let NODE_WHILE = 14;
+let NODE_IDENTIFIER = 15;
+let NODE_ASSIGNMENT = 16;
+let NODE_STRING = 17;
+let NODE_BOOL = 18;
+let NODE_STRUCT = 70;
+let NODE_NATIVE = 80;
+let NODE_CAPSULE = 90;
+let NODE_SPAWN = 100;
+let NODE_INTERFACE = 110;
+let NODE_EXPRESSION_STMT = 20;
 class Program {
     constructor(data = {}) {
         this.statements = data.statements;
@@ -1209,6 +1233,10 @@ if (typeof exports !== 'undefined') {
     exports.NODE_BOOL = NODE_BOOL;
     exports.NODE_STRUCT = NODE_STRUCT;
     exports.NODE_NATIVE = NODE_NATIVE;
+    exports.NODE_CAPSULE = NODE_CAPSULE;
+    exports.NODE_SPAWN = NODE_SPAWN;
+    exports.NODE_INTERFACE = NODE_INTERFACE;
+    exports.NODE_EXPRESSION_STMT = NODE_EXPRESSION_STMT;
 }
 
 
@@ -1259,36 +1287,36 @@ function CodeGenerator_gen_statement(self, stmt) {
     return "return " + CodeGenerator_gen_expression(self, stmt.value) + ";";
 }
     if (stmt.kind == NODE_FUNCTION) {
-    const params = "";
+    let params = "";
      params = stmt.params.join(", "); 
-    const body = CodeGenerator_gen_block(self, stmt.body);
-    const decl = "function " + stmt.name + "(" + params + ") " + body;
-    const decorators_code = CodeGenerator_gen_decorators(self, stmt.name, stmt.decorators);
+    let body = CodeGenerator_gen_block(self, stmt.body);
+    let decl = "function " + stmt.name + "(" + params + ") " + body;
+    let decorators_code = CodeGenerator_gen_decorators(self, stmt.name, stmt.decorators);
     if (decorators_code != "") {
     decl = decl + "\n" + decorators_code;
 }
     return decl;
 }
     if (stmt.kind == NODE_STRUCT) {
-    const decl = CodeGenerator_gen_struct(self, stmt);
-    const decorators_code = CodeGenerator_gen_decorators(self, stmt.name, stmt.decorators);
+    let decl = CodeGenerator_gen_struct(self, stmt);
+    let decorators_code = CodeGenerator_gen_decorators(self, stmt.name, stmt.decorators);
     if (decorators_code != "") {
     decl = decl + "\n" + decorators_code;
 }
     return decl;
 }
     if (stmt.kind == NODE_IF) {
-    const cond = CodeGenerator_gen_expression(self, stmt.condition);
-    const cons = CodeGenerator_gen_block(self, stmt.consequence);
-    const alt = "";
+    let cond = CodeGenerator_gen_expression(self, stmt.condition);
+    let cons = CodeGenerator_gen_block(self, stmt.consequence);
+    let alt = "";
     if (stmt.alternative) {
     alt = " else " + CodeGenerator_gen_block(self, stmt.alternative);
 }
     return "if (" + cond + ") " + cons + alt;
 }
     if (stmt.kind == NODE_WHILE) {
-    const cond = CodeGenerator_gen_expression(self, stmt.condition);
-    const body = CodeGenerator_gen_block(self, stmt.body);
+    let cond = CodeGenerator_gen_expression(self, stmt.condition);
+    let body = CodeGenerator_gen_block(self, stmt.body);
     return "while (" + cond + ") " + body;
 }
     if (stmt.expr) {
@@ -1297,7 +1325,7 @@ function CodeGenerator_gen_statement(self, stmt) {
     return "// Unknown stmt kind: " + stmt.kind;
 }
 function CodeGenerator_gen_import(self, stmt) {
-    const path = stmt.path;
+    let path = stmt.path;
     
         path = path.replace(".omni", ".js");
         if (path.startsWith(".") == false) path = "./" + path;
@@ -1310,8 +1338,8 @@ function CodeGenerator_gen_import(self, stmt) {
     return "";
 }
 function CodeGenerator_gen_struct(self, stmt) {
-    const name = stmt.name;
-    const assignments = "";
+    let name = stmt.name;
+    let assignments = "";
     
         for (const field of stmt.fields) {
              assignments = assignments + "        this." + field.name + " = data." + field.name + ";\n";
@@ -1320,7 +1348,7 @@ function CodeGenerator_gen_struct(self, stmt) {
     return "class " + name + " {\n    constructor(data = {}) {\n" + assignments + "    }\n}";
 }
 function CodeGenerator_gen_block(self, block) {
-    const out = "{\n";
+    let out = "{\n";
     
         if (block && block.statements) {
             for (const s of block.statements) {
@@ -1351,14 +1379,14 @@ function CodeGenerator_gen_expression(self, expr) {
     return CodeGenerator_gen_expression(self, expr.left) + " " + expr.op + " " + CodeGenerator_gen_expression(self, expr.right);
 }
     if (expr.kind == NODE_CALL) {
-    const args = "";
+    let args = "";
     
              let list = [];
              for(let a of expr.args) list.push(CodeGenerator_gen_expression(self, a));
              args = list.join(", ");
          
-    const callee = CodeGenerator_gen_expression(self, expr.function);
-    const is_class = false;
+    let callee = CodeGenerator_gen_expression(self, expr.function);
+    let is_class = false;
     
              if (typeof expr.function.value === 'string') {
                  let val = expr.function.value;
@@ -1375,7 +1403,7 @@ function CodeGenerator_gen_expression(self, expr) {
     return CodeGenerator_gen_expression(self, expr.target) + "." + expr.property;
 }
     if (expr.kind == NODE_STRUCT_INIT) {
-    const fields = "";
+    let fields = "";
     
             let list = [];
             for(let f of expr.fields) {
@@ -1386,7 +1414,7 @@ function CodeGenerator_gen_expression(self, expr) {
     return "new " + expr.name + "({ " + fields + " })";
 }
     if (expr.kind == NODE_ARRAY) {
-    const elems = "";
+    let elems = "";
     
             let list = [];
             for (let e of expr.elements) {
@@ -1400,9 +1428,9 @@ function CodeGenerator_gen_expression(self, expr) {
     return expr.value;
 }
     if (expr.kind == NODE_ASSIGNMENT) {
-    const left = CodeGenerator_gen_expression(self, expr.left);
-    const right = CodeGenerator_gen_expression(self, expr.right);
-    const code = "";
+    let left = CodeGenerator_gen_expression(self, expr.left);
+    let right = CodeGenerator_gen_expression(self, expr.right);
+    let code = "";
      code = left + " = " + right; 
     return code;
 }
@@ -1410,7 +1438,7 @@ function CodeGenerator_gen_expression(self, expr) {
     return expr;
 }
 function CodeGenerator_gen_decorators(self, target_name, decorators) {
-    const out = "";
+    let out = "";
     
         if (decorators && decorators.length > 0) {
              let dec_list = [];
@@ -1457,7 +1485,7 @@ if (typeof global !== 'undefined') Object.assign(global, ast);
 var token = exports;
 if (typeof global !== 'undefined') Object.assign(global, token);
 function CodeGenerator_generate_python(self, program) {
-    const output = "";
+    let output = "";
     
         output = "# Generated by Omni Compiler\n\n";
         output += "# Decorator stubs\n";
@@ -1472,7 +1500,7 @@ function CodeGenerator_generate_python(self, program) {
             }
         }
     
-    const py_exports = [];
+    let py_exports = [];
     
         if (program && program.statements) {
              for (const stmt of program.statements) {
@@ -1488,14 +1516,14 @@ function CodeGenerator_generate_python(self, program) {
     return output;
 }
 function CodeGenerator_gen_stmt_py(self, stmt) {
-    const indent_str = "";
+    let indent_str = "";
      indent_str = "    ".repeat(self.indent); 
     if (stmt.kind == 91) {
     return "";
 }
     if (stmt.kind == NODE_IMPORT) {
-    const path = stmt.path;
-    const name = "";
+    let path = stmt.path;
+    let name = "";
     
              path = path.replace(".omni", "");
              path = path.replace(/\//g, "."); // core/token -> core.token
@@ -1518,24 +1546,24 @@ function CodeGenerator_gen_stmt_py(self, stmt) {
     return indent_str + "return " + CodeGenerator_gen_expr_py(self, stmt.value);
 }
     if (stmt.kind == NODE_FUNCTION) {
-    const decorators = CodeGenerator_gen_decorators_py(self, stmt.decorators);
-    const params = "";
+    let decorators = CodeGenerator_gen_decorators_py(self, stmt.decorators);
+    let params = "";
      params = stmt.params.join(", "); 
-    const decl = indent_str + "def " + stmt.name + "(" + params + "):\n";
+    let decl = indent_str + "def " + stmt.name + "(" + params + "):\n";
     self.indent = self.indent + 1;
-    const body = CodeGenerator_gen_block_py(self, stmt.body);
+    let body = CodeGenerator_gen_block_py(self, stmt.body);
     self.indent = self.indent;
     // Unknown stmt kind: 0
     1;
     return decorators + decl + body;
 }
     if (stmt.kind == NODE_STRUCT) {
-    const decorators = CodeGenerator_gen_decorators_py(self, stmt.decorators);
-    const decl = indent_str + "class " + stmt.name + ":\n";
+    let decorators = CodeGenerator_gen_decorators_py(self, stmt.decorators);
+    let decl = indent_str + "class " + stmt.name + ":\n";
     self.indent = self.indent + 1;
-    const init_indent = "";
+    let init_indent = "";
      init_indent = "    ".repeat(self.indent); 
-    const assignments = "";
+    let assignments = "";
     
              if (stmt.fields.length == 0) {
                  assignments = init_indent + "    pass";
@@ -1545,7 +1573,7 @@ function CodeGenerator_gen_stmt_py(self, stmt) {
                  }
              }
         
-    const init_fn = init_indent + "def __init__(self, data=None):\n";
+    let init_fn = init_indent + "def __init__(self, data=None):\n";
     init_fn = init_fn + init_indent + "    if data is None: data = {}\n";
     init_fn = init_fn + assignments + "\n";
     self.indent = self.indent;
@@ -1554,8 +1582,8 @@ function CodeGenerator_gen_stmt_py(self, stmt) {
     return decorators + decl + init_fn;
 }
     if (stmt.kind == NODE_IF) {
-    const cond = CodeGenerator_gen_expr_py(self, stmt.condition);
-    const out = indent_str + "if " + cond + ":\n";
+    let cond = CodeGenerator_gen_expr_py(self, stmt.condition);
+    let out = indent_str + "if " + cond + ":\n";
     self.indent = self.indent + 1;
     out = out + CodeGenerator_gen_block_py(self, stmt.consequence);
     self.indent = self.indent;
@@ -1572,8 +1600,8 @@ function CodeGenerator_gen_stmt_py(self, stmt) {
     return out;
 }
     if (stmt.kind == NODE_WHILE) {
-    const cond = CodeGenerator_gen_expr_py(self, stmt.condition);
-    const out = indent_str + "while " + cond + ":\n";
+    let cond = CodeGenerator_gen_expr_py(self, stmt.condition);
+    let out = indent_str + "while " + cond + ":\n";
     self.indent = self.indent + 1;
     out = out + CodeGenerator_gen_block_py(self, stmt.body);
     self.indent = self.indent;
@@ -1587,8 +1615,8 @@ function CodeGenerator_gen_stmt_py(self, stmt) {
     return indent_str + "# Unknown stmt: " + stmt.kind;
 }
 function CodeGenerator_gen_decorators_py(self, decorators) {
-    const out = "";
-    const indent_str = "";
+    let out = "";
+    let indent_str = "";
      indent_str = "    ".repeat(self.indent); 
     
         if (decorators && decorators.length > 0) {
@@ -1614,7 +1642,7 @@ function CodeGenerator_gen_decorators_py(self, decorators) {
     return out;
 }
 function CodeGenerator_gen_block_py(self, block) {
-    const out = "";
+    let out = "";
     
         if (!block.statements || block.statements.length == 0) {
              out = "    ".repeat(self.indent) + "pass";
@@ -1652,7 +1680,7 @@ function CodeGenerator_gen_expr_py(self, expr) {
     return "False";
 }
     if (expr.kind == NODE_BINARY) {
-    const op = expr.op;
+    let op = expr.op;
     if (op == "&&") {
     op = "and";
 }
@@ -1665,8 +1693,8 @@ function CodeGenerator_gen_expr_py(self, expr) {
     return CodeGenerator_gen_expr_py(self, expr.left) + " " + op + " " + CodeGenerator_gen_expr_py(self, expr.right);
 }
     if (expr.kind == NODE_CALL) {
-    const callee = CodeGenerator_gen_expr_py(self, expr.function);
-    const args = "";
+    let callee = CodeGenerator_gen_expr_py(self, expr.function);
+    let args = "";
     
             let list = [];
             for(let a of expr.args) list.push(CodeGenerator_gen_expr_py(self, a));
@@ -1678,7 +1706,7 @@ function CodeGenerator_gen_expr_py(self, expr) {
     return CodeGenerator_gen_expr_py(self, expr.target) + "." + expr.property;
 }
     if (expr.kind == NODE_STRUCT_INIT) {
-    const fields = "";
+    let fields = "";
     
               let list = [];
               for(let f of expr.fields) {
@@ -1689,7 +1717,7 @@ function CodeGenerator_gen_expr_py(self, expr) {
     return expr.name + "({ " + fields + " })";
 }
     if (expr.kind == NODE_ARRAY) {
-    const elems = "";
+    let elems = "";
     
              let list = [];
              for (let e of expr.elements) list.push(CodeGenerator_gen_expr_py(self, e));
@@ -1722,8 +1750,8 @@ if (typeof exports !== 'undefined') {
 var codegen_hybrid = exports;
 if (typeof global !== 'undefined') Object.assign(global, codegen_hybrid);
 function CodeGenerator_generate(self, program) {
-    const hybrid = new_code_generator(self.target);
-    const h = HybridCodeGenerator_new(self.target);
+    let hybrid = new_code_generator(self.target);
+    let h = HybridCodeGenerator_new(self.target);
     return HybridCodeGenerator_generate(h, program);
 }
 
@@ -1732,6 +1760,233 @@ function CodeGenerator_generate(self, program) {
 if (typeof exports !== 'undefined') {
     exports.CodeGenerator_generate = CodeGenerator_generate;
 }
+
+
+// === Helper: core/codegen_hybrid_impl.js ===
+// const fs = require('fs'); (hoisted)
+// const path = require('path'); (hoisted)
+
+const HybridImpl = {
+    LanguageProfile_load_impl: function(self) {
+        // Try multiple paths for profile
+        const paths = [
+            path.join(__dirname, '..', 'targets', self.name + '.json'),
+            path.join(__dirname, '..', '..', 'targets', self.name + '.json'),
+            path.join(process.cwd(), 'targets', self.name + '.json')
+        ];
+        
+        let profile = null;
+        for (const p of paths) {
+            if (fs.existsSync(p)) {
+                profile = JSON.parse(fs.readFileSync(p, 'utf-8'));
+                break;
+            }
+        }
+        
+        if (profile) {
+            self.extension = profile.extension || '.txt';
+            self.templates = profile.templates || {};
+            self.type_map = profile.type_map || {};
+            self.operators = profile.operators || {};
+            self.indent_str = profile.indent || '    ';
+            self.statement_end = profile.statement_end || ';';
+            self.loaded = true;
+        } else {
+            // Fallback defaults for JavaScript
+            self.extension = '.js';
+            self.templates = {
+                program_header: "// Generated by Omni Compiler\n'use strict';\n\n",
+                fn_decl: "function {name}({params}) {\n{body}\n}",
+                let_decl: "let {name} = {value};",
+                return_stmt: "return {value};",
+                if_stmt: "if ({condition}) {\n{consequence}\n}",
+                if_else_stmt: "if ({condition}) {\n{consequence}\n} else {\n{alternative}\n}",
+                while_stmt: "while ({condition}) {\n{body}\n}",
+                class_decl: "class {name} {\n{body}\n}",
+                call_expr: "{callee}({args})",
+                binary_expr: "{left} {op} {right}",
+                bool_true: "true",
+                bool_false: "false",
+                null: "null"
+            };
+            self.type_map = { i64: "number", string: "string", bool: "boolean" };
+            self.operators = { eq: "===", neq: "!==", and: "&&", or: "||" };
+            self.loaded = true;
+        }
+        return self;
+    },
+
+    LanguageProfile_render_impl: function(self, template_name, data) {
+        const template = self.templates[template_name];
+        if (!template) {
+            return "/* Template '" + template_name + "' not found */";
+        }
+        return template.replace(/\{(\w+)\}/g, (_, key) => {
+            return data.hasOwnProperty(key) ? data[key] : '';
+        });
+    },
+
+    LanguageProfile_map_operator_impl: function(self, op) {
+        const opMap = { '==': 'eq', '!=': 'neq', '&&': 'and', '||': 'or', '<': 'lt', '>': 'gt' };
+        const key = opMap[op];
+        if (key && self.operators[key]) {
+            return self.operators[key];
+        }
+        return op;
+    },
+
+    HybridCodeGenerator_indent_impl: function(self, code) {
+        const prefix = self.profile.indent_str.repeat(self.indent_level);
+        return code.split('\n').map(line => line ? prefix + line : line).join('\n');
+    },
+
+    check_native_lang: function(self, stmt) {
+        let lang = stmt.lang || 'js';
+        // Strip quotes if present
+        if ((lang.startsWith('"') && lang.endsWith('"')) || (lang.startsWith("'") && lang.endsWith("'"))) {
+            lang = lang.substring(1, lang.length - 1);
+        }
+        
+        const targetLang = self.profile.name;
+        
+        if (lang === 'js' || lang === 'javascript') {
+            if (targetLang === 'js' || targetLang === 'javascript') {
+                return stmt.code;
+            }
+        } else if (lang === 'py' || lang === 'python') {
+            if (targetLang === 'py' || targetLang === 'python') {
+                return stmt.code;
+            }
+        } else if (lang === targetLang) {
+            return stmt.code;
+        }
+        return "";
+    },
+
+    gen_expression_literal: function(self, expr) {
+        let val = String(expr.value);
+        if (val === 'true') val = self.profile.templates.bool_true || 'true';
+        if (val === 'false') val = self.profile.templates.bool_false || 'false';
+        if (val === 'null') val = self.profile.templates.null || 'null';
+        return val;
+    },
+
+    gen_expression_bool: function(self, expr) {
+        return expr.value ? 
+            (self.profile.templates.bool_true || 'true') : 
+            (self.profile.templates.bool_false || 'false');
+    },
+
+    gen_struct_body: function(stmt) {
+        let constructor_body = "";
+        for (const field of stmt.fields || []) {
+            constructor_body += "        this." + field.name + " = data." + field.name + ";\n";
+        }
+        return constructor_body;
+    },
+
+    gen_entity_repo: function(stmt) {
+        const name = stmt.name;
+        const fields = (stmt.fields || []).filter(f => f.name !== 'id').map(f => f.name);
+        // field_names unused in original code logic?
+        
+        let out = "\n// @entity Repository: " + name + "\n";
+        out += name + ".find = async (id) => {\n";
+        out += "    const db = await Database.get('main_db');\n";
+        out += "    const row = await db.get('SELECT * FROM " + name + " WHERE id = ?', [id]);\n";
+        out += "    return row ? new " + name + "(row) : null;\n";
+        out += "};\n\n";
+        
+        out += name + ".all = async () => {\n";
+        out += "    const db = await Database.get('main_db');\n";
+        out += "    return (await db.all('SELECT * FROM " + name + "')).map(r => new " + name + "(r));\n";
+        out += "};\n";
+        return out;
+    },
+
+    gen_capsule: function(stmt) {
+        const name = stmt.name;
+        let flows = "";
+        const flowDefs = stmt.flows || [];
+        const flow_list = flowDefs.map(f => "'" + f.name + "'").join(', ');
+        
+        for (const flow of flowDefs) {
+            const params = flow.params.map(p => p.name).join(', ');
+            const paramJson = flow.params.map(p => p.name + ": " + p.name).join(', ');
+            
+            flows += "    async " + flow.name + "(" + params + ") {\n";
+            flows += "        const route = TopologyResolver.resolve('" + name + "');\n";
+            flows += "        if (route.local) {\n";
+            flows += "            return this._impl_" + flow.name + "(" + params + ");\n";
+            flows += "        } else {\n";
+            flows += "            const response = await fetch(route.url + '/" + name + "/" + flow.name + "', {\n";
+            flows += "                method: 'POST',\n";
+            flows += "                headers: { 'Content-Type': 'application/json' },\n";
+            flows += "                body: JSON.stringify({ " + paramJson + " })\n";
+            flows += "            });\n";
+            flows += "            return await response.json();\n";
+            flows += "        }\n";
+            flows += "    },\n\n";
+            
+            flows += "    _impl_" + flow.name + "(" + params + ") {\n";
+            flows += "        throw new Error('" + name + "." + flow.name + " not implemented');\n";
+            flows += "    },\n\n";
+        }
+        
+        let out = "// Capsule: " + name + "\n";
+        out += "const " + name + " = {\n";
+        out += "    _name: '" + name + "',\n";
+        out += "    _flows: [" + flow_list + "],\n\n";
+        out += flows;
+        out += "};\n";
+        return out;
+    },
+
+    gen_spawn_code: function(fn_name, args_str) {
+        let out = "(() => {\n";
+        out += "    const { Worker } = require('worker_threads');\n";
+        out += "    const worker = new Worker(__filename, {\n";
+        out += "        workerData: { fn: '" + fn_name + "', args: [" + args_str + "] }\n";
+        out += "    });\n";
+        out += "    worker.on('message', r => console.log('[spawn] " + fn_name + " done:', r));\n";
+        out += "    worker.on('error', e => console.error('[spawn] " + fn_name + " error:', e));\n";
+        out += "})()";
+        return out;
+    },
+
+    gen_service_client: function(stmt) {
+        const name = stmt.name;
+        let methods = "";
+        
+        for (const method of stmt.methods || []) {
+            const params = method.params ? method.params.map(p => p.name).join(', ') : '';
+            methods += "    async " + method.name + "(" + params + ") {\n";
+            methods += "        const url = Discovery.resolve('" + name + "');\n";
+            methods += "        const response = await fetch(url + '/" + name + "/" + method.name + "', {\n";
+            methods += "            method: 'POST',\n";
+            methods += "            headers: { 'Content-Type': 'application/json' },\n";
+            methods += "            body: JSON.stringify({ " + params + " })\n";
+            methods += "        });\n";
+            methods += "        return await response.json();\n";
+            methods += "    },\n";
+        }
+        
+        return "// @service RPC Client: " + name + "\n" +
+               "const " + name + " = {\n" + methods + "};\n";
+    },
+    
+    gen_import: function(stmt) {
+        let module_path = stmt.path || stmt.module || '';
+        module_path = module_path.replace(/^['"]|['"]$/g, '');
+        const alias = stmt.alias || module_path.split('/').pop().replace('.omni', '');
+        
+        return "// MARKER: Hybrid Import\n" + 
+               "const " + alias + " = require(\"" + module_path + "\");\n" +
+               "if (typeof global !== 'undefined') Object.assign(global, " + alias + ");";
+    }
+};
+
+Object.assign(exports, HybridImpl);
 
 
 // === Module: core/codegen_hybrid ===
@@ -1761,30 +2016,30 @@ function LanguageProfile_new(name) {
 function LanguageProfile_load(self) {
     
         var impl = exports;
-        return impl.LanguageProfile_load(self);
+        return impl.LanguageProfile_load_impl(self);
     
     return self;
 }
 function LanguageProfile_render(self, template_name, data) {
-    const result = "";
+    let result = "";
     
         var impl = exports;
-        result = impl.LanguageProfile_render(self, template_name, data);
+        result = impl.LanguageProfile_render_impl(self, template_name, data);
     
     return result;
 }
 function LanguageProfile_map_type(self, omni_type) {
-    const result = omni_type;
+    let result = omni_type;
     
         result = self.type_map[omni_type] || omni_type;
     
     return result;
 }
 function LanguageProfile_map_operator(self, op) {
-    const result = op;
+    let result = op;
     
         var impl = exports;
-        result = impl.LanguageProfile_map_operator(self, op);
+        result = impl.LanguageProfile_map_operator_impl(self, op);
     
     return result;
 }
@@ -1798,20 +2053,20 @@ class HybridCodeGenerator {
     }
 }
 function HybridCodeGenerator_new(target) {
-    const profile = LanguageProfile_new(target);
+    let profile = LanguageProfile_new(target);
     profile = LanguageProfile_load(profile);
     return new HybridCodeGenerator({ profile: profile, indent_level: 0, exports: [], ast_node_count: 0, generated_count: 0 });
 }
 function HybridCodeGenerator_indent(self, code) {
-    const result = "";
+    let result = "";
     
         var impl = exports;
-        result = impl.HybridCodeGenerator_indent(self, code);
+        result = impl.HybridCodeGenerator_indent_impl(self, code);
     
     return result;
 }
 function HybridCodeGenerator_generate(self, program) {
-    const output = "";
+    let output = "";
     output = LanguageProfile_render(self.profile, "program_header", null, null);
     
         self.exports = [];
@@ -1821,7 +2076,7 @@ function HybridCodeGenerator_generate(self, program) {
         if (program && program.statements) {
             for (const stmt of program.statements) {
                 self.ast_node_count++;
-                const code = HybridCodeGenerator_gen_statement(self, stmt);
+                let code = HybridCodeGenerator_gen_statement(self, stmt);
                 if (code) {
                     output += code + "\n";
                     self.generated_count++;
@@ -1835,7 +2090,7 @@ function HybridCodeGenerator_generate(self, program) {
         }
         
         // AST Parity Validation
-        const coverage = self.ast_node_count > 0 ? 
+        let coverage = self.ast_node_count > 0 ? 
             (self.generated_count / self.ast_node_count * 100).toFixed(1) : 100;
         if (coverage < 100) {
             console.warn("[codegen] AST coverage: " + coverage + "% (" + 
@@ -1849,7 +2104,7 @@ function HybridCodeGenerator_gen_statement(self, stmt) {
     return HybridCodeGenerator_gen_import(self, stmt);
 }
     if (stmt.kind == NODE_NATIVE) {
-    const result = "";
+    let result = "";
     
             var impl = exports;
             result = impl.check_native_lang(self, stmt);
@@ -1857,25 +2112,49 @@ function HybridCodeGenerator_gen_statement(self, stmt) {
     return result;
 }
     if (stmt.kind == NODE_LET) {
-    const value = HybridCodeGenerator_gen_expression(self, stmt.value);
-    return LanguageProfile_render(self.profile, "let_decl", null, name, null, stmt.name, value, null, value, null);
+    let value = HybridCodeGenerator_gen_expression(self, stmt.value);
+    let result = "";
+    
+            var impl = exports;
+            result = impl.LanguageProfile_render_impl(self.profile, "let_decl", {
+                name: stmt.name,
+                value: value
+            });
+        
+    return result;
 }
     if (stmt.kind == NODE_RETURN) {
-    const value = HybridCodeGenerator_gen_expression(self, stmt.value);
-    return LanguageProfile_render(self.profile, "return_stmt", null, value, null, value, null);
+    let value = HybridCodeGenerator_gen_expression(self, stmt.value);
+    let result = "";
+    
+            var impl = exports;
+            result = impl.LanguageProfile_render_impl(self.profile, "return_stmt", {
+                value: value
+            });
+        
+    return result;
 }
     if (stmt.kind == NODE_FUNCTION) {
-    const params = "";
+    let params = "";
      params = stmt.params ? stmt.params.join(", ") : ""; 
     self.indent_level = self.indent_level + 1;
-    const body = HybridCodeGenerator_gen_block(self, stmt.body);
+    let body = HybridCodeGenerator_gen_block(self, stmt.body);
     self.indent_level = self.indent_level;
     // Unknown stmt kind: 0
     1;
     
             if (stmt.is_exported) self.exports.push(stmt.name);
         
-    return LanguageProfile_render(self.profile, "fn_decl", null, name, null, stmt.name, params, null, params, body, null, body, null);
+    let result = "";
+    
+            var impl = exports;
+            result = impl.LanguageProfile_render_impl(self.profile, "fn_decl", {
+                name: stmt.name,
+                params: params,
+                body: body
+            });
+        
+    return result;
 }
     if (stmt.kind == NODE_STRUCT) {
     return HybridCodeGenerator_gen_struct(self, stmt);
@@ -1884,13 +2163,21 @@ function HybridCodeGenerator_gen_statement(self, stmt) {
     return HybridCodeGenerator_gen_if(self, stmt);
 }
     if (stmt.kind == NODE_WHILE) {
-    const cond = HybridCodeGenerator_gen_expression(self, stmt.condition);
+    let cond = HybridCodeGenerator_gen_expression(self, stmt.condition);
     self.indent_level = self.indent_level + 1;
-    const body = HybridCodeGenerator_gen_block(self, stmt.body);
+    let body = HybridCodeGenerator_gen_block(self, stmt.body);
     self.indent_level = self.indent_level;
     // Unknown stmt kind: 0
     1;
-    return LanguageProfile_render(self.profile, "while_stmt", null, condition, null, cond, body, null, body, null);
+    let result = "";
+    
+            var impl = exports;
+            result = impl.LanguageProfile_render_impl(self.profile, "while_stmt", {
+                condition: cond,
+                body: body
+            });
+        
+    return result;
 }
     if (stmt.kind == NODE_CAPSULE) {
     return HybridCodeGenerator_gen_capsule(self, stmt);
@@ -1902,22 +2189,36 @@ function HybridCodeGenerator_gen_statement(self, stmt) {
     return HybridCodeGenerator_gen_interface(self, stmt);
 }
     if (stmt.kind == NODE_ASSIGNMENT) {
-    const value = HybridCodeGenerator_gen_expression(self, stmt.value);
+    let value = HybridCodeGenerator_gen_expression(self, stmt.value);
     return stmt.name + " = " + value + self.profile.statement_end;
 }
     if (stmt.kind == NODE_CALL) {
-    return HybridCodeGenerator_gen_expression(self, stmt) + self.profile.statement_end;
+    let result = "";
+    
+            var impl = exports;
+            result = impl.LanguageProfile_render_impl(self.profile, "call_expr", {
+                callee: stmt.name, // Simplified for direct calls
+                args: "" // Simplified
+            });
+             // This block seems wrong/duplicate, referencing old logic
+        
 }
-    const result = "";
+    if (stmt.kind == 20) {
+    let expr = HybridCodeGenerator_gen_expression(self, stmt.expr);
+    return expr + self.profile.statement_end;
+}
+    let result = "";
      result = "// Unknown stmt kind: " + stmt.kind; 
     return result;
 }
 function HybridCodeGenerator_gen_expression(self, expr) {
-    if (expr == 0) {
+    let is_null = false;
+     is_null = !expr; 
+    if (is_null) {
     return "";
 }
     if (expr.kind == NODE_LITERAL) {
-    const val = "";
+    let val = "";
      
             val = String(expr.value);
             // Map booleans
@@ -1928,12 +2229,12 @@ function HybridCodeGenerator_gen_expression(self, expr) {
     return val;
 }
     if (expr.kind == NODE_STRING) {
-    const result = "";
+    let result = "";
      result = '"' + expr.value + '"'; 
     return result;
 }
     if (expr.kind == NODE_BOOL) {
-    const result = "";
+    let result = "";
     
             var impl = exports;
             result = impl.gen_expression_bool(self, expr);
@@ -1941,33 +2242,58 @@ function HybridCodeGenerator_gen_expression(self, expr) {
     return result;
 }
     if (expr.kind == NODE_IDENTIFIER) {
-    const result = "";
+    let result = "";
      result = expr.value || expr.name || ''; 
     return result;
 }
     if (expr.kind == NODE_BINARY) {
-    const left = HybridCodeGenerator_gen_expression(self, expr.left);
-    const right = HybridCodeGenerator_gen_expression(self, expr.right);
-    const op = LanguageProfile_map_operator(self.profile, expr.op);
-    return LanguageProfile_render(self.profile, "binary_expr", null, left, null, left, op, null, op, right, null, right, null);
+    let left = HybridCodeGenerator_gen_expression(self, expr.left);
+    let right = HybridCodeGenerator_gen_expression(self, expr.right);
+    let op = LanguageProfile_map_operator(self.profile, expr.op);
+    let result = "";
+    
+            var impl = exports;
+            result = impl.LanguageProfile_render_impl(self.profile, "binary_expr", {
+                left: left,
+                op: op,
+                right: right
+            });
+        
+    return result;
 }
     if (expr.kind == NODE_CALL) {
-    const callee = "";
-    const args = "";
+    let callee = "";
+    let args = "";
     
-            callee = expr.name || (expr.callee ? expr.callee.value : '');
+            // Fix: Check expr.function for identifier, or expr.name if legacy
+            if (expr.function && (expr.function.kind == 15 || expr.function.value)) {
+                 callee = expr.function.value || expr.function.name;
+            } else if (expr.name) {
+                 callee = expr.name;
+            } else if (expr.callee) { // Support legacy parser format if any
+                 callee = expr.callee.value || expr.callee.name;
+            }
+            
             if (expr.args) {
                 args = expr.args.map(a => HybridCodeGenerator_gen_expression(self, a)).join(', ');
             }
         
-    return LanguageProfile_render(self.profile, "call_expr", null, callee, null, callee, args, null, args, null);
+    let result = "";
+    
+            var impl = exports;
+            result = impl.LanguageProfile_render_impl(self.profile, "call_expr", {
+                callee: callee,
+                args: args
+            });
+        
+    return result;
 }
     if (expr.kind == NODE_MEMBER) {
-    const obj = HybridCodeGenerator_gen_expression(self, expr.object);
+    let obj = HybridCodeGenerator_gen_expression(self, expr.object);
     return obj + "." + expr.member;
 }
     if (expr.kind == NODE_ARRAY) {
-    const elements = "";
+    let elements = "";
     
             if (expr.elements) {
                 elements = expr.elements.map(e => HybridCodeGenerator_gen_expression(self, e)).join(', ');
@@ -1976,7 +2302,7 @@ function HybridCodeGenerator_gen_expression(self, expr) {
     return "[" + elements + "]";
 }
     if (expr.kind == NODE_STRUCT_INIT) {
-    const fields = "";
+    let fields = "";
     
             if (expr.fields) {
                 fields = Object.entries(expr.fields)
@@ -1986,61 +2312,92 @@ function HybridCodeGenerator_gen_expression(self, expr) {
         
     return "new " + expr.name + "({ " + fields + " })";
 }
-    const result = "";
+    let result = "";
      result = String(expr.value || expr.name || ''); 
     return result;
 }
 function HybridCodeGenerator_gen_block(self, body) {
-    const result = "";
+    let result = "";
     
         if (!body) return '';
-        const statements = Array.isArray(body) ? body : (body.statements || []);
+        let statements = Array.isArray(body) ? body : (body.statements || []);
         if (!Array.isArray(statements)) return '';
         result = statements.map(s => {
-            const code = HybridCodeGenerator_gen_statement(self, s);
+            let code = HybridCodeGenerator_gen_statement(self, s);
             return HybridCodeGenerator_indent(self, code);
         }).join('\n');
     
     return result;
 }
 function HybridCodeGenerator_gen_if(self, stmt) {
-    const cond = HybridCodeGenerator_gen_expression(self, stmt.condition);
+    let cond = HybridCodeGenerator_gen_expression(self, stmt.condition);
     self.indent_level = self.indent_level + 1;
-    const consequence = HybridCodeGenerator_gen_block(self, stmt.consequence);
+    let consequence = HybridCodeGenerator_gen_block(self, stmt.consequence);
     self.indent_level = self.indent_level;
     // Unknown stmt kind: 0
     1;
-    const has_alt = false;
-     has_alt = stmt.alternative && stmt.alternative.length > 0; 
+    let has_alt = false;
+     
+        // Check for both array and Block object formats
+        has_alt = stmt.alternative && (
+            (Array.isArray(stmt.alternative) && stmt.alternative.length > 0) ||
+            (stmt.alternative.statements && stmt.alternative.statements.length > 0) ||
+            (stmt.alternative.kind) // Any AST node (e.g., Block, IfStmt)
+        ); 
+    
     if (has_alt) {
     self.indent_level = self.indent_level + 1;
-    const alternative = HybridCodeGenerator_gen_block(self, stmt.alternative);
+    let alternative = HybridCodeGenerator_gen_block(self, stmt.alternative);
     self.indent_level = self.indent_level;
     // Unknown stmt kind: 0
     1;
-    return LanguageProfile_render(self.profile, "if_else_stmt", null, condition, null, cond, consequence, null, consequence, alternative, null, alternative, null);
+    let result = "";
+    
+            var impl = exports;
+            result = impl.LanguageProfile_render_impl(self.profile, "if_else_stmt", {
+                condition: cond,
+                consequence: consequence,
+                alternative: alternative
+            });
+        
+    return result;
 }
-    return LanguageProfile_render(self.profile, "if_stmt", null, condition, null, cond, consequence, null, consequence, null);
+    let result = "";
+    
+        var impl = exports;
+        result = impl.LanguageProfile_render_impl(self.profile, "if_stmt", {
+            condition: cond,
+            consequence: consequence
+        });
+    
+    return result;
 }
 function HybridCodeGenerator_gen_struct(self, stmt) {
-    const is_entity = false;
+    let is_entity = false;
     
         is_entity = stmt.attributes && stmt.attributes.some(a => a.name === 'entity');
     
-    const constructor_body = "";
+    let constructor_body = "";
     
         var impl = exports;
         constructor_body = impl.gen_struct_body(stmt);
     
-    const class_body = "    constructor(data = {}) {\n" + constructor_body + "    }\n";
-    const out = LanguageProfile_render(self.profile, "class_decl", null, name, null, stmt.name, body, null, class_body, null);
+    let class_body = "    constructor(data = {}) {\n" + constructor_body + "    }\n";
+    let out = "";
+    
+        var impl = exports;
+        out = impl.LanguageProfile_render_impl(self.profile, "class_decl", {
+            name: stmt.name,
+            body: class_body
+        });
+    
     if (is_entity) {
     out = out + HybridCodeGenerator_gen_entity_repo(self, stmt);
 }
     return out;
 }
 function HybridCodeGenerator_gen_entity_repo(self, stmt) {
-    const result = "";
+    let result = "";
     
         var impl = exports;
         result = impl.gen_entity_repo(stmt);
@@ -2048,7 +2405,7 @@ function HybridCodeGenerator_gen_entity_repo(self, stmt) {
     return result;
 }
 function HybridCodeGenerator_gen_capsule(self, stmt) {
-    const result = "";
+    let result = "";
     
         var impl = exports;
         result = impl.gen_capsule(stmt);
@@ -2056,16 +2413,16 @@ function HybridCodeGenerator_gen_capsule(self, stmt) {
     return result;
 }
 function HybridCodeGenerator_gen_spawn(self, stmt) {
-    const fn_name = "";
-    const args = "";
+    let fn_name = "";
+    let args = "";
     
-        const call = stmt.call;
+        let call = stmt.call;
         fn_name = call?.name || call?.callee?.value || 'unknown';
         if (call?.args) {
             args = call.args.map(a => HybridCodeGenerator_gen_expression(self, a)).join(', ');
         }
     
-    const out = "";
+    let out = "";
     
         var impl = exports;
         out = impl.gen_spawn_code(fn_name, args);
@@ -2073,7 +2430,7 @@ function HybridCodeGenerator_gen_spawn(self, stmt) {
     return out;
 }
 function HybridCodeGenerator_gen_import(self, stmt) {
-    const result = "";
+    let result = "";
     
         var impl = exports;
         result = impl.gen_import(stmt);
@@ -2081,7 +2438,7 @@ function HybridCodeGenerator_gen_import(self, stmt) {
     return result;
 }
 function HybridCodeGenerator_gen_interface(self, stmt) {
-    const is_service = false;
+    let is_service = false;
     
         is_service = stmt.attributes && stmt.attributes.some(a => a.name === 'service');
     
@@ -2091,7 +2448,7 @@ function HybridCodeGenerator_gen_interface(self, stmt) {
     return "// Interface: " + stmt.name;
 }
 function HybridCodeGenerator_gen_service_client(self, stmt) {
-    const result = "";
+    let result = "";
     
         var impl = exports;
         result = impl.gen_service_client(stmt);
@@ -2153,7 +2510,7 @@ function new_map() {
     return 0;
 }
 function VMEnvironment_new(parent) {
-    const env = 0;
+    let env = 0;
     
         env = {
             _omni_struct: true,
@@ -2190,7 +2547,7 @@ function VMEnvironment_new(parent) {
     return env;
 }
 function VMEnvironment_get(self, name) {
-    const result = 0;
+    let result = 0;
     
         if (self.variables.hasOwnProperty(name)) {
             result = self.variables[name];
@@ -2208,7 +2565,7 @@ function VMEnvironment_set(self, name, value) {
     
 }
 function VMEnvironment_get_function(self, name) {
-    const result = 0;
+    let result = 0;
     
         if (self.functions.hasOwnProperty(name)) {
             result = self.functions[name];
@@ -2233,19 +2590,19 @@ class OmniVM {
     }
 }
 function OmniVM_new() {
-    const env = VMEnvironment_new(0);
-    return new OmniVM({ env: env, trace: false, step_count: 0 });
+    let env = VMEnvironment_new(0);
+    return new OmniVM({ env: env, trace: true, step_count: 0 });
 }
 function OmniVM_run(self, program) {
-    const result = 0;
+    let result = 0;
     
         if (!program || !program.statements) {
             console.error("[vm] Invalid program");
             return null;
         }
         
-        console.log("[vm] Starting execution...");
-        const startTime = Date.now();
+        if (self.trace) console.log("[vm] Starting execution...");
+        let startTime = Date.now();
         
         try {
             // Execute all statements
@@ -2255,14 +2612,16 @@ function OmniVM_run(self, program) {
             }
             
             // Call main() if exists
-            const mainFn = VMEnvironment_get_function(self.env, 'main');
+            let mainFn = VMEnvironment_get_function(self.env, 'main');
             if (mainFn && typeof mainFn === 'object' && mainFn._omni_fn) {
                 result = OmniVM_call_function(self, mainFn, []);
             }
             
-            const elapsed = Date.now() - startTime;
-            console.log("[vm] Execution completed in " + elapsed + "ms");
-            console.log("[vm] Steps executed: " + self.step_count);
+            let elapsed = Date.now() - startTime;
+            if (self.trace) {
+                console.log("[vm] Execution completed in " + elapsed + "ms");
+                console.log("[vm] Steps executed: " + self.step_count);
+            }
             
         } catch (e) {
             console.error("[vm] Runtime error:", e.message);
@@ -2274,7 +2633,7 @@ function OmniVM_run(self, program) {
     return result;
 }
 function OmniVM_exec_statement(self, stmt) {
-    const result = 0;
+    let result = 0;
     
         if (self.trace) {
             console.log("[vm:trace] Executing stmt kind:", stmt.kind);
@@ -2282,7 +2641,7 @@ function OmniVM_exec_statement(self, stmt) {
         
         // Function declaration
         if (stmt.kind === 4) { // NODE_FUNCTION
-            const fn = {
+            let fn = {
                 _omni_fn: true,
                 name: stmt.name,
                 params: stmt.params || [],
@@ -2294,7 +2653,7 @@ function OmniVM_exec_statement(self, stmt) {
         
         // Struct declaration
         if (stmt.kind === 70) { // NODE_STRUCT
-            const structDef = {
+            let structDef = {
                 _omni_struct: true,
                 name: stmt.name,
                 fields: stmt.fields || []
@@ -2305,20 +2664,20 @@ function OmniVM_exec_statement(self, stmt) {
         
         // Let declaration
         if (stmt.kind === 2) { // NODE_LET
-            const value = OmniVM_eval_expression(self, stmt.value);
+            let value = OmniVM_eval_expression(self, stmt.value);
             VMEnvironment_set(self.env, stmt.name, value);
             return null;
         }
         
         // Return statement
         if (stmt.kind === 7) { // NODE_RETURN
-            const value = OmniVM_eval_expression(self, stmt.value);
+            let value = OmniVM_eval_expression(self, stmt.value);
             throw { _omni_return: true, value: value };
         }
         
         // If statement
         if (stmt.kind === 13) { // NODE_IF
-            const condition = OmniVM_eval_expression(self, stmt.condition);
+            let condition = OmniVM_eval_expression(self, stmt.condition);
             if (condition) {
                 return OmniVM_exec_block(self, stmt.consequence);
             } else if (stmt.alternative) {
@@ -2343,7 +2702,7 @@ function OmniVM_exec_statement(self, stmt) {
         
         // Assignment
         if (stmt.kind === 16) { // NODE_ASSIGNMENT
-            const value = OmniVM_eval_expression(self, stmt.value);
+            let value = OmniVM_eval_expression(self, stmt.value);
             VMEnvironment_set(self.env, stmt.name, value);
             return null;
         }
@@ -2365,7 +2724,7 @@ function OmniVM_exec_statement(self, stmt) {
         
         // Capsule (register flows)
         if (stmt.kind === 93) { // NODE_CAPSULE
-            const capsule = {
+            let capsule = {
                 _omni_capsule: true,
                 name: stmt.name,
                 flows: {}
@@ -2380,17 +2739,22 @@ function OmniVM_exec_statement(self, stmt) {
             return null;
         }
         
+        // Expression statement (Statement wrapper)
+        if (stmt.kind === 20) { // NODE_EXPRESSION_STMT
+             return OmniVM_eval_expression(self, stmt.expr);
+        }
+        
         console.warn("[vm] Unknown statement kind:", stmt.kind);
         return null;
     
     return result;
 }
 function OmniVM_exec_block(self, block) {
-    const result = 0;
+    let result = 0;
     
         if (!block) return null;
         
-        const statements = Array.isArray(block) ? block : (block.statements || []);
+        let statements = Array.isArray(block) ? block : (block.statements || []);
         
         for (const stmt of statements) {
             self.step_count++;
@@ -2400,13 +2764,13 @@ function OmniVM_exec_block(self, block) {
     return result;
 }
 function OmniVM_eval_expression(self, expr) {
-    const result = 0;
+    let result = 0;
     
         if (!expr) return null;
         
         // Literal
         if (expr.kind === 3) { // NODE_LITERAL
-            const val = expr.value;
+            let val = expr.value;
             if (val === 'true') return true;
             if (val === 'false') return false;
             if (val === 'null') return null;
@@ -2425,15 +2789,15 @@ function OmniVM_eval_expression(self, expr) {
         
         // Identifier
         if (expr.kind === 15) { // NODE_IDENTIFIER
-            const name = expr.value || expr.name;
+            let name = expr.value || expr.name;
             return VMEnvironment_get(self.env, name);
         }
         
         // Binary expression
         if (expr.kind === 8) { // NODE_BINARY
-            const left = OmniVM_eval_expression(self, expr.left);
-            const right = OmniVM_eval_expression(self, expr.right);
-            const op = expr.op;
+            let left = OmniVM_eval_expression(self, expr.left);
+            let right = OmniVM_eval_expression(self, expr.right);
+            let op = expr.op;
             
             switch (op) {
                 case '+': return left + right;
@@ -2455,11 +2819,14 @@ function OmniVM_eval_expression(self, expr) {
         
         // Call expression
         if (expr.kind === 6) { // NODE_CALL
-            const fnName = expr.name || (expr.callee ? expr.callee.value : '');
-            const args = (expr.args || []).map(a => OmniVM_eval_expression(self, a));
+            // Fix: CallExpr uses 'function' field (AST), not 'callee' or 'name'
+            let funcNode = expr.function;
+            let fnName = funcNode ? (funcNode.value || funcNode.name) : '';
+
+            let args = (expr.args || []).map(a => OmniVM_eval_expression(self, a));
             
             // Check builtin
-            const builtin = VMEnvironment_get_function(self.env, fnName);
+            let builtin = VMEnvironment_get_function(self.env, fnName);
             if (builtin && typeof builtin === 'function') {
                 return builtin(...args);
             }
@@ -2474,7 +2841,7 @@ function OmniVM_eval_expression(self, expr) {
         
         // Member access
         if (expr.kind === 9) { // NODE_MEMBER
-            const obj = OmniVM_eval_expression(self, expr.object);
+            let obj = OmniVM_eval_expression(self, expr.object);
             return obj ? obj[expr.member] : undefined;
         }
         
@@ -2485,7 +2852,7 @@ function OmniVM_eval_expression(self, expr) {
         
         // Struct init
         if (expr.kind === 12) { // NODE_STRUCT_INIT
-            const obj = {};
+            let obj = {};
             if (expr.fields) {
                 for (const [k, v] of Object.entries(expr.fields)) {
                     obj[k] = OmniVM_eval_expression(self, v);
@@ -2499,15 +2866,15 @@ function OmniVM_eval_expression(self, expr) {
     return result;
 }
 function OmniVM_call_function(self, func, args) {
-    const result = 0;
+    let result = 0;
     
         // Create new environment for function scope
-        const prevEnv = self.env;
+        let prevEnv = self.env;
         self.env = VMEnvironment_new(prevEnv);
         
         // Bind parameters
         for (let i = 0; i < func.params.length; i++) {
-            const paramName = typeof func.params[i] === 'string' ? func.params[i] : func.params[i].name;
+            let paramName = typeof func.params[i] === 'string' ? func.params[i] : func.params[i].name;
             VMEnvironment_set(self.env, paramName, args[i]);
         }
         
@@ -2570,7 +2937,7 @@ function FrameworkAdapter_new(name) {
 // Unknown stmt kind: undefined
 // Unknown stmt kind: undefined
 function FrameworkAdapter_nextjs() {
-    const adapter = FrameworkAdapter_new("nextjs");
+    let adapter = FrameworkAdapter_new("nextjs");
     
         adapter.language = "typescript";
         
@@ -2645,7 +3012,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
 }
 
-export const config = {
+export let config = {
     matcher: '{matcher}',
 };`
         };
@@ -2689,7 +3056,7 @@ export default {
     return adapter;
 }
 function FrameworkAdapter_laravel() {
-    const adapter = FrameworkAdapter_new("laravel");
+    let adapter = FrameworkAdapter_new("laravel");
     
         adapter.language = "php";
         
@@ -2797,7 +3164,7 @@ use Illuminate\\Support\\Facades\\Route;
     return adapter;
 }
 function FrameworkAdapter_android() {
-    const adapter = FrameworkAdapter_new("android");
+    let adapter = FrameworkAdapter_new("android");
     
         adapter.language = "kotlin";
         
@@ -2890,7 +3257,7 @@ class FrameworkGenerator {
     }
 }
 function FrameworkGenerator_new(framework, output_dir) {
-    const adapter = FrameworkAdapter_new(framework);
+    let adapter = FrameworkAdapter_new(framework);
     
         switch (framework) {
             case 'nextjs':
@@ -2923,14 +3290,14 @@ function FrameworkGenerator_generate_structure(self, project_name) {
         
         // Generate structure files
         for (const [filePath, template] of Object.entries(self.adapter.structure)) {
-            const fullPath = path.join(self.output_dir, filePath);
-            const dir = path.dirname(fullPath);
+            let fullPath = path.join(self.output_dir, filePath);
+            let dir = path.dirname(fullPath);
             
             if (!fs.existsSync(dir)) {
                 fs.mkdirSync(dir, { recursive: true });
             }
             
-            const content = template
+            let content = template
                 .replace(/\{projectName\}/g, project_name)
                 .replace(/\{package\}/g, 'com.omni.' + project_name.toLowerCase());
             
@@ -2940,10 +3307,10 @@ function FrameworkGenerator_generate_structure(self, project_name) {
     
 }
 function FrameworkGenerator_generate_ui(self, name, annotation) {
-    const result = "";
+    let result = "";
     
-        const templateName = annotation.type || 'component';
-        const template = self.adapter.ui_templates[templateName];
+        let templateName = annotation.type || 'component';
+        let template = self.adapter.ui_templates[templateName];
         
         if (!template) {
             result = "/* UI template not found: " + templateName + " */";
@@ -2960,29 +3327,29 @@ function FrameworkGenerator_generate_ui(self, name, annotation) {
     return result;
 }
 function FrameworkGenerator_generate_server(self, capsule) {
-    const result = "";
+    let result = "";
     
         // const fs = require('fs'); (hoisted)
         // const path = require('path'); (hoisted)
         
-        const capsuleName = capsule.name;
-        const flows = capsule.flows || [];
+        let capsuleName = capsule.name;
+        let flows = capsule.flows || [];
         
         if (self.adapter.name === 'nextjs') {
             // Generate API routes for Next.js
             for (const flow of flows) {
-                const serverAttr = flow.attributes?.find(a => a.name.startsWith('server.'));
+                let serverAttr = flow.attributes?.find(a => a.name.startsWith('server.'));
                 if (serverAttr) {
-                    const method = serverAttr.name.split('.')[1].toUpperCase();
-                    const routePath = serverAttr.args?.[0] || '/' + capsuleName.toLowerCase() + '/' + flow.name;
+                    let method = serverAttr.name.split('.')[1].toUpperCase();
+                    let routePath = serverAttr.args?.[0] || '/' + capsuleName.toLowerCase() + '/' + flow.name;
                     
-                    const template = self.adapter.server_templates.route;
-                    const code = template
+                    let template = self.adapter.server_templates.route;
+                    let code = template
                         .replace(/\{method\}/g, method)
-                        .replace(/\{body\}/g, 'const result = await ' + capsuleName + '.' + flow.name + '();');
+                        .replace(/\{body\}/g, 'let result = await ' + capsuleName + '.' + flow.name + '();');
                     
                     // Write route file
-                    const routeDir = path.join(self.output_dir, 'app/api', capsuleName.toLowerCase(), flow.name);
+                    let routeDir = path.join(self.output_dir, 'app/api', capsuleName.toLowerCase(), flow.name);
                     if (!fs.existsSync(routeDir)) {
                         fs.mkdirSync(routeDir, { recursive: true });
                     }
@@ -2996,16 +3363,16 @@ function FrameworkGenerator_generate_server(self, capsule) {
             let routes = '';
             
             for (const flow of flows) {
-                const serverAttr = flow.attributes?.find(a => a.name.startsWith('server.'));
+                let serverAttr = flow.attributes?.find(a => a.name.startsWith('server.'));
                 if (serverAttr) {
-                    const httpMethod = serverAttr.name.split('.')[1];
-                    const routePath = serverAttr.args?.[0] || '/' + capsuleName.toLowerCase() + '/' + flow.name;
+                    let httpMethod = serverAttr.name.split('.')[1];
+                    let routePath = serverAttr.args?.[0] || '/' + capsuleName.toLowerCase() + '/' + flow.name;
                     
                     methods += self.adapter.server_templates.controller_method
                         .replace(/\{name\}/g, flow.name)
                         .replace(/\{body\}/g, '$result = null; // TODO: implement');
                     
-                    const routeTemplate = httpMethod === 'get' 
+                    let routeTemplate = httpMethod === 'get' 
                         ? self.adapter.server_templates.route_get 
                         : self.adapter.server_templates.route_post;
                     routes += routeTemplate
@@ -3015,12 +3382,12 @@ function FrameworkGenerator_generate_server(self, capsule) {
                 }
             }
             
-            const controller = self.adapter.server_templates.controller
+            let controller = self.adapter.server_templates.controller
                 .replace(/\{name\}/g, capsuleName)
                 .replace(/\{methods\}/g, methods);
             
             // Write controller
-            const controllerDir = path.join(self.output_dir, 'app/Http/Controllers');
+            let controllerDir = path.join(self.output_dir, 'app/Http/Controllers');
             if (!fs.existsSync(controllerDir)) {
                 fs.mkdirSync(controllerDir, { recursive: true });
             }
@@ -3043,8 +3410,8 @@ function FrameworkGenerator_write_all(self) {
         // const path = require('path'); (hoisted)
         
         for (const [filePath, content] of Object.entries(self.files)) {
-            const fullPath = path.join(self.output_dir, filePath);
-            const dir = path.dirname(fullPath);
+            let fullPath = path.join(self.output_dir, filePath);
+            let dir = path.dirname(fullPath);
             
             if (!fs.existsSync(dir)) {
                 fs.mkdirSync(dir, { recursive: true });
@@ -3074,6 +3441,146 @@ if (typeof exports !== 'undefined') {
 }
 
 
+// === Helper: core/ingestion_patterns.js ===
+Object.assign(exports, {
+            // PHP Patterns
+            php: [
+                { 
+                    name: 'class_definition',
+                    regex: /class\s+(\w+)(?:\s+extends\s+(\w+))?(?:\s+implements\s+([\w,\s]+))?\s*\{/,
+                    toOmni: (m) => `struct ${m[1]} {\n    // TODO: Extract fields\n}`
+                },
+                {
+                    name: 'function_definition',
+                    regex: /function\s+(\w+)\s*\((.*?)\)(?:\s*:\s*(\w+))?\s*\{/,
+                    toOmni: (m) => `fn ${m[1]}(${m[2] || ''}) ${m[3] ? '-> ' + m[3] : ''} {\n    // TODO: Extract body\n}`
+                },
+                {
+                    name: 'public_method',
+                    regex: /public\s+function\s+(\w+)\s*\((.*?)\)/,
+                    toOmni: (m) => `fn ${m[1]}(self: Self${m[2] ? ', ' + m[2] : ''})`
+                },
+                {
+                    name: 'eloquent_model',
+                    regex: /class\s+(\w+)\s+extends\s+Model/,
+                    toOmni: (m) => `@entity\nstruct ${m[1]} {\n    id: i64\n}`
+                },
+                {
+                    name: 'controller',
+                    regex: /class\s+(\w+)Controller\s+extends\s+Controller/,
+                    toOmni: (m) => `@server\ncapsule ${m[1]} {\n    // TODO: Extract flows\n}`
+                },
+                {
+                    name: 'route_get',
+                    regex: /Route::get\(['"]([^'"]+)['"]\s*,\s*\[(\w+)::class,\s*['"](\w+)['"]\]/,
+                    toOmni: (m) => `@server.get("${m[1]}")\nflow ${m[3]}()`
+                },
+                {
+                    name: 'route_post',
+                    regex: /Route::post\(['"]([^'"]+)['"]\s*,\s*\[(\w+)::class,\s*['"](\w+)['"]\]/,
+                    toOmni: (m) => `@server.post("${m[1]}")\nflow ${m[3]}()`
+                }
+            ],
+            
+            // Java Patterns
+            java: [
+                {
+                    name: 'class_definition',
+                    regex: /(?:public\s+)?class\s+(\w+)(?:\s+extends\s+(\w+))?(?:\s+implements\s+([\w,\s]+))?\s*\{/,
+                    toOmni: (m) => `struct ${m[1]} {\n    // TODO: Extract fields\n}`
+                },
+                {
+                    name: 'method_definition',
+                    regex: /(?:public|private|protected)?\s*(?:static\s+)?(\w+)\s+(\w+)\s*\((.*?)\)\s*(?:throws\s+\w+)?\s*\{/,
+                    toOmni: (m) => `fn ${m[2]}(${m[3] || ''}) -> ${m[1]} {\n}`
+                },
+                {
+                    name: 'spring_controller',
+                    regex: /@(?:RestController|Controller)[\s\S]*?class\s+(\w+)/,
+                    toOmni: (m) => `@server\ncapsule ${m[1]} {\n}`
+                },
+                {
+                    name: 'spring_get',
+                    regex: /@GetMapping\(['"]([^'"]+)['"]\)[\s\S]*?(?:public\s+)?(\w+)\s+(\w+)/,
+                    toOmni: (m) => `@server.get("${m[1]}")\nflow ${m[3]}() -> ${m[2]}`
+                },
+                {
+                    name: 'spring_entity',
+                    regex: /@Entity[\s\S]*?class\s+(\w+)/,
+                    toOmni: (m) => `@entity\nstruct ${m[1]} {\n    id: i64\n}`
+                },
+                {
+                    name: 'spring_repository',
+                    regex: /interface\s+(\w+)Repository\s+extends\s+(?:JpaRepository|CrudRepository)/,
+                    toOmni: (m) => `// Repository ${m[1]} -> Omni @entity auto-generates CRUD`
+                }
+            ],
+            
+            // JavaScript/TypeScript Patterns
+            javascript: [
+                {
+                    name: 'class_definition',
+                    regex: /class\s+(\w+)(?:\s+extends\s+(\w+))?\s*\{/,
+                    toOmni: (m) => `struct ${m[1]} {\n}`
+                },
+                {
+                    name: 'function_definition',
+                    regex: /(?:async\s+)?function\s+(\w+)\s*\((.*?)\)(?:\s*:\s*(\w+))?\s*\{/,
+                    toOmni: (m) => `fn ${m[1]}(${m[2] || ''}) ${m[3] ? '-> ' + m[3] : ''} {\n}`
+                },
+                {
+                    name: 'arrow_function',
+                    regex: /const\s+(\w+)\s*=\s*(?:async\s+)?\((.*?)\)\s*=>/,
+                    toOmni: (m) => `fn ${m[1]}(${m[2] || ''}) {\n}`
+                },
+                {
+                    name: 'express_route',
+                    regex: /(?:app|router)\.(get|post|put|delete)\(['"]([^'"]+)['"]/,
+                    toOmni: (m) => `@server.${m[1]}("${m[2]}")\nflow handler()`
+                },
+                {
+                    name: 'nextjs_api',
+                    regex: /export\s+(?:async\s+)?function\s+(GET|POST|PUT|DELETE)/,
+                    toOmni: (m) => `@server.${m[1].toLowerCase()}("/")\nflow handler()`
+                },
+                {
+                    name: 'react_component',
+                    regex: /(?:export\s+)?(?:default\s+)?function\s+(\w+)\s*\(\s*(?:\{[^}]*\}|props)?\s*\)/,
+                    toOmni: (m) => `@ui.component\nfn ${m[1]}() {\n}`
+                }
+            ],
+            
+            // Python Patterns
+            python: [
+                {
+                    name: 'class_definition',
+                    regex: /class\s+(\w+)(?:\((\w+)\))?:/,
+                    toOmni: (m) => `struct ${m[1]} {\n}`
+                },
+                {
+                    name: 'function_definition',
+                    regex: /def\s+(\w+)\s*\((.*?)\)(?:\s*->\s*(\w+))?:/,
+                    toOmni: (m) => `fn ${m[1]}(${m[2] || ''}) ${m[3] ? '-> ' + m[3] : ''} {\n}`
+                },
+                {
+                    name: 'fastapi_get',
+                    regex: /@app\.get\(['"]([^'"]+)['"]\)[\s\S]*?(?:async\s+)?def\s+(\w+)/,
+                    toOmni: (m) => `@server.get("${m[1]}")\nflow ${m[2]}()`
+                },
+                {
+                    name: 'django_model',
+                    regex: /class\s+(\w+)\(models\.Model\):/,
+                    toOmni: (m) => `@entity\nstruct ${m[1]} {\n    id: i64\n}`
+                },
+                {
+                    name: 'sqlalchemy_model',
+                    regex: /class\s+(\w+)\(Base\):/,
+                    toOmni: (m) => `@entity\nstruct ${m[1]} {\n    id: i64\n}`
+                }
+            ]
+        });
+
+
 // === Module: core/ingestion ===
 var ast = exports;
 if (typeof global !== 'undefined') Object.assign(global, ast);
@@ -3101,7 +3608,7 @@ function new_map() {
     return 0;
 }
 function PatternDatabase_new() {
-    const db = new PatternDatabase({ patterns: new_map() });
+    let db = new PatternDatabase({ patterns: new_map() });
     
         var patterns = exports;
         db.patterns = patterns;
@@ -3109,15 +3616,15 @@ function PatternDatabase_new() {
         // Load external patterns from patterns/ directory
         // const fs = require('fs'); (hoisted)
         // const path = require('path'); (hoisted)
-        const patternsDir = path.join(__dirname, '..', 'patterns');
+        let patternsDir = path.join(__dirname, '..', 'patterns');
         
         if (fs.existsSync(patternsDir)) {
-            const files = fs.readdirSync(patternsDir).filter(f => f.endsWith('.json'));
+            let files = fs.readdirSync(patternsDir).filter(f => f.endsWith('.json'));
             
             for (const file of files) {
                 try {
-                    const content = JSON.parse(fs.readFileSync(path.join(patternsDir, file), 'utf-8'));
-                    const lang = content.language || path.basename(file, '.json');
+                    let content = JSON.parse(fs.readFileSync(path.join(patternsDir, file), 'utf-8'));
+                    let lang = content.language || path.basename(file, '.json');
                     
                     if (!db.patterns[lang]) {
                         db.patterns[lang] = [];
@@ -3161,7 +3668,7 @@ function IngestionEngine_new(source_lang) {
     return new IngestionEngine({ patterns: PatternDatabase_new(), source_language: source_lang, detected_patterns: [], omni_output: "", confidence_score: 0 });
 }
 function IngestionEngine_detect_language(source) {
-    const lang = "unknown";
+    let lang = "unknown";
     
         // Heuristic language detection
         if (source.includes('<?php') || source.includes('<?=')) {
@@ -3182,14 +3689,14 @@ function IngestionEngine_detect_language(source) {
 }
 function IngestionEngine_analyze(self, source) {
     
-        const patterns = self.patterns.patterns[self.source_language] || [];
+        let patterns = self.patterns.patterns[self.source_language] || [];
         self.detected_patterns = [];
         
         for (const pattern of patterns) {
-            const matches = source.match(new RegExp(pattern.regex, 'gm'));
+            let matches = source.match(new RegExp(pattern.regex, 'gm'));
             if (matches) {
                 for (const match of matches) {
-                    const groups = match.match(pattern.regex);
+                    let groups = match.match(pattern.regex);
                     if (groups) {
                         self.detected_patterns.push({
                             pattern: pattern.name,
@@ -3208,7 +3715,7 @@ function IngestionEngine_analyze(self, source) {
     
 }
 function IngestionEngine_generate_omni(self) {
-    const output = "";
+    let output = "";
     
         output = "// ============================================================================\n";
         output += "// AUTO-GENERATED OMNI CODE\n";
@@ -3218,13 +3725,13 @@ function IngestionEngine_generate_omni(self) {
         output += "// ============================================================================\n\n";
         
         // Group by pattern type
-        const structs = [];
-        const capsules = [];
-        const functions = [];
-        const flows = [];
+        let structs = [];
+        let capsules = [];
+        let functions = [];
+        let flows = [];
         
         for (const detected of self.detected_patterns) {
-            const omni = detected.omni;
+            let omni = detected.omni;
             if (omni.includes('@entity') || omni.includes('struct')) {
                 structs.push(omni);
             } else if (omni.includes('capsule') || omni.includes('@server')) {
@@ -3275,7 +3782,7 @@ function IngestionEngine_report(self) {
         console.log("└────────────────────────────────────────────┘");
         console.log("\nDetected Patterns:");
         
-        const patternCounts = {};
+        let patternCounts = {};
         for (const p of self.detected_patterns) {
             patternCounts[p.pattern] = (patternCounts[p.pattern] || 0) + 1;
         }
@@ -3288,17 +3795,17 @@ function IngestionEngine_report(self) {
 function cmd_ingest(input_file, output_file) {
     CLI_header("Omni Ingestion Engine");
     CLI_info("Analyzing: " + input_file);
-    const source = read_file(input_file);
-    const lang = IngestionEngine_detect_language(source);
+    let source = read_file(input_file);
+    let lang = IngestionEngine_detect_language(source);
     CLI_info("Detected language: " + lang);
     if (lang == "unknown") {
     CLI_error("Could not detect source language");
     return null;
 }
-    const engine = IngestionEngine_new(lang);
+    let engine = IngestionEngine_new(lang);
     IngestionEngine_analyze(engine, source);
     IngestionEngine_report(engine);
-    const omni_code = IngestionEngine_generate_omni(engine);
+    let omni_code = IngestionEngine_generate_omni(engine);
     write_file(output_file, omni_code);
     CLI_success("Generated: " + output_file);
     CLI_info("Review the generated code and add missing implementation details.");
@@ -3338,7 +3845,7 @@ class GitPackage {
     }
 }
 function GitPackage_parse(spec) {
-    const pkg = new GitPackage({ name: "", provider: "github", owner: "", repo: "", full_url: "", commit: "", branch: "main", local_path: "" });
+    let pkg = new GitPackage({ name: "", provider: "github", owner: "", repo: "", full_url: "", commit: "", branch: "main", local_path: "" });
     
         // const path = require('path'); (hoisted)
         
@@ -3366,7 +3873,7 @@ function GitPackage_parse(spec) {
             pkg.provider = 'url';
             pkg.full_url = input;
             // Extract name from URL
-            const parts = input.split('/');
+            let parts = input.split('/');
             pkg.name = parts.slice(-2).join('/');
             pkg.owner = parts[parts.length - 2];
             pkg.repo = parts[parts.length - 1].replace('.git', '');
@@ -3374,7 +3881,7 @@ function GitPackage_parse(spec) {
         
         // Parse owner/repo format
         if (!pkg.full_url && input.includes('/')) {
-            const parts = input.split('/');
+            let parts = input.split('/');
             pkg.owner = parts[0];
             pkg.repo = parts[1].replace('.git', '');
             pkg.name = pkg.owner + '/' + pkg.repo;
@@ -3392,14 +3899,14 @@ function GitPackage_parse(spec) {
     return pkg;
 }
 function GitPackage_get_zip_url(pkg) {
-    const url = "";
+    let url = "";
     
         if (pkg.provider === 'github') {
             // GitHub archive URL (no git required)
-            const branch = pkg.commit || pkg.branch || 'main';
+            let branch = pkg.commit || pkg.branch || 'main';
             url = pkg.full_url + '/archive/refs/heads/' + branch + '.zip';
         } else if (pkg.provider === 'gitlab') {
-            const branch = pkg.commit || pkg.branch || 'main';
+            let branch = pkg.commit || pkg.branch || 'main';
             url = pkg.full_url + '/-/archive/' + branch + '/' + pkg.repo + '-' + branch + '.zip';
         } else {
             url = pkg.full_url;
@@ -3408,7 +3915,7 @@ function GitPackage_get_zip_url(pkg) {
     return url;
 }
 function GitPackage_get_api_url(pkg) {
-    const url = "";
+    let url = "";
     
         if (pkg.provider === 'github') {
             url = 'https://api.github.com/repos/' + pkg.owner + '/' + pkg.repo;
@@ -3437,16 +3944,16 @@ function new_map() {
     return 0;
 }
 function LockFile_load(project_dir) {
-    const lock = new LockFile({ version: "1.0", packages: new_map() });
+    let lock = new LockFile({ version: "1.0", packages: new_map() });
     
         // const fs = require('fs'); (hoisted)
         // const path = require('path'); (hoisted)
         
-        const lockPath = path.join(project_dir, 'omni.lock');
+        let lockPath = path.join(project_dir, 'omni.lock');
         
         if (fs.existsSync(lockPath)) {
             try {
-                const data = JSON.parse(fs.readFileSync(lockPath, 'utf-8'));
+                let data = JSON.parse(fs.readFileSync(lockPath, 'utf-8'));
                 lock.version = data.version || '1.0';
                 lock.packages = data.packages || {};
             } catch (e) {
@@ -3461,7 +3968,7 @@ function LockFile_save(lock, project_dir) {
         // const fs = require('fs'); (hoisted)
         // const path = require('path'); (hoisted)
         
-        const lockPath = path.join(project_dir, 'omni.lock');
+        let lockPath = path.join(project_dir, 'omni.lock');
         
         fs.writeFileSync(lockPath, JSON.stringify({
             version: lock.version,
@@ -3482,7 +3989,7 @@ function LockFile_add(lock, pkg) {
     
 }
 function LockFile_get(lock, name) {
-    const entry = new LockEntry({ name: "", url: "", commit: "", installed_at: "" });
+    let entry = new LockEntry({ name: "", url: "", commit: "", installed_at: "" });
     
         if (lock.packages[name]) {
             entry = lock.packages[name];
@@ -3496,24 +4003,24 @@ function LockFile_remove(lock, name) {
     
 }
 function git_get_latest_commit(pkg) {
-    const commit = "";
+    let commit = "";
     
         const https = require('https');
         
         // Use GitHub API to get latest commit
         if (pkg.provider === 'github') {
-            const apiUrl = 'https://api.github.com/repos/' + pkg.owner + '/' + pkg.repo + '/commits?per_page=1';
+            let apiUrl = 'https://api.github.com/repos/' + pkg.owner + '/' + pkg.repo + '/commits?per_page=1';
             
             console.log(CLI_COLORS.dim + '  Fetching latest commit...' + CLI_COLORS.reset);
             
             // Sync HTTP request (simplified for demo)
             const { execSync } = require('child_process');
             try {
-                const result = execSync(
+                let result = execSync(
                     'curl -s -H "Accept: application/vnd.github.v3+json" "' + apiUrl + '"',
                     { encoding: 'utf-8' }
                 );
-                const data = JSON.parse(result);
+                let data = JSON.parse(result);
                 if (data && data[0] && data[0].sha) {
                     commit = data[0].sha;
                 }
@@ -3525,14 +4032,14 @@ function git_get_latest_commit(pkg) {
     return commit;
 }
 function git_clone(pkg, target_dir) {
-    const success = false;
+    let success = false;
     
         const { execSync, exec } = require('child_process');
         // const fs = require('fs'); (hoisted)
         // const path = require('path'); (hoisted)
         
         // Ensure parent directory exists
-        const parentDir = path.dirname(target_dir);
+        let parentDir = path.dirname(target_dir);
         if (!fs.existsSync(parentDir)) {
             fs.mkdirSync(parentDir, { recursive: true });
         }
@@ -3555,8 +4062,8 @@ function git_clone(pkg, target_dir) {
             // Fallback to ZIP download
             console.log(CLI_COLORS.dim + '  Git not available, using ZIP download...' + CLI_COLORS.reset);
             
-            const zipUrl = GitPackage_get_zip_url(pkg);
-            const zipPath = path.join(parentDir, pkg.repo + '.zip');
+            let zipUrl = GitPackage_get_zip_url(pkg);
+            let zipPath = path.join(parentDir, pkg.repo + '.zip');
             
             try {
                 // Download ZIP
@@ -3570,7 +4077,7 @@ function git_clone(pkg, target_dir) {
                 }
                 
                 // Rename extracted folder
-                const entries = fs.readdirSync(parentDir);
+                let entries = fs.readdirSync(parentDir);
                 for (const entry of entries) {
                     if (entry.startsWith(pkg.repo + '-') && fs.statSync(path.join(parentDir, entry)).isDirectory()) {
                         fs.renameSync(path.join(parentDir, entry), target_dir);
@@ -3596,7 +4103,7 @@ function cmd_install(package_spec) {
     cmd_install_from_lock();
     return null;
 }
-    const pkg = GitPackage_parse(package_spec);
+    let pkg = GitPackage_parse(package_spec);
     if (pkg.name == "") {
     CLI_error("Invalid package specification: " + package_spec);
     CLI_info("Examples:");
@@ -3607,23 +4114,23 @@ function cmd_install(package_spec) {
 }
     CLI_info("Package: " + pkg.name);
     CLI_info("Source: " + pkg.full_url);
-    const commit = git_get_latest_commit(pkg);
+    let commit = git_get_latest_commit(pkg);
     if (commit != "") {
     pkg.commit = commit;
     CLI_info("Commit: " + commit.substring(0, 8) + "...");
 }
-    const cwd = "";
+    let cwd = "";
      cwd = process.cwd(); 
-    const target = "";
+    let target = "";
     
         // const path = require('path'); (hoisted)
         target = path.join(cwd, pkg.local_path);
     
     CLI_step(1, 3, "Downloading...");
-    const success = git_clone(pkg, target);
+    let success = git_clone(pkg, target);
     if (success) {
     CLI_step(2, 3, "Updating lock file...");
-    const lock = LockFile_load(cwd);
+    let lock = LockFile_load(cwd);
     LockFile_add(lock, pkg);
     LockFile_save(lock, cwd);
     CLI_step(3, 3, "Done!");
@@ -3639,12 +4146,12 @@ function cmd_install(package_spec) {
 }
 function cmd_install_from_lock() {
     CLI_info("Installing packages from omni.lock...");
-    const cwd = "";
+    let cwd = "";
      cwd = process.cwd(); 
-    const lock = LockFile_load(cwd);
+    let lock = LockFile_load(cwd);
     
         // const path = require('path'); (hoisted)
-        const packages = Object.values(lock.packages);
+        let packages = Object.values(lock.packages);
         
         if (packages.length === 0) {
             terminal.CLI_info("No packages in omni.lock");
@@ -3654,10 +4161,10 @@ function cmd_install_from_lock() {
         console.log(CLI_COLORS.dim + "  Found " + packages.length + " packages" + CLI_COLORS.reset);
         
         for (const entry of packages) {
-            const pkg = GitPackage_parse(entry.url);
+            let pkg = GitPackage_parse(entry.url);
             pkg.commit = entry.commit;
             
-            const target = path.join(cwd, pkg.local_path);
+            let target = path.join(cwd, pkg.local_path);
             
             console.log(CLI_COLORS.cyan + "  Installing: " + CLI_COLORS.reset + pkg.name);
             git_clone(pkg, target);
@@ -3673,10 +4180,10 @@ function cmd_uninstall(package_name) {
     CLI_error("Usage: omni uninstall <package>");
     return null;
 }
-    const cwd = "";
+    let cwd = "";
      cwd = process.cwd(); 
-    const lock = LockFile_load(cwd);
-    const found = false;
+    let lock = LockFile_load(cwd);
+    let found = false;
     
         // const fs = require('fs'); (hoisted)
         // const path = require('path'); (hoisted)
@@ -3687,8 +4194,8 @@ function cmd_uninstall(package_name) {
                 found = true;
                 
                 // Remove directory
-                const pkg = GitPackage_parse(entry.url);
-                const targetDir = path.join(cwd, pkg.local_path);
+                let pkg = GitPackage_parse(entry.url);
+                let targetDir = path.join(cwd, pkg.local_path);
                 
                 if (fs.existsSync(targetDir)) {
                     fs.rmSync(targetDir, { recursive: true });
@@ -3711,11 +4218,11 @@ function cmd_uninstall(package_name) {
 function cmd_list() {
     CLI_banner();
     CLI_header("Installed Packages");
-    const cwd = "";
+    let cwd = "";
      cwd = process.cwd(); 
-    const lock = LockFile_load(cwd);
+    let lock = LockFile_load(cwd);
     
-        const packages = Object.values(lock.packages);
+        let packages = Object.values(lock.packages);
         
         if (packages.length === 0) {
             terminal.CLI_info("No packages installed.");
@@ -3729,7 +4236,7 @@ function cmd_list() {
         console.log("");
         
         for (const pkg of packages) {
-            const commit = pkg.commit ? pkg.commit.substring(0, 8) : 'HEAD';
+            let commit = pkg.commit ? pkg.commit.substring(0, 8) : 'HEAD';
             console.log("  ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¦ " + CLI_COLORS.bold + pkg.name + CLI_COLORS.reset + 
                         CLI_COLORS.dim + " @ " + commit + CLI_COLORS.reset);
             console.log("     " + CLI_COLORS.dim + pkg.url + CLI_COLORS.reset);
@@ -3741,9 +4248,9 @@ function cmd_list() {
 function cmd_update(package_name) {
     CLI_banner();
     CLI_header("Omni Package Updater");
-    const cwd = "";
+    let cwd = "";
      cwd = process.cwd(); 
-    const lock = LockFile_load(cwd);
+    let lock = LockFile_load(cwd);
     
         // const path = require('path'); (hoisted)
         let packagesToUpdate = Object.values(lock.packages);
@@ -3762,18 +4269,18 @@ function cmd_update(package_name) {
         console.log(CLI_COLORS.dim + "  Updating " + packagesToUpdate.length + " packages..." + CLI_COLORS.reset);
         
         for (const entry of packagesToUpdate) {
-            const pkg = GitPackage_parse(entry.url);
+            let pkg = GitPackage_parse(entry.url);
             
             console.log(CLI_COLORS.cyan + "  Updating: " + CLI_COLORS.reset + pkg.name);
             
             // Get latest commit
-            const newCommit = git_get_latest_commit(pkg);
+            let newCommit = git_get_latest_commit(pkg);
             
             if (newCommit && newCommit !== entry.commit) {
                 console.log(CLI_COLORS.dim + "    " + entry.commit.substring(0, 8) + " ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ " + newCommit.substring(0, 8) + CLI_COLORS.reset);
                 
                 pkg.commit = newCommit;
-                const target = path.join(cwd, pkg.local_path);
+                let target = path.join(cwd, pkg.local_path);
                 git_clone(pkg, target);
                 
                 LockFile_add(lock, pkg);
@@ -3800,7 +4307,7 @@ function cmd_doctor() {
         console.log("");
         console.log(CLI_COLORS.cyan + "  Checking tools:" + CLI_COLORS.reset);
         
-        const tools = [
+        let tools = [
             { name: 'git', cmd: 'git --version' },
             { name: 'node', cmd: 'node --version' },
             { name: 'curl', cmd: 'curl --version' }
@@ -3808,7 +4315,7 @@ function cmd_doctor() {
         
         for (const tool of tools) {
             try {
-                const version = execSync(tool.cmd, { encoding: 'utf-8' }).trim().split('\n')[0];
+                let version = execSync(tool.cmd, { encoding: 'utf-8' }).trim().split('\n')[0];
                 console.log("  " + CLI_COLORS.green + "ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“" + CLI_COLORS.reset + " " + tool.name + ": " + CLI_COLORS.dim + version + CLI_COLORS.reset);
             } catch (e) {
                 console.log("  " + CLI_COLORS.red + "ÃƒÂ¢Ã…â€œÃ¢â‚¬â€" + CLI_COLORS.reset + " " + tool.name + ": not found");
@@ -3820,8 +4327,8 @@ function cmd_doctor() {
         console.log("");
         console.log(CLI_COLORS.cyan + "  Checking project:" + CLI_COLORS.reset);
         
-        const cwd = process.cwd();
-        const files = [
+        let cwd = process.cwd();
+        let files = [
             { name: 'omni.config.json', path: path.join(cwd, 'omni.config.json') },
             { name: 'omni.lock', path: path.join(cwd, 'omni.lock') },
             { name: 'packages/', path: path.join(cwd, 'packages') }
@@ -3850,20 +4357,20 @@ function cmd_search(query) {
         const https = require('https');
         
         // Fetch from static registry JSON
-        const registryUrl = 'https://raw.githubusercontent.com/crom-lang/registry/main/packages.json';
+        let registryUrl = 'https://raw.githubusercontent.com/crom-lang/registry/main/packages.json';
         
         console.log(CLI_COLORS.dim + "  Fetching registry..." + CLI_COLORS.reset);
         
         const { execSync } = require('child_process');
         
         try {
-            const result = execSync('curl -sL "' + registryUrl + '"', { encoding: 'utf-8' });
-            const registry = JSON.parse(result);
+            let result = execSync('curl -sL "' + registryUrl + '"', { encoding: 'utf-8' });
+            let registry = JSON.parse(result);
             
             let results = registry.packages || [];
             
             if (query) {
-                const q = query.toLowerCase();
+                let q = query.toLowerCase();
                 results = results.filter(p => 
                     p.name.toLowerCase().includes(q) ||
                     (p.description && p.description.toLowerCase().includes(q)) ||
@@ -3988,7 +4495,7 @@ function GhostWriter_analyze(self, program) {
         for (const stmt of program.statements) {
             // Capsule
             if (stmt.kind === 93) { // NODE_CAPSULE
-                const capsule = {
+                let capsule = {
                     name: stmt.name,
                     flows: [],
                     entities: [],
@@ -4010,7 +4517,7 @@ function GhostWriter_analyze(self, program) {
             
             // Struct / Entity
             if (stmt.kind === 70) { // NODE_STRUCT
-                const entity = {
+                let entity = {
                     name: stmt.name,
                     fields: stmt.fields || [],
                     isEntity: (stmt.attributes || []).some(a => a.name === 'entity')
@@ -4020,7 +4527,7 @@ function GhostWriter_analyze(self, program) {
             
             // Function
             if (stmt.kind === 4) { // NODE_FUNCTION
-                const fn = {
+                let fn = {
                     name: stmt.name,
                     params: stmt.params || [],
                     return_type: stmt.return_type || 'void',
@@ -4028,7 +4535,7 @@ function GhostWriter_analyze(self, program) {
                 };
                 
                 // Extract function calls from body
-                const extractCalls = (node) => {
+                let extractCalls = (node) => {
                     if (!node) return;
                     if (node.kind === 6) { // NODE_CALL
                         fn.calls.push(node.name || (node.callee && node.callee.value));
@@ -4059,7 +4566,7 @@ function GhostWriter_analyze(self, program) {
     
 }
 function GhostWriter_gen_class_diagram(self) {
-    const diagram = "";
+    let diagram = "";
     
         diagram = "```mermaid\nclassDiagram\n";
         
@@ -4068,8 +4575,8 @@ function GhostWriter_gen_class_diagram(self) {
             diagram += "    class " + entity.name + " {\n";
             
             for (const field of entity.fields) {
-                const fieldName = field.name || field;
-                const fieldType = field.type || 'any';
+                let fieldName = field.name || field;
+                let fieldType = field.type || 'any';
                 diagram += "        +" + fieldType + " " + fieldName + "\n";
             }
             
@@ -4082,7 +4589,7 @@ function GhostWriter_gen_class_diagram(self) {
             diagram += "        <<capsule>>\n";
             
             for (const flow of capsule.flows) {
-                const params = (flow.params || []).map(p => 
+                let params = (flow.params || []).map(p => 
                     typeof p === 'string' ? p : p.name
                 ).join(', ');
                 diagram += "        +" + flow.name + "(" + params + ") " + flow.return_type + "\n";
@@ -4095,7 +4602,7 @@ function GhostWriter_gen_class_diagram(self) {
         for (const capsule of self.capsules) {
             for (const entity of self.entities) {
                 // Check if capsule references entity
-                const capsuleStr = JSON.stringify(capsule);
+                let capsuleStr = JSON.stringify(capsule);
                 if (capsuleStr.includes(entity.name)) {
                     diagram += "    " + capsule.name + " --> " + entity.name + " : uses\n";
                 }
@@ -4107,7 +4614,7 @@ function GhostWriter_gen_class_diagram(self) {
     return diagram;
 }
 function GhostWriter_gen_flowchart(self) {
-    const diagram = "";
+    let diagram = "";
     
         diagram = "```mermaid\nflowchart TD\n";
         
@@ -4116,15 +4623,15 @@ function GhostWriter_gen_flowchart(self) {
             diagram += "    subgraph " + capsule.name + "\n";
             
             for (const flow of capsule.flows) {
-                const nodeId = capsule.name + "_" + flow.name;
+                let nodeId = capsule.name + "_" + flow.name;
                 
                 // Check for server attribute
-                const serverAttr = flow.attributes.find(a => 
+                let serverAttr = flow.attributes.find(a => 
                     a.name && a.name.startsWith('server.')
                 );
                 
                 if (serverAttr) {
-                    const method = serverAttr.name.split('.')[1].toUpperCase();
+                    let method = serverAttr.name.split('.')[1].toUpperCase();
                     diagram += "        " + nodeId + "[(" + method + " " + flow.name + ")]\n";
                 } else {
                     diagram += "        " + nodeId + "[" + flow.name + "]\n";
@@ -4137,8 +4644,8 @@ function GhostWriter_gen_flowchart(self) {
         // Connect capsule flows
         for (const capsule of self.capsules) {
             for (let i = 0; i < capsule.flows.length - 1; i++) {
-                const from = capsule.name + "_" + capsule.flows[i].name;
-                const to = capsule.name + "_" + capsule.flows[i + 1].name;
+                let from = capsule.name + "_" + capsule.flows[i].name;
+                let to = capsule.name + "_" + capsule.flows[i + 1].name;
                 // diagram += "    " + from + " --> " + to + "\n";
             }
         }
@@ -4148,7 +4655,7 @@ function GhostWriter_gen_flowchart(self) {
             diagram += "    DB[(" + entity.name + " DB)]\n";
             
             for (const capsule of self.capsules) {
-                const capsuleStr = JSON.stringify(capsule);
+                let capsuleStr = JSON.stringify(capsule);
                 if (capsuleStr.includes(entity.name)) {
                     diagram += "    " + capsule.name + "_" + capsule.flows[0].name + " --> DB\n";
                 }
@@ -4160,7 +4667,7 @@ function GhostWriter_gen_flowchart(self) {
     return diagram;
 }
 function GhostWriter_gen_sequence_diagram(self) {
-    const diagram = "";
+    let diagram = "";
     
         diagram = "```mermaid\nsequenceDiagram\n";
         
@@ -4180,17 +4687,17 @@ function GhostWriter_gen_sequence_diagram(self) {
         // Sequence for each flow
         for (const capsule of self.capsules) {
             for (const flow of capsule.flows) {
-                const serverAttr = flow.attributes.find(a => 
+                let serverAttr = flow.attributes.find(a => 
                     a.name && a.name.startsWith('server.')
                 );
                 
                 if (serverAttr) {
-                    const method = serverAttr.name.split('.')[1].toUpperCase();
+                    let method = serverAttr.name.split('.')[1].toUpperCase();
                     diagram += "    Client->>+" + capsule.name + ": " + method + " /" + flow.name + "\n";
                     
                     // Check for entity access
                     for (const entity of self.entities.filter(e => e.isEntity)) {
-                        const flowStr = JSON.stringify(flow);
+                        let flowStr = JSON.stringify(flow);
                         if (flowStr.includes(entity.name) || flow.return_type === entity.name) {
                             diagram += "    " + capsule.name + "->>+" + entity.name + "DB: Query\n";
                             diagram += "    " + entity.name + "DB-->>-" + capsule.name + ": Results\n";
@@ -4207,7 +4714,7 @@ function GhostWriter_gen_sequence_diagram(self) {
     return diagram;
 }
 function GhostWriter_gen_call_graph(self) {
-    const diagram = "";
+    let diagram = "";
     
         diagram = "```mermaid\ngraph LR\n";
         
@@ -4239,7 +4746,7 @@ function GhostWriter_gen_call_graph(self) {
     return diagram;
 }
 function GhostWriter_generate_docs(self, project_name) {
-    const doc = "";
+    let doc = "";
     
         doc = "# " + project_name + " - Architecture Documentation\n\n";
         doc += "> Auto-generated by Omni Ghost Writer\n\n";
@@ -4277,7 +4784,7 @@ function GhostWriter_generate_docs(self, project_name) {
             doc += "### Capsule: " + capsule.name + "\n\n";
             
             for (const flow of capsule.flows) {
-                const params = (flow.params || []).map(p => 
+                let params = (flow.params || []).map(p => 
                     typeof p === 'string' ? p : (p.name + ': ' + (p.type || 'any'))
                 ).join(', ');
                 
@@ -4286,8 +4793,8 @@ function GhostWriter_generate_docs(self, project_name) {
                 // Attributes
                 for (const attr of flow.attributes) {
                     if (attr.name && attr.name.startsWith('server.')) {
-                        const method = attr.name.split('.')[1].toUpperCase();
-                        const path = attr.args && attr.args[0] ? attr.args[0] : '/' + flow.name;
+                        let method = attr.name.split('.')[1].toUpperCase();
+                        let path = attr.args && attr.args[0] ? attr.args[0] : '/' + flow.name;
                         doc += "- **Endpoint:** `" + method + " " + path + "`\n";
                     }
                 }
@@ -4305,8 +4812,8 @@ function GhostWriter_generate_docs(self, project_name) {
             doc += "|-------|------|\n";
             
             for (const field of entity.fields) {
-                const name = field.name || field;
-                const type = field.type || 'any';
+                let name = field.name || field;
+                let type = field.type || 'any';
                 doc += "| " + name + " | " + type + " |\n";
             }
             
@@ -4321,18 +4828,18 @@ function GhostWriter_generate_docs(self, project_name) {
 function cmd_graph(input_file, output_file) {
     CLI_header("Omni Ghost Writer");
     CLI_info("Analyzing: " + input_file);
-    const source = read_file(input_file);
-    const l = new_lexer(source);
-    const p = new_parser(l);
-    const program = Parser_parse_program(p);
-    const writer = GhostWriter_new();
+    let source = read_file(input_file);
+    let l = new_lexer(source);
+    let p = new_parser(l);
+    let program = Parser_parse_program(p);
+    let writer = GhostWriter_new();
     GhostWriter_analyze(writer, program);
-    const project_name = "";
+    let project_name = "";
     
         // const path = require('path'); (hoisted)
         project_name = path.basename(input_file, '.omni');
     
-    const docs = GhostWriter_generate_docs(writer, project_name);
+    let docs = GhostWriter_generate_docs(writer, project_name);
     write_file(output_file, docs);
     CLI_success("Documentation generated: " + output_file);
     
@@ -4369,7 +4876,7 @@ if (typeof exports !== 'undefined') {
 var terminal = exports;
 if (typeof global !== 'undefined') Object.assign(global, terminal);
 function get_c_runtime_header() {
-    const header = "";
+    let header = "";
     
         header = `
 // ============================================================================
@@ -4612,10 +5119,10 @@ function cmd_bootstrap() {
         // const path = require('path'); (hoisted)
         const { execSync } = require('child_process');
         
-        const omniDir = path.join(__dirname, '..');
-        const srcDir = path.join(omniDir, 'src');
-        const distDir = path.join(omniDir, 'dist');
-        const bootstrapDir = path.join(omniDir, 'bootstrap');
+        let omniDir = path.join(__dirname, '..');
+        let srcDir = path.join(omniDir, 'src');
+        let distDir = path.join(omniDir, 'dist');
+        let bootstrapDir = path.join(omniDir, 'bootstrap');
         
         // Create bootstrap directory
         if (!fs.existsSync(bootstrapDir)) {
@@ -4625,14 +5132,14 @@ function cmd_bootstrap() {
         CLI_step(1, 5, "Generating C runtime header...");
         
         // Write runtime header
-        const runtimeHeader = get_c_runtime_header();
+        let runtimeHeader = get_c_runtime_header();
         fs.writeFileSync(path.join(bootstrapDir, 'omni_runtime.h'), runtimeHeader);
         CLI_success("Created: bootstrap/omni_runtime.h");
         
         CLI_step(2, 5, "Compiling Omni sources to C...");
         
         // List of core source files (order matters)
-        const sourceFiles = [
+        let sourceFiles = [
             'core/token.omni',
             'core/ast.omni',
             'core/lexer.omni',
@@ -4647,7 +5154,7 @@ function cmd_bootstrap() {
         let combinedC = '#include "omni_runtime.h"\n\n';
         
         for (const file of sourceFiles) {
-            const fullPath = path.join(srcDir, file);
+            let fullPath = path.join(srcDir, file);
             if (fs.existsSync(fullPath)) {
                 CLI_info("Processing: " + file);
                 // In real implementation, would compile each file to C
@@ -4664,7 +5171,7 @@ function cmd_bootstrap() {
         CLI_step(3, 5, "Checking for C compiler...");
         
         let compiler = null;
-        const compilers = ['gcc', 'clang', 'cl'];
+        let compilers = ['gcc', 'clang', 'cl'];
         
         for (const cc of compilers) {
             try {
@@ -4688,13 +5195,13 @@ function cmd_bootstrap() {
         
         CLI_step(4, 5, "Compiling native binary...");
         
-        const isWindows = process.platform === 'win32';
-        const outputName = isWindows ? 'omni.exe' : 'omni';
-        const outputPath = path.join(bootstrapDir, outputName);
+        let isWindows = process.platform === 'win32';
+        let outputName = isWindows ? 'omni.exe' : 'omni';
+        let outputPath = path.join(bootstrapDir, outputName);
         
         try {
             // Note: This would fail without actual C code
-            // const compileCmd = compiler + ' -O2 -o ' + outputPath + ' ' + 
+            // let compileCmd = compiler + ' -O2 -o ' + outputPath + ' ' + 
             //                    path.join(bootstrapDir, 'omni.c');
             // execSync(compileCmd, { stdio: 'inherit' });
             
@@ -4788,19 +5295,17 @@ function AppConfig_default() {
     return new AppConfig({ name: "OmniApp", version: "1.0.0", icon: "", description: "Built with Omni", author: "Omni Developer", bundle_id: "org.omni.app" });
 }
 function detect_platform() {
-    const platform = "unknown";
+    let platform = "unknown";
     
         platform = process.platform;
     
     return platform;
 }
 function detect_build_tools() {
-    const tools = null;
-}
-
+    
         const { execSync } = require('child_process');
         
-        tools = {
+        let tools = {
             gcc: false,
             clang: false,
             cargo: false,
@@ -4809,7 +5314,7 @@ function detect_build_tools() {
             wix: false
         };
         
-        const check = (cmd) => {
+        let check = (cmd) => {
             try {
                 execSync(cmd + ' --version', { stdio: 'ignore' });
                 return true;
@@ -4834,13 +5339,15 @@ function detect_build_tools() {
         if (process.platform === 'win32') {
             tools.wix = check('candle');
         }
+
+        return tools;
     
-return tools;
-// Unknown stmt kind: undefined
+    return 0;
+}
 function generate_tauri_config(config, is_studio) {
-    const json = "";
+    let json = "";
     
-        const tauriConfig = {
+        let tauriConfig = {
             "build": {
                 "distDir": is_studio ? "../studio/dist" : "../dist",
                 "devPath": is_studio ? "http://localhost:3000" : "http://localhost:8080"
@@ -4880,9 +5387,9 @@ function generate_tauri_config(config, is_studio) {
     return json;
 }
 function generate_capacitor_config(config) {
-    const json = "";
+    let json = "";
     
-        const capConfig = {
+        let capConfig = {
             "appId": config.bundle_id,
             "appName": config.name,
             "webDir": "dist",
@@ -4906,16 +5413,16 @@ function cmd_package_app(target, config) {
     CLI_header("Omni App Packager");
     CLI_info("Target: " + target);
     CLI_info("App: " + config.name + " v" + config.version);
-    const tools = detect_build_tools();
-    const platform = detect_platform();
+    let tools = detect_build_tools();
+    let platform = detect_platform();
     
         // const fs = require('fs'); (hoisted)
         // const path = require('path'); (hoisted)
         const { execSync } = require('child_process');
         
-        const omniDir = path.join(__dirname, '..');
-        const buildDir = path.join(omniDir, 'build');
-        const distDir = path.join(omniDir, 'dist', 'app');
+        let omniDir = path.join(__dirname, '..');
+        let buildDir = path.join(omniDir, 'build');
+        let distDir = path.join(omniDir, 'dist', 'app');
         
         // Create build directories
         [buildDir, distDir].forEach(dir => {
@@ -4931,26 +5438,26 @@ function cmd_package_app(target, config) {
             CLI_step(1, 4, "Generating Windows project...");
             
             // Create Tauri project structure
-            const tauriDir = path.join(buildDir, 'tauri');
+            let tauriDir = path.join(buildDir, 'tauri');
             if (!fs.existsSync(tauriDir)) {
                 fs.mkdirSync(tauriDir, { recursive: true });
             }
             
             // Write tauri.conf.json
-            const tauriConfig = generate_tauri_config(config, true);
+            let tauriConfig = generate_tauri_config(config, true);
             fs.writeFileSync(path.join(tauriDir, 'tauri.conf.json'), tauriConfig);
             CLI_success("Generated: build/tauri/tauri.conf.json");
             
             CLI_step(2, 4, "Copying Studio UI...");
             
             // Copy Studio files
-            const studioDistDir = path.join(tauriDir, 'studio', 'dist');
+            let studioDistDir = path.join(tauriDir, 'studio', 'dist');
             if (!fs.existsSync(studioDistDir)) {
                 fs.mkdirSync(studioDistDir, { recursive: true });
             }
             
             // Generate minimal index.html that loads Studio
-            const indexHtml = `<!DOCTYPE html>
+            let indexHtml = `<!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"><title>${config.name}</title></head>
 <body>
@@ -4993,18 +5500,18 @@ function cmd_package_app(target, config) {
         if (target === 'android' || target === 'apk') {
             CLI_step(1, 5, "Generating Capacitor project...");
             
-            const capDir = path.join(buildDir, 'capacitor');
+            let capDir = path.join(buildDir, 'capacitor');
             if (!fs.existsSync(capDir)) {
                 fs.mkdirSync(capDir, { recursive: true });
             }
             
             // Write capacitor.config.json
-            const capConfig = generate_capacitor_config(config);
+            let capConfig = generate_capacitor_config(config);
             fs.writeFileSync(path.join(capDir, 'capacitor.config.json'), capConfig);
             CLI_success("Generated: build/capacitor/capacitor.config.json");
             
             // Create package.json
-            const packageJson = {
+            let packageJson = {
                 "name": config.bundle_id.replace(/\./g, '-'),
                 "version": config.version,
                 "scripts": {
@@ -5023,13 +5530,13 @@ function cmd_package_app(target, config) {
             
             CLI_step(2, 5, "Creating dist folder...");
             
-            const distFolder = path.join(capDir, 'dist');
+            let distFolder = path.join(capDir, 'dist');
             if (!fs.existsSync(distFolder)) {
                 fs.mkdirSync(distFolder, { recursive: true });
             }
             
             // Create minimal index.html
-            const indexHtml = `<!DOCTYPE html>
+            let indexHtml = `<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -5100,13 +5607,13 @@ function cmd_package_app(target, config) {
         if (target === 'linux' || target === 'appimage') {
             CLI_step(1, 3, "Generating Linux project...");
             
-            const linuxDir = path.join(buildDir, 'linux');
+            let linuxDir = path.join(buildDir, 'linux');
             if (!fs.existsSync(linuxDir)) {
                 fs.mkdirSync(linuxDir, { recursive: true });
             }
             
             // Write desktop file
-            const desktopEntry = `[Desktop Entry]
+            let desktopEntry = `[Desktop Entry]
 Name=${config.name}
 Comment=${config.description}
 Exec=omni
@@ -5117,7 +5624,7 @@ Categories=Development;IDE;
             fs.writeFileSync(path.join(linuxDir, config.name + '.desktop'), desktopEntry);
             
             // Write AppImage recipe
-            const appImageYml = `app: ${config.name}
+            let appImageYml = `app: ${config.name}
 ingredients:
   dist: omni-installer
   script:
@@ -5216,8 +5723,8 @@ function tui_show_cursor() {
 }
 function tui_render_header(title, subtitle) {
     
-        const width = process.stdout.columns || 80;
-        const line = 'â•'.repeat(width - 2);
+        let width = process.stdout.columns || 80;
+        let line = 'â•'.repeat(width - 2);
         
         console.log(CLI_COLORS.cyan + 'â•”' + line + 'â•—' + CLI_COLORS.reset);
         console.log(CLI_COLORS.cyan + 'â•‘' + CLI_COLORS.reset + 
@@ -5232,10 +5739,10 @@ function tui_render_header(title, subtitle) {
 function tui_render_menu(state) {
     
         for (let i = 0; i < state.items.length; i++) {
-            const item = state.items[i];
-            const selected = i === state.cursor;
-            const prefix = selected ? CLI_COLORS.cyan + ' â–¶ ' : '   ';
-            const suffix = CLI_COLORS.reset;
+            let item = state.items[i];
+            let selected = i === state.cursor;
+            let prefix = selected ? CLI_COLORS.cyan + ' â–¶ ' : '   ';
+            let suffix = CLI_COLORS.reset;
             
             if (selected) {
                 console.log(prefix + CLI_COLORS.bold + item.label + suffix);
@@ -5247,8 +5754,8 @@ function tui_render_menu(state) {
 }
 function tui_render_footer(state) {
     
-        const width = process.stdout.columns || 80;
-        const line = 'â”€'.repeat(width - 2);
+        let width = process.stdout.columns || 80;
+        let line = 'â”€'.repeat(width - 2);
         
         console.log('');
         console.log(CLI_COLORS.dim + 'â”Œ' + line + 'â”' + CLI_COLORS.reset);
@@ -5271,12 +5778,12 @@ function tui_render_file_list(state) {
         console.log('');
         
         for (let i = 0; i < state.items.length; i++) {
-            const item = state.items[i];
-            const isSelected = state.selected.includes(i);
-            const isCursor = i === state.cursor;
+            let item = state.items[i];
+            let isSelected = state.selected.includes(i);
+            let isCursor = i === state.cursor;
             
-            const checkbox = isSelected ? CLI_COLORS.green + '[âœ“]' : CLI_COLORS.dim + '[ ]';
-            const prefix = isCursor ? CLI_COLORS.cyan + ' â–¶ ' : '   ';
+            let checkbox = isSelected ? CLI_COLORS.green + '[âœ“]' : CLI_COLORS.dim + '[ ]';
+            let prefix = isCursor ? CLI_COLORS.cyan + ' â–¶ ' : '   ';
             
             console.log(prefix + checkbox + CLI_COLORS.reset + ' ' + 
                         (isCursor ? CLI_COLORS.bold : CLI_COLORS.dim) + 
@@ -5291,11 +5798,11 @@ function tui_render_target_select(state) {
         console.log('');
         
         for (let i = 0; i < state.items.length; i++) {
-            const item = state.items[i];
-            const isCursor = i === state.cursor;
+            let item = state.items[i];
+            let isCursor = i === state.cursor;
             
-            const prefix = isCursor ? CLI_COLORS.cyan + ' â–¶ ' : '   ';
-            const icon = item.icon || 'ðŸŽ¯';
+            let prefix = isCursor ? CLI_COLORS.cyan + ' â–¶ ' : '   ';
+            let icon = item.icon || 'ðŸŽ¯';
             
             console.log(prefix + icon + ' ' + 
                         (isCursor ? CLI_COLORS.bold : '') + 
@@ -5314,20 +5821,20 @@ function tui_target_menu() {
     return [null, id, null, "js", label, null, "JavaScript (Node.js)", icon, null, "ðŸŸ¨", description, null, "CommonJS module", null, null, id, null, "python", label, null, "Python 3", icon, null, "ðŸ", description, null, "Python 3.8+ compatible", null, null, id, null, "c", label, null, "C Native", icon, null, "âš¡", description, null, "Portable C99 code", null, null, id, null, "lua", label, null, "Lua 5.4", icon, null, "ðŸŒ™", description, null, "Lua script", null, null, id, null, "wasm", label, null, "WebAssembly", icon, null, "ðŸ•¸ï¸", description, null, "WASM binary", null, null, id, null, "back", label, null, "â† Back", icon, null, "â—€ï¸", description, null, "", null];
 }
 function tui_scan_legacy_files(dir) {
-    const files = [];
+    let files = [];
     
         // const fs = require('fs'); (hoisted)
         // const path = require('path'); (hoisted)
         
-        const extensions = ['.php', '.java', '.py', '.js', '.ts'];
+        let extensions = ['.php', '.java', '.py', '.js', '.ts'];
         
-        const scan = (d) => {
+        let scan = (d) => {
             try {
-                const entries = fs.readdirSync(d, { withFileTypes: true });
+                let entries = fs.readdirSync(d, { withFileTypes: true });
                 for (const entry of entries) {
                     if (entry.name.startsWith('.') || entry.name === 'node_modules') continue;
                     
-                    const fullPath = path.join(d, entry.name);
+                    let fullPath = path.join(d, entry.name);
                     
                     if (entry.isDirectory()) {
                         scan(fullPath);
@@ -5349,7 +5856,7 @@ function tui_scan_legacy_files(dir) {
     return files;
 }
 function cmd_tui() {
-    const state = TUIState_new();
+    let state = TUIState_new();
     
         state.items = tui_main_menu();
     
@@ -5358,7 +5865,7 @@ function cmd_tui() {
     
         const readline = require('readline');
         
-        const render = () => {
+        let render = () => {
             tui_clear_screen();
             tui_render_header('INTERACTIVE', 'v1.1.0 - Use arrow keys to navigate');
             
@@ -5373,7 +5880,7 @@ function cmd_tui() {
             tui_render_footer(state);
         };
         
-        const handleAction = (action) => {
+        let handleAction = (action) => {
             if (action === 'convert') {
                 state.screen = 'files';
                 state.items = tui_scan_legacy_files(process.cwd());
@@ -5418,7 +5925,7 @@ function cmd_tui() {
                 state.items = tui_main_menu();
                 state.cursor = 0;
             } else if (action.startsWith('target:')) {
-                const target = action.split(':')[1];
+                let target = action.split(':')[1];
                 tui_show_cursor();
                 tui_disable_raw_mode();
                 console.log('\nConverting ' + state.selected.length + ' files to ' + target + '...');
@@ -5434,14 +5941,14 @@ function cmd_tui() {
             } else if (key === '\u001B[B') { // Down arrow
                 state.cursor = Math.min(state.items.length - 1, state.cursor + 1);
             } else if (key === ' ' && state.screen === 'files') { // Space - toggle select
-                const idx = state.selected.indexOf(state.cursor);
+                let idx = state.selected.indexOf(state.cursor);
                 if (idx >= 0) {
                     state.selected.splice(idx, 1);
                 } else {
                     state.selected.push(state.cursor);
                 }
             } else if (key === '\r' || key === '\n') { // Enter
-                const item = state.items[state.cursor];
+                let item = state.items[state.cursor];
                 if (state.screen === 'main') {
                     handleAction(item.id);
                 } else if (state.screen === 'files') {
@@ -5529,7 +6036,7 @@ class ProjectInfo {
     }
 }
 function detect_project(dir) {
-    const info = new ProjectInfo({ name: "", type: "unknown", config_file: "", run_command: "", build_command: "", dev_command: "" });
+    let info = new ProjectInfo({ name: "", type: "unknown", config_file: "", run_command: "", build_command: "", dev_command: "" });
     
         // const fs = require('fs'); (hoisted)
         // const path = require('path'); (hoisted)
@@ -5537,7 +6044,7 @@ function detect_project(dir) {
         info.name = path.basename(dir);
         
         // Detection order (most specific first)
-        const detectors = [
+        let detectors = [
             {
                 file: 'omni.config.json',
                 type: 'omni',
@@ -5611,7 +6118,7 @@ function detect_project(dir) {
         ];
         
         for (const detector of detectors) {
-            const configPath = path.join(dir, detector.file);
+            let configPath = path.join(dir, detector.file);
             if (fs.existsSync(configPath)) {
                 info.type = detector.type;
                 info.config_file = detector.file;
@@ -5652,7 +6159,7 @@ function CrossRunner_new() {
 // Unknown stmt kind: undefined
 // Unknown stmt kind: undefined
 function CrossRunner_run(self, name, command, cwd) {
-    const success = true;
+    let success = true;
     
         const { spawn } = require('child_process');
         // const path = require('path'); (hoisted)
@@ -5660,12 +6167,12 @@ function CrossRunner_run(self, name, command, cwd) {
         console.log(CLI_COLORS.cyan + "[runner] " + CLI_COLORS.reset + "Starting: " + command);
         
         // Parse command
-        const parts = command.split(' ');
-        const cmd = parts[0];
-        const args = parts.slice(1);
+        let parts = command.split(' ');
+        let cmd = parts[0];
+        let args = parts.slice(1);
         
         // Spawn process
-        const proc = spawn(cmd, args, {
+        let proc = spawn(cmd, args, {
             cwd: cwd,
             shell: true,
             stdio: ['inherit', 'pipe', 'pipe']
@@ -5675,13 +6182,13 @@ function CrossRunner_run(self, name, command, cwd) {
         self.output_buffer[name] = [];
         
         proc.stdout.on('data', (data) => {
-            const line = data.toString();
+            let line = data.toString();
             self.output_buffer[name].push(line);
             process.stdout.write(CLI_COLORS.dim + "[" + name + "] " + CLI_COLORS.reset + line);
         });
         
         proc.stderr.on('data', (data) => {
-            const line = data.toString();
+            let line = data.toString();
             self.output_buffer[name].push(line);
             process.stderr.write(CLI_COLORS.red + "[" + name + "] " + CLI_COLORS.reset + line);
         });
@@ -5700,7 +6207,7 @@ function CrossRunner_run(self, name, command, cwd) {
 }
 function CrossRunner_stop(self, name) {
     
-        const proc = self.processes[name];
+        let proc = self.processes[name];
         if (proc) {
             proc.kill('SIGTERM');
             console.log(CLI_COLORS.yellow + "[runner] " + CLI_COLORS.reset + "Stopped: " + name);
@@ -5759,7 +6266,7 @@ function GraphState_new() {
 }
 // Unknown stmt kind: undefined
 function GraphState_from_ast(program) {
-    const state = GraphState_new();
+    let state = GraphState_new();
     
         if (!program || !program.statements) return;
         
@@ -5767,7 +6274,7 @@ function GraphState_from_ast(program) {
         let y = 50;
         
         for (const stmt of program.statements) {
-            const node = {
+            let node = {
                 id: 'node_' + (++nodeId),
                 type: 'unknown',
                 name: stmt.name || 'anonymous',
@@ -5835,7 +6342,7 @@ function GraphState_from_ast(program) {
     return state;
 }
 function GraphState_to_json(self) {
-    const json = "";
+    let json = "";
     
         json = JSON.stringify({
             nodes: self.nodes,
@@ -5862,7 +6369,7 @@ if (typeof exports !== 'undefined') {
 var server = exports;
 if (typeof global !== 'undefined') Object.assign(global, server);
 function generate_studio_html(server) {
-    const html = "";
+    let html = "";
     
         html = `<!DOCTYPE html>
 <html lang="en">
@@ -6215,18 +6722,18 @@ function generate_studio_html(server) {
         
         // Load initial graph
         async function loadGraph() {
-            const res = await fetch('/api/graph');
-            const graph = await res.json();
+            let res = await fetch('/api/graph');
+            let graph = await res.json();
             nodes = graph.nodes || [];
             renderNodes();
         }
         
         function renderNodes() {
-            const canvas = document.getElementById('canvas');
+            let canvas = document.getElementById('canvas');
             canvas.innerHTML = '';
             
             for (const node of nodes) {
-                const el = document.createElement('div');
+                let el = document.createElement('div');
                 el.className = 'vnode ' + node.type;
                 el.dataset.id = node.id;
                 el.style.left = (node.position?.x || 100) + 'px';
@@ -6304,7 +6811,7 @@ function StudioServer_start(self, dir) {
         // const fs = require('fs'); (hoisted)
         // const path = require('path'); (hoisted)
         
-        const server = http.createServer((req, res) => {
+        let server = http.createServer((req, res) => {
             // API Routes
             if (req.url === '/api/project') {
                 res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -6322,7 +6829,7 @@ function StudioServer_start(self, dir) {
                 // Warning: PackageRegistry_new might need import or be available
                 // Assuming it's available via global context or we need to import it here.
                 // For now, let's assume it's imported in facade or globally available.
-                const registry = PackageRegistry_new();
+                let registry = PackageRegistry_new();
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify(registry.packages));
                 return;
@@ -6434,10 +6941,10 @@ if (typeof global !== 'undefined') Object.assign(global, ast);
 var graph_types = exports;
 if (typeof global !== 'undefined') Object.assign(global, graph_types);
 
-    const { VisualGraph_new, VisualGraph } = graph_types;
+    var { VisualGraph_new, VisualGraph: VisualGraph_Class } = graph_types;
 
 function ast_to_graph(program) {
-    const graph = VisualGraph_new();
+    let graph = VisualGraph_new();
     
         if (!program || !program.statements) {
             console.error("[graph] Invalid program AST");
@@ -6449,12 +6956,12 @@ function ast_to_graph(program) {
         let nodeId = 0;
         let edgeId = 0;
         let y = 50;
-        const NODE_HEIGHT = 80;
-        const NODE_WIDTH = 200;
-        const CAPSULE_PADDING = 40;
+        let NODE_HEIGHT = 80;
+        let NODE_WIDTH = 200;
+        let CAPSULE_PADDING = 40;
         
         // Helper to create node
-        const createNode = (type, name, x, y, astKind, astLine, parentId = null) => {
+        let createNode = (type, name, x, y, astKind, astLine, parentId = null) => {
             return {
                 id: 'node_' + (++nodeId),
                 type: type,
@@ -6474,7 +6981,7 @@ function ast_to_graph(program) {
         };
         
         // Helper to create edge
-        const createEdge = (srcNode, srcPort, tgtNode, tgtPort, type) => {
+        let createEdge = (srcNode, srcPort, tgtNode, tgtPort, type) => {
             return {
                 id: 'edge_' + (++edgeId),
                 source_node: srcNode,
@@ -6489,7 +6996,7 @@ function ast_to_graph(program) {
         for (const stmt of program.statements) {
             // Import
             if (stmt.kind === 10) { // NODE_IMPORT
-                const node = createNode('import', stmt.path || stmt.value, 50, y, 10, stmt.line);
+                let node = createNode('import', stmt.path || stmt.value, 50, y, 10, stmt.line);
                 node.width = 150;
                 node.height = 40;
                 graph.nodes.push(node);
@@ -6499,13 +7006,13 @@ function ast_to_graph(program) {
             
             // Struct / Entity
             if (stmt.kind === 70) { // NODE_STRUCT
-                const isEntity = (stmt.attributes || []).some(a => a.name === 'entity');
-                const node = createNode(isEntity ? 'entity' : 'struct', stmt.name, 400, y, 70, stmt.line);
+                let isEntity = (stmt.attributes || []).some(a => a.name === 'entity');
+                let node = createNode(isEntity ? 'entity' : 'struct', stmt.name, 400, y, 70, stmt.line);
                 
                 // Add fields as ports
                 for (const field of (stmt.fields || [])) {
-                    const fieldName = typeof field === 'string' ? field : field.name;
-                    const fieldType = typeof field === 'object' ? field.type : 'any';
+                    let fieldName = typeof field === 'string' ? field : field.name;
+                    let fieldType = typeof field === 'object' ? field.type : 'any';
                     node.ports_out.push({
                         id: 'port_' + (++nodeId),
                         name: fieldName,
@@ -6522,21 +7029,21 @@ function ast_to_graph(program) {
             
             // Capsule
             if (stmt.kind === 93) { // NODE_CAPSULE
-                const capsuleNode = createNode('capsule', stmt.name, 50, y, 93, stmt.line);
+                let capsuleNode = createNode('capsule', stmt.name, 50, y, 93, stmt.line);
                 capsuleNode.width = 350;
                 
                 let innerY = y + CAPSULE_PADDING;
-                const flowNodes = [];
+                let flowNodes = [];
                 
                 // Process flows inside capsule
                 for (const flow of (stmt.flows || [])) {
-                    const flowNode = createNode('flow', flow.name, 70, innerY, 94, flow.line, capsuleNode.id);
+                    let flowNode = createNode('flow', flow.name, 70, innerY, 94, flow.line, capsuleNode.id);
                     flowNode.width = 280;
                     
                     // Input ports (params)
                     for (const param of (flow.params || [])) {
-                        const paramName = typeof param === 'string' ? param : param.name;
-                        const paramType = typeof param === 'object' ? param.type : 'any';
+                        let paramName = typeof param === 'string' ? param : param.name;
+                        let paramType = typeof param === 'object' ? param.type : 'any';
                         flowNode.ports_in.push({
                             id: 'port_' + (++nodeId),
                             name: paramName,
@@ -6565,7 +7072,7 @@ function ast_to_graph(program) {
                 
                 // Create execution edges between flows
                 for (let i = 0; i < flowNodes.length - 1; i++) {
-                    const edge = createEdge(
+                    let edge = createEdge(
                         flowNodes[i].id, 'exec_out',
                         flowNodes[i + 1].id, 'exec_in',
                         'execution'
@@ -6579,12 +7086,12 @@ function ast_to_graph(program) {
             
             // Function
             if (stmt.kind === 4) { // NODE_FUNCTION
-                const node = createNode('function', stmt.name, 50, y, 4, stmt.line);
+                let node = createNode('function', stmt.name, 50, y, 4, stmt.line);
                 
                 // Input ports (params)
                 for (const param of (stmt.params || [])) {
-                    const paramName = typeof param === 'string' ? param : param.name;
-                    const paramType = typeof param === 'object' ? param.type : 'any';
+                    let paramName = typeof param === 'string' ? param : param.name;
+                    let paramType = typeof param === 'object' ? param.type : 'any';
                     node.ports_in.push({
                         id: 'port_' + (++nodeId),
                         name: paramName,
@@ -6613,7 +7120,7 @@ function new_map() {
     return 0;
 }
 function graph_to_ast(graph) {
-    const program = new_map();
+    let program = new_map();
     
         program = {
             kind: 1, // NODE_PROGRAM
@@ -6621,10 +7128,10 @@ function graph_to_ast(graph) {
         };
         
         // Sort nodes by y position for correct order
-        const sortedNodes = [...graph.nodes].sort((a, b) => a.y - b.y);
+        let sortedNodes = [...graph.nodes].sort((a, b) => a.y - b.y);
         
         // Group child nodes by parent
-        const childrenMap = {};
+        let childrenMap = {};
         for (const node of sortedNodes) {
             if (node.parent_id) {
                 if (!childrenMap[node.parent_id]) {
@@ -6650,7 +7157,7 @@ function graph_to_ast(graph) {
             
             // Struct / Entity
             if (node.type === 'struct' || node.type === 'entity') {
-                const stmt = {
+                let stmt = {
                     kind: 70,
                     name: node.name,
                     fields: node.ports_out.map(p => ({ name: p.name, type: p.type })),
@@ -6663,7 +7170,7 @@ function graph_to_ast(graph) {
             
             // Capsule
             if (node.type === 'capsule') {
-                const flows = (childrenMap[node.id] || [])
+                let flows = (childrenMap[node.id] || [])
                     .filter(n => n.type === 'flow')
                     .sort((a, b) => a.y - b.y)
                     .map(flowNode => ({
@@ -6703,18 +7210,18 @@ function graph_to_ast(graph) {
     return program;
 }
 function graph_to_code(graph) {
-    const code = "";
+    let code = "";
     
-        const lines = [];
+        let lines = [];
         lines.push("// Generated by Omni Studio Visual Editor");
         lines.push("// " + new Date().toISOString());
         lines.push("");
         
         // Sort nodes by y position
-        const sortedNodes = [...graph.nodes].sort((a, b) => a.y - b.y);
+        let sortedNodes = [...graph.nodes].sort((a, b) => a.y - b.y);
         
         // Group children by parent
-        const childrenMap = {};
+        let childrenMap = {};
         for (const node of sortedNodes) {
             if (node.parent_id) {
                 if (!childrenMap[node.parent_id]) {
@@ -6756,7 +7263,7 @@ function graph_to_code(graph) {
             if (node.type === 'capsule') {
                 lines.push(`capsule ${node.name} {`);
                 
-                const children = (childrenMap[node.id] || []).sort((a, b) => a.y - b.y);
+                let children = (childrenMap[node.id] || []).sort((a, b) => a.y - b.y);
                 for (const child of children) {
                     if (child.type === 'flow') {
                         // Position comment
@@ -6765,15 +7272,15 @@ function graph_to_code(graph) {
                         // Attributes
                         for (const attr of (child.attributes || [])) {
                             if (attr.name) {
-                                const args = (attr.args || []).map(a => `"${a}"`).join(', ');
+                                let args = (attr.args || []).map(a => `"${a}"`).join(', ');
                                 lines.push(`    @${attr.name}${args ? '(' + args + ')' : ''}`);
                             }
                         }
                         
                         // Flow signature
-                        const params = child.ports_in.map(p => `${p.name}: ${p.type}`).join(', ');
-                        const returnType = child.ports_out[0]?.type || 'void';
-                        const returnStr = returnType !== 'void' ? ` -> ${returnType}` : '';
+                        let params = child.ports_in.map(p => `${p.name}: ${p.type}`).join(', ');
+                        let returnType = child.ports_out[0]?.type || 'void';
+                        let returnStr = returnType !== 'void' ? ` -> ${returnType}` : '';
                         
                         lines.push(`    flow ${child.name}(${params})${returnStr} {`);
                         lines.push(`        // TODO: Implement`);
@@ -6789,9 +7296,9 @@ function graph_to_code(graph) {
             
             // Function
             if (node.type === 'function') {
-                const params = node.ports_in.map(p => `${p.name}: ${p.type}`).join(', ');
-                const returnType = node.ports_out[0]?.type || 'void';
-                const returnStr = returnType !== 'void' ? ` -> ${returnType}` : '';
+                let params = node.ports_in.map(p => `${p.name}: ${p.type}`).join(', ');
+                let returnType = node.ports_out[0]?.type || 'void';
+                let returnStr = returnType !== 'void' ? ` -> ${returnType}` : '';
                 
                 lines.push(`fn ${node.name}(${params})${returnStr} {`);
                 lines.push(`    // TODO: Implement`);
@@ -6806,7 +7313,7 @@ function graph_to_code(graph) {
     return code;
 }
 function code_to_graph(source, program) {
-    const graph = VisualGraph_new();
+    let graph = VisualGraph_new();
     
         if (!program || !program.statements) {
             console.error("[graph] Invalid program AST");
@@ -6814,20 +7321,20 @@ function code_to_graph(source, program) {
         }
         
         // Parse @visual:position comments from source
-        const positionMap = {};
-        const lines = source.split('\n');
+        let positionMap = {};
+        let lines = source.split('\n');
         
         for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
-            const match = line.match(new RegExp("@visual:position\\((\\d+),\\s*(\\d+)\\)"));
+            let line = lines[i];
+            let match = line.match(new RegExp("@visual:position\\((\\d+),\\s*(\\d+)\\)"));
             if (match) {
                 // Position applies to next non-comment line
-                const x = parseInt(match[1]);
-                const y = parseInt(match[2]);
+                let x = parseInt(match[1]);
+                let y = parseInt(match[2]);
                 
                 // Find next statement line
                 for (let j = i + 1; j < lines.length; j++) {
-                    const nextLine = lines[j].trim();
+                    let nextLine = lines[j].trim();
                     if (nextLine && !nextLine.startsWith('//') && !nextLine.startsWith('@')) {
                         positionMap[j + 1] = { x, y }; // 1-indexed
                         break;
@@ -6842,10 +7349,10 @@ function code_to_graph(source, program) {
         let nodeId = 0;
         let edgeId = 0;
         let defaultY = 50;
-        const NODE_HEIGHT = 80;
-        const NODE_WIDTH = 200;
+        let NODE_HEIGHT = 80;
+        let NODE_WIDTH = 200;
         
-        const createNode = (type, name, x, y, astKind, astLine, parentId = null) => {
+        let createNode = (type, name, x, y, astKind, astLine, parentId = null) => {
             return {
                 id: 'node_' + (++nodeId),
                 type: type,
@@ -6866,13 +7373,13 @@ function code_to_graph(source, program) {
         
         for (const stmt of program.statements) {
             // Get saved position or use default
-            const savedPos = positionMap[stmt.line];
-            const x = savedPos ? savedPos.x : 50;
-            const y = savedPos ? savedPos.y : defaultY;
+            let savedPos = positionMap[stmt.line];
+            let x = savedPos ? savedPos.x : 50;
+            let y = savedPos ? savedPos.y : defaultY;
             
             // Import
             if (stmt.kind === 10) {
-                const node = createNode('import', stmt.path || stmt.value, x, y, 10, stmt.line);
+                let node = createNode('import', stmt.path || stmt.value, x, y, 10, stmt.line);
                 node.width = 150;
                 node.height = 40;
                 graph.nodes.push(node);
@@ -6882,12 +7389,12 @@ function code_to_graph(source, program) {
             
             // Struct / Entity
             if (stmt.kind === 70) {
-                const isEntity = (stmt.attributes || []).some(a => a.name === 'entity');
-                const node = createNode(isEntity ? 'entity' : 'struct', stmt.name, x, y, 70, stmt.line);
+                let isEntity = (stmt.attributes || []).some(a => a.name === 'entity');
+                let node = createNode(isEntity ? 'entity' : 'struct', stmt.name, x, y, 70, stmt.line);
                 
                 for (const field of (stmt.fields || [])) {
-                    const fieldName = typeof field === 'string' ? field : field.name;
-                    const fieldType = typeof field === 'object' ? field.type : 'any';
+                    let fieldName = typeof field === 'string' ? field : field.name;
+                    let fieldType = typeof field === 'object' ? field.type : 'any';
                     node.ports_out.push({
                         id: 'port_' + (++nodeId),
                         name: fieldName,
@@ -6904,22 +7411,22 @@ function code_to_graph(source, program) {
             
             // Capsule
             if (stmt.kind === 93) {
-                const capsuleNode = createNode('capsule', stmt.name, x, y, 93, stmt.line);
+                let capsuleNode = createNode('capsule', stmt.name, x, y, 93, stmt.line);
                 capsuleNode.width = 350;
                 
                 let innerY = y + 40;
                 
                 for (const flow of (stmt.flows || [])) {
-                    const flowPos = positionMap[flow.line];
-                    const fx = flowPos ? flowPos.x : x + 20;
-                    const fy = flowPos ? flowPos.y : innerY;
+                    let flowPos = positionMap[flow.line];
+                    let fx = flowPos ? flowPos.x : x + 20;
+                    let fy = flowPos ? flowPos.y : innerY;
                     
-                    const flowNode = createNode('flow', flow.name, fx, fy, 94, flow.line, capsuleNode.id);
+                    let flowNode = createNode('flow', flow.name, fx, fy, 94, flow.line, capsuleNode.id);
                     flowNode.width = 280;
                     
                     for (const param of (flow.params || [])) {
-                        const paramName = typeof param === 'string' ? param : param.name;
-                        const paramType = typeof param === 'object' ? param.type : 'any';
+                        let paramName = typeof param === 'string' ? param : param.name;
+                        let paramType = typeof param === 'object' ? param.type : 'any';
                         flowNode.ports_in.push({
                             id: 'port_' + (++nodeId),
                             name: paramName,
@@ -6948,11 +7455,11 @@ function code_to_graph(source, program) {
             
             // Function
             if (stmt.kind === 4) {
-                const node = createNode('function', stmt.name, x, y, 4, stmt.line);
+                let node = createNode('function', stmt.name, x, y, 4, stmt.line);
                 
                 for (const param of (stmt.params || [])) {
-                    const paramName = typeof param === 'string' ? param : param.name;
-                    const paramType = typeof param === 'object' ? param.type : 'any';
+                    let paramName = typeof param === 'string' ? param : param.name;
+                    let paramType = typeof param === 'object' ? param.type : 'any';
                     node.ports_in.push({
                         id: 'port_' + (++nodeId),
                         name: paramName,
@@ -6991,20 +7498,20 @@ if (typeof exports !== 'undefined') {
 var graph_types = exports;
 if (typeof global !== 'undefined') Object.assign(global, graph_types);
 
-    const { VisualGraph_new } = graph_types;
+    var { VisualGraph_new } = graph_types;
 
 function graph_to_json(graph) {
-    const json = "";
+    let json = "";
     
         json = JSON.stringify(graph, null, 2);
     
     return json;
 }
 function json_to_graph(json) {
-    const graph = VisualGraph_new();
+    let graph = VisualGraph_new();
     
         try {
-            const parsed = JSON.parse(json);
+            let parsed = JSON.parse(json);
             graph.nodes = parsed.nodes || [];
             graph.edges = parsed.edges || [];
             graph.viewport = parsed.viewport || { x: 0, y: 0, zoom: 1.0 };
@@ -7016,31 +7523,31 @@ function json_to_graph(json) {
     return graph;
 }
 function get_installed_package_nodes() {
-    const nodes = [];
+    let nodes = [];
     
         // const fs = require('fs'); (hoisted)
         // const path = require('path'); (hoisted)
         
-        const packagesDir = path.join(process.cwd(), 'packages');
+        let packagesDir = path.join(process.cwd(), 'packages');
         if (!fs.existsSync(packagesDir)) {
             return;
         }
         
-        const scanDir = (dir, pkgName = '') => {
-            const entries = fs.readdirSync(dir, { withFileTypes: true });
+        let scanDir = (dir, pkgName = '') => {
+            let entries = fs.readdirSync(dir, { withFileTypes: true });
             
             for (const entry of entries) {
-                const fullPath = path.join(dir, entry.name);
+                let fullPath = path.join(dir, entry.name);
                 
                 if (entry.isDirectory() && !entry.name.startsWith('.')) {
-                    const newPkgName = pkgName ? pkgName + '/' + entry.name : entry.name;
+                    let newPkgName = pkgName ? pkgName + '/' + entry.name : entry.name;
                     scanDir(fullPath, newPkgName);
                 } else if (entry.name.endsWith('.omni')) {
                     try {
-                        const source = fs.readFileSync(fullPath, 'utf-8');
+                        let source = fs.readFileSync(fullPath, 'utf-8');
                         
                         // Simple regex to find capsules and functions
-                        const capsuleMatches = source.matchAll(new RegExp("capsule\\s+(\\w+)\\s*\\{", "g")); // }
+                        let capsuleMatches = source.matchAll(new RegExp("capsule\\s+(\\w+)\\s*\\{", "g")); // }
                         for (const match of capsuleMatches) {
                             nodes.push({
                                 type: 'package_capsule',
@@ -7051,7 +7558,7 @@ function get_installed_package_nodes() {
                             });
                         }
                         
-                        const fnMatches = source.matchAll(new RegExp("fn\\s+(\\w+)\\s*\\(", "g"));
+                        let fnMatches = source.matchAll(new RegExp("fn\\s+(\\w+)\\s*\\(", "g"));
                         for (const match of fnMatches) {
                             // Skip private functions (starting with _)
                             if (!match[1].startsWith('_')) {
@@ -7089,11 +7596,11 @@ if (typeof exports !== 'undefined') {
 var graph_types = exports;
 if (typeof global !== 'undefined') Object.assign(global, graph_types);
 function graph_add_node(graph, node_type, name, x, y) {
-    const new_id = "";
+    let new_id = "";
     
         new_id = 'node_' + Date.now();
         
-        const node = {
+        let node = {
             id: new_id,
             type: node_type,
             name: name,
@@ -7135,10 +7642,10 @@ function graph_remove_node(graph, node_id) {
 }
 function graph_move_node(graph, node_id, x, y) {
     
-        const node = graph.nodes.find(n => n.id === node_id);
+        let node = graph.nodes.find(n => n.id === node_id);
         if (node) {
-            const dx = x - node.x;
-            const dy = y - node.y;
+            let dx = x - node.x;
+            let dy = y - node.y;
             node.x = x;
             node.y = y;
             
@@ -7153,7 +7660,7 @@ function graph_move_node(graph, node_id, x, y) {
     
 }
 function graph_add_edge(graph, src_node, src_port, tgt_node, tgt_port) {
-    const new_id = "";
+    let new_id = "";
     
         new_id = 'edge_' + Date.now();
         
@@ -7434,20 +7941,12 @@ var impl_lua = exports;
 if (typeof global !== 'undefined') Object.assign(global, impl_lua);
 var terminal = exports;
 if (typeof global !== 'undefined') Object.assign(global, terminal);
-
-    const { ContractRegistry } = types;
-    const { register_std_interfaces } = interfaces;
-    const { register_js_impl } = impl_js;
-    const { register_python_impl } = impl_python;
-    const { register_cnative_impl } = impl_cnative;
-    const { register_lua_impl } = impl_lua;
-
 function new_map() {
      return {}; 
     return 0;
 }
 function ContractRegistry_new() {
-    const registry = new ContractRegistry({ interfaces: new_map(), implementations: new_map(), active_target: "js" });
+    let registry = new ContractRegistry({ interfaces: new_map(), implementations: new_map(), active_target: "js" });
     register_std_interfaces(registry);
     register_js_impl(registry);
     register_python_impl(registry);
@@ -7462,9 +7961,9 @@ function ContractRegistry_set_target(self, target) {
     
 }
 function ContractRegistry_resolve(self, contract_path, args) {
-    const result = "";
+    let result = "";
     
-        const impl = self.implementations[self.active_target];
+        let impl = self.implementations[self.active_target];
         if (!impl) {
             result = "/* UNKNOWN TARGET: " + self.active_target + " */";
             return;
@@ -7496,7 +7995,7 @@ function ContractRegistry_list_interfaces(self) {
         console.log("├─────────────────────────────────────────────────────────────┤");
         
         for (const [name, iface] of Object.entries(self.interfaces)) {
-            const methodCount = Object.keys(iface.methods).length;
+            let methodCount = Object.keys(iface.methods).length;
             console.log("│ " + name.padEnd(20) + " │ " + 
                         iface.category.padEnd(10) + " │ " +
                         (methodCount + " methods").padEnd(15) + " │");
@@ -7506,10 +8005,10 @@ function ContractRegistry_list_interfaces(self) {
     
 }
 function ContractRegistry_verify_target(self, target) {
-    const is_complete = true;
-    const missing = 0;
+    let is_complete = true;
+    let missing = 0;
     
-        const impl = self.implementations[target];
+        let impl = self.implementations[target];
         if (!impl) {
             terminal.CLI_error("Target '" + target + "' has no implementations");
             is_complete = false;
@@ -7519,7 +8018,7 @@ function ContractRegistry_verify_target(self, target) {
         // Check all interfaces
         for (const [ifaceName, iface] of Object.entries(self.interfaces)) {
             for (const methodName of Object.keys(iface.methods)) {
-                const contractPath = ifaceName + '.' + methodName;
+                let contractPath = ifaceName + '.' + methodName;
                 if (!impl[contractPath]) {
                     missing++;
                 }
@@ -7533,7 +8032,7 @@ function ContractRegistry_verify_target(self, target) {
     
     return is_complete;
 }
-const GLOBAL_CONTRACTS = ContractRegistry_new();
+let GLOBAL_CONTRACTS = ContractRegistry_new();
 
 
 // Auto-exports
@@ -7593,10 +8092,10 @@ function register_js_impl(registry) {
             'std.gui.canvas_draw_text': '{0}.getContext("2d").fillText({1}, {2}, {3})',
             
             'std.3d.create_scene': 'new THREE.Scene()',
-            'std.3d.add_cube': '(() => { const g = new THREE.BoxGeometry({3}, {3}, {3}); const m = new THREE.MeshStandardMaterial({color: {4}}); const c = new THREE.Mesh(g, m); c.position.set({0}, {1}, {2}); {5}.add(c); return c; })()',
-            'std.3d.add_sphere': '(() => { const g = new THREE.SphereGeometry({3}); const m = new THREE.MeshStandardMaterial({color: {4}}); const s = new THREE.Mesh(g, m); s.position.set({0}, {1}, {2}); {5}.add(s); return s; })()',
-            'std.3d.add_plane': '(() => { const g = new THREE.PlaneGeometry({0}, {1}); const m = new THREE.MeshStandardMaterial({color: {2}}); const p = new THREE.Mesh(g, m); return p; })()',
-            'std.3d.add_light': '(() => { const l = new THREE.DirectionalLight({2}, {1}); {0}.add(l); return l; })()',
+            'std.3d.add_cube': '(() => { let g = new THREE.BoxGeometry({3}, {3}, {3}); let m = new THREE.MeshStandardMaterial({color: {4}}); let c = new THREE.Mesh(g, m); c.position.set({0}, {1}, {2}); {5}.add(c); return c; })()',
+            'std.3d.add_sphere': '(() => { let g = new THREE.SphereGeometry({3}); let m = new THREE.MeshStandardMaterial({color: {4}}); let s = new THREE.Mesh(g, m); s.position.set({0}, {1}, {2}); {5}.add(s); return s; })()',
+            'std.3d.add_plane': '(() => { let g = new THREE.PlaneGeometry({0}, {1}); let m = new THREE.MeshStandardMaterial({color: {2}}); let p = new THREE.Mesh(g, m); return p; })()',
+            'std.3d.add_light': '(() => { let l = new THREE.DirectionalLight({2}, {1}); {0}.add(l); return l; })()',
             'std.3d.set_camera': 'camera.position.set({1}, {2}, {3})',
             'std.3d.rotate': '{0}.rotation.set({1}, {2}, {3})',
             'std.3d.animate': 'requestAnimationFrame(() => { {1}(); renderer.render({0}, camera); })',
@@ -7763,437 +8262,13 @@ if (typeof exports !== 'undefined') {
 }
 
 
-// === Module: core/studio_engine ===
-var terminal = exports;
-if (typeof global !== 'undefined') Object.assign(global, terminal);
-var ghost_writer = exports;
-if (typeof global !== 'undefined') Object.assign(global, ghost_writer);
-var project = exports;
-if (typeof global !== 'undefined') Object.assign(global, project);
-var runner = exports;
-if (typeof global !== 'undefined') Object.assign(global, runner);
-var state = exports;
-if (typeof global !== 'undefined') Object.assign(global, state);
-var server = exports;
-if (typeof global !== 'undefined') Object.assign(global, server);
-var html = exports;
-if (typeof global !== 'undefined') Object.assign(global, html);
-
-
-
-// === Module: core/studio_graph ===
-var ast = exports;
-if (typeof global !== 'undefined') Object.assign(global, ast);
-var terminal = exports;
-if (typeof global !== 'undefined') Object.assign(global, terminal);
-var graph_types = exports;
-if (typeof global !== 'undefined') Object.assign(global, graph_types);
-var graph_convert = exports;
-if (typeof global !== 'undefined') Object.assign(global, graph_convert);
-var graph_io = exports;
-if (typeof global !== 'undefined') Object.assign(global, graph_io);
-var graph_actions = exports;
-if (typeof global !== 'undefined') Object.assign(global, graph_actions);
-
-
-
-// === Module: core/app_packager ===
-var terminal = exports;
-if (typeof global !== 'undefined') Object.assign(global, terminal);
-class AppConfig {
-    constructor(data = {}) {
-        this.name = data.name;
-        this.version = data.version;
-        this.icon = data.icon;
-        this.description = data.description;
-        this.author = data.author;
-        this.bundle_id = data.bundle_id;
-    }
-}
-function AppConfig_default() {
-    return new AppConfig({ name: "OmniApp", version: "1.0.0", icon: "", description: "Built with Omni", author: "Omni Developer", bundle_id: "org.omni.app" });
-}
-function detect_platform() {
-    const platform = "unknown";
-    
-        platform = process.platform;
-    
-    return platform;
-}
-function detect_build_tools() {
-    const tools = null;
-}
-
-        const { execSync } = require('child_process');
-        
-        tools = {
-            gcc: false,
-            clang: false,
-            cargo: false,
-            android_sdk: false,
-            xcode: false,
-            wix: false
-        };
-        
-        const check = (cmd) => {
-            try {
-                execSync(cmd + ' --version', { stdio: 'ignore' });
-                return true;
-            } catch (e) {
-                return false;
-            }
-        };
-        
-        tools.gcc = check('gcc');
-        tools.clang = check('clang');
-        tools.cargo = check('cargo');
-        
-        // Check for Android SDK
-        tools.android_sdk = !!process.env.ANDROID_HOME;
-        
-        // Check for Xcode (macOS only)
-        if (process.platform === 'darwin') {
-            tools.xcode = check('xcodebuild');
-        }
-        
-        // Check for WiX (Windows installer)
-        if (process.platform === 'win32') {
-            tools.wix = check('candle');
-        }
-    
-return tools;
-// Unknown stmt kind: undefined
-function generate_tauri_config(config, is_studio) {
-    const json = "";
-    
-        const tauriConfig = {
-            "build": {
-                "distDir": is_studio ? "../studio/dist" : "../dist",
-                "devPath": is_studio ? "http://localhost:3000" : "http://localhost:8080"
-            },
-            "package": {
-                "productName": config.name,
-                "version": config.version
-            },
-            "tauri": {
-                "bundle": {
-                    "active": true,
-                    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/icon.ico"],
-                    "identifier": config.bundle_id,
-                    "targets": ["msi", "appimage", "dmg"]
-                },
-                "windows": [{
-                    "title": config.name,
-                    "width": 1280,
-                    "height": 800,
-                    "minWidth": 800,
-                    "minHeight": 600,
-                    "resizable": true,
-                    "fullscreen": false
-                }],
-                "allowlist": {
-                    "shell": { "execute": true },
-                    "fs": { "all": true },
-                    "path": { "all": true },
-                    "process": { "all": true },
-                    "http": { "all": true }
-                }
-            }
-        };
-        
-        json = JSON.stringify(tauriConfig, null, 2);
-    
-    return json;
-}
-function generate_capacitor_config(config) {
-    const json = "";
-    
-        const capConfig = {
-            "appId": config.bundle_id,
-            "appName": config.name,
-            "webDir": "dist",
-            "server": {
-                "androidScheme": "https"
-            },
-            "plugins": {
-                "SplashScreen": {
-                    "launchShowDuration": 2000,
-                    "backgroundColor": "#0d1117"
-                }
-            }
-        };
-        
-        json = JSON.stringify(capConfig, null, 2);
-    
-    return json;
-}
-function cmd_package_app(target, config) {
-    CLI_banner();
-    CLI_header("Omni App Packager");
-    CLI_info("Target: " + target);
-    CLI_info("App: " + config.name + " v" + config.version);
-    const tools = detect_build_tools();
-    const platform = detect_platform();
-    
-        // const fs = require('fs'); (hoisted)
-        // const path = require('path'); (hoisted)
-        const { execSync } = require('child_process');
-        
-        const omniDir = path.join(__dirname, '..');
-        const buildDir = path.join(omniDir, 'build');
-        const distDir = path.join(omniDir, 'dist', 'app');
-        
-        // Create build directories
-        [buildDir, distDir].forEach(dir => {
-            if (!fs.existsSync(dir)) {
-                fs.mkdirSync(dir, { recursive: true });
-            }
-        });
-        
-        // ================================================================
-        // WINDOWS BUILD
-        // ================================================================
-        if (target === 'windows' || target === 'win32' || target === 'exe') {
-            CLI_step(1, 4, "Generating Windows project...");
-            
-            // Create Tauri project structure
-            const tauriDir = path.join(buildDir, 'tauri');
-            if (!fs.existsSync(tauriDir)) {
-                fs.mkdirSync(tauriDir, { recursive: true });
-            }
-            
-            // Write tauri.conf.json
-            const tauriConfig = generate_tauri_config(config, true);
-            fs.writeFileSync(path.join(tauriDir, 'tauri.conf.json'), tauriConfig);
-            CLI_success("Generated: build/tauri/tauri.conf.json");
-            
-            CLI_step(2, 4, "Copying Studio UI...");
-            
-            // Copy Studio files
-            const studioDistDir = path.join(tauriDir, 'studio', 'dist');
-            if (!fs.existsSync(studioDistDir)) {
-                fs.mkdirSync(studioDistDir, { recursive: true });
-            }
-            
-            // Generate minimal index.html that loads Studio
-            const indexHtml = `<!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"><title>${config.name}</title></head>
-<body>
-<script>
-    // Omni Studio loads here
-    window.location.href = 'http://localhost:3000';
-</script>
-</body>
-</html>`;
-            fs.writeFileSync(path.join(studioDistDir, 'index.html'), indexHtml);
-            
-            CLI_step(3, 4, "Checking Tauri...");
-            
-            if (!tools.cargo) {
-                CLI_warning("Rust/Cargo not found. Required for Tauri builds.");
-                CLI_info("Install Rust: https://rustup.rs/");
-                console.log("");
-                CLI_info("Manual build steps:");
-                console.log(CLI_COLORS.dim + "  cd build/tauri" + CLI_COLORS.reset);
-                console.log(CLI_COLORS.dim + "  cargo tauri build" + CLI_COLORS.reset);
-                return;
-            }
-            
-            CLI_step(4, 4, "Building...");
-            
-            console.log("");
-            console.log(CLI_COLORS.yellow + "  To complete the Windows build:" + CLI_COLORS.reset);
-            console.log("");
-            console.log(CLI_COLORS.cyan + "  cd build/tauri" + CLI_COLORS.reset);
-            console.log(CLI_COLORS.cyan + "  cargo install tauri-cli" + CLI_COLORS.reset);
-            console.log(CLI_COLORS.cyan + "  cargo tauri build" + CLI_COLORS.reset);
-            console.log("");
-            CLI_success("Windows project ready in build/tauri/");
-            return;
-        }
-        
-        // ================================================================
-        // ANDROID BUILD
-        // ================================================================
-        if (target === 'android' || target === 'apk') {
-            CLI_step(1, 5, "Generating Capacitor project...");
-            
-            const capDir = path.join(buildDir, 'capacitor');
-            if (!fs.existsSync(capDir)) {
-                fs.mkdirSync(capDir, { recursive: true });
-            }
-            
-            // Write capacitor.config.json
-            const capConfig = generate_capacitor_config(config);
-            fs.writeFileSync(path.join(capDir, 'capacitor.config.json'), capConfig);
-            CLI_success("Generated: build/capacitor/capacitor.config.json");
-            
-            // Create package.json
-            const packageJson = {
-                "name": config.bundle_id.replace(/\./g, '-'),
-                "version": config.version,
-                "scripts": {
-                    "build": "echo 'Building...'",
-                    "cap:add": "npx cap add android",
-                    "cap:sync": "npx cap sync",
-                    "cap:open": "npx cap open android"
-                },
-                "dependencies": {
-                    "@capacitor/android": "^5.0.0",
-                    "@capacitor/core": "^5.0.0",
-                    "@capacitor/cli": "^5.0.0"
-                }
-            };
-            fs.writeFileSync(path.join(capDir, 'package.json'), JSON.stringify(packageJson, null, 2));
-            
-            CLI_step(2, 5, "Creating dist folder...");
-            
-            const distFolder = path.join(capDir, 'dist');
-            if (!fs.existsSync(distFolder)) {
-                fs.mkdirSync(distFolder, { recursive: true });
-            }
-            
-            // Create minimal index.html
-            const indexHtml = `<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${config.name}</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: system-ui, sans-serif;
-            background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
-            color: white;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .container { text-align: center; padding: 20px; }
-        h1 { font-size: 2rem; margin-bottom: 1rem; color: #58a6ff; }
-        p { color: #8b949e; }
-        .btn {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 12px 24px;
-            background: #238636;
-            color: white;
-            border-radius: 8px;
-            text-decoration: none;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>◊ ${config.name}</h1>
-        <p>Built with Omni</p>
-        <a href="#" class="btn" onclick="window.location.reload()">Start</a>
-    </div>
-</body>
-</html>`;
-            fs.writeFileSync(path.join(distFolder, 'index.html'), indexHtml);
-            
-            CLI_step(3, 5, "Checking Android SDK...");
-            
-            if (!tools.android_sdk) {
-                CLI_warning("Android SDK not found (ANDROID_HOME not set)");
-                CLI_info("Install Android Studio: https://developer.android.com/studio");
-            }
-            
-            CLI_step(4, 5, "Generating build instructions...");
-            
-            console.log("");
-            console.log(CLI_COLORS.yellow + "  To complete the Android build:" + CLI_COLORS.reset);
-            console.log("");
-            console.log(CLI_COLORS.cyan + "  cd build/capacitor" + CLI_COLORS.reset);
-            console.log(CLI_COLORS.cyan + "  npm install" + CLI_COLORS.reset);
-            console.log(CLI_COLORS.cyan + "  npx cap add android" + CLI_COLORS.reset);
-            console.log(CLI_COLORS.cyan + "  npx cap sync" + CLI_COLORS.reset);
-            console.log(CLI_COLORS.cyan + "  npx cap open android" + CLI_COLORS.reset);
-            console.log("");
-            
-            CLI_step(5, 5, "Done!");
-            CLI_success("Android project ready in build/capacitor/");
-            return;
-        }
-        
-        // ================================================================
-        // LINUX BUILD
-        // ================================================================
-        if (target === 'linux' || target === 'appimage') {
-            CLI_step(1, 3, "Generating Linux project...");
-            
-            const linuxDir = path.join(buildDir, 'linux');
-            if (!fs.existsSync(linuxDir)) {
-                fs.mkdirSync(linuxDir, { recursive: true });
-            }
-            
-            // Write desktop file
-            const desktopEntry = `[Desktop Entry]
-Name=${config.name}
-Comment=${config.description}
-Exec=omni
-Icon=omni
-Type=Application
-Categories=Development;IDE;
-`;
-            fs.writeFileSync(path.join(linuxDir, config.name + '.desktop'), desktopEntry);
-            
-            // Write AppImage recipe
-            const appImageYml = `app: ${config.name}
-ingredients:
-  dist: omni-installer
-  script:
-    - echo "Building Omni AppImage"
-
-script:
-  - mkdir -p AppDir/usr/bin
-  - cp omni AppDir/usr/bin/
-  - cp -r studio AppDir/usr/share/omni/
-`;
-            fs.writeFileSync(path.join(linuxDir, 'AppImageBuilder.yml'), appImageYml);
-            
-            CLI_step(2, 3, "Generated Linux files");
-            CLI_step(3, 3, "Done!");
-            
-            console.log("");
-            CLI_info("To build AppImage:");
-            console.log(CLI_COLORS.dim + "  cd build/linux" + CLI_COLORS.reset);
-            console.log(CLI_COLORS.dim + "  appimage-builder --recipe AppImageBuilder.yml" + CLI_COLORS.reset);
-            
-            CLI_success("Linux project ready in build/linux/");
-            return;
-        }
-        
-        // Unknown target
-        CLI_error("Unknown target: " + target);
-        CLI_info("Available targets: windows, android, linux");
-    
-}
-
-
-// Auto-exports
-if (typeof exports !== 'undefined') {
-    exports.AppConfig_default = AppConfig_default;
-    exports.detect_platform = detect_platform;
-    exports.detect_build_tools = detect_build_tools;
-    exports.generate_tauri_config = generate_tauri_config;
-    exports.generate_capacitor_config = generate_capacitor_config;
-    exports.cmd_package_app = cmd_package_app;
-    exports.AppConfig = AppConfig;
-}
-
-
 // === Module: lib/std ===
 function print(msg) {
      console.log(msg); 
     
 }
 function read_file(path) {
-    const content = "";
+    let content = "";
     
         // const fs = require("fs"); (hoisted)
         try {
@@ -8220,12 +8295,7 @@ function write_file(path, content) {
 }
 
 
-// Auto-exports
-if (typeof exports !== 'undefined') {
-    exports.print = print;
-    exports.read_file = read_file;
-    exports.write_file = write_file;
-}
+
 
 
 // === Module: lib/terminal ===
@@ -8254,10 +8324,10 @@ class Colors {
     }
 }
 function Colors_new() {
-    const c = new Colors({ reset: "", bold: "", dim: "", underline: "", black: "", red: "", green: "", yellow: "", blue: "", magenta: "", cyan: "", white: "", bg_black: "", bg_red: "", bg_green: "", bg_yellow: "", bg_blue: "", bg_magenta: "", bg_cyan: "", bg_white: "" });
+    let c = new Colors({ reset: "", bold: "", dim: "", underline: "", black: "", red: "", green: "", yellow: "", blue: "", magenta: "", cyan: "", white: "", bg_black: "", bg_red: "", bg_green: "", bg_yellow: "", bg_blue: "", bg_magenta: "", bg_cyan: "", bg_white: "" });
     
         // Check if terminal supports colors
-        const supportsColor = process.stdout.isTTY && 
+        let supportsColor = process.stdout.isTTY && 
             (process.env.TERM !== 'dumb') && 
             !process.env.NO_COLOR;
         
@@ -8288,8 +8358,8 @@ function Colors_new() {
     
     return c;
 }
-const CLI_COLORS_INIT = false;
-const CLI_COLORS_CACHE = new Colors({ reset: "", bold: "", dim: "", underline: "", black: "", red: "", green: "", yellow: "", blue: "", magenta: "", cyan: "", white: "", bg_black: "", bg_red: "", bg_green: "", bg_yellow: "", bg_blue: "", bg_magenta: "", bg_cyan: "", bg_white: "" });
+let CLI_COLORS_INIT = false;
+let CLI_COLORS_CACHE = new Colors({ reset: "", bold: "", dim: "", underline: "", black: "", red: "", green: "", yellow: "", blue: "", magenta: "", cyan: "", white: "", bg_black: "", bg_red: "", bg_green: "", bg_yellow: "", bg_blue: "", bg_magenta: "", bg_cyan: "", bg_white: "" });
 function CLI_COLORS() {
     if (CLI_COLORS_INIT == false) {
     CLI_COLORS_CACHE = Colors_new();
@@ -8299,87 +8369,87 @@ function CLI_COLORS() {
 }
 function CLI_success(msg) {
     
-        const c = CLI_COLORS();
+        let c = CLI_COLORS();
         console.log(c.green + 'âœ“' + c.reset + ' ' + msg);
     
 }
 function CLI_error(msg) {
     
-        const c = CLI_COLORS();
+        let c = CLI_COLORS();
         console.error(c.red + 'âœ—' + c.reset + ' ' + msg);
     
 }
 function CLI_warning(msg) {
     
-        const c = CLI_COLORS();
+        let c = CLI_COLORS();
         console.log(c.yellow + 'âš ' + c.reset + ' ' + msg);
     
 }
 function CLI_info(msg) {
     
-        const c = CLI_COLORS();
+        let c = CLI_COLORS();
         console.log(c.blue + 'â„¹' + c.reset + ' ' + msg);
     
 }
 function CLI_step(step, total, msg) {
     
-        const c = CLI_COLORS();
-        const prefix = c.cyan + '[' + step + '/' + total + ']' + c.reset;
+        let c = CLI_COLORS();
+        let prefix = c.cyan + '[' + step + '/' + total + ']' + c.reset;
         console.log(prefix + ' ' + msg);
     
 }
 function CLI_header(title) {
     
-        const c = CLI_COLORS();
+        let c = CLI_COLORS();
         console.log('');
         console.log(c.bold + c.cyan + 'â•â•â• ' + title + ' â•â•â•' + c.reset);
         console.log('');
     
 }
 function CLI_dim(msg) {
-    const result = "";
+    let result = "";
     
-        const c = CLI_COLORS();
+        let c = CLI_COLORS();
         result = c.dim + msg + c.reset;
     
     return result;
 }
 function CLI_bold(msg) {
-    const result = "";
+    let result = "";
     
-        const c = CLI_COLORS();
+        let c = CLI_COLORS();
         result = c.bold + msg + c.reset;
     
     return result;
 }
 function CLI_green(msg) {
-    const result = "";
+    let result = "";
     
-        const c = CLI_COLORS();
+        let c = CLI_COLORS();
         result = c.green + msg + c.reset;
     
     return result;
 }
 function CLI_red(msg) {
-    const result = "";
+    let result = "";
     
-        const c = CLI_COLORS();
+        let c = CLI_COLORS();
         result = c.red + msg + c.reset;
     
     return result;
 }
 function CLI_yellow(msg) {
-    const result = "";
+    let result = "";
     
-        const c = CLI_COLORS();
+        let c = CLI_COLORS();
         result = c.yellow + msg + c.reset;
     
     return result;
 }
 function CLI_cyan(msg) {
-    const result = "";
+    let result = "";
     
-        const c = CLI_COLORS();
+        let c = CLI_COLORS();
         result = c.cyan + msg + c.reset;
     
     return result;
@@ -8394,15 +8464,15 @@ class Spinner {
     }
 }
 function Spinner_new(message) {
-    const spinner = new Spinner({ frames: "â ‹â ™â ¹â ¸â ¼â ´â ¦â §â ‡â ", current: 0, interval: 0, message: message, running: false });
+    let spinner = new Spinner({ frames: "â ‹â ™â ¹â ¸â ¼â ´â ¦â §â ‡â ", current: 0, interval: 0, message: message, running: false });
     return spinner;
 }
 function Spinner_start(self) {
     
         if (self.running) return;
         self.running = true;
-        const frames = self.frames.split('');
-        const c = CLI_COLORS();
+        let frames = self.frames.split('');
+        let c = CLI_COLORS();
         
         self.interval = setInterval(() => {
             process.stdout.write('\r' + c.cyan + 
@@ -8418,9 +8488,9 @@ function Spinner_stop(self, success) {
         
         clearInterval(self.interval);
         self.running = false;
-        const c = CLI_COLORS();
+        let c = CLI_COLORS();
         
-        const icon = success 
+        let icon = success 
             ? c.green + 'âœ“' + c.reset 
             : c.red + 'âœ—' + c.reset;
         
@@ -8428,14 +8498,14 @@ function Spinner_stop(self, success) {
     
 }
 function CLI_progress_bar(current, total, width) {
-    const result = "";
+    let result = "";
     
-        const c = CLI_COLORS();
-        const percent = Math.floor((current / total) * 100);
-        const filled = Math.floor((current / total) * width);
-        const empty = width - filled;
+        let c = CLI_COLORS();
+        let percent = Math.floor((current / total) * 100);
+        let filled = Math.floor((current / total) * width);
+        let empty = width - filled;
         
-        const bar = c.green + 'â–ˆ'.repeat(filled) + 
+        let bar = c.green + 'â–ˆ'.repeat(filled) + 
                     c.dim + 'â–‘'.repeat(empty) + c.reset;
         
         result = bar + ' ' + percent + '%';
@@ -8460,13 +8530,13 @@ class ParsedArgs {
     }
 }
 function ParsedArgs_new() {
-    const args = new ParsedArgs({ command: "", arg1: "", arg2: "", arg3: "", flag_help: false, flag_version: false, flag_verbose: false, flag_global: false, flag_app: false, flag_tui: false, opt_target: "js", opt_port: "3000", opt_framework: "" });
+    let args = new ParsedArgs({ command: "", arg1: "", arg2: "", arg3: "", flag_help: false, flag_version: false, flag_verbose: false, flag_global: false, flag_app: false, flag_tui: false, opt_target: "js", opt_port: "3000", opt_framework: "" });
     
-        const argv = process.argv.slice(2);
+        let argv = process.argv.slice(2);
         
         let positional = [];
         for (let i = 0; i < argv.length; i++) {
-            const arg = argv[i];
+            let arg = argv[i];
             
             if (arg === '--help' || arg === '-h') {
                 args.flag_help = true;
@@ -8500,13 +8570,13 @@ function ParsedArgs_new() {
 }
 function CLI_table_simple(col1, col2) {
     
-        const c = CLI_COLORS();
+        let c = CLI_COLORS();
         console.log('  ' + c.cyan + col1.padEnd(20) + c.reset + col2);
     
 }
 function CLI_table_header(title) {
     
-        const c = CLI_COLORS();
+        let c = CLI_COLORS();
         console.log('');
         console.log(c.bold + title + c.reset);
         console.log('â”€'.repeat(50));
@@ -8514,7 +8584,7 @@ function CLI_table_header(title) {
 }
 function CLI_banner() {
     
-        const c = CLI_COLORS();
+        let c = CLI_COLORS();
         console.log('');
         console.log(c.cyan + c.bold + 
             '   ____  __  __ _   _ ___ ' + c.reset);
@@ -8574,7 +8644,7 @@ if (typeof exports !== 'undefined') {
 var terminal = exports;
 if (typeof global !== 'undefined') Object.assign(global, terminal);
 function get_omni_home() {
-    const home = "";
+    let home = "";
     
         // const path = require('path'); (hoisted)
         // const os = require('os'); (hoisted)
@@ -8589,7 +8659,7 @@ function get_omni_home() {
         }
         // Priority 3: User's home directory
         else {
-            const platform = os.platform();
+            let platform = os.platform();
             if (platform === 'win32') {
                 home = path.join(os.homedir(), 'AppData', 'Local', 'Omni');
             } else {
@@ -8600,28 +8670,28 @@ function get_omni_home() {
     return home;
 }
 function resolve_resource_path(name) {
-    const resolved = "";
+    let resolved = "";
     
         // const fs = require('fs'); (hoisted)
         // const path = require('path'); (hoisted)
         
         // Strategy 1: Local project path (./targets/, ./packages/, ./patterns/)
-        const localPath = path.join(process.cwd(), name);
+        let localPath = path.join(process.cwd(), name);
         if (fs.existsSync(localPath)) {
             resolved = localPath;
             return;
         }
         
         // Strategy 2: Relative to executable (dist/../)
-        const execPath = path.join(__dirname, '..', name);
+        let execPath = path.join(__dirname, '..', name);
         if (fs.existsSync(execPath)) {
             resolved = execPath;
             return;
         }
         
         // Strategy 3: OMNI_HOME
-        const omniHome = get_omni_home();
-        const homePath = path.join(omniHome, name);
+        let omniHome = get_omni_home();
+        let homePath = path.join(omniHome, name);
         if (fs.existsSync(homePath)) {
             resolved = homePath;
             return;
@@ -8629,7 +8699,7 @@ function resolve_resource_path(name) {
         
         // Strategy 4: Global installation
         // const os = require('os'); (hoisted)
-        const platform = os.platform();
+        let platform = os.platform();
         let globalPath;
         
         if (platform === 'win32') {
@@ -8657,9 +8727,9 @@ function cmd_setup(is_global) {
         // const path = require('path'); (hoisted)
         const { execSync } = require('child_process');
         
-        const platform = os.platform();
-        const isWindows = platform === 'win32';
-        const omniDir = path.dirname(path.dirname(__filename));
+        let platform = os.platform();
+        let isWindows = platform === 'win32';
+        let omniDir = path.dirname(path.dirname(__filename));
         
         terminal.CLI_info("Platform: " + platform + " (" + os.arch() + ")");
         terminal.CLI_info("Omni directory: " + omniDir);
@@ -8692,15 +8762,15 @@ function cmd_setup(is_global) {
             }
             
             // Copy dist folder
-            const srcDist = path.join(omniDir, 'dist');
-            const dstDist = path.join(globalDir, 'dist');
+            let srcDist = path.join(omniDir, 'dist');
+            let dstDist = path.join(globalDir, 'dist');
             
             if (fs.existsSync(srcDist)) {
                 if (!fs.existsSync(dstDist)) {
                     fs.mkdirSync(dstDist, { recursive: true });
                 }
                 
-                const files = fs.readdirSync(srcDist);
+                let files = fs.readdirSync(srcDist);
                 for (const file of files) {
                     fs.copyFileSync(
                         path.join(srcDist, file),
@@ -8711,19 +8781,19 @@ function cmd_setup(is_global) {
             }
             
             // Copy lib folder
-            const srcLib = path.join(omniDir, 'src', 'lib');
-            const dstLib = path.join(globalDir, 'lib');
+            let srcLib = path.join(omniDir, 'src', 'lib');
+            let dstLib = path.join(globalDir, 'lib');
             
             if (fs.existsSync(srcLib)) {
                 if (!fs.existsSync(dstLib)) {
                     fs.mkdirSync(dstLib, { recursive: true });
                 }
                 
-                const walkAndCopy = (src, dst) => {
-                    const entries = fs.readdirSync(src, { withFileTypes: true });
+                let walkAndCopy = (src, dst) => {
+                    let entries = fs.readdirSync(src, { withFileTypes: true });
                     for (const entry of entries) {
-                        const srcPath = path.join(src, entry.name);
-                        const dstPath = path.join(dst, entry.name);
+                        let srcPath = path.join(src, entry.name);
+                        let dstPath = path.join(dst, entry.name);
                         if (entry.isDirectory()) {
                             if (!fs.existsSync(dstPath)) fs.mkdirSync(dstPath);
                             walkAndCopy(srcPath, dstPath);
@@ -8740,21 +8810,21 @@ function cmd_setup(is_global) {
             
             if (isWindows) {
                 // Windows: Create batch and PowerShell wrappers
-                const cmdContent = `@echo off
+                let cmdContent = `@echo off
 node "%~dp0dist\\main.js" %*`;
                 fs.writeFileSync(path.join(globalDir, 'omni.cmd'), cmdContent);
                 
-                const ps1Content = `#!/usr/bin/env pwsh
+                let ps1Content = `#!/usr/bin/env pwsh
 node "$PSScriptRoot\\dist\\main.js" @args`;
                 fs.writeFileSync(path.join(globalDir, 'omni.ps1'), ps1Content);
                 
                 CLI_success("Created omni.cmd and omni.ps1");
             } else {
                 // Unix: Create shell script
-                const shContent = `#!/usr/bin/env bash
+                let shContent = `#!/usr/bin/env bash
 OMNI_DIR="$( cd "$( dirname "\${BASH_SOURCE[0]}" )" && pwd )"
 node "$OMNI_DIR/dist/main.js" "$@"`;
-                const shPath = path.join(globalDir, 'omni');
+                let shPath = path.join(globalDir, 'omni');
                 fs.writeFileSync(shPath, shContent);
                 fs.chmodSync(shPath, '755');
                 
@@ -8769,7 +8839,7 @@ node "$OMNI_DIR/dist/main.js" "$@"`;
                 
                 // Try to add to user PATH
                 try {
-                    const currentPath = execSync('echo %PATH%', { encoding: 'utf-8' }).trim();
+                    let currentPath = execSync('echo %PATH%', { encoding: 'utf-8' }).trim();
                     if (!currentPath.includes(globalDir)) {
                         console.log("");
                         CLI_warning("Add this directory to your PATH:");
@@ -8789,7 +8859,7 @@ node "$OMNI_DIR/dist/main.js" "$@"`;
                     fs.mkdirSync(binDir, { recursive: true });
                 }
                 
-                const linkPath = path.join(binDir, 'omni');
+                let linkPath = path.join(binDir, 'omni');
                 try {
                     if (fs.existsSync(linkPath)) fs.unlinkSync(linkPath);
                     fs.symlinkSync(path.join(globalDir, 'omni'), linkPath);
@@ -8799,7 +8869,7 @@ node "$OMNI_DIR/dist/main.js" "$@"`;
                 }
                 
                 // Check if ~/.local/bin is in PATH
-                const shellPath = process.env.PATH || '';
+                let shellPath = process.env.PATH || '';
                 if (!shellPath.includes(binDir)) {
                     console.log("");
                     CLI_warning("Add to your shell profile (~/.bashrc or ~/.zshrc):");
@@ -8818,17 +8888,17 @@ node "$OMNI_DIR/dist/main.js" "$@"`;
             // ============================================================
             CLI_step(1, 2, "Creating local wrapper...");
             
-            const cwd = process.cwd();
+            let cwd = process.cwd();
             
             if (isWindows) {
-                const cmdContent = `@echo off
+                let cmdContent = `@echo off
 node "${path.join(omniDir, 'dist', 'main.js')}" %*`;
                 fs.writeFileSync(path.join(cwd, 'omni.cmd'), cmdContent);
                 CLI_success("Created: omni.cmd");
             } else {
-                const shContent = `#!/usr/bin/env bash
+                let shContent = `#!/usr/bin/env bash
 node "${path.join(omniDir, 'dist', 'main.js')}" "$@"`;
-                const shPath = path.join(cwd, 'omni');
+                let shPath = path.join(cwd, 'omni');
                 fs.writeFileSync(shPath, shContent);
                 fs.chmodSync(shPath, '755');
                 CLI_success("Created: ./omni");
@@ -8871,9 +8941,9 @@ if (typeof global !== 'undefined') Object.assign(global, codegen_hybrid);
 var vm = exports;
 if (typeof global !== 'undefined') Object.assign(global, vm);
 function cmd_run() {
-    const run_file = "";
-    const is_app = false;
-    const target = "js";
+    let run_file = "";
+    let is_app = false;
+    let target = "js";
      
          run_file = process.argv[3] || ''; 
          if (process.argv.includes("--app")) {
@@ -8890,21 +8960,31 @@ function cmd_run() {
     CLI_error("Usage: omni run <file.omni> [--app] [--target python]");
     return true;
 }
-    const source = read_file(run_file);
-    const l = new_lexer(source);
-    const p = new_parser(l);
-    const program = Parser_parse_program(p);
-    if (is_app || target == "python") {
-    CLI_info("Compiling Native App (" + target + ")...");
-    const gen = new_code_generator(target);
-    const code = CodeGenerator_generate(gen, program);
+    let source = read_file(run_file);
+    if (source == "") {
+}
+    let l = new_lexer(source);
+    let p = new_parser(l);
+    let program = Parser_parse_program(p);
+    if (is_app || target == "python" || target == "js") {
+    CLI_info("Compiling & Running (" + target + "): " + run_file);
+    let gen = new_code_generator(target);
+    let code = CodeGenerator_generate(gen, program);
     
              // const fs = require('fs'); (hoisted)
              // const path = require('path'); (hoisted)
-             const { spawn } = require('child_process');
+             const { spawnSync } = require('child_process');
              
-             const ext = target == "python" ? ".py" : ".js";
-             const outFile = run_file.replace(".omni", ext); 
+             let ext = target == "python" ? ".py" : ".js";
+             let outFile = run_file.replace(".omni", ext); 
+             
+             // Auto-run main if exists
+             if (target == "js") {
+                 code += "\nif (typeof main === 'function') main();\n";
+             } else if (target == "python") {
+                 code += "\nif __name__ == '__main__':\n    main()\n";
+             }
+
              fs.writeFileSync(outFile, code);
              
              let cmd = "node";
@@ -8914,15 +8994,13 @@ function cmd_run() {
                  args = [outFile];
              }
              
-             const proc = spawn(cmd, args, { stdio: 'inherit' });
-             proc.on('close', (code) => {
-                 // process.exit(code); // Optional
-             });
+             let proc = spawnSync(cmd, args, { stdio: 'inherit' });
+             // Returns { status, signal, output, ... }
          
     return true;
 }
     CLI_info("VM Mode - Executing: " + run_file);
-    const vm = OmniVM_new();
+    let vm = OmniVM_new();
     OmniVM_run(vm, program);
     return true;
 }
@@ -8965,7 +9043,7 @@ function cmd_test_all() {
         // const path = require('path'); (hoisted)
         
         // Find examples directory
-        const possiblePaths = [
+        let possiblePaths = [
             path.join(process.cwd(), 'examples'),
             path.join(__dirname, '..', '..', 'examples'),
             path.join(__dirname, '..', 'examples')
@@ -8989,7 +9067,7 @@ function cmd_test_all() {
         console.log("");
         
         // Get all .omni files
-        const files = fs.readdirSync(examplesDir)
+        let files = fs.readdirSync(examplesDir)
             .filter(f => f.endsWith('.omni'))
             .sort();
         
@@ -8998,22 +9076,22 @@ function cmd_test_all() {
         
         let passed = 0;
         let failed = 0;
-        const failures = [];
+        let failures = [];
         
         for (const file of files) {
-            const filePath = path.join(examplesDir, file);
-            const outputPath = path.join(examplesDir, file.replace('.omni', '.test.js'));
+            let filePath = path.join(examplesDir, file);
+            let outputPath = path.join(examplesDir, file.replace('.omni', '.test.js'));
             
             try {
                 // Read and parse
-                const source = fs.readFileSync(filePath, 'utf-8');
-                const l = new_lexer(source);
-                const p = new_parser(l);
-                const program = Parser_parse_program(p);
+                let source = fs.readFileSync(filePath, 'utf-8');
+                let l = new_lexer(source);
+                let p = new_parser(l);
+                let program = Parser_parse_program(p);
                 
                 // Generate code
-                const gen = HybridCodeGenerator_new('js');
-                const code = HybridCodeGenerator_generate(gen, program);
+                let gen = HybridCodeGenerator_new('js');
+                let code = HybridCodeGenerator_generate(gen, program);
                 
                 // Check if code was generated
                 if (code && code.length > 0) {
@@ -9068,19 +9146,19 @@ function cmd_package_self() {
         // const path = require('path'); (hoisted)
         const { execSync } = require('child_process');
         
-        const omniDir = path.dirname(path.dirname(__filename));
-        const version = CLI_version();
-        const platform = process.platform;
+        let omniDir = path.dirname(path.dirname(__filename));
+        let version = CLI_version();
+        let platform = process.platform;
         
         terminal.CLI_step(1, 4, "Collecting source files...");
         
         // Files to include
-        const distDir = path.join(omniDir, 'dist');
-        const targetsDir = path.join(omniDir, 'targets');
+        let distDir = path.join(omniDir, 'dist');
+        let targetsDir = path.join(omniDir, 'targets');
         
         terminal.CLI_step(2, 4, "Creating package manifest...");
         
-        const manifest = {
+        let manifest = {
             name: 'omni-compiler',
             version: version,
             platform: platform,
@@ -9090,20 +9168,20 @@ function cmd_package_self() {
         
         // List dist files
         if (fs.existsSync(distDir)) {
-            const files = fs.readdirSync(distDir, { recursive: true });
+            let files = fs.readdirSync(distDir, { recursive: true });
             manifest.files.push(...files.map(f => 'dist/' + f));
         }
         
         // List target profiles
         if (fs.existsSync(targetsDir)) {
-            const files = fs.readdirSync(targetsDir);
+            let files = fs.readdirSync(targetsDir);
             manifest.files.push(...files.map(f => 'targets/' + f));
         }
         
         CLI_step(3, 4, "Writing package...");
         
-        const packageName = `omni-${version}-${platform}`;
-        const packageDir = path.join(omniDir, 'packages');
+        let packageName = `omni-${version}-${platform}`;
+        let packageDir = path.join(omniDir, 'packages');
         
         if (!fs.existsSync(packageDir)) {
             fs.mkdirSync(packageDir, { recursive: true });
@@ -9119,16 +9197,16 @@ function cmd_package_self() {
         
         // Create .run file (Unix) or .cmd (Windows)
         if (platform === 'win32') {
-            const runContent = `@echo off
+            let runContent = `@echo off
 set OMNI_HOME=%~dp0
 node "%OMNI_HOME%dist\\main.js" %*`;
             fs.writeFileSync(path.join(packageDir, packageName + '.cmd'), runContent);
             CLI_success("Package created: packages/" + packageName + ".cmd");
         } else {
-            const runContent = `#!/bin/bash
+            let runContent = `#!/bin/bash
 OMNI_HOME="$(dirname "$(readlink -f "$0")")"
 node "$OMNI_HOME/dist/main.js" "$@"`;
-            const runPath = path.join(packageDir, packageName + '.run');
+            let runPath = path.join(packageDir, packageName + '.run');
             fs.writeFileSync(runPath, runContent);
             fs.chmodSync(runPath, '755');
             CLI_success("Package created: packages/" + packageName + ".run");
@@ -9152,7 +9230,7 @@ var contracts = exports;
 if (typeof global !== 'undefined') Object.assign(global, contracts);
 function cmd_contracts() {
     
-        const registry = ContractRegistry_new();
+        let registry = ContractRegistry_new();
         ContractRegistry_list_interfaces(registry);
     
 }
@@ -9170,9 +9248,9 @@ if (typeof global !== 'undefined') Object.assign(global, studio_engine);
 var tui = exports;
 if (typeof global !== 'undefined') Object.assign(global, tui);
 function cmd_studio_cli() {
-    const port = 3000;
-    const open_app = false;
-    const run_tui = false;
+    let port = 3000;
+    let open_app = false;
+    let run_tui = false;
     
         // Parse port option
         for (let i = 3; i < process.argv.length; i++) {
@@ -9236,20 +9314,20 @@ var terminal = exports;
 if (typeof global !== 'undefined') Object.assign(global, terminal);
 var std = exports;
 if (typeof global !== 'undefined') Object.assign(global, std);
-var cmd_setup = exports;
-if (typeof global !== 'undefined') Object.assign(global, cmd_setup);
-var cmd_run = exports;
-if (typeof global !== 'undefined') Object.assign(global, cmd_run);
-var cmd_build = exports;
-if (typeof global !== 'undefined') Object.assign(global, cmd_build);
-var cmd_test = exports;
-if (typeof global !== 'undefined') Object.assign(global, cmd_test);
-var cmd_package = exports;
-if (typeof global !== 'undefined') Object.assign(global, cmd_package);
-var cmd_registry = exports;
-if (typeof global !== 'undefined') Object.assign(global, cmd_registry);
-var cmd_studio = exports;
-if (typeof global !== 'undefined') Object.assign(global, cmd_studio);
+var mod_cmd_setup = exports;
+if (typeof global !== 'undefined') Object.assign(global, mod_cmd_setup);
+var mod_cmd_run = exports;
+if (typeof global !== 'undefined') Object.assign(global, mod_cmd_run);
+var mod_cmd_build = exports;
+if (typeof global !== 'undefined') Object.assign(global, mod_cmd_build);
+var mod_cmd_test = exports;
+if (typeof global !== 'undefined') Object.assign(global, mod_cmd_test);
+var mod_cmd_package = exports;
+if (typeof global !== 'undefined') Object.assign(global, mod_cmd_package);
+var mod_cmd_registry = exports;
+if (typeof global !== 'undefined') Object.assign(global, mod_cmd_registry);
+var mod_cmd_studio = exports;
+if (typeof global !== 'undefined') Object.assign(global, mod_cmd_studio);
 function cmd_version() {
     CLI_banner();
     print("Version: " + CLI_version());
@@ -9261,16 +9339,16 @@ function cmd_version() {
     
 }
 function main() {
-    const args_len = 0;
+    let args_len = 0;
     
         args_len = process.argv.length;
     
-    const command = "";
+    let command = "";
     
         command = process.argv[2] || '';
     
     if (command == "setup") {
-    const is_global = false;
+    let is_global = false;
     
             for (let i = 3; i < process.argv.length; i++) {
                 if (process.argv[i] === '--global' || process.argv[i] === '-g') {
@@ -9286,7 +9364,7 @@ function main() {
     return 0;
 }
     if (command == "package") {
-    const self_package = false;
+    let self_package = false;
      self_package = process.argv[3] === '--self'; 
     if (self_package) {
     cmd_package_self();
@@ -9294,13 +9372,13 @@ function main() {
 }
 }
     if (command == "install") {
-    const package_spec = "";
+    let package_spec = "";
      package_spec = process.argv[3] || ''; 
     cmd_install(package_spec);
     return 0;
 }
     if (command == "uninstall") {
-    const package_name = "";
+    let package_name = "";
      package_name = process.argv[3] || ''; 
     if (package_name == "") {
     terminal.CLI_error("Usage: omni uninstall <package_name>");
@@ -9314,13 +9392,13 @@ function main() {
     return 0;
 }
     if (command == "update") {
-    const package_name = "";
+    let package_name = "";
      package_name = process.argv[3] || ''; 
     cmd_update(package_name);
     return 0;
 }
     if (command == "search") {
-    const query = "";
+    let query = "";
      query = process.argv[3] || ''; 
     cmd_search(query);
     return 0;
@@ -9334,8 +9412,8 @@ function main() {
     return 0;
 }
     if (command == "graph") {
-    const input_file = "";
-    const output_file = "";
+    let input_file = "";
+    let output_file = "";
      
             input_file = process.argv[3] || '';
             output_file = process.argv[4] || '';
@@ -9367,7 +9445,7 @@ function main() {
     return 0;
 }
     if (command == "package") {
-    const target = "";
+    let target = "";
     
             for (let i = 3; i < process.argv.length; i++) {
                 if (process.argv[i] === '--app' && process.argv[i + 1]) {
@@ -9375,21 +9453,21 @@ function main() {
                 }
             }
             if (!target) {
-                const platform = process.platform;
+                let platform = process.platform;
                 if (platform === 'win32') target = 'windows';
                 else if (platform === 'darwin') target = 'macos';
                 else if (platform === 'linux') target = 'linux';
                 else target = 'windows';
             }
         
-    const config = AppConfig_default();
+    let config = AppConfig_default();
     
             // const fs = require('fs'); (hoisted)
             // const path = require('path'); (hoisted)
-            const configPath = path.join(process.cwd(), 'omni.config.json');
+            let configPath = path.join(process.cwd(), 'omni.config.json');
             
             if (fs.existsSync(configPath)) {
-                const cfg = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+                let cfg = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
                 if (cfg.app) {
                     config.name = cfg.app.name || config.name;
                     config.version = cfg.app.version || config.version;
@@ -9402,8 +9480,8 @@ function main() {
     return 0;
 }
     if (command == "ingest") {
-    const input_file = "";
-    const output_file = "";
+    let input_file = "";
+    let output_file = "";
      
             input_file = process.argv[3] || '';
             output_file = process.argv[4] || '';
@@ -9433,7 +9511,7 @@ function main() {
     cmd_test_all();
     return 0;
 }
-    const show_help = false;
+    let show_help = false;
      
         show_help = command === 'help' || command === '--help' || command === '-h'; 
     
@@ -9461,18 +9539,18 @@ function main() {
     print("");
     return 0;
 }
-    const input_path = "";
-    const output_path = "";
-    const target_lang = "js";
-    const package_path = "";
-    const framework = "";
-    const show_coverage = false;
+    let input_path = "";
+    let output_path = "";
+    let target_lang = "js";
+    let package_path = "";
+    let framework = "";
+    let show_coverage = false;
     
         input_path = process.argv[2];
         output_path = process.argv[3];
         
         for (let i = 4; i < process.argv.length; i++) {
-            const arg = process.argv[i];
+            let arg = process.argv[i];
             if (arg === "--target" && (i + 1 < process.argv.length)) {
                 target_lang = process.argv[++i];
             } else if (arg === "--package" && (i + 1 < process.argv.length)) {
@@ -9494,18 +9572,18 @@ function main() {
             if (fs.existsSync(package_path)) {
                 terminal.CLI_info("Loading package: " + package_path);
                 
-                const grammarPath = fs.statSync(package_path).isDirectory() 
+                let grammarPath = fs.statSync(package_path).isDirectory() 
                     ? path.join(package_path, 'grammar.json')
                     : package_path;
                     
                 if (fs.existsSync(grammarPath)) {
-                    const targetDir = path.join(__dirname, '..', 'targets');
+                    let targetDir = path.join(__dirname, '..', 'targets');
                     if (!fs.existsSync(targetDir)) {
                         fs.mkdirSync(targetDir, { recursive: true });
                     }
                     
-                    const profile = JSON.parse(fs.readFileSync(grammarPath, 'utf-8'));
-                    const profileName = profile.name || path.basename(package_path, '.omni-pkg');
+                    let profile = JSON.parse(fs.readFileSync(grammarPath, 'utf-8'));
+                    let profileName = profile.name || path.basename(package_path, '.omni-pkg');
                     fs.writeFileSync(
                         path.join(targetDir, profileName + '.json'),
                         JSON.stringify(profile, null, 2)
@@ -9519,20 +9597,20 @@ function main() {
             }
         }
     
-    const source = read_file(input_path);
-    const l = new_lexer(source);
-    const p = new_parser(l);
-    const program = Parser_parse_program(p);
-    const gen = new_code_generator(target_lang);
+    let source = read_file(input_path);
+    let l = new_lexer(source);
+    let p = new_parser(l);
+    let program = Parser_parse_program(p);
+    let gen = new_code_generator(target_lang);
     
         if (framework) {
             gen.framework = framework;
         }
     
-    const code = CodeGenerator_generate(gen, program);
+    let code = CodeGenerator_generate(gen, program);
     
         if (show_coverage || gen.ast_node_count > 0) {
-            const coverage = gen.ast_node_count > 0 
+            let coverage = gen.ast_node_count > 0 
                 ? (gen.generated_count / gen.ast_node_count * 100).toFixed(1)
                 : 100;
             terminal.CLI_info("AST Coverage: " + coverage + "% (" + 
@@ -9550,6 +9628,8 @@ function main() {
 
 
 
+if (typeof main === 'function') main();
+
+
 // Expose all exports globally
 if (typeof global !== 'undefined') Object.assign(global, exports);
-console.log('Bundle exports:', Object.keys(exports));

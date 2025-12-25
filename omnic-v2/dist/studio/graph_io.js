@@ -1,20 +1,20 @@
 const graph_types = require("./graph_types.js");
 if (typeof global !== 'undefined') Object.assign(global, graph_types);
 
-    const { VisualGraph_new } = graph_types;
+    var { VisualGraph_new } = graph_types;
 
 function graph_to_json(graph) {
-    const json = "";
+    let json = "";
     
         json = JSON.stringify(graph, null, 2);
     
     return json;
 }
 function json_to_graph(json) {
-    const graph = VisualGraph_new();
+    let graph = VisualGraph_new();
     
         try {
-            const parsed = JSON.parse(json);
+            let parsed = JSON.parse(json);
             graph.nodes = parsed.nodes || [];
             graph.edges = parsed.edges || [];
             graph.viewport = parsed.viewport || { x: 0, y: 0, zoom: 1.0 };
@@ -26,31 +26,31 @@ function json_to_graph(json) {
     return graph;
 }
 function get_installed_package_nodes() {
-    const nodes = [];
+    let nodes = [];
     
         const fs = require('fs');
         const path = require('path');
         
-        const packagesDir = path.join(process.cwd(), 'packages');
+        let packagesDir = path.join(process.cwd(), 'packages');
         if (!fs.existsSync(packagesDir)) {
             return;
         }
         
-        const scanDir = (dir, pkgName = '') => {
-            const entries = fs.readdirSync(dir, { withFileTypes: true });
+        let scanDir = (dir, pkgName = '') => {
+            let entries = fs.readdirSync(dir, { withFileTypes: true });
             
             for (const entry of entries) {
-                const fullPath = path.join(dir, entry.name);
+                let fullPath = path.join(dir, entry.name);
                 
                 if (entry.isDirectory() && !entry.name.startsWith('.')) {
-                    const newPkgName = pkgName ? pkgName + '/' + entry.name : entry.name;
+                    let newPkgName = pkgName ? pkgName + '/' + entry.name : entry.name;
                     scanDir(fullPath, newPkgName);
                 } else if (entry.name.endsWith('.omni')) {
                     try {
-                        const source = fs.readFileSync(fullPath, 'utf-8');
+                        let source = fs.readFileSync(fullPath, 'utf-8');
                         
                         // Simple regex to find capsules and functions
-                        const capsuleMatches = source.matchAll(new RegExp("capsule\\s+(\\w+)\\s*\\{", "g")); // }
+                        let capsuleMatches = source.matchAll(new RegExp("capsule\\s+(\\w+)\\s*\\{", "g")); // }
                         for (const match of capsuleMatches) {
                             nodes.push({
                                 type: 'package_capsule',
@@ -61,7 +61,7 @@ function get_installed_package_nodes() {
                             });
                         }
                         
-                        const fnMatches = source.matchAll(new RegExp("fn\\s+(\\w+)\\s*\\(", "g"));
+                        let fnMatches = source.matchAll(new RegExp("fn\\s+(\\w+)\\s*\\(", "g"));
                         for (const match of fnMatches) {
                             // Skip private functions (starting with _)
                             if (!match[1].startsWith('_')) {

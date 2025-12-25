@@ -32,20 +32,20 @@ const terminal = require("./lib/terminal.js");
 if (typeof global !== 'undefined') Object.assign(global, terminal);
 const std = require("./lib/std.js");
 if (typeof global !== 'undefined') Object.assign(global, std);
-const cmd_setup = require("./commands/cmd_setup.js");
-if (typeof global !== 'undefined') Object.assign(global, cmd_setup);
-const cmd_run = require("./commands/cmd_run.js");
-if (typeof global !== 'undefined') Object.assign(global, cmd_run);
-const cmd_build = require("./commands/cmd_build.js");
-if (typeof global !== 'undefined') Object.assign(global, cmd_build);
-const cmd_test = require("./commands/cmd_test.js");
-if (typeof global !== 'undefined') Object.assign(global, cmd_test);
-const cmd_package = require("./commands/cmd_package.js");
-if (typeof global !== 'undefined') Object.assign(global, cmd_package);
-const cmd_registry = require("./commands/cmd_registry.js");
-if (typeof global !== 'undefined') Object.assign(global, cmd_registry);
-const cmd_studio = require("./commands/cmd_studio.js");
-if (typeof global !== 'undefined') Object.assign(global, cmd_studio);
+const mod_cmd_setup = require("./commands/cmd_setup.js");
+if (typeof global !== 'undefined') Object.assign(global, mod_cmd_setup);
+const mod_cmd_run = require("./commands/cmd_run.js");
+if (typeof global !== 'undefined') Object.assign(global, mod_cmd_run);
+const mod_cmd_build = require("./commands/cmd_build.js");
+if (typeof global !== 'undefined') Object.assign(global, mod_cmd_build);
+const mod_cmd_test = require("./commands/cmd_test.js");
+if (typeof global !== 'undefined') Object.assign(global, mod_cmd_test);
+const mod_cmd_package = require("./commands/cmd_package.js");
+if (typeof global !== 'undefined') Object.assign(global, mod_cmd_package);
+const mod_cmd_registry = require("./commands/cmd_registry.js");
+if (typeof global !== 'undefined') Object.assign(global, mod_cmd_registry);
+const mod_cmd_studio = require("./commands/cmd_studio.js");
+if (typeof global !== 'undefined') Object.assign(global, mod_cmd_studio);
 function cmd_version() {
     CLI_banner();
     print("Version: " + CLI_version());
@@ -57,16 +57,16 @@ function cmd_version() {
     
 }
 function main() {
-    const args_len = 0;
+    let args_len = 0;
     
         args_len = process.argv.length;
     
-    const command = "";
+    let command = "";
     
         command = process.argv[2] || '';
     
     if (command == "setup") {
-    const is_global = false;
+    let is_global = false;
     
             for (let i = 3; i < process.argv.length; i++) {
                 if (process.argv[i] === '--global' || process.argv[i] === '-g') {
@@ -82,7 +82,7 @@ function main() {
     return 0;
 }
     if (command == "package") {
-    const self_package = false;
+    let self_package = false;
      self_package = process.argv[3] === '--self'; 
     if (self_package) {
     cmd_package_self();
@@ -90,13 +90,13 @@ function main() {
 }
 }
     if (command == "install") {
-    const package_spec = "";
+    let package_spec = "";
      package_spec = process.argv[3] || ''; 
     cmd_install(package_spec);
     return 0;
 }
     if (command == "uninstall") {
-    const package_name = "";
+    let package_name = "";
      package_name = process.argv[3] || ''; 
     if (package_name == "") {
     terminal.CLI_error("Usage: omni uninstall <package_name>");
@@ -110,13 +110,13 @@ function main() {
     return 0;
 }
     if (command == "update") {
-    const package_name = "";
+    let package_name = "";
      package_name = process.argv[3] || ''; 
     cmd_update(package_name);
     return 0;
 }
     if (command == "search") {
-    const query = "";
+    let query = "";
      query = process.argv[3] || ''; 
     cmd_search(query);
     return 0;
@@ -130,8 +130,8 @@ function main() {
     return 0;
 }
     if (command == "graph") {
-    const input_file = "";
-    const output_file = "";
+    let input_file = "";
+    let output_file = "";
      
             input_file = process.argv[3] || '';
             output_file = process.argv[4] || '';
@@ -163,7 +163,7 @@ function main() {
     return 0;
 }
     if (command == "package") {
-    const target = "";
+    let target = "";
     
             for (let i = 3; i < process.argv.length; i++) {
                 if (process.argv[i] === '--app' && process.argv[i + 1]) {
@@ -171,21 +171,21 @@ function main() {
                 }
             }
             if (!target) {
-                const platform = process.platform;
+                let platform = process.platform;
                 if (platform === 'win32') target = 'windows';
                 else if (platform === 'darwin') target = 'macos';
                 else if (platform === 'linux') target = 'linux';
                 else target = 'windows';
             }
         
-    const config = AppConfig_default();
+    let config = AppConfig_default();
     
             const fs = require('fs');
             const path = require('path');
-            const configPath = path.join(process.cwd(), 'omni.config.json');
+            let configPath = path.join(process.cwd(), 'omni.config.json');
             
             if (fs.existsSync(configPath)) {
-                const cfg = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+                let cfg = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
                 if (cfg.app) {
                     config.name = cfg.app.name || config.name;
                     config.version = cfg.app.version || config.version;
@@ -198,8 +198,8 @@ function main() {
     return 0;
 }
     if (command == "ingest") {
-    const input_file = "";
-    const output_file = "";
+    let input_file = "";
+    let output_file = "";
      
             input_file = process.argv[3] || '';
             output_file = process.argv[4] || '';
@@ -229,7 +229,7 @@ function main() {
     cmd_test_all();
     return 0;
 }
-    const show_help = false;
+    let show_help = false;
      
         show_help = command === 'help' || command === '--help' || command === '-h'; 
     
@@ -257,18 +257,18 @@ function main() {
     print("");
     return 0;
 }
-    const input_path = "";
-    const output_path = "";
-    const target_lang = "js";
-    const package_path = "";
-    const framework = "";
-    const show_coverage = false;
+    let input_path = "";
+    let output_path = "";
+    let target_lang = "js";
+    let package_path = "";
+    let framework = "";
+    let show_coverage = false;
     
         input_path = process.argv[2];
         output_path = process.argv[3];
         
         for (let i = 4; i < process.argv.length; i++) {
-            const arg = process.argv[i];
+            let arg = process.argv[i];
             if (arg === "--target" && (i + 1 < process.argv.length)) {
                 target_lang = process.argv[++i];
             } else if (arg === "--package" && (i + 1 < process.argv.length)) {
@@ -290,18 +290,18 @@ function main() {
             if (fs.existsSync(package_path)) {
                 terminal.CLI_info("Loading package: " + package_path);
                 
-                const grammarPath = fs.statSync(package_path).isDirectory() 
+                let grammarPath = fs.statSync(package_path).isDirectory() 
                     ? path.join(package_path, 'grammar.json')
                     : package_path;
                     
                 if (fs.existsSync(grammarPath)) {
-                    const targetDir = path.join(__dirname, '..', 'targets');
+                    let targetDir = path.join(__dirname, '..', 'targets');
                     if (!fs.existsSync(targetDir)) {
                         fs.mkdirSync(targetDir, { recursive: true });
                     }
                     
-                    const profile = JSON.parse(fs.readFileSync(grammarPath, 'utf-8'));
-                    const profileName = profile.name || path.basename(package_path, '.omni-pkg');
+                    let profile = JSON.parse(fs.readFileSync(grammarPath, 'utf-8'));
+                    let profileName = profile.name || path.basename(package_path, '.omni-pkg');
                     fs.writeFileSync(
                         path.join(targetDir, profileName + '.json'),
                         JSON.stringify(profile, null, 2)
@@ -315,20 +315,20 @@ function main() {
             }
         }
     
-    const source = read_file(input_path);
-    const l = new_lexer(source);
-    const p = new_parser(l);
-    const program = Parser_parse_program(p);
-    const gen = new_code_generator(target_lang);
+    let source = read_file(input_path);
+    let l = new_lexer(source);
+    let p = new_parser(l);
+    let program = Parser_parse_program(p);
+    let gen = new_code_generator(target_lang);
     
         if (framework) {
             gen.framework = framework;
         }
     
-    const code = CodeGenerator_generate(gen, program);
+    let code = CodeGenerator_generate(gen, program);
     
         if (show_coverage || gen.ast_node_count > 0) {
-            const coverage = gen.ast_node_count > 0 
+            let coverage = gen.ast_node_count > 0 
                 ? (gen.generated_count / gen.ast_node_count * 100).toFixed(1)
                 : 100;
             terminal.CLI_info("AST Coverage: " + coverage + "% (" + 
@@ -344,3 +344,6 @@ function main() {
     CLI_success("Compiled successfully!");
 }
 
+
+
+if (typeof main === 'function') main();

@@ -31,16 +31,20 @@ fn cmd_run() -> bool {
     
     if (run_file == "") {
         CLI_error("Usage: omni run <file.omni> [--app] [--target python]");
-        return true; // Used to indicate handled but error? Or simply return
+        return true; 
     }
     
     let source = read_file(run_file);
+    if (source == "") {
+        // Error handling handled by read_file generally or we iterate safely
+    }
+
     let l = new_lexer(source);
     let p = new_parser(l);
     let program = Parser_parse_program(p);
     
-    if (is_app || target == "python") {
-         CLI_info("Compiling Native App (" + target + ")...");
+    if (is_app || target == "python" || target == "js") {
+         CLI_info("Compiling & Running (" + target + "): " + run_file);
          let gen = new_code_generator(target);
          let code = CodeGenerator_generate(gen, program);
          
@@ -48,10 +52,18 @@ fn cmd_run() -> bool {
          native "js" {
              const fs = require('fs');
              const path = require('path');
-             const { spawn } = require('child_process');
+             const { spawnSync } = require('child_process');
              
              const ext = target == "python" ? ".py" : ".js";
              const outFile = run_file.replace(".omni", ext); 
+             
+             // Auto-run main if exists
+             if (target == "js") {
+                 code += "\nif (typeof main === 'function') main();\n";
+             } else if (target == "python") {
+                 code += "\nif __name__ == '__main__':\n    main()\n";
+             }
+
              fs.writeFileSync(outFile, code);
              
              let cmd = "node";
@@ -61,10 +73,8 @@ fn cmd_run() -> bool {
                  args = [outFile];
              }
              
-             const proc = spawn(cmd, args, { stdio: 'inherit' });
-             proc.on('close', (code) => {
-                 // process.exit(code); // Optional
-             });
+             const proc = spawnSync(cmd, args, { stdio: 'inherit' });
+             // Returns { status, signal, output, ... }
          }
          return true;
     }

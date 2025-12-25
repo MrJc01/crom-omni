@@ -11,9 +11,9 @@ if (typeof global !== 'undefined') Object.assign(global, codegen_hybrid);
 const vm = require("../core/vm.js");
 if (typeof global !== 'undefined') Object.assign(global, vm);
 function cmd_run() {
-    const run_file = "";
-    const is_app = false;
-    const target = "js";
+    let run_file = "";
+    let is_app = false;
+    let target = "js";
      
          run_file = process.argv[3] || ''; 
          if (process.argv.includes("--app")) {
@@ -30,21 +30,31 @@ function cmd_run() {
     CLI_error("Usage: omni run <file.omni> [--app] [--target python]");
     return true;
 }
-    const source = read_file(run_file);
-    const l = new_lexer(source);
-    const p = new_parser(l);
-    const program = Parser_parse_program(p);
-    if (is_app || target == "python") {
-    CLI_info("Compiling Native App (" + target + ")...");
-    const gen = new_code_generator(target);
-    const code = CodeGenerator_generate(gen, program);
+    let source = read_file(run_file);
+    if (source == "") {
+}
+    let l = new_lexer(source);
+    let p = new_parser(l);
+    let program = Parser_parse_program(p);
+    if (is_app || target == "python" || target == "js") {
+    CLI_info("Compiling & Running (" + target + "): " + run_file);
+    let gen = new_code_generator(target);
+    let code = CodeGenerator_generate(gen, program);
     
              const fs = require('fs');
              const path = require('path');
-             const { spawn } = require('child_process');
+             const { spawnSync } = require('child_process');
              
-             const ext = target == "python" ? ".py" : ".js";
-             const outFile = run_file.replace(".omni", ext); 
+             let ext = target == "python" ? ".py" : ".js";
+             let outFile = run_file.replace(".omni", ext); 
+             
+             // Auto-run main if exists
+             if (target == "js") {
+                 code += "\nif (typeof main === 'function') main();\n";
+             } else if (target == "python") {
+                 code += "\nif __name__ == '__main__':\n    main()\n";
+             }
+
              fs.writeFileSync(outFile, code);
              
              let cmd = "node";
@@ -54,15 +64,13 @@ function cmd_run() {
                  args = [outFile];
              }
              
-             const proc = spawn(cmd, args, { stdio: 'inherit' });
-             proc.on('close', (code) => {
-                 // process.exit(code); // Optional
-             });
+             let proc = spawnSync(cmd, args, { stdio: 'inherit' });
+             // Returns { status, signal, output, ... }
          
     return true;
 }
     CLI_info("VM Mode - Executing: " + run_file);
-    const vm = OmniVM_new();
+    let vm = OmniVM_new();
     OmniVM_run(vm, program);
     return true;
 }

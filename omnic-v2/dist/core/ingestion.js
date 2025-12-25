@@ -24,7 +24,7 @@ function new_map() {
     return 0;
 }
 function PatternDatabase_new() {
-    const db = new PatternDatabase({ patterns: new_map() });
+    let db = new PatternDatabase({ patterns: new_map() });
     
         const patterns = require('./ingestion_patterns.js');
         db.patterns = patterns;
@@ -32,15 +32,15 @@ function PatternDatabase_new() {
         // Load external patterns from patterns/ directory
         const fs = require('fs');
         const path = require('path');
-        const patternsDir = path.join(__dirname, '..', 'patterns');
+        let patternsDir = path.join(__dirname, '..', 'patterns');
         
         if (fs.existsSync(patternsDir)) {
-            const files = fs.readdirSync(patternsDir).filter(f => f.endsWith('.json'));
+            let files = fs.readdirSync(patternsDir).filter(f => f.endsWith('.json'));
             
             for (const file of files) {
                 try {
-                    const content = JSON.parse(fs.readFileSync(path.join(patternsDir, file), 'utf-8'));
-                    const lang = content.language || path.basename(file, '.json');
+                    let content = JSON.parse(fs.readFileSync(path.join(patternsDir, file), 'utf-8'));
+                    let lang = content.language || path.basename(file, '.json');
                     
                     if (!db.patterns[lang]) {
                         db.patterns[lang] = [];
@@ -84,7 +84,7 @@ function IngestionEngine_new(source_lang) {
     return new IngestionEngine({ patterns: PatternDatabase_new(), source_language: source_lang, detected_patterns: [], omni_output: "", confidence_score: 0 });
 }
 function IngestionEngine_detect_language(source) {
-    const lang = "unknown";
+    let lang = "unknown";
     
         // Heuristic language detection
         if (source.includes('<?php') || source.includes('<?=')) {
@@ -105,14 +105,14 @@ function IngestionEngine_detect_language(source) {
 }
 function IngestionEngine_analyze(self, source) {
     
-        const patterns = self.patterns.patterns[self.source_language] || [];
+        let patterns = self.patterns.patterns[self.source_language] || [];
         self.detected_patterns = [];
         
         for (const pattern of patterns) {
-            const matches = source.match(new RegExp(pattern.regex, 'gm'));
+            let matches = source.match(new RegExp(pattern.regex, 'gm'));
             if (matches) {
                 for (const match of matches) {
-                    const groups = match.match(pattern.regex);
+                    let groups = match.match(pattern.regex);
                     if (groups) {
                         self.detected_patterns.push({
                             pattern: pattern.name,
@@ -131,7 +131,7 @@ function IngestionEngine_analyze(self, source) {
     
 }
 function IngestionEngine_generate_omni(self) {
-    const output = "";
+    let output = "";
     
         output = "// ============================================================================\n";
         output += "// AUTO-GENERATED OMNI CODE\n";
@@ -141,13 +141,13 @@ function IngestionEngine_generate_omni(self) {
         output += "// ============================================================================\n\n";
         
         // Group by pattern type
-        const structs = [];
-        const capsules = [];
-        const functions = [];
-        const flows = [];
+        let structs = [];
+        let capsules = [];
+        let functions = [];
+        let flows = [];
         
         for (const detected of self.detected_patterns) {
-            const omni = detected.omni;
+            let omni = detected.omni;
             if (omni.includes('@entity') || omni.includes('struct')) {
                 structs.push(omni);
             } else if (omni.includes('capsule') || omni.includes('@server')) {
@@ -198,7 +198,7 @@ function IngestionEngine_report(self) {
         console.log("└────────────────────────────────────────────┘");
         console.log("\nDetected Patterns:");
         
-        const patternCounts = {};
+        let patternCounts = {};
         for (const p of self.detected_patterns) {
             patternCounts[p.pattern] = (patternCounts[p.pattern] || 0) + 1;
         }
@@ -211,17 +211,17 @@ function IngestionEngine_report(self) {
 function cmd_ingest(input_file, output_file) {
     CLI_header("Omni Ingestion Engine");
     CLI_info("Analyzing: " + input_file);
-    const source = read_file(input_file);
-    const lang = IngestionEngine_detect_language(source);
+    let source = read_file(input_file);
+    let lang = IngestionEngine_detect_language(source);
     CLI_info("Detected language: " + lang);
     if (lang == "unknown") {
     CLI_error("Could not detect source language");
     return null;
 }
-    const engine = IngestionEngine_new(lang);
+    let engine = IngestionEngine_new(lang);
     IngestionEngine_analyze(engine, source);
     IngestionEngine_report(engine);
-    const omni_code = IngestionEngine_generate_omni(engine);
+    let omni_code = IngestionEngine_generate_omni(engine);
     write_file(output_file, omni_code);
     CLI_success("Generated: " + output_file);
     CLI_info("Review the generated code and add missing implementation details.");

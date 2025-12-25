@@ -1,7 +1,7 @@
 const terminal = require("../lib/terminal.js");
 if (typeof global !== 'undefined') Object.assign(global, terminal);
 function get_omni_home() {
-    const home = "";
+    let home = "";
     
         const path = require('path');
         const os = require('os');
@@ -16,7 +16,7 @@ function get_omni_home() {
         }
         // Priority 3: User's home directory
         else {
-            const platform = os.platform();
+            let platform = os.platform();
             if (platform === 'win32') {
                 home = path.join(os.homedir(), 'AppData', 'Local', 'Omni');
             } else {
@@ -27,28 +27,28 @@ function get_omni_home() {
     return home;
 }
 function resolve_resource_path(name) {
-    const resolved = "";
+    let resolved = "";
     
         const fs = require('fs');
         const path = require('path');
         
         // Strategy 1: Local project path (./targets/, ./packages/, ./patterns/)
-        const localPath = path.join(process.cwd(), name);
+        let localPath = path.join(process.cwd(), name);
         if (fs.existsSync(localPath)) {
             resolved = localPath;
             return;
         }
         
         // Strategy 2: Relative to executable (dist/../)
-        const execPath = path.join(__dirname, '..', name);
+        let execPath = path.join(__dirname, '..', name);
         if (fs.existsSync(execPath)) {
             resolved = execPath;
             return;
         }
         
         // Strategy 3: OMNI_HOME
-        const omniHome = get_omni_home();
-        const homePath = path.join(omniHome, name);
+        let omniHome = get_omni_home();
+        let homePath = path.join(omniHome, name);
         if (fs.existsSync(homePath)) {
             resolved = homePath;
             return;
@@ -56,7 +56,7 @@ function resolve_resource_path(name) {
         
         // Strategy 4: Global installation
         const os = require('os');
-        const platform = os.platform();
+        let platform = os.platform();
         let globalPath;
         
         if (platform === 'win32') {
@@ -84,9 +84,9 @@ function cmd_setup(is_global) {
         const path = require('path');
         const { execSync } = require('child_process');
         
-        const platform = os.platform();
-        const isWindows = platform === 'win32';
-        const omniDir = path.dirname(path.dirname(__filename));
+        let platform = os.platform();
+        let isWindows = platform === 'win32';
+        let omniDir = path.dirname(path.dirname(__filename));
         
         terminal.CLI_info("Platform: " + platform + " (" + os.arch() + ")");
         terminal.CLI_info("Omni directory: " + omniDir);
@@ -119,15 +119,15 @@ function cmd_setup(is_global) {
             }
             
             // Copy dist folder
-            const srcDist = path.join(omniDir, 'dist');
-            const dstDist = path.join(globalDir, 'dist');
+            let srcDist = path.join(omniDir, 'dist');
+            let dstDist = path.join(globalDir, 'dist');
             
             if (fs.existsSync(srcDist)) {
                 if (!fs.existsSync(dstDist)) {
                     fs.mkdirSync(dstDist, { recursive: true });
                 }
                 
-                const files = fs.readdirSync(srcDist);
+                let files = fs.readdirSync(srcDist);
                 for (const file of files) {
                     fs.copyFileSync(
                         path.join(srcDist, file),
@@ -138,19 +138,19 @@ function cmd_setup(is_global) {
             }
             
             // Copy lib folder
-            const srcLib = path.join(omniDir, 'src', 'lib');
-            const dstLib = path.join(globalDir, 'lib');
+            let srcLib = path.join(omniDir, 'src', 'lib');
+            let dstLib = path.join(globalDir, 'lib');
             
             if (fs.existsSync(srcLib)) {
                 if (!fs.existsSync(dstLib)) {
                     fs.mkdirSync(dstLib, { recursive: true });
                 }
                 
-                const walkAndCopy = (src, dst) => {
-                    const entries = fs.readdirSync(src, { withFileTypes: true });
+                let walkAndCopy = (src, dst) => {
+                    let entries = fs.readdirSync(src, { withFileTypes: true });
                     for (const entry of entries) {
-                        const srcPath = path.join(src, entry.name);
-                        const dstPath = path.join(dst, entry.name);
+                        let srcPath = path.join(src, entry.name);
+                        let dstPath = path.join(dst, entry.name);
                         if (entry.isDirectory()) {
                             if (!fs.existsSync(dstPath)) fs.mkdirSync(dstPath);
                             walkAndCopy(srcPath, dstPath);
@@ -167,21 +167,21 @@ function cmd_setup(is_global) {
             
             if (isWindows) {
                 // Windows: Create batch and PowerShell wrappers
-                const cmdContent = `@echo off
+                let cmdContent = `@echo off
 node "%~dp0dist\\main.js" %*`;
                 fs.writeFileSync(path.join(globalDir, 'omni.cmd'), cmdContent);
                 
-                const ps1Content = `#!/usr/bin/env pwsh
+                let ps1Content = `#!/usr/bin/env pwsh
 node "$PSScriptRoot\\dist\\main.js" @args`;
                 fs.writeFileSync(path.join(globalDir, 'omni.ps1'), ps1Content);
                 
                 CLI_success("Created omni.cmd and omni.ps1");
             } else {
                 // Unix: Create shell script
-                const shContent = `#!/usr/bin/env bash
+                let shContent = `#!/usr/bin/env bash
 OMNI_DIR="$( cd "$( dirname "\${BASH_SOURCE[0]}" )" && pwd )"
 node "$OMNI_DIR/dist/main.js" "$@"`;
-                const shPath = path.join(globalDir, 'omni');
+                let shPath = path.join(globalDir, 'omni');
                 fs.writeFileSync(shPath, shContent);
                 fs.chmodSync(shPath, '755');
                 
@@ -196,7 +196,7 @@ node "$OMNI_DIR/dist/main.js" "$@"`;
                 
                 // Try to add to user PATH
                 try {
-                    const currentPath = execSync('echo %PATH%', { encoding: 'utf-8' }).trim();
+                    let currentPath = execSync('echo %PATH%', { encoding: 'utf-8' }).trim();
                     if (!currentPath.includes(globalDir)) {
                         console.log("");
                         CLI_warning("Add this directory to your PATH:");
@@ -216,7 +216,7 @@ node "$OMNI_DIR/dist/main.js" "$@"`;
                     fs.mkdirSync(binDir, { recursive: true });
                 }
                 
-                const linkPath = path.join(binDir, 'omni');
+                let linkPath = path.join(binDir, 'omni');
                 try {
                     if (fs.existsSync(linkPath)) fs.unlinkSync(linkPath);
                     fs.symlinkSync(path.join(globalDir, 'omni'), linkPath);
@@ -226,7 +226,7 @@ node "$OMNI_DIR/dist/main.js" "$@"`;
                 }
                 
                 // Check if ~/.local/bin is in PATH
-                const shellPath = process.env.PATH || '';
+                let shellPath = process.env.PATH || '';
                 if (!shellPath.includes(binDir)) {
                     console.log("");
                     CLI_warning("Add to your shell profile (~/.bashrc or ~/.zshrc):");
@@ -245,17 +245,17 @@ node "$OMNI_DIR/dist/main.js" "$@"`;
             // ============================================================
             CLI_step(1, 2, "Creating local wrapper...");
             
-            const cwd = process.cwd();
+            let cwd = process.cwd();
             
             if (isWindows) {
-                const cmdContent = `@echo off
+                let cmdContent = `@echo off
 node "${path.join(omniDir, 'dist', 'main.js')}" %*`;
                 fs.writeFileSync(path.join(cwd, 'omni.cmd'), cmdContent);
                 CLI_success("Created: omni.cmd");
             } else {
-                const shContent = `#!/usr/bin/env bash
+                let shContent = `#!/usr/bin/env bash
 node "${path.join(omniDir, 'dist', 'main.js')}" "$@"`;
-                const shPath = path.join(cwd, 'omni');
+                let shPath = path.join(cwd, 'omni');
                 fs.writeFileSync(shPath, shContent);
                 fs.chmodSync(shPath, '755');
                 CLI_success("Created: ./omni");

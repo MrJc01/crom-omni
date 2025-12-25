@@ -2,7 +2,7 @@
 import "./graph_types.omni";
 
 native "js" {
-    const { VisualGraph_new } = graph_types;
+    var { VisualGraph_new } = graph_types;
 }
 
 // ============================================================================

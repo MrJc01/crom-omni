@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 const HybridImpl = {
-    LanguageProfile_load: function(self) {
+    LanguageProfile_load_impl: function(self) {
         // Try multiple paths for profile
         const paths = [
             path.join(__dirname, '..', 'targets', self.name + '.json'),
@@ -51,7 +51,7 @@ const HybridImpl = {
         return self;
     },
 
-    LanguageProfile_render: function(self, template_name, data) {
+    LanguageProfile_render_impl: function(self, template_name, data) {
         const template = self.templates[template_name];
         if (!template) {
             return "/* Template '" + template_name + "' not found */";
@@ -61,7 +61,7 @@ const HybridImpl = {
         });
     },
 
-    LanguageProfile_map_operator: function(self, op) {
+    LanguageProfile_map_operator_impl: function(self, op) {
         const opMap = { '==': 'eq', '!=': 'neq', '&&': 'and', '||': 'or', '<': 'lt', '>': 'gt' };
         const key = opMap[op];
         if (key && self.operators[key]) {
@@ -70,7 +70,7 @@ const HybridImpl = {
         return op;
     },
 
-    HybridCodeGenerator_indent: function(self, code) {
+    HybridCodeGenerator_indent_impl: function(self, code) {
         const prefix = self.profile.indent_str.repeat(self.indent_level);
         return code.split('\n').map(line => line ? prefix + line : line).join('\n');
     },

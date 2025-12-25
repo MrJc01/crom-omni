@@ -50,7 +50,7 @@ function GhostWriter_analyze(self, program) {
         for (const stmt of program.statements) {
             // Capsule
             if (stmt.kind === 93) { // NODE_CAPSULE
-                const capsule = {
+                let capsule = {
                     name: stmt.name,
                     flows: [],
                     entities: [],
@@ -72,7 +72,7 @@ function GhostWriter_analyze(self, program) {
             
             // Struct / Entity
             if (stmt.kind === 70) { // NODE_STRUCT
-                const entity = {
+                let entity = {
                     name: stmt.name,
                     fields: stmt.fields || [],
                     isEntity: (stmt.attributes || []).some(a => a.name === 'entity')
@@ -82,7 +82,7 @@ function GhostWriter_analyze(self, program) {
             
             // Function
             if (stmt.kind === 4) { // NODE_FUNCTION
-                const fn = {
+                let fn = {
                     name: stmt.name,
                     params: stmt.params || [],
                     return_type: stmt.return_type || 'void',
@@ -90,7 +90,7 @@ function GhostWriter_analyze(self, program) {
                 };
                 
                 // Extract function calls from body
-                const extractCalls = (node) => {
+                let extractCalls = (node) => {
                     if (!node) return;
                     if (node.kind === 6) { // NODE_CALL
                         fn.calls.push(node.name || (node.callee && node.callee.value));
@@ -121,7 +121,7 @@ function GhostWriter_analyze(self, program) {
     
 }
 function GhostWriter_gen_class_diagram(self) {
-    const diagram = "";
+    let diagram = "";
     
         diagram = "```mermaid\nclassDiagram\n";
         
@@ -130,8 +130,8 @@ function GhostWriter_gen_class_diagram(self) {
             diagram += "    class " + entity.name + " {\n";
             
             for (const field of entity.fields) {
-                const fieldName = field.name || field;
-                const fieldType = field.type || 'any';
+                let fieldName = field.name || field;
+                let fieldType = field.type || 'any';
                 diagram += "        +" + fieldType + " " + fieldName + "\n";
             }
             
@@ -144,7 +144,7 @@ function GhostWriter_gen_class_diagram(self) {
             diagram += "        <<capsule>>\n";
             
             for (const flow of capsule.flows) {
-                const params = (flow.params || []).map(p => 
+                let params = (flow.params || []).map(p => 
                     typeof p === 'string' ? p : p.name
                 ).join(', ');
                 diagram += "        +" + flow.name + "(" + params + ") " + flow.return_type + "\n";
@@ -157,7 +157,7 @@ function GhostWriter_gen_class_diagram(self) {
         for (const capsule of self.capsules) {
             for (const entity of self.entities) {
                 // Check if capsule references entity
-                const capsuleStr = JSON.stringify(capsule);
+                let capsuleStr = JSON.stringify(capsule);
                 if (capsuleStr.includes(entity.name)) {
                     diagram += "    " + capsule.name + " --> " + entity.name + " : uses\n";
                 }
@@ -169,7 +169,7 @@ function GhostWriter_gen_class_diagram(self) {
     return diagram;
 }
 function GhostWriter_gen_flowchart(self) {
-    const diagram = "";
+    let diagram = "";
     
         diagram = "```mermaid\nflowchart TD\n";
         
@@ -178,15 +178,15 @@ function GhostWriter_gen_flowchart(self) {
             diagram += "    subgraph " + capsule.name + "\n";
             
             for (const flow of capsule.flows) {
-                const nodeId = capsule.name + "_" + flow.name;
+                let nodeId = capsule.name + "_" + flow.name;
                 
                 // Check for server attribute
-                const serverAttr = flow.attributes.find(a => 
+                let serverAttr = flow.attributes.find(a => 
                     a.name && a.name.startsWith('server.')
                 );
                 
                 if (serverAttr) {
-                    const method = serverAttr.name.split('.')[1].toUpperCase();
+                    let method = serverAttr.name.split('.')[1].toUpperCase();
                     diagram += "        " + nodeId + "[(" + method + " " + flow.name + ")]\n";
                 } else {
                     diagram += "        " + nodeId + "[" + flow.name + "]\n";
@@ -199,8 +199,8 @@ function GhostWriter_gen_flowchart(self) {
         // Connect capsule flows
         for (const capsule of self.capsules) {
             for (let i = 0; i < capsule.flows.length - 1; i++) {
-                const from = capsule.name + "_" + capsule.flows[i].name;
-                const to = capsule.name + "_" + capsule.flows[i + 1].name;
+                let from = capsule.name + "_" + capsule.flows[i].name;
+                let to = capsule.name + "_" + capsule.flows[i + 1].name;
                 // diagram += "    " + from + " --> " + to + "\n";
             }
         }
@@ -210,7 +210,7 @@ function GhostWriter_gen_flowchart(self) {
             diagram += "    DB[(" + entity.name + " DB)]\n";
             
             for (const capsule of self.capsules) {
-                const capsuleStr = JSON.stringify(capsule);
+                let capsuleStr = JSON.stringify(capsule);
                 if (capsuleStr.includes(entity.name)) {
                     diagram += "    " + capsule.name + "_" + capsule.flows[0].name + " --> DB\n";
                 }
@@ -222,7 +222,7 @@ function GhostWriter_gen_flowchart(self) {
     return diagram;
 }
 function GhostWriter_gen_sequence_diagram(self) {
-    const diagram = "";
+    let diagram = "";
     
         diagram = "```mermaid\nsequenceDiagram\n";
         
@@ -242,17 +242,17 @@ function GhostWriter_gen_sequence_diagram(self) {
         // Sequence for each flow
         for (const capsule of self.capsules) {
             for (const flow of capsule.flows) {
-                const serverAttr = flow.attributes.find(a => 
+                let serverAttr = flow.attributes.find(a => 
                     a.name && a.name.startsWith('server.')
                 );
                 
                 if (serverAttr) {
-                    const method = serverAttr.name.split('.')[1].toUpperCase();
+                    let method = serverAttr.name.split('.')[1].toUpperCase();
                     diagram += "    Client->>+" + capsule.name + ": " + method + " /" + flow.name + "\n";
                     
                     // Check for entity access
                     for (const entity of self.entities.filter(e => e.isEntity)) {
-                        const flowStr = JSON.stringify(flow);
+                        let flowStr = JSON.stringify(flow);
                         if (flowStr.includes(entity.name) || flow.return_type === entity.name) {
                             diagram += "    " + capsule.name + "->>+" + entity.name + "DB: Query\n";
                             diagram += "    " + entity.name + "DB-->>-" + capsule.name + ": Results\n";
@@ -269,7 +269,7 @@ function GhostWriter_gen_sequence_diagram(self) {
     return diagram;
 }
 function GhostWriter_gen_call_graph(self) {
-    const diagram = "";
+    let diagram = "";
     
         diagram = "```mermaid\ngraph LR\n";
         
@@ -301,7 +301,7 @@ function GhostWriter_gen_call_graph(self) {
     return diagram;
 }
 function GhostWriter_generate_docs(self, project_name) {
-    const doc = "";
+    let doc = "";
     
         doc = "# " + project_name + " - Architecture Documentation\n\n";
         doc += "> Auto-generated by Omni Ghost Writer\n\n";
@@ -339,7 +339,7 @@ function GhostWriter_generate_docs(self, project_name) {
             doc += "### Capsule: " + capsule.name + "\n\n";
             
             for (const flow of capsule.flows) {
-                const params = (flow.params || []).map(p => 
+                let params = (flow.params || []).map(p => 
                     typeof p === 'string' ? p : (p.name + ': ' + (p.type || 'any'))
                 ).join(', ');
                 
@@ -348,8 +348,8 @@ function GhostWriter_generate_docs(self, project_name) {
                 // Attributes
                 for (const attr of flow.attributes) {
                     if (attr.name && attr.name.startsWith('server.')) {
-                        const method = attr.name.split('.')[1].toUpperCase();
-                        const path = attr.args && attr.args[0] ? attr.args[0] : '/' + flow.name;
+                        let method = attr.name.split('.')[1].toUpperCase();
+                        let path = attr.args && attr.args[0] ? attr.args[0] : '/' + flow.name;
                         doc += "- **Endpoint:** `" + method + " " + path + "`\n";
                     }
                 }
@@ -367,8 +367,8 @@ function GhostWriter_generate_docs(self, project_name) {
             doc += "|-------|------|\n";
             
             for (const field of entity.fields) {
-                const name = field.name || field;
-                const type = field.type || 'any';
+                let name = field.name || field;
+                let type = field.type || 'any';
                 doc += "| " + name + " | " + type + " |\n";
             }
             
@@ -383,18 +383,18 @@ function GhostWriter_generate_docs(self, project_name) {
 function cmd_graph(input_file, output_file) {
     CLI_header("Omni Ghost Writer");
     CLI_info("Analyzing: " + input_file);
-    const source = read_file(input_file);
-    const l = new_lexer(source);
-    const p = new_parser(l);
-    const program = Parser_parse_program(p);
-    const writer = GhostWriter_new();
+    let source = read_file(input_file);
+    let l = new_lexer(source);
+    let p = new_parser(l);
+    let program = Parser_parse_program(p);
+    let writer = GhostWriter_new();
     GhostWriter_analyze(writer, program);
-    const project_name = "";
+    let project_name = "";
     
         const path = require('path');
         project_name = path.basename(input_file, '.omni');
     
-    const docs = GhostWriter_generate_docs(writer, project_name);
+    let docs = GhostWriter_generate_docs(writer, project_name);
     write_file(output_file, docs);
     CLI_success("Documentation generated: " + output_file);
     

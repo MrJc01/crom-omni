@@ -1,2 +1,2 @@
 @echo off
-node "%~dp0dist\main.js" %*
+node "%~dp0dist\omni_bundle.js" %*

@@ -3,7 +3,7 @@ import "../core/ast.omni";
 import "./graph_types.omni";
 
 native "js" {
-    const { VisualGraph_new, VisualGraph } = graph_types;
+    var { VisualGraph_new, VisualGraph: VisualGraph_Class } = graph_types;
 }
 
 // ============================================================================

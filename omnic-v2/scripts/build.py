@@ -159,10 +159,9 @@ def main():
     # I replaced "studio_engine", "studio_graph" with "tui".
     # I should add them back to full_core_modules.
     
-    extra_core = ["studio_engine", "studio_graph", "app_packager"]
-    for mod in extra_core:
-        if compile_file(os.path.join(SRC_DIR, "core", f"{mod}.omni"), os.path.join(DIST_DIR, "core", f"{mod}.js"), auto_export=True):
-            compiled_core.append(mod)
+    # Compile Facades (studio_engine, studio_graph) LAST so they can find dependencies if checked?
+    # Actually, they are in core/ so they are in full_core_modules list.
+    # extra_core block removed to prevent duplicate inclusion.
 
     # Lib
     print("Step 2: Compiling lib modules...")
@@ -181,6 +180,49 @@ def main():
     # Main
     print("Step 4: Compiling main.omni...")
     compile_file(os.path.join(SRC_DIR, "main.omni"), os.path.join(DIST_DIR, "main.js"))
+    
+    # Function to patch generic JS issues (const -> let)
+    def patch_js_file(file_path):
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = f.read()
+            
+        # Fix: Compiler generates 'const' for 'let', preventing reassignment
+        # Pattern: const var_name = ... -> let var_name = ...
+        # Exclude import requires
+        # Match any identifier start (lowercase or uppercase)
+        new_content = re.sub(r'const\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*=(?!\s*require)', r'let \1 =', content)
+        
+        if content != new_content:
+            with open(file_path, "w", encoding="utf-8") as f:
+                f.write(new_content)
+                
+    # Patch all generated JS files for const/let issue
+    print("Patching generated JS files...")
+    for root, dirs, files in os.walk(DIST_DIR):
+        for file in files:
+            if file.endswith(".js") and file != "omni_bundle.js":
+                patch_js_file(os.path.join(root, file))
+
+    # Specific patches for main.js (Entry Point & Module Renaming)
+    with open(os.path.join(DIST_DIR, "main.js"), "r", encoding="utf-8") as f:
+        main_content = f.read()
+    
+    # Fix 2: Rename command module imports to avoid shadowing global functions (ONLY needed in main.js)
+    # const cmd_run = require(...) -> const mod_cmd_run = require(...)
+    # Object.assign(global, cmd_run) -> Object.assign(global, mod_cmd_run)
+    main_content = re.sub(r'const (cmd_\w+) = require', r'const mod_\1 = require', main_content)
+    main_content = re.sub(r'Object\.assign\(global, (cmd_\w+)\)', r'Object.assign(global, mod_\1)', main_content)
+    
+    # Append execution trigger
+    if "if (typeof main === 'function') main();" not in main_content:
+        main_content += "\n\nif (typeof main === 'function') main();\n"
+    
+    with open(os.path.join(DIST_DIR, "main.js"), "w", encoding="utf-8") as f:
+        f.write(main_content)
+
+    # Specific patch for std.js (Export missing functions due to compiler bug)
+    with open(os.path.join(DIST_DIR, "lib/std.js"), "a", encoding="utf-8") as f:
+        f.write("\nmodule.exports = { print, read_file, write_file };\n")
 
     # Bundle
     print("Step 5: Creating bundle...")
@@ -219,6 +261,29 @@ def main():
         return content
 
     for mod in compiled_core:
+        # Pre-append helper JS for specific modules
+        if mod == "codegen_hybrid":
+             bundle_content.append(f"\n// === Helper: core/codegen_hybrid_impl.js ===")
+             if os.path.exists(os.path.join(SRC_DIR, "core", "codegen_hybrid_impl.js")):
+                 with open(os.path.join(SRC_DIR, "core", "codegen_hybrid_impl.js"), "r", encoding="utf-8") as f:
+                     helper = f.read()
+                     # Patch exports
+                     helper = helper.replace("module.exports = HybridImpl;", "Object.assign(exports, HybridImpl);")
+                     # Patch requires
+                     helper = re.sub(r"const \w+ = require\(['\"](fs|path|os|child_process)['\"]\);", r"// \g<0> (hoisted)", helper)
+                     bundle_content.append(helper)
+
+        # Inject helper JS for ingestion
+        if mod == "ingestion":
+             bundle_content.append(f"\n// === Helper: core/ingestion_patterns.js ===")
+             if os.path.exists(os.path.join(SRC_DIR, "core", "ingestion_patterns.js")):
+                 with open(os.path.join(SRC_DIR, "core", "ingestion_patterns.js"), "r", encoding="utf-8") as f:
+                     helper = f.read()
+                     # Patch exports to mix into global exports
+                     helper = helper.replace("module.exports = {", "Object.assign(exports, {")
+                     helper = helper.replace("};", "});")
+                     bundle_content.append(helper)
+
         bundle_content.append(f"\n// === Module: core/{mod} ===")
         content = process_module(os.path.join(DIST_DIR, "core", f"{mod}.js"))
         bundle_content.append(content)
@@ -247,8 +312,7 @@ def main():
 
     # Add footer to expose all exports globally
     bundle_content.append("\n// Expose all exports globally")
-    bundle_content.append("if (typeof global !== 'undefined') Object.assign(global, exports);")
-    bundle_content.append("console.log('Bundle exports:', Object.keys(exports));") 
+    bundle_content.append("if (typeof global !== 'undefined') Object.assign(global, exports);") 
     
     with open(os.path.join(DIST_DIR, "omni_bundle.js"), "w", encoding="utf-8") as f:
         f.write("\n".join(bundle_content))

@@ -13,7 +13,7 @@ class GitPackage {
     }
 }
 function GitPackage_parse(spec) {
-    const pkg = new GitPackage({ name: "", provider: "github", owner: "", repo: "", full_url: "", commit: "", branch: "main", local_path: "" });
+    let pkg = new GitPackage({ name: "", provider: "github", owner: "", repo: "", full_url: "", commit: "", branch: "main", local_path: "" });
     
         const path = require('path');
         
@@ -41,7 +41,7 @@ function GitPackage_parse(spec) {
             pkg.provider = 'url';
             pkg.full_url = input;
             // Extract name from URL
-            const parts = input.split('/');
+            let parts = input.split('/');
             pkg.name = parts.slice(-2).join('/');
             pkg.owner = parts[parts.length - 2];
             pkg.repo = parts[parts.length - 1].replace('.git', '');
@@ -49,7 +49,7 @@ function GitPackage_parse(spec) {
         
         // Parse owner/repo format
         if (!pkg.full_url && input.includes('/')) {
-            const parts = input.split('/');
+            let parts = input.split('/');
             pkg.owner = parts[0];
             pkg.repo = parts[1].replace('.git', '');
             pkg.name = pkg.owner + '/' + pkg.repo;
@@ -67,14 +67,14 @@ function GitPackage_parse(spec) {
     return pkg;
 }
 function GitPackage_get_zip_url(pkg) {
-    const url = "";
+    let url = "";
     
         if (pkg.provider === 'github') {
             // GitHub archive URL (no git required)
-            const branch = pkg.commit || pkg.branch || 'main';
+            let branch = pkg.commit || pkg.branch || 'main';
             url = pkg.full_url + '/archive/refs/heads/' + branch + '.zip';
         } else if (pkg.provider === 'gitlab') {
-            const branch = pkg.commit || pkg.branch || 'main';
+            let branch = pkg.commit || pkg.branch || 'main';
             url = pkg.full_url + '/-/archive/' + branch + '/' + pkg.repo + '-' + branch + '.zip';
         } else {
             url = pkg.full_url;
@@ -83,7 +83,7 @@ function GitPackage_get_zip_url(pkg) {
     return url;
 }
 function GitPackage_get_api_url(pkg) {
-    const url = "";
+    let url = "";
     
         if (pkg.provider === 'github') {
             url = 'https://api.github.com/repos/' + pkg.owner + '/' + pkg.repo;
@@ -112,16 +112,16 @@ function new_map() {
     return 0;
 }
 function LockFile_load(project_dir) {
-    const lock = new LockFile({ version: "1.0", packages: new_map() });
+    let lock = new LockFile({ version: "1.0", packages: new_map() });
     
         const fs = require('fs');
         const path = require('path');
         
-        const lockPath = path.join(project_dir, 'omni.lock');
+        let lockPath = path.join(project_dir, 'omni.lock');
         
         if (fs.existsSync(lockPath)) {
             try {
-                const data = JSON.parse(fs.readFileSync(lockPath, 'utf-8'));
+                let data = JSON.parse(fs.readFileSync(lockPath, 'utf-8'));
                 lock.version = data.version || '1.0';
                 lock.packages = data.packages || {};
             } catch (e) {
@@ -136,7 +136,7 @@ function LockFile_save(lock, project_dir) {
         const fs = require('fs');
         const path = require('path');
         
-        const lockPath = path.join(project_dir, 'omni.lock');
+        let lockPath = path.join(project_dir, 'omni.lock');
         
         fs.writeFileSync(lockPath, JSON.stringify({
             version: lock.version,
@@ -157,7 +157,7 @@ function LockFile_add(lock, pkg) {
     
 }
 function LockFile_get(lock, name) {
-    const entry = new LockEntry({ name: "", url: "", commit: "", installed_at: "" });
+    let entry = new LockEntry({ name: "", url: "", commit: "", installed_at: "" });
     
         if (lock.packages[name]) {
             entry = lock.packages[name];
@@ -171,24 +171,24 @@ function LockFile_remove(lock, name) {
     
 }
 function git_get_latest_commit(pkg) {
-    const commit = "";
+    let commit = "";
     
         const https = require('https');
         
         // Use GitHub API to get latest commit
         if (pkg.provider === 'github') {
-            const apiUrl = 'https://api.github.com/repos/' + pkg.owner + '/' + pkg.repo + '/commits?per_page=1';
+            let apiUrl = 'https://api.github.com/repos/' + pkg.owner + '/' + pkg.repo + '/commits?per_page=1';
             
             console.log(CLI_COLORS.dim + '  Fetching latest commit...' + CLI_COLORS.reset);
             
             // Sync HTTP request (simplified for demo)
             const { execSync } = require('child_process');
             try {
-                const result = execSync(
+                let result = execSync(
                     'curl -s -H "Accept: application/vnd.github.v3+json" "' + apiUrl + '"',
                     { encoding: 'utf-8' }
                 );
-                const data = JSON.parse(result);
+                let data = JSON.parse(result);
                 if (data && data[0] && data[0].sha) {
                     commit = data[0].sha;
                 }
@@ -200,14 +200,14 @@ function git_get_latest_commit(pkg) {
     return commit;
 }
 function git_clone(pkg, target_dir) {
-    const success = false;
+    let success = false;
     
         const { execSync, exec } = require('child_process');
         const fs = require('fs');
         const path = require('path');
         
         // Ensure parent directory exists
-        const parentDir = path.dirname(target_dir);
+        let parentDir = path.dirname(target_dir);
         if (!fs.existsSync(parentDir)) {
             fs.mkdirSync(parentDir, { recursive: true });
         }
@@ -230,8 +230,8 @@ function git_clone(pkg, target_dir) {
             // Fallback to ZIP download
             console.log(CLI_COLORS.dim + '  Git not available, using ZIP download...' + CLI_COLORS.reset);
             
-            const zipUrl = GitPackage_get_zip_url(pkg);
-            const zipPath = path.join(parentDir, pkg.repo + '.zip');
+            let zipUrl = GitPackage_get_zip_url(pkg);
+            let zipPath = path.join(parentDir, pkg.repo + '.zip');
             
             try {
                 // Download ZIP
@@ -245,7 +245,7 @@ function git_clone(pkg, target_dir) {
                 }
                 
                 // Rename extracted folder
-                const entries = fs.readdirSync(parentDir);
+                let entries = fs.readdirSync(parentDir);
                 for (const entry of entries) {
                     if (entry.startsWith(pkg.repo + '-') && fs.statSync(path.join(parentDir, entry)).isDirectory()) {
                         fs.renameSync(path.join(parentDir, entry), target_dir);
@@ -271,7 +271,7 @@ function cmd_install(package_spec) {
     cmd_install_from_lock();
     return null;
 }
-    const pkg = GitPackage_parse(package_spec);
+    let pkg = GitPackage_parse(package_spec);
     if (pkg.name == "") {
     CLI_error("Invalid package specification: " + package_spec);
     CLI_info("Examples:");
@@ -282,23 +282,23 @@ function cmd_install(package_spec) {
 }
     CLI_info("Package: " + pkg.name);
     CLI_info("Source: " + pkg.full_url);
-    const commit = git_get_latest_commit(pkg);
+    let commit = git_get_latest_commit(pkg);
     if (commit != "") {
     pkg.commit = commit;
     CLI_info("Commit: " + commit.substring(0, 8) + "...");
 }
-    const cwd = "";
+    let cwd = "";
      cwd = process.cwd(); 
-    const target = "";
+    let target = "";
     
         const path = require('path');
         target = path.join(cwd, pkg.local_path);
     
     CLI_step(1, 3, "Downloading...");
-    const success = git_clone(pkg, target);
+    let success = git_clone(pkg, target);
     if (success) {
     CLI_step(2, 3, "Updating lock file...");
-    const lock = LockFile_load(cwd);
+    let lock = LockFile_load(cwd);
     LockFile_add(lock, pkg);
     LockFile_save(lock, cwd);
     CLI_step(3, 3, "Done!");
@@ -314,12 +314,12 @@ function cmd_install(package_spec) {
 }
 function cmd_install_from_lock() {
     CLI_info("Installing packages from omni.lock...");
-    const cwd = "";
+    let cwd = "";
      cwd = process.cwd(); 
-    const lock = LockFile_load(cwd);
+    let lock = LockFile_load(cwd);
     
         const path = require('path');
-        const packages = Object.values(lock.packages);
+        let packages = Object.values(lock.packages);
         
         if (packages.length === 0) {
             terminal.CLI_info("No packages in omni.lock");
@@ -329,10 +329,10 @@ function cmd_install_from_lock() {
         console.log(CLI_COLORS.dim + "  Found " + packages.length + " packages" + CLI_COLORS.reset);
         
         for (const entry of packages) {
-            const pkg = GitPackage_parse(entry.url);
+            let pkg = GitPackage_parse(entry.url);
             pkg.commit = entry.commit;
             
-            const target = path.join(cwd, pkg.local_path);
+            let target = path.join(cwd, pkg.local_path);
             
             console.log(CLI_COLORS.cyan + "  Installing: " + CLI_COLORS.reset + pkg.name);
             git_clone(pkg, target);
@@ -348,10 +348,10 @@ function cmd_uninstall(package_name) {
     CLI_error("Usage: omni uninstall <package>");
     return null;
 }
-    const cwd = "";
+    let cwd = "";
      cwd = process.cwd(); 
-    const lock = LockFile_load(cwd);
-    const found = false;
+    let lock = LockFile_load(cwd);
+    let found = false;
     
         const fs = require('fs');
         const path = require('path');
@@ -362,8 +362,8 @@ function cmd_uninstall(package_name) {
                 found = true;
                 
                 // Remove directory
-                const pkg = GitPackage_parse(entry.url);
-                const targetDir = path.join(cwd, pkg.local_path);
+                let pkg = GitPackage_parse(entry.url);
+                let targetDir = path.join(cwd, pkg.local_path);
                 
                 if (fs.existsSync(targetDir)) {
                     fs.rmSync(targetDir, { recursive: true });
@@ -386,11 +386,11 @@ function cmd_uninstall(package_name) {
 function cmd_list() {
     CLI_banner();
     CLI_header("Installed Packages");
-    const cwd = "";
+    let cwd = "";
      cwd = process.cwd(); 
-    const lock = LockFile_load(cwd);
+    let lock = LockFile_load(cwd);
     
-        const packages = Object.values(lock.packages);
+        let packages = Object.values(lock.packages);
         
         if (packages.length === 0) {
             terminal.CLI_info("No packages installed.");
@@ -404,7 +404,7 @@ function cmd_list() {
         console.log("");
         
         for (const pkg of packages) {
-            const commit = pkg.commit ? pkg.commit.substring(0, 8) : 'HEAD';
+            let commit = pkg.commit ? pkg.commit.substring(0, 8) : 'HEAD';
             console.log("  ÃƒÂ°Ã…Â¸Ã¢â‚¬Å“Ã‚Â¦ " + CLI_COLORS.bold + pkg.name + CLI_COLORS.reset + 
                         CLI_COLORS.dim + " @ " + commit + CLI_COLORS.reset);
             console.log("     " + CLI_COLORS.dim + pkg.url + CLI_COLORS.reset);
@@ -416,9 +416,9 @@ function cmd_list() {
 function cmd_update(package_name) {
     CLI_banner();
     CLI_header("Omni Package Updater");
-    const cwd = "";
+    let cwd = "";
      cwd = process.cwd(); 
-    const lock = LockFile_load(cwd);
+    let lock = LockFile_load(cwd);
     
         const path = require('path');
         let packagesToUpdate = Object.values(lock.packages);
@@ -437,18 +437,18 @@ function cmd_update(package_name) {
         console.log(CLI_COLORS.dim + "  Updating " + packagesToUpdate.length + " packages..." + CLI_COLORS.reset);
         
         for (const entry of packagesToUpdate) {
-            const pkg = GitPackage_parse(entry.url);
+            let pkg = GitPackage_parse(entry.url);
             
             console.log(CLI_COLORS.cyan + "  Updating: " + CLI_COLORS.reset + pkg.name);
             
             // Get latest commit
-            const newCommit = git_get_latest_commit(pkg);
+            let newCommit = git_get_latest_commit(pkg);
             
             if (newCommit && newCommit !== entry.commit) {
                 console.log(CLI_COLORS.dim + "    " + entry.commit.substring(0, 8) + " ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ " + newCommit.substring(0, 8) + CLI_COLORS.reset);
                 
                 pkg.commit = newCommit;
-                const target = path.join(cwd, pkg.local_path);
+                let target = path.join(cwd, pkg.local_path);
                 git_clone(pkg, target);
                 
                 LockFile_add(lock, pkg);
@@ -475,7 +475,7 @@ function cmd_doctor() {
         console.log("");
         console.log(CLI_COLORS.cyan + "  Checking tools:" + CLI_COLORS.reset);
         
-        const tools = [
+        let tools = [
             { name: 'git', cmd: 'git --version' },
             { name: 'node', cmd: 'node --version' },
             { name: 'curl', cmd: 'curl --version' }
@@ -483,7 +483,7 @@ function cmd_doctor() {
         
         for (const tool of tools) {
             try {
-                const version = execSync(tool.cmd, { encoding: 'utf-8' }).trim().split('\n')[0];
+                let version = execSync(tool.cmd, { encoding: 'utf-8' }).trim().split('\n')[0];
                 console.log("  " + CLI_COLORS.green + "ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“" + CLI_COLORS.reset + " " + tool.name + ": " + CLI_COLORS.dim + version + CLI_COLORS.reset);
             } catch (e) {
                 console.log("  " + CLI_COLORS.red + "ÃƒÂ¢Ã…â€œÃ¢â‚¬â€" + CLI_COLORS.reset + " " + tool.name + ": not found");
@@ -495,8 +495,8 @@ function cmd_doctor() {
         console.log("");
         console.log(CLI_COLORS.cyan + "  Checking project:" + CLI_COLORS.reset);
         
-        const cwd = process.cwd();
-        const files = [
+        let cwd = process.cwd();
+        let files = [
             { name: 'omni.config.json', path: path.join(cwd, 'omni.config.json') },
             { name: 'omni.lock', path: path.join(cwd, 'omni.lock') },
             { name: 'packages/', path: path.join(cwd, 'packages') }
@@ -525,20 +525,20 @@ function cmd_search(query) {
         const https = require('https');
         
         // Fetch from static registry JSON
-        const registryUrl = 'https://raw.githubusercontent.com/crom-lang/registry/main/packages.json';
+        let registryUrl = 'https://raw.githubusercontent.com/crom-lang/registry/main/packages.json';
         
         console.log(CLI_COLORS.dim + "  Fetching registry..." + CLI_COLORS.reset);
         
         const { execSync } = require('child_process');
         
         try {
-            const result = execSync('curl -sL "' + registryUrl + '"', { encoding: 'utf-8' });
-            const registry = JSON.parse(result);
+            let result = execSync('curl -sL "' + registryUrl + '"', { encoding: 'utf-8' });
+            let registry = JSON.parse(result);
             
             let results = registry.packages || [];
             
             if (query) {
-                const q = query.toLowerCase();
+                let q = query.toLowerCase();
                 results = results.filter(p => 
                     p.name.toLowerCase().includes(q) ||
                     (p.description && p.description.toLowerCase().includes(q)) ||

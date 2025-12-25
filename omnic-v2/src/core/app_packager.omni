@@ -42,12 +42,10 @@ fn detect_platform() -> string {
 }
 
 fn detect_build_tools() -> any {
-    let tools = {};
-    
     native "js" {
         const { execSync } = require('child_process');
         
-        tools = {
+        let tools = {
             gcc: false,
             clang: false,
             cargo: false,
@@ -81,9 +79,10 @@ fn detect_build_tools() -> any {
         if (process.platform === 'win32') {
             tools.wix = check('candle');
         }
+
+        return tools;
     }
-    
-    return tools;
+    return 0;
 }
 
 // ============================================================================

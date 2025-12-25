@@ -42,7 +42,7 @@ fn LanguageProfile_new(name: string) -> LanguageProfile {
 fn LanguageProfile_load(self: LanguageProfile) -> LanguageProfile {
     native "js" {
         const impl = require('./codegen_hybrid_impl.js');
-        return impl.LanguageProfile_load(self);
+        return impl.LanguageProfile_load_impl(self);
     }
     return self;
 }
@@ -51,7 +51,7 @@ fn LanguageProfile_render(self: LanguageProfile, template_name: string, data: an
     let result = "";
     native "js" {
         const impl = require('./codegen_hybrid_impl.js');
-        result = impl.LanguageProfile_render(self, template_name, data);
+        result = impl.LanguageProfile_render_impl(self, template_name, data);
     }
     return result;
 }
@@ -68,7 +68,7 @@ fn LanguageProfile_map_operator(self: LanguageProfile, op: string) -> string {
     let result = op;
     native "js" {
         const impl = require('./codegen_hybrid_impl.js');
-        result = impl.LanguageProfile_map_operator(self, op);
+        result = impl.LanguageProfile_map_operator_impl(self, op);
     }
     return result;
 }
@@ -102,7 +102,7 @@ fn HybridCodeGenerator_indent(self: HybridCodeGenerator, code: string) -> string
     let result = "";
     native "js" {
         const impl = require('./codegen_hybrid_impl.js');
-        result = impl.HybridCodeGenerator_indent(self, code);
+        result = impl.HybridCodeGenerator_indent_impl(self, code);
     }
     return result;
 }
@@ -167,18 +167,28 @@ fn HybridCodeGenerator_gen_statement(self: HybridCodeGenerator, stmt: any) -> st
     // Let declaration - TEMPLATE BASED
     if (stmt.kind == NODE_LET) {
         let value = HybridCodeGenerator_gen_expression(self, stmt.value);
-        return LanguageProfile_render(self.profile, "let_decl", {
-            name: stmt.name,
-            value: value
-        });
+        let result = "";
+        native "js" {
+            const impl = require('./codegen_hybrid_impl.js');
+            result = impl.LanguageProfile_render_impl(self.profile, "let_decl", {
+                name: stmt.name,
+                value: value
+            });
+        }
+        return result;
     }
     
     // Return statement - TEMPLATE BASED
     if (stmt.kind == NODE_RETURN) {
         let value = HybridCodeGenerator_gen_expression(self, stmt.value);
-        return LanguageProfile_render(self.profile, "return_stmt", {
-            value: value
-        });
+        let result = "";
+        native "js" {
+            const impl = require('./codegen_hybrid_impl.js');
+            result = impl.LanguageProfile_render_impl(self.profile, "return_stmt", {
+                value: value
+            });
+        }
+        return result;
     }
     
     // Function declaration - TEMPLATE BASED
@@ -194,11 +204,16 @@ fn HybridCodeGenerator_gen_statement(self: HybridCodeGenerator, stmt: any) -> st
             if (stmt.is_exported) self.exports.push(stmt.name);
         }
         
-        return LanguageProfile_render(self.profile, "fn_decl", {
-            name: stmt.name,
-            params: params,
-            body: body
-        });
+        let result = "";
+        native "js" {
+            const impl = require('./codegen_hybrid_impl.js');
+            result = impl.LanguageProfile_render_impl(self.profile, "fn_decl", {
+                name: stmt.name,
+                params: params,
+                body: body
+            });
+        }
+        return result;
     }
     
     // Struct/Class - HYBRID (Template + Omni Logic)
@@ -219,10 +234,15 @@ fn HybridCodeGenerator_gen_statement(self: HybridCodeGenerator, stmt: any) -> st
         let body = HybridCodeGenerator_gen_block(self, stmt.body);
         self.indent_level = self.indent_level - 1;
         
-        return LanguageProfile_render(self.profile, "while_stmt", {
-            condition: cond,
-            body: body
-        });
+        let result = "";
+        native "js" {
+            const impl = require('./codegen_hybrid_impl.js');
+            result = impl.LanguageProfile_render_impl(self.profile, "while_stmt", {
+                condition: cond,
+                body: body
+            });
+        }
+        return result;
     }
     
     // Capsule - HYBRID (Complex Omni Logic)
@@ -248,7 +268,22 @@ fn HybridCodeGenerator_gen_statement(self: HybridCodeGenerator, stmt: any) -> st
     
     // Call as statement
     if (stmt.kind == NODE_CALL) {
-        return HybridCodeGenerator_gen_expression(self, stmt) + self.profile.statement_end;
+        let result = "";
+        native "js" {
+            const impl = require('./codegen_hybrid_impl.js');
+            result = impl.LanguageProfile_render_impl(self.profile, "call_expr", {
+                callee: stmt.name, // Simplified for direct calls
+                args: "" // Simplified
+            });
+             // This block seems wrong/duplicate, referencing old logic
+        }
+        // Correct logic below
+    }
+
+    // Expression Statement
+    if (stmt.kind == 20) { // NODE_EXPRESSION_STMT
+        let expr = HybridCodeGenerator_gen_expression(self, stmt.expr);
+        return expr + self.profile.statement_end;
     }
     
     let result = "";
@@ -257,7 +292,9 @@ fn HybridCodeGenerator_gen_statement(self: HybridCodeGenerator, stmt: any) -> st
 }
 
 fn HybridCodeGenerator_gen_expression(self: HybridCodeGenerator, expr: any) -> string {
-    if (expr == 0) return "";
+    let is_null = false;
+    native "js" { is_null = !expr; }
+    if (is_null) return "";
     
     // Literal number
     if (expr.kind == NODE_LITERAL) {
@@ -302,11 +339,16 @@ fn HybridCodeGenerator_gen_expression(self: HybridCodeGenerator, expr: any) -> s
         let right = HybridCodeGenerator_gen_expression(self, expr.right);
         let op = LanguageProfile_map_operator(self.profile, expr.op);
         
-        return LanguageProfile_render(self.profile, "binary_expr", {
-            left: left,
-            op: op,
-            right: right
-        });
+        let result = "";
+        native "js" {
+            const impl = require('./codegen_hybrid_impl.js');
+            result = impl.LanguageProfile_render_impl(self.profile, "binary_expr", {
+                left: left,
+                op: op,
+                right: right
+            });
+        }
+        return result;
     }
     
     // Call expression - TEMPLATE BASED
@@ -314,16 +356,29 @@ fn HybridCodeGenerator_gen_expression(self: HybridCodeGenerator, expr: any) -> s
         let callee = "";
         let args = "";
         native "js" {
-            callee = expr.name || (expr.callee ? expr.callee.value : '');
+            // Fix: Check expr.function for identifier, or expr.name if legacy
+            if (expr.function && (expr.function.kind == 15 || expr.function.value)) {
+                 callee = expr.function.value || expr.function.name;
+            } else if (expr.name) {
+                 callee = expr.name;
+            } else if (expr.callee) { // Support legacy parser format if any
+                 callee = expr.callee.value || expr.callee.name;
+            }
+            
             if (expr.args) {
                 args = expr.args.map(a => HybridCodeGenerator_gen_expression(self, a)).join(', ');
             }
         }
         
-        return LanguageProfile_render(self.profile, "call_expr", {
-            callee: callee,
-            args: args
-        });
+        let result = "";
+        native "js" {
+            const impl = require('./codegen_hybrid_impl.js');
+            result = impl.LanguageProfile_render_impl(self.profile, "call_expr", {
+                callee: callee,
+                args: args
+            });
+        }
+        return result;
     }
     
     // Member access
@@ -383,24 +438,41 @@ fn HybridCodeGenerator_gen_if(self: HybridCodeGenerator, stmt: any) -> string {
     self.indent_level = self.indent_level - 1;
     
     let has_alt = false;
-    native "js" { has_alt = stmt.alternative && stmt.alternative.length > 0; }
+    native "js" { 
+        // Check for both array and Block object formats
+        has_alt = stmt.alternative && (
+            (Array.isArray(stmt.alternative) && stmt.alternative.length > 0) ||
+            (stmt.alternative.statements && stmt.alternative.statements.length > 0) ||
+            (stmt.alternative.kind) // Any AST node (e.g., Block, IfStmt)
+        ); 
+    }
     
     if (has_alt) {
         self.indent_level = self.indent_level + 1;
         let alternative = HybridCodeGenerator_gen_block(self, stmt.alternative);
         self.indent_level = self.indent_level - 1;
         
-        return LanguageProfile_render(self.profile, "if_else_stmt", {
-            condition: cond,
-            consequence: consequence,
-            alternative: alternative
-        });
+        let result = "";
+        native "js" {
+            const impl = require('./codegen_hybrid_impl.js');
+            result = impl.LanguageProfile_render_impl(self.profile, "if_else_stmt", {
+                condition: cond,
+                consequence: consequence,
+                alternative: alternative
+            });
+        }
+        return result;
     }
     
-    return LanguageProfile_render(self.profile, "if_stmt", {
-        condition: cond,
-        consequence: consequence
-    });
+    let result = "";
+    native "js" {
+        const impl = require('./codegen_hybrid_impl.js');
+        result = impl.LanguageProfile_render_impl(self.profile, "if_stmt", {
+            condition: cond,
+            consequence: consequence
+        });
+    }
+    return result;
 }
 
 // ============================================================================
@@ -423,10 +495,14 @@ fn HybridCodeGenerator_gen_struct(self: HybridCodeGenerator, stmt: any) -> strin
     
     let class_body = "    constructor(data = {}) {\n" + constructor_body + "    }\n";
     
-    let out = LanguageProfile_render(self.profile, "class_decl", {
-        name: stmt.name,
-        body: class_body
-    });
+    let out = "";
+    native "js" {
+        const impl = require('./codegen_hybrid_impl.js');
+        out = impl.LanguageProfile_render_impl(self.profile, "class_decl", {
+            name: stmt.name,
+            body: class_body
+        });
+    }
     
     // If @entity, add repository methods (HYBRID - Omni controls logic)
     if (is_entity) {

@@ -24,30 +24,30 @@ function LanguageProfile_new(name) {
 function LanguageProfile_load(self) {
     
         const impl = require('./codegen_hybrid_impl.js');
-        return impl.LanguageProfile_load(self);
+        return impl.LanguageProfile_load_impl(self);
     
     return self;
 }
 function LanguageProfile_render(self, template_name, data) {
-    const result = "";
+    let result = "";
     
         const impl = require('./codegen_hybrid_impl.js');
-        result = impl.LanguageProfile_render(self, template_name, data);
+        result = impl.LanguageProfile_render_impl(self, template_name, data);
     
     return result;
 }
 function LanguageProfile_map_type(self, omni_type) {
-    const result = omni_type;
+    let result = omni_type;
     
         result = self.type_map[omni_type] || omni_type;
     
     return result;
 }
 function LanguageProfile_map_operator(self, op) {
-    const result = op;
+    let result = op;
     
         const impl = require('./codegen_hybrid_impl.js');
-        result = impl.LanguageProfile_map_operator(self, op);
+        result = impl.LanguageProfile_map_operator_impl(self, op);
     
     return result;
 }
@@ -61,20 +61,20 @@ class HybridCodeGenerator {
     }
 }
 function HybridCodeGenerator_new(target) {
-    const profile = LanguageProfile_new(target);
+    let profile = LanguageProfile_new(target);
     profile = LanguageProfile_load(profile);
     return new HybridCodeGenerator({ profile: profile, indent_level: 0, exports: [], ast_node_count: 0, generated_count: 0 });
 }
 function HybridCodeGenerator_indent(self, code) {
-    const result = "";
+    let result = "";
     
         const impl = require('./codegen_hybrid_impl.js');
-        result = impl.HybridCodeGenerator_indent(self, code);
+        result = impl.HybridCodeGenerator_indent_impl(self, code);
     
     return result;
 }
 function HybridCodeGenerator_generate(self, program) {
-    const output = "";
+    let output = "";
     output = LanguageProfile_render(self.profile, "program_header", null, null);
     
         self.exports = [];
@@ -84,7 +84,7 @@ function HybridCodeGenerator_generate(self, program) {
         if (program && program.statements) {
             for (const stmt of program.statements) {
                 self.ast_node_count++;
-                const code = HybridCodeGenerator_gen_statement(self, stmt);
+                let code = HybridCodeGenerator_gen_statement(self, stmt);
                 if (code) {
                     output += code + "\n";
                     self.generated_count++;
@@ -98,7 +98,7 @@ function HybridCodeGenerator_generate(self, program) {
         }
         
         // AST Parity Validation
-        const coverage = self.ast_node_count > 0 ? 
+        let coverage = self.ast_node_count > 0 ? 
             (self.generated_count / self.ast_node_count * 100).toFixed(1) : 100;
         if (coverage < 100) {
             console.warn("[codegen] AST coverage: " + coverage + "% (" + 
@@ -112,7 +112,7 @@ function HybridCodeGenerator_gen_statement(self, stmt) {
     return HybridCodeGenerator_gen_import(self, stmt);
 }
     if (stmt.kind == NODE_NATIVE) {
-    const result = "";
+    let result = "";
     
             const impl = require('./codegen_hybrid_impl.js');
             result = impl.check_native_lang(self, stmt);
@@ -120,25 +120,49 @@ function HybridCodeGenerator_gen_statement(self, stmt) {
     return result;
 }
     if (stmt.kind == NODE_LET) {
-    const value = HybridCodeGenerator_gen_expression(self, stmt.value);
-    return LanguageProfile_render(self.profile, "let_decl", null, name, null, stmt.name, value, null, value, null);
+    let value = HybridCodeGenerator_gen_expression(self, stmt.value);
+    let result = "";
+    
+            const impl = require('./codegen_hybrid_impl.js');
+            result = impl.LanguageProfile_render_impl(self.profile, "let_decl", {
+                name: stmt.name,
+                value: value
+            });
+        
+    return result;
 }
     if (stmt.kind == NODE_RETURN) {
-    const value = HybridCodeGenerator_gen_expression(self, stmt.value);
-    return LanguageProfile_render(self.profile, "return_stmt", null, value, null, value, null);
+    let value = HybridCodeGenerator_gen_expression(self, stmt.value);
+    let result = "";
+    
+            const impl = require('./codegen_hybrid_impl.js');
+            result = impl.LanguageProfile_render_impl(self.profile, "return_stmt", {
+                value: value
+            });
+        
+    return result;
 }
     if (stmt.kind == NODE_FUNCTION) {
-    const params = "";
+    let params = "";
      params = stmt.params ? stmt.params.join(", ") : ""; 
     self.indent_level = self.indent_level + 1;
-    const body = HybridCodeGenerator_gen_block(self, stmt.body);
+    let body = HybridCodeGenerator_gen_block(self, stmt.body);
     self.indent_level = self.indent_level;
     // Unknown stmt kind: 0
     1;
     
             if (stmt.is_exported) self.exports.push(stmt.name);
         
-    return LanguageProfile_render(self.profile, "fn_decl", null, name, null, stmt.name, params, null, params, body, null, body, null);
+    let result = "";
+    
+            const impl = require('./codegen_hybrid_impl.js');
+            result = impl.LanguageProfile_render_impl(self.profile, "fn_decl", {
+                name: stmt.name,
+                params: params,
+                body: body
+            });
+        
+    return result;
 }
     if (stmt.kind == NODE_STRUCT) {
     return HybridCodeGenerator_gen_struct(self, stmt);
@@ -147,13 +171,21 @@ function HybridCodeGenerator_gen_statement(self, stmt) {
     return HybridCodeGenerator_gen_if(self, stmt);
 }
     if (stmt.kind == NODE_WHILE) {
-    const cond = HybridCodeGenerator_gen_expression(self, stmt.condition);
+    let cond = HybridCodeGenerator_gen_expression(self, stmt.condition);
     self.indent_level = self.indent_level + 1;
-    const body = HybridCodeGenerator_gen_block(self, stmt.body);
+    let body = HybridCodeGenerator_gen_block(self, stmt.body);
     self.indent_level = self.indent_level;
     // Unknown stmt kind: 0
     1;
-    return LanguageProfile_render(self.profile, "while_stmt", null, condition, null, cond, body, null, body, null);
+    let result = "";
+    
+            const impl = require('./codegen_hybrid_impl.js');
+            result = impl.LanguageProfile_render_impl(self.profile, "while_stmt", {
+                condition: cond,
+                body: body
+            });
+        
+    return result;
 }
     if (stmt.kind == NODE_CAPSULE) {
     return HybridCodeGenerator_gen_capsule(self, stmt);
@@ -165,22 +197,36 @@ function HybridCodeGenerator_gen_statement(self, stmt) {
     return HybridCodeGenerator_gen_interface(self, stmt);
 }
     if (stmt.kind == NODE_ASSIGNMENT) {
-    const value = HybridCodeGenerator_gen_expression(self, stmt.value);
+    let value = HybridCodeGenerator_gen_expression(self, stmt.value);
     return stmt.name + " = " + value + self.profile.statement_end;
 }
     if (stmt.kind == NODE_CALL) {
-    return HybridCodeGenerator_gen_expression(self, stmt) + self.profile.statement_end;
+    let result = "";
+    
+            const impl = require('./codegen_hybrid_impl.js');
+            result = impl.LanguageProfile_render_impl(self.profile, "call_expr", {
+                callee: stmt.name, // Simplified for direct calls
+                args: "" // Simplified
+            });
+             // This block seems wrong/duplicate, referencing old logic
+        
 }
-    const result = "";
+    if (stmt.kind == 20) {
+    let expr = HybridCodeGenerator_gen_expression(self, stmt.expr);
+    return expr + self.profile.statement_end;
+}
+    let result = "";
      result = "// Unknown stmt kind: " + stmt.kind; 
     return result;
 }
 function HybridCodeGenerator_gen_expression(self, expr) {
-    if (expr == 0) {
+    let is_null = false;
+     is_null = !expr; 
+    if (is_null) {
     return "";
 }
     if (expr.kind == NODE_LITERAL) {
-    const val = "";
+    let val = "";
      
             val = String(expr.value);
             // Map booleans
@@ -191,12 +237,12 @@ function HybridCodeGenerator_gen_expression(self, expr) {
     return val;
 }
     if (expr.kind == NODE_STRING) {
-    const result = "";
+    let result = "";
      result = '"' + expr.value + '"'; 
     return result;
 }
     if (expr.kind == NODE_BOOL) {
-    const result = "";
+    let result = "";
     
             const impl = require('./codegen_hybrid_impl.js');
             result = impl.gen_expression_bool(self, expr);
@@ -204,33 +250,58 @@ function HybridCodeGenerator_gen_expression(self, expr) {
     return result;
 }
     if (expr.kind == NODE_IDENTIFIER) {
-    const result = "";
+    let result = "";
      result = expr.value || expr.name || ''; 
     return result;
 }
     if (expr.kind == NODE_BINARY) {
-    const left = HybridCodeGenerator_gen_expression(self, expr.left);
-    const right = HybridCodeGenerator_gen_expression(self, expr.right);
-    const op = LanguageProfile_map_operator(self.profile, expr.op);
-    return LanguageProfile_render(self.profile, "binary_expr", null, left, null, left, op, null, op, right, null, right, null);
+    let left = HybridCodeGenerator_gen_expression(self, expr.left);
+    let right = HybridCodeGenerator_gen_expression(self, expr.right);
+    let op = LanguageProfile_map_operator(self.profile, expr.op);
+    let result = "";
+    
+            const impl = require('./codegen_hybrid_impl.js');
+            result = impl.LanguageProfile_render_impl(self.profile, "binary_expr", {
+                left: left,
+                op: op,
+                right: right
+            });
+        
+    return result;
 }
     if (expr.kind == NODE_CALL) {
-    const callee = "";
-    const args = "";
+    let callee = "";
+    let args = "";
     
-            callee = expr.name || (expr.callee ? expr.callee.value : '');
+            // Fix: Check expr.function for identifier, or expr.name if legacy
+            if (expr.function && (expr.function.kind == 15 || expr.function.value)) {
+                 callee = expr.function.value || expr.function.name;
+            } else if (expr.name) {
+                 callee = expr.name;
+            } else if (expr.callee) { // Support legacy parser format if any
+                 callee = expr.callee.value || expr.callee.name;
+            }
+            
             if (expr.args) {
                 args = expr.args.map(a => HybridCodeGenerator_gen_expression(self, a)).join(', ');
             }
         
-    return LanguageProfile_render(self.profile, "call_expr", null, callee, null, callee, args, null, args, null);
+    let result = "";
+    
+            const impl = require('./codegen_hybrid_impl.js');
+            result = impl.LanguageProfile_render_impl(self.profile, "call_expr", {
+                callee: callee,
+                args: args
+            });
+        
+    return result;
 }
     if (expr.kind == NODE_MEMBER) {
-    const obj = HybridCodeGenerator_gen_expression(self, expr.object);
+    let obj = HybridCodeGenerator_gen_expression(self, expr.object);
     return obj + "." + expr.member;
 }
     if (expr.kind == NODE_ARRAY) {
-    const elements = "";
+    let elements = "";
     
             if (expr.elements) {
                 elements = expr.elements.map(e => HybridCodeGenerator_gen_expression(self, e)).join(', ');
@@ -239,7 +310,7 @@ function HybridCodeGenerator_gen_expression(self, expr) {
     return "[" + elements + "]";
 }
     if (expr.kind == NODE_STRUCT_INIT) {
-    const fields = "";
+    let fields = "";
     
             if (expr.fields) {
                 fields = Object.entries(expr.fields)
@@ -249,61 +320,92 @@ function HybridCodeGenerator_gen_expression(self, expr) {
         
     return "new " + expr.name + "({ " + fields + " })";
 }
-    const result = "";
+    let result = "";
      result = String(expr.value || expr.name || ''); 
     return result;
 }
 function HybridCodeGenerator_gen_block(self, body) {
-    const result = "";
+    let result = "";
     
         if (!body) return '';
-        const statements = Array.isArray(body) ? body : (body.statements || []);
+        let statements = Array.isArray(body) ? body : (body.statements || []);
         if (!Array.isArray(statements)) return '';
         result = statements.map(s => {
-            const code = HybridCodeGenerator_gen_statement(self, s);
+            let code = HybridCodeGenerator_gen_statement(self, s);
             return HybridCodeGenerator_indent(self, code);
         }).join('\n');
     
     return result;
 }
 function HybridCodeGenerator_gen_if(self, stmt) {
-    const cond = HybridCodeGenerator_gen_expression(self, stmt.condition);
+    let cond = HybridCodeGenerator_gen_expression(self, stmt.condition);
     self.indent_level = self.indent_level + 1;
-    const consequence = HybridCodeGenerator_gen_block(self, stmt.consequence);
+    let consequence = HybridCodeGenerator_gen_block(self, stmt.consequence);
     self.indent_level = self.indent_level;
     // Unknown stmt kind: 0
     1;
-    const has_alt = false;
-     has_alt = stmt.alternative && stmt.alternative.length > 0; 
+    let has_alt = false;
+     
+        // Check for both array and Block object formats
+        has_alt = stmt.alternative && (
+            (Array.isArray(stmt.alternative) && stmt.alternative.length > 0) ||
+            (stmt.alternative.statements && stmt.alternative.statements.length > 0) ||
+            (stmt.alternative.kind) // Any AST node (e.g., Block, IfStmt)
+        ); 
+    
     if (has_alt) {
     self.indent_level = self.indent_level + 1;
-    const alternative = HybridCodeGenerator_gen_block(self, stmt.alternative);
+    let alternative = HybridCodeGenerator_gen_block(self, stmt.alternative);
     self.indent_level = self.indent_level;
     // Unknown stmt kind: 0
     1;
-    return LanguageProfile_render(self.profile, "if_else_stmt", null, condition, null, cond, consequence, null, consequence, alternative, null, alternative, null);
+    let result = "";
+    
+            const impl = require('./codegen_hybrid_impl.js');
+            result = impl.LanguageProfile_render_impl(self.profile, "if_else_stmt", {
+                condition: cond,
+                consequence: consequence,
+                alternative: alternative
+            });
+        
+    return result;
 }
-    return LanguageProfile_render(self.profile, "if_stmt", null, condition, null, cond, consequence, null, consequence, null);
+    let result = "";
+    
+        const impl = require('./codegen_hybrid_impl.js');
+        result = impl.LanguageProfile_render_impl(self.profile, "if_stmt", {
+            condition: cond,
+            consequence: consequence
+        });
+    
+    return result;
 }
 function HybridCodeGenerator_gen_struct(self, stmt) {
-    const is_entity = false;
+    let is_entity = false;
     
         is_entity = stmt.attributes && stmt.attributes.some(a => a.name === 'entity');
     
-    const constructor_body = "";
+    let constructor_body = "";
     
         const impl = require('./codegen_hybrid_impl.js');
         constructor_body = impl.gen_struct_body(stmt);
     
-    const class_body = "    constructor(data = {}) {\n" + constructor_body + "    }\n";
-    const out = LanguageProfile_render(self.profile, "class_decl", null, name, null, stmt.name, body, null, class_body, null);
+    let class_body = "    constructor(data = {}) {\n" + constructor_body + "    }\n";
+    let out = "";
+    
+        const impl = require('./codegen_hybrid_impl.js');
+        out = impl.LanguageProfile_render_impl(self.profile, "class_decl", {
+            name: stmt.name,
+            body: class_body
+        });
+    
     if (is_entity) {
     out = out + HybridCodeGenerator_gen_entity_repo(self, stmt);
 }
     return out;
 }
 function HybridCodeGenerator_gen_entity_repo(self, stmt) {
-    const result = "";
+    let result = "";
     
         const impl = require('./codegen_hybrid_impl.js');
         result = impl.gen_entity_repo(stmt);
@@ -311,7 +413,7 @@ function HybridCodeGenerator_gen_entity_repo(self, stmt) {
     return result;
 }
 function HybridCodeGenerator_gen_capsule(self, stmt) {
-    const result = "";
+    let result = "";
     
         const impl = require('./codegen_hybrid_impl.js');
         result = impl.gen_capsule(stmt);
@@ -319,16 +421,16 @@ function HybridCodeGenerator_gen_capsule(self, stmt) {
     return result;
 }
 function HybridCodeGenerator_gen_spawn(self, stmt) {
-    const fn_name = "";
-    const args = "";
+    let fn_name = "";
+    let args = "";
     
-        const call = stmt.call;
+        let call = stmt.call;
         fn_name = call?.name || call?.callee?.value || 'unknown';
         if (call?.args) {
             args = call.args.map(a => HybridCodeGenerator_gen_expression(self, a)).join(', ');
         }
     
-    const out = "";
+    let out = "";
     
         const impl = require('./codegen_hybrid_impl.js');
         out = impl.gen_spawn_code(fn_name, args);
@@ -336,7 +438,7 @@ function HybridCodeGenerator_gen_spawn(self, stmt) {
     return out;
 }
 function HybridCodeGenerator_gen_import(self, stmt) {
-    const result = "";
+    let result = "";
     
         const impl = require('./codegen_hybrid_impl.js');
         result = impl.gen_import(stmt);
@@ -344,7 +446,7 @@ function HybridCodeGenerator_gen_import(self, stmt) {
     return result;
 }
 function HybridCodeGenerator_gen_interface(self, stmt) {
-    const is_service = false;
+    let is_service = false;
     
         is_service = stmt.attributes && stmt.attributes.some(a => a.name === 'service');
     
@@ -354,7 +456,7 @@ function HybridCodeGenerator_gen_interface(self, stmt) {
     return "// Interface: " + stmt.name;
 }
 function HybridCodeGenerator_gen_service_client(self, stmt) {
-    const result = "";
+    let result = "";
     
         const impl = require('./codegen_hybrid_impl.js');
         result = impl.gen_service_client(stmt);

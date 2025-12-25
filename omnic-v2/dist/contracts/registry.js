@@ -12,20 +12,12 @@ const impl_lua = require("./impl_lua.js");
 if (typeof global !== 'undefined') Object.assign(global, impl_lua);
 const terminal = require("../lib/terminal.js");
 if (typeof global !== 'undefined') Object.assign(global, terminal);
-
-    const { ContractRegistry } = types;
-    const { register_std_interfaces } = interfaces;
-    const { register_js_impl } = impl_js;
-    const { register_python_impl } = impl_python;
-    const { register_cnative_impl } = impl_cnative;
-    const { register_lua_impl } = impl_lua;
-
 function new_map() {
      return {}; 
     return 0;
 }
 function ContractRegistry_new() {
-    const registry = new ContractRegistry({ interfaces: new_map(), implementations: new_map(), active_target: "js" });
+    let registry = new ContractRegistry({ interfaces: new_map(), implementations: new_map(), active_target: "js" });
     register_std_interfaces(registry);
     register_js_impl(registry);
     register_python_impl(registry);
@@ -40,9 +32,9 @@ function ContractRegistry_set_target(self, target) {
     
 }
 function ContractRegistry_resolve(self, contract_path, args) {
-    const result = "";
+    let result = "";
     
-        const impl = self.implementations[self.active_target];
+        let impl = self.implementations[self.active_target];
         if (!impl) {
             result = "/* UNKNOWN TARGET: " + self.active_target + " */";
             return;
@@ -74,7 +66,7 @@ function ContractRegistry_list_interfaces(self) {
         console.log("├─────────────────────────────────────────────────────────────┤");
         
         for (const [name, iface] of Object.entries(self.interfaces)) {
-            const methodCount = Object.keys(iface.methods).length;
+            let methodCount = Object.keys(iface.methods).length;
             console.log("│ " + name.padEnd(20) + " │ " + 
                         iface.category.padEnd(10) + " │ " +
                         (methodCount + " methods").padEnd(15) + " │");
@@ -84,10 +76,10 @@ function ContractRegistry_list_interfaces(self) {
     
 }
 function ContractRegistry_verify_target(self, target) {
-    const is_complete = true;
-    const missing = 0;
+    let is_complete = true;
+    let missing = 0;
     
-        const impl = self.implementations[target];
+        let impl = self.implementations[target];
         if (!impl) {
             terminal.CLI_error("Target '" + target + "' has no implementations");
             is_complete = false;
@@ -97,7 +89,7 @@ function ContractRegistry_verify_target(self, target) {
         // Check all interfaces
         for (const [ifaceName, iface] of Object.entries(self.interfaces)) {
             for (const methodName of Object.keys(iface.methods)) {
-                const contractPath = ifaceName + '.' + methodName;
+                let contractPath = ifaceName + '.' + methodName;
                 if (!impl[contractPath]) {
                     missing++;
                 }
@@ -111,7 +103,7 @@ function ContractRegistry_verify_target(self, target) {
     
     return is_complete;
 }
-const GLOBAL_CONTRACTS = ContractRegistry_new();
+let GLOBAL_CONTRACTS = ContractRegistry_new();
 
 
 // Auto-exports

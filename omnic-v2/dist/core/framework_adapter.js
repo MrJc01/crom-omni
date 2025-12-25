@@ -20,7 +20,7 @@ function FrameworkAdapter_new(name) {
 // Unknown stmt kind: undefined
 // Unknown stmt kind: undefined
 function FrameworkAdapter_nextjs() {
-    const adapter = FrameworkAdapter_new("nextjs");
+    let adapter = FrameworkAdapter_new("nextjs");
     
         adapter.language = "typescript";
         
@@ -95,7 +95,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
 }
 
-export const config = {
+export let config = {
     matcher: '{matcher}',
 };`
         };
@@ -139,7 +139,7 @@ export default {
     return adapter;
 }
 function FrameworkAdapter_laravel() {
-    const adapter = FrameworkAdapter_new("laravel");
+    let adapter = FrameworkAdapter_new("laravel");
     
         adapter.language = "php";
         
@@ -247,7 +247,7 @@ use Illuminate\\Support\\Facades\\Route;
     return adapter;
 }
 function FrameworkAdapter_android() {
-    const adapter = FrameworkAdapter_new("android");
+    let adapter = FrameworkAdapter_new("android");
     
         adapter.language = "kotlin";
         
@@ -340,7 +340,7 @@ class FrameworkGenerator {
     }
 }
 function FrameworkGenerator_new(framework, output_dir) {
-    const adapter = FrameworkAdapter_new(framework);
+    let adapter = FrameworkAdapter_new(framework);
     
         switch (framework) {
             case 'nextjs':
@@ -373,14 +373,14 @@ function FrameworkGenerator_generate_structure(self, project_name) {
         
         // Generate structure files
         for (const [filePath, template] of Object.entries(self.adapter.structure)) {
-            const fullPath = path.join(self.output_dir, filePath);
-            const dir = path.dirname(fullPath);
+            let fullPath = path.join(self.output_dir, filePath);
+            let dir = path.dirname(fullPath);
             
             if (!fs.existsSync(dir)) {
                 fs.mkdirSync(dir, { recursive: true });
             }
             
-            const content = template
+            let content = template
                 .replace(/\{projectName\}/g, project_name)
                 .replace(/\{package\}/g, 'com.omni.' + project_name.toLowerCase());
             
@@ -390,10 +390,10 @@ function FrameworkGenerator_generate_structure(self, project_name) {
     
 }
 function FrameworkGenerator_generate_ui(self, name, annotation) {
-    const result = "";
+    let result = "";
     
-        const templateName = annotation.type || 'component';
-        const template = self.adapter.ui_templates[templateName];
+        let templateName = annotation.type || 'component';
+        let template = self.adapter.ui_templates[templateName];
         
         if (!template) {
             result = "/* UI template not found: " + templateName + " */";
@@ -410,29 +410,29 @@ function FrameworkGenerator_generate_ui(self, name, annotation) {
     return result;
 }
 function FrameworkGenerator_generate_server(self, capsule) {
-    const result = "";
+    let result = "";
     
         const fs = require('fs');
         const path = require('path');
         
-        const capsuleName = capsule.name;
-        const flows = capsule.flows || [];
+        let capsuleName = capsule.name;
+        let flows = capsule.flows || [];
         
         if (self.adapter.name === 'nextjs') {
             // Generate API routes for Next.js
             for (const flow of flows) {
-                const serverAttr = flow.attributes?.find(a => a.name.startsWith('server.'));
+                let serverAttr = flow.attributes?.find(a => a.name.startsWith('server.'));
                 if (serverAttr) {
-                    const method = serverAttr.name.split('.')[1].toUpperCase();
-                    const routePath = serverAttr.args?.[0] || '/' + capsuleName.toLowerCase() + '/' + flow.name;
+                    let method = serverAttr.name.split('.')[1].toUpperCase();
+                    let routePath = serverAttr.args?.[0] || '/' + capsuleName.toLowerCase() + '/' + flow.name;
                     
-                    const template = self.adapter.server_templates.route;
-                    const code = template
+                    let template = self.adapter.server_templates.route;
+                    let code = template
                         .replace(/\{method\}/g, method)
-                        .replace(/\{body\}/g, 'const result = await ' + capsuleName + '.' + flow.name + '();');
+                        .replace(/\{body\}/g, 'let result = await ' + capsuleName + '.' + flow.name + '();');
                     
                     // Write route file
-                    const routeDir = path.join(self.output_dir, 'app/api', capsuleName.toLowerCase(), flow.name);
+                    let routeDir = path.join(self.output_dir, 'app/api', capsuleName.toLowerCase(), flow.name);
                     if (!fs.existsSync(routeDir)) {
                         fs.mkdirSync(routeDir, { recursive: true });
                     }
@@ -446,16 +446,16 @@ function FrameworkGenerator_generate_server(self, capsule) {
             let routes = '';
             
             for (const flow of flows) {
-                const serverAttr = flow.attributes?.find(a => a.name.startsWith('server.'));
+                let serverAttr = flow.attributes?.find(a => a.name.startsWith('server.'));
                 if (serverAttr) {
-                    const httpMethod = serverAttr.name.split('.')[1];
-                    const routePath = serverAttr.args?.[0] || '/' + capsuleName.toLowerCase() + '/' + flow.name;
+                    let httpMethod = serverAttr.name.split('.')[1];
+                    let routePath = serverAttr.args?.[0] || '/' + capsuleName.toLowerCase() + '/' + flow.name;
                     
                     methods += self.adapter.server_templates.controller_method
                         .replace(/\{name\}/g, flow.name)
                         .replace(/\{body\}/g, '$result = null; // TODO: implement');
                     
-                    const routeTemplate = httpMethod === 'get' 
+                    let routeTemplate = httpMethod === 'get' 
                         ? self.adapter.server_templates.route_get 
                         : self.adapter.server_templates.route_post;
                     routes += routeTemplate
@@ -465,12 +465,12 @@ function FrameworkGenerator_generate_server(self, capsule) {
                 }
             }
             
-            const controller = self.adapter.server_templates.controller
+            let controller = self.adapter.server_templates.controller
                 .replace(/\{name\}/g, capsuleName)
                 .replace(/\{methods\}/g, methods);
             
             // Write controller
-            const controllerDir = path.join(self.output_dir, 'app/Http/Controllers');
+            let controllerDir = path.join(self.output_dir, 'app/Http/Controllers');
             if (!fs.existsSync(controllerDir)) {
                 fs.mkdirSync(controllerDir, { recursive: true });
             }
@@ -493,8 +493,8 @@ function FrameworkGenerator_write_all(self) {
         const path = require('path');
         
         for (const [filePath, content] of Object.entries(self.files)) {
-            const fullPath = path.join(self.output_dir, filePath);
-            const dir = path.dirname(fullPath);
+            let fullPath = path.join(self.output_dir, filePath);
+            let dir = path.dirname(fullPath);
             
             if (!fs.existsSync(dir)) {
                 fs.mkdirSync(dir, { recursive: true });

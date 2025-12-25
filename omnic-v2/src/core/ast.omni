@@ -19,6 +19,10 @@ let NODE_STRING = 17;
 let NODE_BOOL = 18;
 let NODE_STRUCT = 70;
 let NODE_NATIVE = 80;
+let NODE_CAPSULE = 90;
+let NODE_SPAWN = 100;
+let NODE_INTERFACE = 110;
+let NODE_EXPRESSION_STMT = 20;
 
 // Structures
 struct Program {

@@ -7,14 +7,14 @@ import "impl_cnative.omni";
 import "impl_lua.omni";
 import "../lib/terminal.omni";
 
-native "js" {
-    const { ContractRegistry } = types;
-    const { register_std_interfaces } = interfaces;
-    const { register_js_impl } = impl_js;
-    const { register_python_impl } = impl_python;
-    const { register_cnative_impl } = impl_cnative;
-    const { register_lua_impl } = impl_lua;
-}
+// native "js" {
+//     const { ContractRegistry } = types;
+//     const { register_std_interfaces } = interfaces;
+//     const { register_js_impl } = impl_js;
+//     const { register_python_impl } = impl_python;
+//     const { register_cnative_impl } = impl_cnative;
+//     const { register_lua_impl } = impl_lua;
+// }
 
 // ============================================================================
 // CONTRACT REGISTRY

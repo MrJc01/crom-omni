@@ -115,7 +115,7 @@ fn OmniVM_new() -> OmniVM {
     let env = VMEnvironment_new(0);
     return OmniVM {
         env: env,
-        trace: false,
+        trace: true,
         step_count: 0
     };
 }
@@ -129,7 +129,7 @@ fn OmniVM_run(self: OmniVM, program: Program) -> any {
             return null;
         }
         
-        console.log("[vm] Starting execution...");
+        if (self.trace) console.log("[vm] Starting execution...");
         const startTime = Date.now();
         
         try {
@@ -146,8 +146,10 @@ fn OmniVM_run(self: OmniVM, program: Program) -> any {
             }
             
             const elapsed = Date.now() - startTime;
-            console.log("[vm] Execution completed in " + elapsed + "ms");
-            console.log("[vm] Steps executed: " + self.step_count);
+            if (self.trace) {
+                console.log("[vm] Execution completed in " + elapsed + "ms");
+                console.log("[vm] Steps executed: " + self.step_count);
+            }
             
         } catch (e) {
             console.error("[vm] Runtime error:", e.message);
@@ -268,6 +270,11 @@ fn OmniVM_exec_statement(self: OmniVM, stmt: any) -> any {
             return null;
         }
         
+        // Expression statement (Statement wrapper)
+        if (stmt.kind === 20) { // NODE_EXPRESSION_STMT
+             return OmniVM_eval_expression(self, stmt.expr);
+        }
+        
         console.warn("[vm] Unknown statement kind:", stmt.kind);
         return null;
     }
@@ -349,7 +356,10 @@ fn OmniVM_eval_expression(self: OmniVM, expr: any) -> any {
         
         // Call expression
         if (expr.kind === 6) { // NODE_CALL
-            const fnName = expr.name || (expr.callee ? expr.callee.value : '');
+            // Fix: CallExpr uses 'function' field (AST), not 'callee' or 'name'
+            const funcNode = expr.function;
+            const fnName = funcNode ? (funcNode.value || funcNode.name) : '';
+
             const args = (expr.args || []).map(a => OmniVM_eval_expression(self, a));
             
             // Check builtin

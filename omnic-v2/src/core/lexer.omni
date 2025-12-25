@@ -92,6 +92,19 @@ fn Lexer_read_number(l: Lexer) -> string {
     while (is_digit(l.ch)) {
         Lexer_read_char(l);
     }
+    
+    // Check for decimal point
+    if (l.ch == ".") {
+        let peek_next = char_at(l.input, l.read_position);
+        
+        if (is_digit(peek_next)) {
+             Lexer_read_char(l); // consume .
+             while (is_digit(l.ch)) {
+                 Lexer_read_char(l);
+             }
+        }
+    }
+    
     let num_str = "";
     native "js" {
         num_str = l.input.substring(Number(start_pos), Number(l.position));

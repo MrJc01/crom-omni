@@ -3,7 +3,7 @@ function print(msg) {
     
 }
 function read_file(path) {
-    const content = "";
+    let content = "";
     
         const fs = require("fs");
         try {
@@ -30,9 +30,4 @@ function write_file(path, content) {
 }
 
 
-// Auto-exports
-if (typeof exports !== 'undefined') {
-    exports.print = print;
-    exports.read_file = read_file;
-    exports.write_file = write_file;
-}
+module.exports = { print, read_file, write_file };

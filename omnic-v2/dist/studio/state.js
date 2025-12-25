@@ -30,7 +30,7 @@ function GraphState_new() {
 }
 // Unknown stmt kind: undefined
 function GraphState_from_ast(program) {
-    const state = GraphState_new();
+    let state = GraphState_new();
     
         if (!program || !program.statements) return;
         
@@ -38,7 +38,7 @@ function GraphState_from_ast(program) {
         let y = 50;
         
         for (const stmt of program.statements) {
-            const node = {
+            let node = {
                 id: 'node_' + (++nodeId),
                 type: 'unknown',
                 name: stmt.name || 'anonymous',
@@ -106,7 +106,7 @@ function GraphState_from_ast(program) {
     return state;
 }
 function GraphState_to_json(self) {
-    const json = "";
+    let json = "";
     
         json = JSON.stringify({
             nodes: self.nodes,

@@ -12,7 +12,7 @@ class Parser {
     }
 }
 function new_parser(l) {
-    const p = new Parser({ lexer: l, cur_token: new_token(0, "", 0), peek_token: new_token(0, "", 0) });
+    let p = new Parser({ lexer: l, cur_token: new_token(0, "", 0), peek_token: new_token(0, "", 0) });
     Parser_next_token(p);
     Parser_next_token(p);
     return p;
@@ -22,9 +22,9 @@ function Parser_next_token(p) {
     p.peek_token = Lexer_next_token(p.lexer);
 }
 function Parser_parse_program(p) {
-    const stmts = [];
+    let stmts = [];
     while (p.cur_token.kind != TOKEN_EOF) {
-    const stmt = Parser_parse_statement(p);
+    let stmt = Parser_parse_statement(p);
     if (stmt != 0) {
     if (stmt.kind != 0) {
      stmts.push(stmt); 
@@ -35,17 +35,17 @@ function Parser_parse_program(p) {
 }
 function Parser_parse_statement(p) {
     if (p.cur_token.kind == 95) {
-    const decorators = [];
+    let decorators = [];
     while (p.cur_token.kind == 95) {
      decorators.push(Parser_parse_decorator(p)); 
 }
-    const stmt = Parser_parse_statement(p);
+    let stmt = Parser_parse_statement(p);
      if (stmt) stmt.decorators = decorators; 
     return stmt;
 }
     if (p.cur_token.kind == 92) {
     Parser_next_token(p);
-    const stmt = Parser_parse_statement(p);
+    let stmt = Parser_parse_statement(p);
      if (stmt) stmt.is_exported = true; 
     return stmt;
 }
@@ -84,7 +84,7 @@ function Parser_parse_statement(p) {
 }
 function Parser_parse_import(p) {
     Parser_next_token(p);
-    const path = p.cur_token.lexeme;
+    let path = p.cur_token.lexeme;
     Parser_next_token(p);
     if (p.cur_token.kind == TOKEN_SEMICOLON) {
     Parser_next_token(p);
@@ -103,14 +103,14 @@ function Parser_parse_package(p) {
 }
 function Parser_parse_let(p) {
     Parser_next_token(p);
-    const name = p.cur_token.lexeme;
+    let name = p.cur_token.lexeme;
     Parser_next_token(p);
     if (p.cur_token.kind == 30) {
     Parser_next_token(p);
     Parser_next_token(p);
 }
     Parser_next_token(p);
-    const val = Parser_parse_expression(p);
+    let val = Parser_parse_expression(p);
     if (p.cur_token.kind == TOKEN_SEMICOLON) {
     Parser_next_token(p);
 }
@@ -118,7 +118,7 @@ function Parser_parse_let(p) {
 }
 function Parser_parse_return(p) {
     Parser_next_token(p);
-    const val = Parser_parse_expression(p);
+    let val = Parser_parse_expression(p);
     if (p.cur_token.kind == TOKEN_SEMICOLON) {
     Parser_next_token(p);
 }
@@ -126,10 +126,10 @@ function Parser_parse_return(p) {
 }
 function Parser_parse_fn(p) {
     Parser_next_token(p);
-    const name = p.cur_token.lexeme;
+    let name = p.cur_token.lexeme;
     Parser_next_token(p);
     Parser_next_token(p);
-    const params = [];
+    let params = [];
     while (p.cur_token.kind != TOKEN_RPAREN) {
      params.push(p.cur_token.lexeme); 
     Parser_next_token(p);
@@ -142,30 +142,29 @@ function Parser_parse_fn(p) {
 }
 }
     Parser_next_token(p);
-    if (p.cur_token.lexeme == "-") {
-    Parser_next_token(p);
+    if (p.cur_token.kind == 99) {
     Parser_next_token(p);
     Parser_next_token(p);
 }
-    const body = Parser_parse_block(p);
+    let body = Parser_parse_block(p);
     return new FunctionDecl({ kind: NODE_FUNCTION, name: name, params: params, body: body, is_exported: false, decorators: [] });
 }
 function Parser_parse_struct(p) {
     Parser_next_token(p);
-    const name = p.cur_token.lexeme;
+    let name = p.cur_token.lexeme;
     Parser_next_token(p);
     Parser_next_token(p);
-    const fields = [];
+    let fields = [];
     while (p.cur_token.kind != TOKEN_RBRACE && p.cur_token.kind != TOKEN_EOF) {
     if (p.cur_token.kind == TOKEN_RBRACE) {
     break;
 }
-    const field_name = p.cur_token.lexeme;
+    let field_name = p.cur_token.lexeme;
     Parser_next_token(p);
     Parser_next_token(p);
-    const field_type = p.cur_token.lexeme;
+    let field_type = p.cur_token.lexeme;
     Parser_next_token(p);
-    const f = new_struct_field(field_name, field_type);
+    let f = new_struct_field(field_name, field_type);
      fields.push(f); 
     if (p.cur_token.kind == TOKEN_COMMA) {
     Parser_next_token(p);
@@ -176,7 +175,7 @@ function Parser_parse_struct(p) {
 }
 function Parser_parse_native_block(p) {
     Parser_next_token(p);
-    const lang = "js";
+    let lang = "js";
     if (p.cur_token.kind == TOKEN_STRING) {
     lang = p.cur_token.lexeme;
     Parser_next_token(p);
@@ -184,17 +183,17 @@ function Parser_parse_native_block(p) {
     if (p.cur_token.kind != TOKEN_LBRACE) {
     return new NativeStmt({ kind: 0, lang: "", code: "" });
 }
-    const start_pos = p.cur_token.start;
-    const code = "";
-    const end_pos = 0;
+    let start_pos = p.cur_token.start;
+    let code = "";
+    let end_pos = 0;
     
-        const input = p.lexer.input;
+        let input = p.lexer.input;
         let pos = Number(start_pos) + 1;
         let brace_count = 1;
         let start_extract = pos;
         
         while (pos < input.length && brace_count > 0) {
-            const char = input[pos];
+            let char = input[pos];
             if (char === '{') brace_count++;
             if (char === '}') brace_count--;
             pos++;
@@ -212,130 +211,140 @@ function Parser_parse_native_block(p) {
     return new NativeStmt({ kind: NODE_NATIVE, lang: lang, code: code });
 }
 function Parser_parse_block(p) {
-    const stmts = [];
+    let stmts = [];
     if (p.cur_token.kind == TOKEN_LBRACE) {
     Parser_next_token(p);
     while (p.cur_token.kind != TOKEN_RBRACE && p.cur_token.kind != TOKEN_EOF) {
-     console.log("BlockLoop: " + p.cur_token.kind + " (" + p.cur_token.lexeme + ")"); 
-    const stmt = Parser_parse_statement(p);
+    let stmt = Parser_parse_statement(p);
      stmts.push(stmt); 
 }
     Parser_next_token(p);
 } else {
-    const stmt = Parser_parse_statement(p);
+    let stmt = Parser_parse_statement(p);
      stmts.push(stmt); 
 }
     return new Block({ kind: NODE_BLOCK, statements: stmts });
 }
 function Parser_parse_expr_stmt(p) {
-    const expr = Parser_parse_expression(p);
+    let expr = Parser_parse_expression(p);
     if (p.cur_token.kind == TOKEN_SEMICOLON) {
     Parser_next_token(p);
 }
-    return new ExpressionStmt({ kind: 0, expr: expr });
+    return new ExpressionStmt({ kind: NODE_EXPRESSION_STMT, expr: expr });
 }
 function Parser_parse_expression(p) {
     return Parser_parse_assignment(p);
 }
 function Parser_parse_assignment(p) {
-    const left = Parser_parse_logic(p);
+    let left = Parser_parse_logic(p);
     if (p.cur_token.kind == TOKEN_ASSIGN) {
     Parser_next_token(p);
-    const right = Parser_parse_assignment(p);
+    let right = Parser_parse_assignment(p);
     return new AssignmentExpr({ kind: NODE_ASSIGNMENT, left: left, right: right });
 }
     return left;
 }
 function Parser_parse_equality(p) {
-    const left = Parser_parse_relational(p);
+    let left = Parser_parse_relational(p);
     while (true) {
-    const k = p.cur_token.kind;
+    let k = p.cur_token.kind;
     if (k != TOKEN_EQ && k != TOKEN_NOT_EQ) {
     break;
 }
-    const op = p.cur_token.lexeme;
+    let op = p.cur_token.lexeme;
     Parser_next_token(p);
-    const right = Parser_parse_relational(p);
+    let right = Parser_parse_relational(p);
     left = new BinaryExpr({ kind: NODE_BINARY, left: left, op: op, right: right });
 }
     return left;
 }
 function Parser_parse_relational(p) {
-    const left = Parser_parse_term(p);
+    let left = Parser_parse_term(p);
     while (true) {
-    const k = p.cur_token.kind;
+    let k = p.cur_token.kind;
     if (k != TOKEN_LT && k != TOKEN_GT && k != TOKEN_LE && k != TOKEN_GE) {
     break;
 }
-    const op = p.cur_token.lexeme;
+    let op = p.cur_token.lexeme;
     Parser_next_token(p);
-    const right = Parser_parse_term(p);
+    let right = Parser_parse_term(p);
     left = new BinaryExpr({ kind: NODE_BINARY, left: left, op: op, right: right });
 }
     return left;
 }
 function Parser_parse_logic(p) {
-    const left = Parser_parse_equality(p);
+    let left = Parser_parse_equality(p);
     while (true) {
-    const k = p.cur_token.kind;
+    let k = p.cur_token.kind;
     if (k != TOKEN_AND && k != TOKEN_OR) {
     break;
 }
-    const op = p.cur_token.lexeme;
+    let op = p.cur_token.lexeme;
     Parser_next_token(p);
-    const right = Parser_parse_equality(p);
+    let right = Parser_parse_equality(p);
     left = new BinaryExpr({ kind: NODE_BINARY, left: left, op: op, right: right });
 }
     return left;
 }
 function Parser_parse_term(p) {
-    const left = Parser_parse_multiplication(p);
+    let left = Parser_parse_multiplication(p);
     while (true) {
-    const k = p.cur_token.kind;
+    let k = p.cur_token.kind;
     if (k != TOKEN_PLUS && k != TOKEN_MINUS) {
     break;
 }
-    const op = p.cur_token.lexeme;
+    let op = p.cur_token.lexeme;
     Parser_next_token(p);
-    const right = Parser_parse_multiplication(p);
+    let right = Parser_parse_multiplication(p);
     left = new BinaryExpr({ kind: NODE_BINARY, left: left, op: op, right: right });
 }
     return left;
 }
 function Parser_parse_multiplication(p) {
-    const left = Parser_parse_factor(p);
+    let left = Parser_parse_factor(p);
     while (true) {
-    const k = p.cur_token.kind;
+    let k = p.cur_token.kind;
     if (k != TOKEN_ASTERISK && k != TOKEN_SLASH) {
     break;
 }
-    const op = p.cur_token.lexeme;
+    let op = p.cur_token.lexeme;
     Parser_next_token(p);
-    const right = Parser_parse_factor(p);
+    let right = Parser_parse_factor(p);
     left = new BinaryExpr({ kind: NODE_BINARY, left: left, op: op, right: right });
 }
     return left;
 }
 function Parser_parse_factor(p) {
-    const node = 0;
+    let node = 0;
+    if (p.cur_token.kind == TOKEN_MINUS) {
+    Parser_next_token(p);
+    let operand = Parser_parse_factor(p);
+    node = new BinaryExpr({ kind: NODE_BINARY, left: new IntegerLiteral({ kind: NODE_LITERAL, value: 0 }), op: "-", right: operand });
+    return node;
+}
+    if (p.cur_token.kind == TOKEN_BANG) {
+    Parser_next_token(p);
+    let operand = Parser_parse_factor(p);
+    return operand;
+}
     if (p.cur_token.kind == TOKEN_INT) {
-    const val = 0;
-     val = parseInt(p.cur_token.lexeme); 
+    let val = 0;
+     val = Number(p.cur_token.lexeme); 
     node = new IntegerLiteral({ kind: NODE_LITERAL, value: val });
     Parser_next_token(p);
 } else {
     if (p.cur_token.kind == TOKEN_IDENTIFIER) {
-    const name = p.cur_token.lexeme;
+    let name = p.cur_token.lexeme;
     Parser_next_token(p);
     if (p.cur_token.kind == TOKEN_LBRACE) {
     Parser_next_token(p);
-    const init_fields = [];
+    let init_fields = [];
     while (p.cur_token.kind != TOKEN_RBRACE && p.cur_token.kind != TOKEN_EOF) {
-    const field_name = p.cur_token.lexeme;
+    let field_name = p.cur_token.lexeme;
     Parser_next_token(p);
     Parser_next_token(p);
-    const field_val = Parser_parse_expression(p);
-    const field = new StructInitField({ name: field_name, value: field_val });
+    let field_val = Parser_parse_expression(p);
+    let field = new StructInitField({ name: field_name, value: field_val });
      init_fields.push(field); 
     if (p.cur_token.kind == TOKEN_COMMA) {
     Parser_next_token(p);
@@ -353,7 +362,7 @@ function Parser_parse_factor(p) {
     Parser_next_token(p);
 } else {
     if (p.cur_token.kind == TOKEN_STRING) {
-    const str_val = p.cur_token.lexeme;
+    let str_val = p.cur_token.lexeme;
     node = new StringLiteral({ kind: NODE_STRING, value: str_val });
     Parser_next_token(p);
 } else {
@@ -367,7 +376,7 @@ function Parser_parse_factor(p) {
 } else {
     if (p.cur_token.kind == TOKEN_LBRACKET) {
     Parser_next_token(p);
-    const elements = [];
+    let elements = [];
     while (p.cur_token.kind != TOKEN_RBRACKET && p.cur_token.kind != TOKEN_EOF) {
      elements.push(Parser_parse_expression(p)); 
     if (p.cur_token.kind == TOKEN_COMMA) {
@@ -387,17 +396,17 @@ function Parser_parse_factor(p) {
 }
 }
 }
-    const continue_loop = true;
+    let continue_loop = true;
     while (continue_loop) {
     if (p.cur_token.kind == 31) {
     Parser_next_token(p);
-    const prop = p.cur_token.lexeme;
+    let prop = p.cur_token.lexeme;
     Parser_next_token(p);
     node = new MemberExpr({ kind: NODE_MEMBER, target: node, property: prop });
 } else {
     if (p.cur_token.kind == TOKEN_LPAREN) {
     Parser_next_token(p);
-    const args = [];
+    let args = [];
     while (p.cur_token.kind != TOKEN_RPAREN && p.cur_token.kind != TOKEN_EOF) {
      args.push(Parser_parse_expression(p)); 
     if (p.cur_token.kind == TOKEN_COMMA) {
@@ -415,14 +424,14 @@ function Parser_parse_factor(p) {
 }
 function Parser_parse_if(p) {
     Parser_next_token(p);
-    const cond = Parser_parse_expression(p);
-    const cons = Parser_parse_block(p);
-    const alt = 0;
+    let cond = Parser_parse_expression(p);
+    let cons = Parser_parse_block(p);
+    let alt = 0;
     if (p.cur_token.kind == TOKEN_ELSE) {
     Parser_next_token(p);
     if (p.cur_token.kind == TOKEN_IF) {
-    const if_stmt = Parser_parse_if(p);
-    const stmts = [];
+    let if_stmt = Parser_parse_if(p);
+    let stmts = [];
      stmts.push(if_stmt); 
     alt = new Block({ kind: NODE_BLOCK, statements: stmts });
 } else {
@@ -433,21 +442,21 @@ function Parser_parse_if(p) {
 }
 function Parser_parse_while(p) {
     Parser_next_token(p);
-    const cond = Parser_parse_expression(p);
-    const body = Parser_parse_block(p);
+    let cond = Parser_parse_expression(p);
+    let body = Parser_parse_block(p);
     return new WhileStmt({ kind: NODE_WHILE, condition: cond, body: body });
 }
 function Parser_parse_decorator(p) {
     Parser_next_token(p);
-    const name = p.cur_token.lexeme;
+    let name = p.cur_token.lexeme;
     Parser_next_token(p);
-    const args = [];
+    let args = [];
     if (p.cur_token.kind == TOKEN_LPAREN) {
     Parser_next_token(p);
     while (p.cur_token.kind != TOKEN_RPAREN && p.cur_token.kind != TOKEN_EOF) {
-    const arg_name = "";
-    const arg_val = 0;
-    const is_named = false;
+    let arg_name = "";
+    let arg_val = 0;
+    let is_named = false;
     if (p.cur_token.kind == TOKEN_IDENTIFIER) {
     if (p.peek_token.kind == TOKEN_ASSIGN) {
     is_named = true;
@@ -461,7 +470,7 @@ function Parser_parse_decorator(p) {
 } else {
     arg_val = Parser_parse_expression(p);
 }
-    const field = new StructInitField({ name: arg_name, value: arg_val });
+    let field = new StructInitField({ name: arg_name, value: arg_val });
      args.push(field); 
     if (p.cur_token.kind == TOKEN_COMMA) {
     Parser_next_token(p);

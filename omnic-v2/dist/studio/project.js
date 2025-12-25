@@ -9,7 +9,7 @@ class ProjectInfo {
     }
 }
 function detect_project(dir) {
-    const info = new ProjectInfo({ name: "", type: "unknown", config_file: "", run_command: "", build_command: "", dev_command: "" });
+    let info = new ProjectInfo({ name: "", type: "unknown", config_file: "", run_command: "", build_command: "", dev_command: "" });
     
         const fs = require('fs');
         const path = require('path');
@@ -17,7 +17,7 @@ function detect_project(dir) {
         info.name = path.basename(dir);
         
         // Detection order (most specific first)
-        const detectors = [
+        let detectors = [
             {
                 file: 'omni.config.json',
                 type: 'omni',
@@ -91,7 +91,7 @@ function detect_project(dir) {
         ];
         
         for (const detector of detectors) {
-            const configPath = path.join(dir, detector.file);
+            let configPath = path.join(dir, detector.file);
             if (fs.existsSync(configPath)) {
                 info.type = detector.type;
                 info.config_file = detector.file;

@@ -14,7 +14,7 @@ function cmd_test_all() {
         const path = require('path');
         
         // Find examples directory
-        const possiblePaths = [
+        let possiblePaths = [
             path.join(process.cwd(), 'examples'),
             path.join(__dirname, '..', '..', 'examples'),
             path.join(__dirname, '..', 'examples')
@@ -38,7 +38,7 @@ function cmd_test_all() {
         console.log("");
         
         // Get all .omni files
-        const files = fs.readdirSync(examplesDir)
+        let files = fs.readdirSync(examplesDir)
             .filter(f => f.endsWith('.omni'))
             .sort();
         
@@ -47,22 +47,22 @@ function cmd_test_all() {
         
         let passed = 0;
         let failed = 0;
-        const failures = [];
+        let failures = [];
         
         for (const file of files) {
-            const filePath = path.join(examplesDir, file);
-            const outputPath = path.join(examplesDir, file.replace('.omni', '.test.js'));
+            let filePath = path.join(examplesDir, file);
+            let outputPath = path.join(examplesDir, file.replace('.omni', '.test.js'));
             
             try {
                 // Read and parse
-                const source = fs.readFileSync(filePath, 'utf-8');
-                const l = new_lexer(source);
-                const p = new_parser(l);
-                const program = Parser_parse_program(p);
+                let source = fs.readFileSync(filePath, 'utf-8');
+                let l = new_lexer(source);
+                let p = new_parser(l);
+                let program = Parser_parse_program(p);
                 
                 // Generate code
-                const gen = HybridCodeGenerator_new('js');
-                const code = HybridCodeGenerator_generate(gen, program);
+                let gen = HybridCodeGenerator_new('js');
+                let code = HybridCodeGenerator_generate(gen, program);
                 
                 // Check if code was generated
                 if (code && code.length > 0) {

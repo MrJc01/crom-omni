@@ -1,7 +1,7 @@
 const terminal = require("../lib/terminal.js");
 if (typeof global !== 'undefined') Object.assign(global, terminal);
 function get_c_runtime_header() {
-    const header = "";
+    let header = "";
     
         header = `
 // ============================================================================
@@ -244,10 +244,10 @@ function cmd_bootstrap() {
         const path = require('path');
         const { execSync } = require('child_process');
         
-        const omniDir = path.join(__dirname, '..');
-        const srcDir = path.join(omniDir, 'src');
-        const distDir = path.join(omniDir, 'dist');
-        const bootstrapDir = path.join(omniDir, 'bootstrap');
+        let omniDir = path.join(__dirname, '..');
+        let srcDir = path.join(omniDir, 'src');
+        let distDir = path.join(omniDir, 'dist');
+        let bootstrapDir = path.join(omniDir, 'bootstrap');
         
         // Create bootstrap directory
         if (!fs.existsSync(bootstrapDir)) {
@@ -257,14 +257,14 @@ function cmd_bootstrap() {
         CLI_step(1, 5, "Generating C runtime header...");
         
         // Write runtime header
-        const runtimeHeader = get_c_runtime_header();
+        let runtimeHeader = get_c_runtime_header();
         fs.writeFileSync(path.join(bootstrapDir, 'omni_runtime.h'), runtimeHeader);
         CLI_success("Created: bootstrap/omni_runtime.h");
         
         CLI_step(2, 5, "Compiling Omni sources to C...");
         
         // List of core source files (order matters)
-        const sourceFiles = [
+        let sourceFiles = [
             'core/token.omni',
             'core/ast.omni',
             'core/lexer.omni',
@@ -279,7 +279,7 @@ function cmd_bootstrap() {
         let combinedC = '#include "omni_runtime.h"\n\n';
         
         for (const file of sourceFiles) {
-            const fullPath = path.join(srcDir, file);
+            let fullPath = path.join(srcDir, file);
             if (fs.existsSync(fullPath)) {
                 CLI_info("Processing: " + file);
                 // In real implementation, would compile each file to C
@@ -296,7 +296,7 @@ function cmd_bootstrap() {
         CLI_step(3, 5, "Checking for C compiler...");
         
         let compiler = null;
-        const compilers = ['gcc', 'clang', 'cl'];
+        let compilers = ['gcc', 'clang', 'cl'];
         
         for (const cc of compilers) {
             try {
@@ -320,13 +320,13 @@ function cmd_bootstrap() {
         
         CLI_step(4, 5, "Compiling native binary...");
         
-        const isWindows = process.platform === 'win32';
-        const outputName = isWindows ? 'omni.exe' : 'omni';
-        const outputPath = path.join(bootstrapDir, outputName);
+        let isWindows = process.platform === 'win32';
+        let outputName = isWindows ? 'omni.exe' : 'omni';
+        let outputPath = path.join(bootstrapDir, outputName);
         
         try {
             // Note: This would fail without actual C code
-            // const compileCmd = compiler + ' -O2 -o ' + outputPath + ' ' + 
+            // let compileCmd = compiler + ' -O2 -o ' + outputPath + ' ' + 
             //                    path.join(bootstrapDir, 'omni.c');
             // execSync(compileCmd, { stdio: 'inherit' });
             

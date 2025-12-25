@@ -30,7 +30,7 @@ function StudioServer_start(self, dir) {
         const fs = require('fs');
         const path = require('path');
         
-        const server = http.createServer((req, res) => {
+        let server = http.createServer((req, res) => {
             // API Routes
             if (req.url === '/api/project') {
                 res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -48,7 +48,7 @@ function StudioServer_start(self, dir) {
                 // Warning: PackageRegistry_new might need import or be available
                 // Assuming it's available via global context or we need to import it here.
                 // For now, let's assume it's imported in facade or globally available.
-                const registry = PackageRegistry_new();
+                let registry = PackageRegistry_new();
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify(registry.packages));
                 return;
