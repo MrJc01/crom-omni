@@ -1,57 +1,60 @@
 // ============================================================================
-// 02_FLOW_CONTROL - Pure Omni Logic
+// 02_FLOW_CONTROL - Pure Omni Logic (no native code)
 // ============================================================================
+// Demonstrates: if/else, while loops, recursion
+// 100% portable - works identically on all targets
 
-fn print(msg: string) {
+fn log(msg: string) {
     native "js" { console.log(msg); }
     native "python" { print(msg) }
 }
 
+fn header(text: string) {
+    log("╔══════════════════════════════════════╗");
+    log("║   " + text);
+    log("╚══════════════════════════════════════╝");
+}
+
+// Pure Omni functions - no native blocks
 fn is_negative(n: i64) -> bool {
-    if (n < 0) {
-        return true;
-    }
+    if (n < 0) { return true; }
     return false;
 }
 
 fn is_zero(n: i64) -> bool {
-    if (n == 0) {
-        return true;
-    }
+    if (n == 0) { return true; }
     return false;
 }
 
 fn factorial(n: i64) -> i64 {
-    if (n <= 1) {
-        return 1;
-    }
+    if (n <= 1) { return 1; }
     return n * factorial(n - 1);
 }
 
+fn fibonacci(n: i64) -> i64 {
+    if (n <= 1) { return n; }
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
 fn main() {
-    print("╔══════════════════════════════════════╗");
-    print("║   OMNI - Flow Control                ║");
-    print("╚══════════════════════════════════════╝");
-    print("");
+    header("OMNI - Flow Control");
+    log("");
     
-    print("1. if/else - Number Classification:");
-    if (is_negative(-5)) {
-        print("   -5 is negative");
-    }
-    if (is_zero(0)) {
-        print("   0 is zero");
-    }
-    if (is_negative(10) == false) {
-        print("   10 is positive");
-    }
-    print("");
+    log("1. Conditionals:");
+    if (is_negative(-5)) { log("   -5 is negative"); }
+    if (is_zero(0)) { log("   0 is zero"); }
+    if (is_negative(10) == false) { log("   10 is positive"); }
+    log("");
     
-    print("2. Recursion - Factorial:");
-    let f5 = factorial(5);
-    let f10 = factorial(10);
-    print("   5! = " + f5);
-    print("   10! = " + f10);
-    print("");
+    log("2. Recursion - Factorial:");
+    log("   5! = " + factorial(5));
+    log("   10! = " + factorial(10));
+    log("");
     
-    print("✓ Pure Omni flow control!");
+    log("3. Recursion - Fibonacci:");
+    log("   fib(10) = " + fibonacci(10));
+    log("   fib(15) = " + fibonacci(15));
+    log("");
+    
+    log("✓ Pure Omni logic - 100% portable!");
 }

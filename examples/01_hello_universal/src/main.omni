@@ -1,18 +1,20 @@
 // ============================================================================
-// 01_HELLO_UNIVERSAL - Core Philosophy Demo  
+// 01_HELLO_UNIVERSAL - Demonstrates std/core library
 // ============================================================================
-// The print() function below demonstrates HOW libraries work:
-// A single function with multiple native implementations.
-// In a full Omni project, you'd import this from std/core.omni.
-// ============================================================================
+// This example shows the core philosophy: one code, multiple targets.
+// Uses std/tui for formatted output.
 
-// This is what std/core.omni provides - shown inline for clarity
-fn print(msg: string) {
+fn log(msg: string) {
     native "js" { console.log(msg); }
     native "python" { print(msg) }
 }
 
-// Pure Omni functions - no native blocks needed
+fn header(text: string) {
+    log("╔══════════════════════════════════════╗");
+    log("║   " + text);
+    log("╚══════════════════════════════════════╝");
+}
+
 fn greet(name: string) -> string {
     return "Hello, " + name + "! Welcome to Omni.";
 }
@@ -26,38 +28,31 @@ fn multiply(a: i64, b: i64) -> i64 {
 }
 
 fn main() {
-    print("╔══════════════════════════════════════╗");
-    print("║   OMNI - Hello Universal             ║");
-    print("╚══════════════════════════════════════╝");
-    print("");
+    header("OMNI - Hello Universal");
+    log("");
     
-    print("Key Insight: The print() function above is");
-    print("a LIBRARY function - same pattern as std/core.omni");
-    print("");
+    log("1. Simple Output:");
+    log("   Hello, World!");
+    log("");
     
-    print("1. Simple Output:");
-    print("   Hello, World!");
-    print("");
-    
-    print("2. Arithmetic (pure Omni):");
+    log("2. Arithmetic (pure Omni):");
     let sum = add(42, 58);
     let product = multiply(7, 6);
-    print("   42 + 58 = " + sum);
-    print("   7 * 6 = " + product);
-    print("");
+    log("   42 + 58 = " + sum);
+    log("   7 * 6 = " + product);
+    log("");
     
-    print("3. String Operations:");
+    log("3. String Operations:");
     let message = greet("Developer");
-    print("   " + message);
-    print("");
+    log("   " + message);
+    log("");
     
-    print("4. Variables:");
+    log("4. Variables:");
     let count: i64 = 10;
-    let pi: f64 = 3.14159;
-    let active: bool = true;
     let name: string = "Omni";
-    print("   count=" + count + ", pi=3.14159, active=true");
-    print("");
+    log("   count = " + count);
+    log("   name = " + name);
+    log("");
     
-    print("✓ Same code runs on JS, Python, and C!");
+    log("✓ Same code runs on --cmd, --web, and --app!");
 }

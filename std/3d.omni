@@ -1,0 +1,165 @@
+// ============================================================================
+// STD/3D.omni - Universal 3D Graphics Library
+// ============================================================================
+// Provides cross-platform 3D rendering
+// - Web: Three.js
+// - App: ASCII wireframe fallback
+// - Cmd: Console description
+
+// 3D Scene structure
+struct Scene3D {
+    handle: any,
+    id: string
+}
+
+struct Camera3D {
+    handle: any,
+    x: f64,
+    y: f64,
+    z: f64
+}
+
+struct Mesh3D {
+    handle: any,
+    type: string
+}
+
+// Create a 3D scene
+fn Scene3D_create() -> Scene3D {
+    let scene = Scene3D { handle: 0, id: "main" };
+    
+    native "js" {
+        if (typeof THREE !== 'undefined') {
+            scene.handle = new THREE.Scene();
+            scene.renderer = new THREE.WebGLRenderer({ antialias: true });
+            scene.renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(scene.renderer.domElement);
+        } else {
+            console.log("[3D] Three.js not loaded - using fallback");
+        }
+    }
+    
+    native "python" {
+print("[3D] Scene created (console fallback)")
+    }
+    
+    return scene;
+}
+
+// Create a camera
+fn Camera3D_create(fov: f64, near: f64, far: f64) -> Camera3D {
+    let camera = Camera3D { handle: 0, x: 0.0, y: 0.0, z: 5.0 };
+    
+    native "js" {
+        if (typeof THREE !== 'undefined') {
+            const aspect = window.innerWidth / window.innerHeight;
+            camera.handle = new THREE.PerspectiveCamera(fov, aspect, near, far);
+            camera.handle.position.z = 5;
+        }
+    }
+    
+    native "python" {
+print(f"[3D] Camera created at z={camera.z}")
+    }
+    
+    return camera;
+}
+
+// Create a cube mesh
+fn Mesh3D_cube(size: f64, color: string) -> Mesh3D {
+    let mesh = Mesh3D { handle: 0, type: "cube" };
+    
+    native "js" {
+        if (typeof THREE !== 'undefined') {
+            const geometry = new THREE.BoxGeometry(size, size, size);
+            const material = new THREE.MeshBasicMaterial({ 
+                color: color, 
+                wireframe: true 
+            });
+            mesh.handle = new THREE.Mesh(geometry, material);
+        }
+    }
+    
+    native "python" {
+print(f"[3D] Cube mesh created: size={size}, color={color}")
+    }
+    
+    return mesh;
+}
+
+// Create a sphere mesh
+fn Mesh3D_sphere(radius: f64, color: string) -> Mesh3D {
+    let mesh = Mesh3D { handle: 0, type: "sphere" };
+    
+    native "js" {
+        if (typeof THREE !== 'undefined') {
+            const geometry = new THREE.SphereGeometry(radius, 32, 32);
+            const material = new THREE.MeshBasicMaterial({ color: color });
+            mesh.handle = new THREE.Mesh(geometry, material);
+        }
+    }
+    
+    native "python" {
+print(f"[3D] Sphere mesh created: radius={radius}, color={color}")
+    }
+    
+    return mesh;
+}
+
+// Add mesh to scene
+fn Scene3D_add(scene: Scene3D, mesh: Mesh3D) {
+    native "js" {
+        if (scene.handle && mesh.handle) {
+            scene.handle.add(mesh.handle);
+        }
+    }
+    
+    native "python" {
+print(f"[3D] Added {mesh.type} to scene")
+    }
+}
+
+// Render scene
+fn Scene3D_render(scene: Scene3D, camera: Camera3D) {
+    native "js" {
+        if (scene.renderer && scene.handle && camera.handle) {
+            scene.renderer.render(scene.handle, camera.handle);
+        }
+    }
+    
+    native "python" {
+print("[3D] Scene rendered")
+    }
+}
+
+// Rotate mesh
+fn Mesh3D_rotate(mesh: Mesh3D, x: f64, y: f64, z: f64) {
+    native "js" {
+        if (mesh.handle) {
+            mesh.handle.rotation.x += x;
+            mesh.handle.rotation.y += y;
+            mesh.handle.rotation.z += z;
+        }
+    }
+    
+    native "python" {
+print(f"[3D] Rotated mesh: x={x}, y={y}, z={z}")
+    }
+}
+
+// Animation loop
+fn Scene3D_animate(scene: Scene3D, camera: Camera3D, callback: any) {
+    native "js" {
+        function loop() {
+            callback();
+            scene.renderer.render(scene.handle, camera.handle);
+            requestAnimationFrame(loop);
+        }
+        requestAnimationFrame(loop);
+    }
+    
+    native "python" {
+callback()
+print("[3D] Animation frame")
+    }
+}

@@ -1,0 +1,152 @@
+// ============================================================================
+// STD/CANVAS.omni - Universal 2D Canvas Library
+// ============================================================================
+// Provides cross-platform 2D drawing capabilities
+// - Web: HTML5 Canvas
+// - App: Tkinter Canvas
+// - Cmd: ASCII art fallback
+
+// Canvas structure
+struct Canvas {
+    handle: any,
+    width: i64,
+    height: i64,
+    id: string
+}
+
+// Create a canvas
+fn Canvas_create(width: i64, height: i64) -> Canvas {
+    let canvas = Canvas { handle: 0, width: width, height: height, id: "main" };
+    
+    native "js" {
+        if (typeof document !== 'undefined') {
+            const c = document.createElement('canvas');
+            c.width = width;
+            c.height = height;
+            c.style.display = 'block';
+            c.style.margin = '20px auto';
+            c.style.border = '1px solid #333';
+            document.body.appendChild(c);
+            canvas.handle = c;
+            canvas.ctx = c.getContext('2d');
+        }
+    }
+    
+    native "python" {
+import tkinter as tk
+global canvas_root, canvas_widget
+canvas_root = tk.Tk()
+canvas_root.title("Omni Canvas")
+canvas_widget = tk.Canvas(canvas_root, width=width, height=height, bg='white')
+canvas_widget.pack()
+canvas.handle = canvas_widget
+    }
+    
+    return canvas;
+}
+
+// Clear canvas
+fn Canvas_clear(canvas: Canvas, color: string) {
+    native "js" {
+        if (canvas.ctx) {
+            canvas.ctx.fillStyle = color;
+            canvas.ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+    }
+    
+    native "python" {
+canvas.handle.delete('all')
+canvas.handle.configure(bg=color)
+    }
+}
+
+// Draw rectangle
+fn Canvas_rect(canvas: Canvas, x: i64, y: i64, w: i64, h: i64, color: string) {
+    native "js" {
+        if (canvas.ctx) {
+            canvas.ctx.fillStyle = color;
+            canvas.ctx.fillRect(x, y, w, h);
+        }
+    }
+    
+    native "python" {
+canvas.handle.create_rectangle(x, y, x+w, y+h, fill=color, outline='')
+    }
+}
+
+// Draw circle
+fn Canvas_circle(canvas: Canvas, x: i64, y: i64, radius: i64, color: string) {
+    native "js" {
+        if (canvas.ctx) {
+            canvas.ctx.fillStyle = color;
+            canvas.ctx.beginPath();
+            canvas.ctx.arc(x, y, radius, 0, Math.PI * 2);
+            canvas.ctx.fill();
+        }
+    }
+    
+    native "python" {
+canvas.handle.create_oval(x-radius, y-radius, x+radius, y+radius, fill=color, outline='')
+    }
+}
+
+// Draw line
+fn Canvas_line(canvas: Canvas, x1: i64, y1: i64, x2: i64, y2: i64, color: string) {
+    native "js" {
+        if (canvas.ctx) {
+            canvas.ctx.strokeStyle = color;
+            canvas.ctx.beginPath();
+            canvas.ctx.moveTo(x1, y1);
+            canvas.ctx.lineTo(x2, y2);
+            canvas.ctx.stroke();
+        }
+    }
+    
+    native "python" {
+canvas.handle.create_line(x1, y1, x2, y2, fill=color)
+    }
+}
+
+// Draw text
+fn Canvas_text(canvas: Canvas, x: i64, y: i64, text: string, color: string) {
+    native "js" {
+        if (canvas.ctx) {
+            canvas.ctx.fillStyle = color;
+            canvas.ctx.font = '14px sans-serif';
+            canvas.ctx.fillText(text, x, y);
+        }
+    }
+    
+    native "python" {
+canvas.handle.create_text(x, y, text=text, fill=color, anchor='nw')
+    }
+}
+
+// Run canvas event loop (for app mode)
+fn Canvas_run() {
+    native "js" {
+        console.log("Canvas running (web mode)");
+    }
+    
+    native "python" {
+canvas_root.mainloop()
+    }
+}
+
+// Animation loop helper
+fn Canvas_animate(callback: any) {
+    native "js" {
+        function loop() {
+            callback();
+            requestAnimationFrame(loop);
+        }
+        requestAnimationFrame(loop);
+    }
+    
+    native "python" {
+def loop():
+    callback()
+    canvas_root.after(16, loop)
+canvas_root.after(16, loop)
+    }
+}

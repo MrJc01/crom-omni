@@ -1,40 +1,57 @@
 // ============================================================================
-// 05_HTTP_API_CLIENT - HTTP Requests
+// 05_HTTP_API_CLIENT - Uses std/http library pattern
 // ============================================================================
 
-fn print(msg: string) {
+fn log(msg: string) {
     native "js" { console.log(msg); }
     native "python" { print(msg) }
 }
 
-fn http_get_demo(url: string) -> string {
+fn header(text: string) {
+    log("╔══════════════════════════════════════╗");
+    log("║   " + text);
+    log("╚══════════════════════════════════════╝");
+}
+
+fn http_get(url: string) -> string {
     let response = "";
     native "js" {
-        response = '{"status": "ok", "source": "omni-http"}';
+        response = '{"status": "ok", "data": "from JS"}';
         console.log("[HTTP] GET " + url);
     }
     native "python" {
-response = '{"status": "ok", "source": "omni-http"}'
+response = '{"status": "ok", "data": "from Python"}'
 print(f"[HTTP] GET {url}")
     }
     return response;
 }
 
+fn http_post(url: string, body: string) -> string {
+    let response = "";
+    native "js" {
+        response = '{"status": "created", "id": 123}';
+        console.log("[HTTP] POST " + url);
+    }
+    native "python" {
+response = '{"status": "created", "id": 456}'
+print(f"[HTTP] POST {url}")
+    }
+    return response;
+}
+
 fn main() {
-    print("╔══════════════════════════════════════╗");
-    print("║   OMNI - HTTP API Client             ║");
-    print("╚══════════════════════════════════════╝");
-    print("");
+    header("OMNI - HTTP API Client");
+    log("");
     
-    print("1. Making HTTP GET Request:");
-    let response = http_get_demo("https://api.example.com/data");
-    print("   Response: " + response);
-    print("");
+    log("1. GET Request:");
+    let get_result = http_get("https://api.example.com/users");
+    log("   Response: " + get_result);
+    log("");
     
-    print("2. Response contains:");
-    print("   status: ok");
-    print("   source: omni-http");
-    print("");
+    log("2. POST Request:");
+    let post_result = http_post("https://api.example.com/users", "data");
+    log("   Response: " + post_result);
+    log("");
     
-    print("✓ HTTP API client example completed!");
+    log("✓ Same API works on --cmd, --web, --app!");
 }
