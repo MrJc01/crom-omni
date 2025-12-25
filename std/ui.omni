@@ -3,15 +3,10 @@
 // ============================================================================
 // wraps Tkinter (Python) and DOM (JS)
 
-import "core.omni";
+import "std/core.omni";
 
 // Global state for UI (Python side will use its own globals via imports or these)
-// We rely on Python keeping state in module scope if we can't use top-level native.
-// But we can't emit top-level native.
-// Hack: we import tkinter in every function.
-
 let ui_root_ref: any = 0;
-
 
 struct WindowConfig {
     title: string,
@@ -58,6 +53,7 @@ fn Window_create(config: WindowConfig) -> Window {
             div.style.position = 'relative';
             div.style.border = '1px solid #ccc';
             div.style.margin = '20px auto';
+            div.style.fontFamily = 'sans-serif';
             div.id = 'omni-window-main';
             document.body.appendChild(div);
             win.handle = div;
@@ -89,57 +85,54 @@ fn Button_create(win: Window, text: string, x: i64, y: i64) -> Button {
     let btn = Button { handle: 0, id: "btn_" + text, text: text };
 
     native "js" {
-        const b = document.createElement('button');
-        b.innerText = text;
-        b.style.position = 'absolute';
-        b.style.left = x + 'px';
-        b.style.top = y + 'px';
-        if (win.handle) win.handle.appendChild(b);
-        btn.handle = b;
-    }
-
-    native "python" {
-        import tkinter as tk
-        from tkinter import ttk
-        b = ttk.Button(ui_root_ref, text=text)
-        b.place(x=x, y=y)
-        btn.handle = b
-    }
-
-    return btn;
-}
-
-fn Button_on_click(btn: Button, callback: any) {
-    native "js" {
-        if (btn.handle) {
-            btn.handle.onclick = callback;
+        if (typeof document !== 'undefined') {
+            const b = document.createElement('button');
+            b.innerText = text;
+            b.style.position = 'absolute';
+            b.style.left = x + 'px';
+            b.style.top = y + 'px';
+            if (win.handle) win.handle.appendChild(b);
+            btn.handle = b;
         }
     }
 
     native "python" {
-        def wrapper():
-            callback()
-        btn.handle.config(command=wrapper)
+        import tkinter as tk
+        b = tk.Button(win.handle, text=text)
+        b.place(x=x, y=y)
+        btn.handle = b
+    }
+    
+    return btn;
+}
+
+fn Button_set_click(btn: Button, callback: any) {
+    native "js" {
+        if (btn.handle) btn.handle.onclick = callback;
+    }
+    native "python" {
+        if btn.handle:
+            btn.handle.configure(command=callback)
     }
 }
 
 fn Label_create(win: Window, text: string, x: i64, y: i64) -> Label {
     let lbl = Label { handle: 0, id: "lbl", text: text };
-
+    
     native "js" {
-        const l = document.createElement('div');
-        l.innerText = text;
-        l.style.position = 'absolute';
-        l.style.left = x + 'px';
-        l.style.top = y + 'px';
-        if (win.handle) win.handle.appendChild(l);
-        lbl.handle = l;
+        if (typeof document !== 'undefined') {
+             const l = document.createElement('div');
+             l.innerText = text;
+             l.style.position = 'absolute';
+             l.style.left = x + 'px';
+             l.style.top = y + 'px';
+             if (win.handle) win.handle.appendChild(l);
+             lbl.handle = l;
+        }
     }
-
     native "python" {
         import tkinter as tk
-        bg = ui_root_ref.cget('bg')
-        l = tk.Label(ui_root_ref, text=text, bg=bg)
+        l = tk.Label(win.handle, text=text, bg=win.handle['bg'])
         l.place(x=x, y=y)
         lbl.handle = l
     }
@@ -151,55 +144,72 @@ fn Label_set_text(lbl: Label, text: string) {
         if (lbl.handle) lbl.handle.innerText = text;
     }
     native "python" {
-        lbl.handle.config(text=text)
+        if lbl.handle:
+            lbl.handle.configure(text=text)
     }
 }
 
-fn TextInput_create(win: Window, x: i64, y: i64, width: i64) -> TextInput {
-    let input = TextInput { handle: 0, id: "input" };
-
+fn TextInput_create(win: Window, x: i64, y: i64) -> TextInput {
+    let inp = TextInput { handle: 0, id: "input" };
     native "js" {
-        const i = document.createElement('input');
-        i.type = 'text';
-        i.style.position = 'absolute';
-        i.style.left = x + 'px';
-        i.style.top = y + 'px';
-        i.style.width = width + 'px';
-        if (win.handle) win.handle.appendChild(i);
-        input.handle = i;
+        if (typeof document !== 'undefined') {
+            const i = document.createElement('input');
+            i.type = 'text';
+            i.style.position = 'absolute';
+            i.style.left = x + 'px';
+            i.style.top = y + 'px';
+            if (win.handle) win.handle.appendChild(i);
+            inp.handle = i;
+        }
     }
-
     native "python" {
         import tkinter as tk
-        from tkinter import ttk
-        i = ttk.Entry(ui_root_ref)
-        i.place(x=x, y=y, width=width)
-        input.handle = i
+        i = tk.Entry(win.handle)
+        i.place(x=x, y=y)
+        inp.handle = i
     }
-    return input;
+    return inp;
 }
 
-fn TextInput_get_value(input: TextInput) -> string {
+fn TextInput_get_value(inp: TextInput) -> string {
     let val = "";
     native "js" {
-        if (input.handle) val = input.handle.value;
+        if (inp.handle) val = inp.handle.value;
     }
     native "python" {
-        val = input.handle.get()
+        if inp.handle:
+            val = inp.handle.get()
     }
     return val;
 }
 
-// ============================================================================
-// RUNLOOP
-// ============================================================================
+fn Window_bind_key(win: Window, key: string, callback: any) {
+    native "js" {
+        if (typeof document !== 'undefined') {
+            document.addEventListener('keydown', (e) => {
+                if (e.key === key) callback();
+            });
+        }
+    }
+    native "python" {
+        if win.handle:
+            # Map common keys
+            k = key
+            if key == "ArrowLeft": k = "Left"
+            elif key == "ArrowRight": k = "Right"
+            elif key == "ArrowUp": k = "Up"
+            elif key == "ArrowDown": k = "Down"
+            
+            win.handle.bind(f"<{k}>", lambda e: callback())
+    }
+}
 
 fn UI_run() {
     native "js" {
-        console.log("UI Running (Web)");
+        console.log("UI running (web mode)");
     }
     native "python" {
-        # global ui_root
+        global ui_root_ref
         if ui_root_ref:
             ui_root_ref.mainloop()
     }

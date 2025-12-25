@@ -1,62 +1,52 @@
 // ============================================================================
-// 11_INTERACTIVE_UI_NODES - Visual Node Editor
+// 11_INTERACTIVE_UI_NODES - Visual Node Editor (Simplified)
 // ============================================================================
 // Run with: omni run examples/11_interactive_ui_nodes/src/main.omni --web
 // ============================================================================
 
-fn print(msg: string) {
-    native "js" { console.log(msg); }
+import "std/core.omni";
+import "std/ui.omni";
+
+// Global widgets
+let input_data: TextInput = TextInput { handle: 0, id: "" };
+let output_display: Label = Label { handle: 0, id: "", text: "" };
+
+fn process_data() {
+    let val = TextInput_get_value(input_data);
+    Label_set_text(output_display, "Processed: " + val);
 }
 
-// @visual:position(100, 100)
-// @visual:color(#4CAF50)
-fn input_node(value: string) -> string {
-    return value;
-}
-
-// @visual:position(300, 100)
-// @visual:color(#2196F3)
-fn process_node(input: string) -> string {
-    return "Processed: " + input;
-}
-
-// @visual:position(500, 100)
-// @visual:color(#FF9800)
-fn output_node(result: string) {
-    print("Output: " + result);
-}
-
-fn create_ui() {
-    native "js" {
-        document.body.innerHTML = `
-            <div style="padding: 20px; font-family: sans-serif;">
-                <h1>Interactive UI Nodes</h1>
-                <div style="display: flex; gap: 20px; margin-top: 20px;">
-                    <div style="padding: 20px; background: #4CAF50; color: white; border-radius: 8px;">
-                        <h3>Input Node</h3>
-                        <input id="input" type="text" value="Hello" style="padding: 8px;">
-                    </div>
-                    <div style="padding: 20px; background: #2196F3; color: white; border-radius: 8px;">
-                        <h3>Process Node</h3>
-                        <button onclick="processData()" style="padding: 8px 16px;">Process</button>
-                    </div>
-                    <div style="padding: 20px; background: #FF9800; color: white; border-radius: 8px;">
-                        <h3>Output Node</h3>
-                        <div id="output">-</div>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        window.processData = function() {
-            const input = document.getElementById('input').value;
-            const result = "Processed: " + input;
-            document.getElementById('output').textContent = result;
-        };
-    }
+fn create_node_ui() {
+    let config = WindowConfig {
+        title: "Interactive UI Nodes",
+        width: 800,
+        height: 400,
+        background: "#ffffff"
+    };
+    
+    let win = Window_create(config);
+    
+    // Header
+    Label_create(win, "Interactive UI Nodes", 20, 20);
+    
+    // Node 1: Input (Greenish area approx)
+    Label_create(win, "Input Node", 50, 80);
+    input_data = TextInput_create(win, 50, 110);
+    
+    // Node 2: Process (Blueish area approx)
+    Label_create(win, "Process Node", 300, 80);
+    let btn = Button_create(win, "Process", 300, 110);
+    Button_set_click(btn, process_data);
+    
+    // Node 3: Output (Orangeish area approx)
+    Label_create(win, "Output Node", 550, 80);
+    output_display = Label_create(win, "-", 550, 110);
+    
+    print("UI Nodes Layout Created. Running loop...");
+    UI_run();
 }
 
 fn main() {
     print("Starting Interactive UI Nodes...");
-    create_ui();
+    create_node_ui();
 }

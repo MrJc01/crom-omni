@@ -1,37 +1,11 @@
 // ============================================================================
 // 13_SECURE_HASHER - Cryptography
 // ============================================================================
+// Uses std/crypto.omni
+// Run with: omni run examples/13_secure_hasher/src/main.omni --cmd
 
-fn print(msg: string) {
-    native "js" { console.log(msg); }
-    native "python" { print(msg) }
-}
-
-fn sha256_hash(input: string) -> string {
-    let result = "";
-    native "js" {
-        const crypto = require('crypto');
-        result = crypto.createHash('sha256').update(input).digest('hex');
-    }
-    native "python" {
-import hashlib
-result = hashlib.sha256(input.encode()).hexdigest()
-    }
-    return result;
-}
-
-fn md5_hash(input: string) -> string {
-    let result = "";
-    native "js" {
-        const crypto = require('crypto');
-        result = crypto.createHash('md5').update(input).digest('hex');
-    }
-    native "python" {
-import hashlib
-result = hashlib.md5(input.encode()).hexdigest()
-    }
-    return result;
-}
+import "std/core.omni";
+import "std/crypto.omni";
 
 fn main() {
     print("╔══════════════════════════════════════╗");
@@ -44,12 +18,12 @@ fn main() {
     print("");
     
     print("1. SHA-256:");
-    let sha = sha256_hash(input);
+    let sha = sha256(input);
     print("   " + sha);
     print("");
     
     print("2. MD5:");
-    let md = md5_hash(input);
+    let md = md5(input);
     print("   " + md);
     print("");
     

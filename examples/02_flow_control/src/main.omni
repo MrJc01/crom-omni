@@ -1,27 +1,12 @@
 // ============================================================================
 // 02_FLOW_CONTROL - Pure Omni Logic (works on all modes)
 // ============================================================================
-
-fn log(msg: string) {
-    native "js" { console.log(msg); }
-    native "python" {
-print(str(msg))
-    }
-}
-
-fn to_str(n: i64) -> string {
-    let result = "";
-    native "js" { result = String(n); }
-    native "python" {
-result = str(n)
-    }
-    return result;
-}
+import "std/core.omni";
 
 fn header(text: string) {
-    log("╔══════════════════════════════════════╗");
-    log("║   " + text);
-    log("╚══════════════════════════════════════╝");
+    print("╔══════════════════════════════════════╗");
+    print("║   " + text);
+    print("╚══════════════════════════════════════╝");
 }
 
 fn factorial(n: i64) -> i64 {
@@ -42,23 +27,23 @@ fn classify(n: i64) -> string {
 
 fn main() {
     header("OMNI - Flow Control");
-    log("");
+    print("");
     
-    log("1. Factorial (recursion):");
-    log("   5! = " + to_str(factorial(5)));
-    log("   10! = " + to_str(factorial(10)));
-    log("");
+    print("1. Factorial (recursion):");
+    print("   5! = " + to_string(factorial(5)));
+    print("   10! = " + to_string(factorial(10)));
+    print("");
     
-    log("2. Fibonacci (recursion):");
-    log("   fib(10) = " + to_str(fibonacci(10)));
-    log("   fib(15) = " + to_str(fibonacci(15)));
-    log("");
+    print("2. Fibonacci (recursion):");
+    print("   fib(10) = " + to_string(fibonacci(10)));
+    print("   fib(15) = " + to_string(fibonacci(15)));
+    print("");
     
-    log("3. Classification:");
-    log("   -5 is " + classify(-5));
-    log("   0 is " + classify(0));
-    log("   10 is " + classify(10));
-    log("");
+    print("3. Classification:");
+    print("   -5 is " + classify(-5));
+    print("   0 is " + classify(0));
+    print("   10 is " + classify(10));
+    print("");
     
-    log("✓ Pure Omni logic - works on all modes!");
+    print("✓ Pure Omni logic - works on all modes!");
 }

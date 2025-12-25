@@ -1,53 +1,48 @@
 // ============================================================================
-// 09_BASIC_3D_CUBE - Three.js 3D Scene
+// 09_BASIC_3D_CUBE - Pure Omni
 // ============================================================================
-// Run with: omni run examples/09_basic_3d_cube/src/main.omni --web
-// ============================================================================
+// Uses std/3d.omni library for cross-platform 3D
+// Works on --cmd (Headless), --web (Three.js)
 
-fn print(msg: string) {
-    native "js" { console.log(msg); }
+import "std/core.omni";
+import "std/3d.omni";
+
+let scene: Scene3D = Scene3D { handle: 0 };
+let camera: Camera3D = Camera3D { handle: 0 };
+let renderer: Renderer3D = Renderer3D { handle: 0 };
+let cube: Mesh3D = Mesh3D { handle: 0 };
+
+let rx: f64 = 0.0;
+let ry: f64 = 0.0;
+
+fn animate() {
+    rx = rx + 0.01;
+    ry = ry + 0.01;
+    Mesh_set_rotation(cube, rx, ry, 0.0);
+    Renderer_render(renderer, scene, camera);
 }
 
-fn create_scene() {
-    native "js" {
-        // Dynamically load Three.js
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
-        script.onload = function() {
-            initScene();
-        };
-        document.head.appendChild(script);
-    }
-}
-
-fn initScene() {
-    native "js" {
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
-        
-        // Create cube
-        const geometry = new THREE.BoxGeometry();
-        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: true });
-        const cube = new THREE.Mesh(geometry, material);
-        scene.add(cube);
-        
-        camera.position.z = 5;
-        
-        // Animation loop
-        function animate() {
-            requestAnimationFrame(animate);
-            cube.rotation.x += 0.01;
-            cube.rotation.y += 0.01;
-            renderer.render(scene, camera);
-        }
-        animate();
-    }
+fn init() {
+    scene = Scene_create();
+    camera = Camera_create();
+    renderer = Renderer_create();
+    Renderer_init(renderer);
+    
+    Camera_set_z(camera, 5.0);
+    
+    // Create Greenish Cube
+    cube = Cube_create(2.0, 0x00ff00, scene);
+    
+    AnimationLoop(animate);
 }
 
 fn main() {
-    print("Starting 3D Cube Demo...");
-    create_scene();
+    print("╔══════════════════════════════════════╗");
+    print("║   OMNI - 3D Cube                     ║");
+    print("╚══════════════════════════════════════╝");
+    print("");
+    print("Initializing 3D Scene...");
+    print("Note: Use --web to see the visual result.");
+    
+    ThreeJS_load(init);
 }

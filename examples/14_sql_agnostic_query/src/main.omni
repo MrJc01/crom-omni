@@ -1,23 +1,11 @@
 // ============================================================================
 // 14_SQL_AGNOSTIC_QUERY - Database Abstraction
 // ============================================================================
+// Uses std/sql.omni for structured query building
+// Run with: omni run examples/14_sql_agnostic_query/src/main.omni --cmd
 
-fn print(msg: string) {
-    native "js" { console.log(msg); }
-    native "python" { print(msg) }
-}
-
-fn build_select(table: string, fields: string) -> string {
-    return "SELECT " + fields + " FROM " + table;
-}
-
-fn build_where(query: string, condition: string) -> string {
-    return query + " WHERE " + condition;
-}
-
-fn build_order(query: string, field: string) -> string {
-    return query + " ORDER BY " + field;
-}
+import "std/core.omni";
+import "std/sql.omni";
 
 fn main() {
     print("╔══════════════════════════════════════╗");
@@ -28,18 +16,23 @@ fn main() {
     print("Building a SQL query:");
     print("");
     
-    let q1 = build_select("users", "*");
-    print("1. " + q1);
+    // 1. Select
+    let q = Query_select("users");
+    print("1. " + Query_to_string(q));
     
-    let q2 = build_where(q1, "active = true");
-    print("2. " + q2);
+    // 2. Where
+    q = Query_where(q, "active = true");
+    q = Query_where(q, "age >= 18");
+    print("2. " + Query_to_string(q));
     
-    let q3 = build_order(q2, "created_at DESC");
-    print("3. " + q3);
+    // 3. Order & Limit
+    q = Query_order_by(q, "created_at DESC");
+    q = Query_limit(q, 50);
+    print("3. " + Query_to_string(q));
     print("");
     
     print("Final Query:");
-    print("   " + q3);
+    print("   " + Query_to_string(q));
     print("");
     
     print("✓ SQL Query Builder example completed!");

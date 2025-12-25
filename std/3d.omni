@@ -1,165 +1,472 @@
 // ============================================================================
 // STD/3D.omni - Universal 3D Graphics Library
 // ============================================================================
-// Provides cross-platform 3D rendering
-// - Web: Three.js
-// - App: ASCII wireframe fallback
-// - Cmd: Console description
+// Modular 3D Scene Graph API with Universal Rendering:
+// - Web: Three.js (WebGL)
+// - App: Tkinter Wireframe (Software 3D)
+// - Cmd: ASCII Art (Software 3D)
 
-// 3D Scene structure
+import "std/math.omni";
+
 struct Scene3D {
-    handle: any,
-    id: string
+    handle: any
 }
 
 struct Camera3D {
-    handle: any,
-    x: f64,
-    y: f64,
-    z: f64
+    handle: any
+}
+
+struct Renderer3D {
+    handle: any
 }
 
 struct Mesh3D {
-    handle: any,
-    type: string
+    handle: any
 }
 
-// Create a 3D scene
-fn Scene3D_create() -> Scene3D {
-    let scene = Scene3D { handle: 0, id: "main" };
-    
+// ----------------------------------------------------------------------------
+// SETUP
+// ----------------------------------------------------------------------------
+
+fn ThreeJS_load(callback: any) {
+    native "js" {
+        if (typeof document !== 'undefined') {
+            if (typeof THREE === 'undefined') {
+                 const script = document.createElement('script');
+                 script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+                 script.onload = callback;
+                 document.head.appendChild(script);
+            } else {
+                 callback();
+            }
+        } else {
+            // Node.js: Immediate callback
+            callback();
+        }
+    }
+    native "python" {
+        callback()
+    }
+}
+
+fn Scene_create() -> Scene3D {
+    let scene = Scene3D { handle: 0 };
     native "js" {
         if (typeof THREE !== 'undefined') {
             scene.handle = new THREE.Scene();
-            scene.renderer = new THREE.WebGLRenderer({ antialias: true });
-            scene.renderer.setSize(window.innerWidth, window.innerHeight);
-            document.body.appendChild(scene.renderer.domElement);
         } else {
-            console.log("[3D] Three.js not loaded - using fallback");
+            // Headless / Node.js Scene
+            scene.handle = { type: 'scene', objects: [] };
         }
     }
-    
     native "python" {
-print("[3D] Scene created (console fallback)")
+        scene.handle = {'type': 'scene', 'objects': []}
     }
-    
     return scene;
 }
 
-// Create a camera
-fn Camera3D_create(fov: f64, near: f64, far: f64) -> Camera3D {
-    let camera = Camera3D { handle: 0, x: 0.0, y: 0.0, z: 5.0 };
-    
+fn Camera_create() -> Camera3D {
+    let cam = Camera3D { handle: 0 };
     native "js" {
         if (typeof THREE !== 'undefined') {
-            const aspect = window.innerWidth / window.innerHeight;
-            camera.handle = new THREE.PerspectiveCamera(fov, aspect, near, far);
-            camera.handle.position.z = 5;
+            cam.handle = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+            cam.handle.position.z = 10;
+        } else {
+            cam.handle = { x: 0, y: 0, z: 10, fov: 75 };
         }
     }
-    
     native "python" {
-print(f"[3D] Camera created at z={camera.z}")
+        cam.handle = {'x': 0, 'y': 0, 'z': 10, 'fov': 75}
     }
-    
-    return camera;
+    return cam;
 }
 
-// Create a cube mesh
-fn Mesh3D_cube(size: f64, color: string) -> Mesh3D {
-    let mesh = Mesh3D { handle: 0, type: "cube" };
-    
+fn Renderer_create() -> Renderer3D {
+    let ren = Renderer3D { handle: 0 };
     native "js" {
-        if (typeof THREE !== 'undefined') {
-            const geometry = new THREE.BoxGeometry(size, size, size);
-            const material = new THREE.MeshBasicMaterial({ 
-                color: color, 
-                wireframe: true 
-            });
-            mesh.handle = new THREE.Mesh(geometry, material);
+        if (typeof document !== 'undefined') {
+             if (typeof THREE !== 'undefined') {
+                 const r = new THREE.WebGLRenderer({ antialias: true });
+                 r.setSize(window.innerWidth, window.innerHeight);
+                 document.body.appendChild(r.domElement);
+                 ren.handle = r;
+                 ren.type = 'webgl';
+             }
+        } else {
+            ren.handle = { width: 80, height: 24 }; // Terminal size
+            ren.type = 'ascii';
+            ren.frame_count = 0;
         }
     }
-    
     native "python" {
-print(f"[3D] Cube mesh created: size={size}, color={color}")
+        import tkinter as tk
+        root = tk.Tk()
+        root.title("Omni 3D App")
+        root.configure(bg='#1a1a2e')
+        canvas = tk.Canvas(root, width=600, height=400, bg='#1a1a2e', highlightthickness=0)
+        canvas.pack(fill='both', expand=True)
+        ren.handle = {'root': root, 'canvas': canvas, 'width': 600, 'height': 400}
     }
-    
+    return ren;
+}
+
+fn AnimationLoop(callback: any) {
+    native "js" {
+        if (typeof requestAnimationFrame !== 'undefined') {
+            function loop() {
+                callback();
+                requestAnimationFrame(loop);
+            }
+            requestAnimationFrame(loop);
+        } else {
+            console.log("Animation loop running in terminal (ASCII)... press Ctrl+C to stop");
+            // Simple interval for Node.js
+            setInterval(callback, 100);
+        }
+    }
+    native "python" {
+        import tkinter as tk
+        # We need access to the renderer root to schedule loop
+        # We can find it via a global hack or assume it's created
+        # But for now, we just loop using root.after if we can find the root
+        # Or we rely on the user having created a renderer.
+        
+        # NOTE: We need the callback to run within Tkinter loop
+        def loop():
+             callback()
+             # We assume active_tk_root is set by Renderer_create
+             # But here we don't have it scope. 
+             # We'll rely on the renderer logic to drive this, 
+             # OR we impl a global registry in python block
+             pass 
+        
+        # Hack: The renderer creation sets a global 'omni_tk_root'
+        try:
+             global omni_tk_root
+             if 'omni_tk_root' in globals() and omni_tk_root:
+                 omni_tk_root.after(16, loop) # kick off
+                 # mainloop moved to main or handled by UI_run? 
+                 # Usually loop must start before mainloop
+                 
+                 def _forever():
+                     loop()
+                     omni_tk_root.after(30, _forever)
+                 _forever()
+                 
+                 omni_tk_root.mainloop() 
+        except:
+             pass
+    }
+}
+
+// ----------------------------------------------------------------------------
+// OBJECTS
+// ----------------------------------------------------------------------------
+
+fn Sphere_create(radius: f64, color: i64, scene: Scene3D) -> Mesh3D {
+    let mesh = Mesh3D { handle: 0 };
+    native "js" {
+        // Web Mode
+        if (typeof THREE !== 'undefined' && scene.handle && scene.handle.add) {
+            const g = new THREE.SphereGeometry(radius, 16, 16); // Lower poly for perf
+            const m = new THREE.MeshBasicMaterial({ color: color, wireframe: true });
+            const s = new THREE.Mesh(g, m);
+            scene.handle.add(s);
+            mesh.handle = s;
+        } 
+        // Terminal Mode
+        else if (scene.handle && scene.handle.objects) {
+            let obj = { 
+                type: 'sphere', 
+                radius: radius, 
+                color: color,
+                x: 0, y: 0, z: 0,
+                rx: 0, ry: 0, rz: 0 
+            };
+            scene.handle.objects.push(obj);
+            mesh.handle = obj;
+        }
+    }
+    native "python" {
+        obj = { 
+            'type': 'sphere', 
+            'radius': radius, 
+            'color': f"#{color:06x}",
+            'x': 0.0, 'y': 0.0, 'z': 0.0,
+            'rx': 0.0, 'ry': 0.0, 'rz': 0.0
+        }
+        scene.handle['objects'].append(obj)
+        mesh.handle = obj
+    }
     return mesh;
 }
 
-// Create a sphere mesh
-fn Mesh3D_sphere(radius: f64, color: string) -> Mesh3D {
-    let mesh = Mesh3D { handle: 0, type: "sphere" };
-    
+fn Cube_create(size: f64, color: i64, scene: Scene3D) -> Mesh3D {
+    let mesh = Mesh3D { handle: 0 };
     native "js" {
-        if (typeof THREE !== 'undefined') {
-            const geometry = new THREE.SphereGeometry(radius, 32, 32);
-            const material = new THREE.MeshBasicMaterial({ color: color });
-            mesh.handle = new THREE.Mesh(geometry, material);
+        // Web Mode
+        if (typeof THREE !== 'undefined' && scene.handle && scene.handle.add) {
+            const g = new THREE.BoxGeometry(size, size, size);
+            const m = new THREE.MeshBasicMaterial({ color: color, wireframe: true });
+            const s = new THREE.Mesh(g, m);
+            scene.handle.add(s);
+            mesh.handle = s;
+        }
+        // Terminal Mode
+        else if (scene.handle && scene.handle.objects) {
+             let obj = { 
+                type: 'cube', 
+                size: size, 
+                color: color,
+                x: 0, y: 0, z: 0,
+                rx: 0, ry: 0, rz: 0 
+            };
+            scene.handle.objects.push(obj);
+            mesh.handle = obj;
         }
     }
-    
     native "python" {
-print(f"[3D] Sphere mesh created: radius={radius}, color={color}")
+        obj = { 
+            'type': 'cube', 
+            'size': size, 
+            'color': f"#{color:06x}",
+            'x': 0.0, 'y': 0.0, 'z': 0.0,
+            'rx': 0.0, 'ry': 0.0, 'rz': 0.0
+        }
+        scene.handle['objects'].append(obj)
+        mesh.handle = obj
     }
-    
     return mesh;
 }
 
-// Add mesh to scene
-fn Scene3D_add(scene: Scene3D, mesh: Mesh3D) {
-    native "js" {
-        if (scene.handle && mesh.handle) {
-            scene.handle.add(mesh.handle);
-        }
-    }
-    
-    native "python" {
-print(f"[3D] Added {mesh.type} to scene")
-    }
-}
+// ----------------------------------------------------------------------------
+// MANIPULATION
+// ----------------------------------------------------------------------------
 
-// Render scene
-fn Scene3D_render(scene: Scene3D, camera: Camera3D) {
-    native "js" {
-        if (scene.renderer && scene.handle && camera.handle) {
-            scene.renderer.render(scene.handle, camera.handle);
-        }
-    }
-    
-    native "python" {
-print("[3D] Scene rendered")
-    }
-}
-
-// Rotate mesh
-fn Mesh3D_rotate(mesh: Mesh3D, x: f64, y: f64, z: f64) {
+fn Mesh_set_position(mesh: Mesh3D, x: f64, y: f64, z: f64) {
     native "js" {
         if (mesh.handle) {
-            mesh.handle.rotation.x += x;
-            mesh.handle.rotation.y += y;
-            mesh.handle.rotation.z += z;
+            if (mesh.handle.position) {
+                mesh.handle.position.set(x, y, z);
+            } else {
+                mesh.handle.x = x;
+                mesh.handle.y = y;
+                mesh.handle.z = z;
+            }
         }
     }
-    
     native "python" {
-print(f"[3D] Rotated mesh: x={x}, y={y}, z={z}")
+        if mesh.handle:
+            mesh.handle['x'] = x
+            mesh.handle['y'] = y
+            mesh.handle['z'] = z
     }
 }
 
-// Animation loop
-fn Scene3D_animate(scene: Scene3D, camera: Camera3D, callback: any) {
+fn Mesh_set_rotation(mesh: Mesh3D, x: f64, y: f64, z: f64) {
     native "js" {
-        function loop() {
-            callback();
-            scene.renderer.render(scene.handle, camera.handle);
-            requestAnimationFrame(loop);
+        if (mesh.handle) {
+            if (mesh.handle.rotation) {
+                mesh.handle.rotation.set(x, y, z);
+            } else {
+                mesh.handle.rx = x;
+                mesh.handle.ry = y;
+                mesh.handle.rz = z;
+            }
         }
-        requestAnimationFrame(loop);
     }
-    
     native "python" {
-callback()
-print("[3D] Animation frame")
+        if mesh.handle:
+            mesh.handle['rx'] = x
+            mesh.handle['ry'] = y
+            mesh.handle['rz'] = z
+    }
+}
+
+fn Camera_set_z(cam: Camera3D, z: f64) {
+    native "js" {
+        if (cam.handle) {
+            if (cam.handle.position) cam.handle.position.z = z;
+            else cam.handle.z = z;
+        }
+    }
+    native "python" {
+        if cam.handle:
+            cam.handle['z'] = z
+    }
+}
+
+fn Camera_set_position(cam: Camera3D, x: f64, y: f64, z: f64) {
+    native "js" {
+        if (cam.handle) {
+            if (cam.handle.position) {
+                cam.handle.position.set(x, y, z);
+            } else {
+                cam.handle.x = x;
+                cam.handle.y = y;
+                cam.handle.z = z;
+            }
+        }
+    }
+    native "python" {
+        if cam.handle:
+            cam.handle['x'] = x
+            cam.handle['y'] = y
+            cam.handle['z'] = z
+    }
+}
+
+fn Renderer_render(ren: Renderer3D, scene: Scene3D, cam: Camera3D) {
+    native "js" {
+        // Web Mode
+        if (ren.type === 'webgl') {
+             ren.handle.render(scene.handle, cam.handle);
+        }
+        // ASCII Mode (Terminal)
+        else if (ren.type === 'ascii') {
+            const w = ren.handle.width;
+            const h = ren.handle.height;
+            const buffer = new Array(h).fill(' ').map(() => new Array(w).fill(' '));
+            
+            // Simple projection
+            const cx = w / 2;
+            const cy = h / 2;
+            const cam_z = cam.handle.z;
+            
+            for (const obj of scene.handle.objects) {
+                let x = obj.x; 
+                let y = obj.y;
+                let z = obj.z;
+                
+                // Relative to camera
+                let rel_z = cam_z - z;
+                if (rel_z < 0.1) continue; // Behind camera
+                
+                let scale = 20 / rel_z; // Perspective factor
+                
+                let screen_x = Math.floor(cx + x * scale * 2); // *2 for char aspect ratio
+                let screen_y = Math.floor(cy - y * scale);
+                
+                // Draw symbol
+                if (screen_x >= 0 && screen_x < w && screen_y >= 0 && screen_y < h) {
+                    let char = '*';
+                    if (obj.type === 'cube') char = '#';
+                    if (obj.type === 'sphere') char = 'O';
+                    buffer[screen_y][screen_x] = char;
+                }
+            }
+            
+            // Output frame
+            console.clear();
+            console.log("OMNI 3D ASCII RENDERER");
+            console.log(buffer.map(row => row.join('')).join('\n'));
+        }
+    }
+    native "python" {
+        # Python Tkinter Wireframe Renderer
+        if 'canvas' in ren.handle:
+            canvas = ren.handle['canvas']
+            canvas.delete('all')
+            
+            w = ren.handle['width']
+            h = ren.handle['height']
+            cx = w / 2
+            cy = h / 2
+            cam_z = cam.handle['z']
+            
+            import math
+            
+            for obj in scene.handle['objects']:
+                # 3D Transform
+                x, y, z = obj['x'], obj['y'], obj['z']
+                rx, ry, rz = obj['rx'], obj['ry'], obj['rz']
+                
+                # Simple rotation (around Y axis for demo)
+                # Ideally we'd do full matrix, but this is a toy renderer
+                
+                # Vertices for Cube (size)
+                # Vertices for Sphere (radius) -> we'll draw a circle or simple points
+                
+                rel_z = cam_z - z
+                if rel_z < 0.1: continue
+                scale = 300 / rel_z
+                
+                sx = cx + x * scale
+                sy = cy - y * scale
+                
+                color = obj['color']
+                
+                if obj['type'] == 'sphere':
+                    r_screen = obj['radius'] * scale
+                    canvas.create_oval(sx-r_screen, sy-r_screen, sx+r_screen, sy+r_screen, outline=color)
+                
+                elif obj['type'] == 'cube':
+                    s = obj['size'] / 2
+                    points = [
+                        (-s,-s,-s), (s,-s,-s), (s,s,-s), (-s,s,-s),
+                        (-s,-s,s), (s,-s,s), (s,s,s), (-s,s,s)
+                    ]
+                    
+                    # Rotate points
+                    rot_points = []
+                    cos_y = math.cos(ry)
+                    sin_y = math.sin(ry)
+                    cos_x = math.cos(rx)
+                    sin_x = math.sin(rx)
+                    
+                    projected = []
+                    
+                    for px, py, pz in points:
+                        # Rotate Y
+                        nx = px * cos_y - pz * sin_y
+                        nz = px * sin_y + pz * cos_y
+                        
+                        # Rotate X
+                        ny = py * cos_x - nz * sin_x
+                        nz = py * sin_x + nz * cos_x
+                        
+                        # Translate
+                        tx = nx + x
+                        ty = ny + y
+                        tz = nz + z
+                        
+                        # Project
+                        trz = cam_z - tz
+                        if trz > 0.1:
+                            pscale = 300 / trz
+                            psx = cx + tx * pscale
+                            psy = cy - ty * pscale
+                            projected.append((psx, psy))
+                        else:
+                            projected.append(None)
+                            
+                    # Draw Edges
+                    edges = [
+                        (0,1), (1,2), (2,3), (3,0), # Front
+                        (4,5), (5,6), (6,7), (7,4), # Back
+                        (0,4), (1,5), (2,6), (3,7)  # Connecting
+                    ]
+                    
+                    for i, j in edges:
+                        p1 = projected[i]
+                        p2 = projected[j]
+                        if p1 and p2:
+                            canvas.create_line(p1[0], p1[1], p2[0], p2[1], fill=color)
+    }
+}
+
+// Global registry hack for Python mainloop
+native "python" {
+omni_tk_root = None
+def _register_renderer(ren):
+    global omni_tk_root
+    if 'root' in ren.handle:
+        omni_tk_root = ren.handle['root']
+}
+
+// Wrap Render create to call registration
+fn Renderer_init(ren: Renderer3D) {
+    native "python" {
+        _register_renderer(ren)
     }
 }

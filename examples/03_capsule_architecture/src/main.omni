@@ -2,11 +2,7 @@
 // 03_CAPSULE_ARCHITECTURE - Modular Organization
 // ============================================================================
 // Demonstrates capsule (module) syntax
-
-fn print(msg: string) {
-    native "js" { console.log(msg); }
-    native "python" { print(msg) }
-}
+import "std/core.omni";
 
 // Pure functions without capsule syntax (parser limitation)
 fn math_add(a: i64, b: i64) -> i64 {
@@ -38,9 +34,9 @@ fn main() {
     print("");
     
     print("Using math functions:");
-    print("  10 + 5 = " + math_add(10, 5));
-    print("  10 - 5 = " + math_sub(10, 5));
-    print("  10 * 5 = " + math_mul(10, 5));
+    print("  10 + 5 = " + to_string(math_add(10, 5)));
+    print("  10 - 5 = " + to_string(math_sub(10, 5)));
+    print("  10 * 5 = " + to_string(math_mul(10, 5)));
     print("");
     
     print("Using string_repeat:");

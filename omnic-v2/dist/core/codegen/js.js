@@ -61,15 +61,61 @@ function CodeGenerator_gen_statement(self, stmt) {
 function CodeGenerator_gen_import(self, stmt) {
     let path = stmt.path;
     
-        path = path.replace(".omni", ".js");
-        if (path.startsWith(".") == false) path = "./" + path;
-        // Extrai nome do arquivo para variável: "./core/token.js" -> "token"
-        let name = path.split("/").pop().replace(".js", "");
-        // Gera: const token = require("./token.js");
-        return "const " + name + " = require(\"" + path + "\");\n" +
-               "if (typeof global !== 'undefined') Object.assign(global, " + name + ");";
+    // Inline bundling for std/ imports
+    if (path.startsWith("std/") || path.startsWith("std\\")) {
+        const fs = require('fs');
+        const p = require('path');
+        
+        // Find project root (where std/ folder is)
+        let projectRoot = process.cwd();
+        let stdPath = p.join(projectRoot, path);
+        
+        // Also try parent directories
+        if (!fs.existsSync(stdPath)) {
+            let dir = projectRoot;
+            for (let i = 0; i < 5; i++) {
+                dir = p.dirname(dir);
+                stdPath = p.join(dir, path);
+                if (fs.existsSync(stdPath)) {
+                    projectRoot = dir;
+                    break;
+                }
+            }
+        }
+        
+        if (fs.existsSync(stdPath)) {
+            const source = fs.readFileSync(stdPath, 'utf-8');
+            
+            // Parse the library file
+            const lexer_mod = require('../lexer.js');
+            const parser_mod = require('../parser.js');
+            
+            const lexer = lexer_mod.Lexer_new(source);
+            const tokens = lexer_mod.Lexer_tokenize(lexer);
+            const parser = parser_mod.Parser_new(tokens);
+            const ast = parser_mod.Parser_parse(parser);
+            
+            // Generate inline code
+            let code = "// ===== INLINE: " + path + " =====\n";
+            if (ast && ast.statements) {
+                for (const s of ast.statements) {
+                    let stmtCode = CodeGenerator_gen_statement(self, s);
+                    if (stmtCode) code += stmtCode + "\n";
+                }
+            }
+            code += "// ===== END: " + path + " =====\n";
+            return code;
+        } else {
+            return "// [WARN] Could not find: " + path + " at " + stdPath;
+        }
+    }
     
-    return "";
+    // Fallback: relative imports use require
+    path = path.replace(".omni", ".js");
+    if (path.startsWith(".") == false) path = "./" + path;
+    let name = path.split("/").pop().replace(".js", "");
+    return "const " + name + " = require(\"" + path + "\");\n" +
+           "if (typeof global !== 'undefined') Object.assign(global, " + name + ");";
 }
 function CodeGenerator_gen_struct(self, stmt) {
     let name = stmt.name;

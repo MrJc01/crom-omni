@@ -58,8 +58,8 @@ exists = os.path.exists(path)
     return exists;
 }
 
-fn read_dir(path: string) -> string[] {
-    let files: string[] = [];
+fn read_dir(path: string) -> any {
+    let files = 0;
     native "js" {
         const fs = require("fs");
         try {

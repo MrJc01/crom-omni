@@ -1,68 +1,61 @@
 // ============================================================================
 // 10_ANIMATED_SOLAR_SYSTEM - 3D Animation
 // ============================================================================
+// Run with: omni run examples/10_animated_solar_system/src/main.omni --web
+// ============================================================================
 
-fn print(msg: string) {
-    native "js" { console.log(msg); }
+import "std/core.omni";
+import "std/3d.omni";
+import "std/math.omni";
+
+let scene: Scene3D = Scene3D { handle: 0 };
+let camera: Camera3D = Camera3D { handle: 0 };
+let renderer: Renderer3D = Renderer3D { handle: 0 };
+let sun: Mesh3D = Mesh3D { handle: 0 };
+let earth: Mesh3D = Mesh3D { handle: 0 };
+let moon: Mesh3D = Mesh3D { handle: 0 };
+
+let time: f64 = 0.0;
+
+fn animate() {
+    time = time + 0.01;
+    
+    // Earth orbits sun (radius 7)
+    let ex = cos(time) * 7.0;
+    let ez = sin(time) * 7.0;
+    Mesh_set_position(earth, ex, 0.0, ez);
+    
+    // Moon orbits earth (radius 1.5 relative to earth)
+    // Speed x5
+    let mx = ex + cos(time * 5.0) * 1.5;
+    let mz = ez + sin(time * 5.0) * 1.5;
+    Mesh_set_position(moon, mx, 0.0, mz);
+    
+    Renderer_render(renderer, scene, camera);
 }
 
-fn create_solar_system() {
-    native "js" {
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
-        script.onload = initSolarSystem;
-        document.head.appendChild(script);
-    }
-}
-
-fn initSolarSystem() {
-    native "js" {
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
-        
-        // Sun
-        const sunGeometry = new THREE.SphereGeometry(2, 32, 32);
-        const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
-        const sun = new THREE.Mesh(sunGeometry, sunMaterial);
-        scene.add(sun);
-        
-        // Earth
-        const earthGeometry = new THREE.SphereGeometry(0.5, 32, 32);
-        const earthMaterial = new THREE.MeshBasicMaterial({ color: 0x0077ff });
-        const earth = new THREE.Mesh(earthGeometry, earthMaterial);
-        scene.add(earth);
-        
-        // Moon
-        const moonGeometry = new THREE.SphereGeometry(0.15, 32, 32);
-        const moonMaterial = new THREE.MeshBasicMaterial({ color: 0x888888 });
-        const moon = new THREE.Mesh(moonGeometry, moonMaterial);
-        scene.add(moon);
-        
-        camera.position.z = 15;
-        
-        let time = 0;
-        function animate() {
-            requestAnimationFrame(animate);
-            time += 0.01;
-            
-            // Earth orbits sun
-            earth.position.x = Math.cos(time) * 7;
-            earth.position.z = Math.sin(time) * 7;
-            
-            // Moon orbits earth
-            moon.position.x = earth.position.x + Math.cos(time * 5) * 1;
-            moon.position.z = earth.position.z + Math.sin(time * 5) * 1;
-            
-            renderer.render(scene, camera);
-        }
-        animate();
-    }
+fn init() {
+    scene = Scene_create();
+    camera = Camera_create();
+    renderer = Renderer_create();
+    Renderer_init(renderer);
+    
+    Camera_set_z(camera, 15.0);
+    
+    // Sun (Yellow - 0xffff00 - 16776960)
+    sun = Sphere_create(2.0, 16776960, scene);
+    
+    // Earth (Blue - 0x0077ff - 30719)
+    earth = Sphere_create(0.5, 30719, scene);
+    
+    // Moon (Gray - 0x888888 - 8947848)
+    moon = Sphere_create(0.15, 8947848, scene);
+    
+    AnimationLoop(animate);
 }
 
 fn main() {
     print("Starting Solar System Animation...");
-    create_solar_system();
+    print("Note: This example is best viewed with --web flag.");
+    ThreeJS_load(init);
 }

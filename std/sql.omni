@@ -1,0 +1,65 @@
+// ============================================================================
+// STD/SQL.omni - SQL Query Builder
+// ============================================================================
+// A simple, dialect-agnostic SQL builder
+
+struct Query {
+    table: string,
+    fields: string,
+    where_clause: string,
+    order_clause: string,
+    limit: i64
+}
+
+fn Query_select(table: string) -> Query {
+    return Query { 
+        table: table, 
+        fields: "*", 
+        where_clause: "", 
+        order_clause: "", 
+        limit: 0 
+    };
+}
+
+fn Query_fields(q: Query, fields: string) -> Query {
+    q.fields = fields;
+    return q;
+}
+
+fn Query_where(q: Query, condition: string) -> Query {
+    if (q.where_clause == "") {
+        q.where_clause = condition;
+    } else {
+        q.where_clause = q.where_clause + " AND " + condition;
+    }
+    return q;
+}
+
+fn Query_order_by(q: Query, field: string) -> Query {
+    q.order_clause = field;
+    return q;
+}
+
+fn Query_limit(q: Query, limit: i64) -> Query {
+    q.limit = limit;
+    return q;
+}
+
+fn Query_to_string(q: Query) -> string {
+    let sql = "SELECT " + q.fields + " FROM " + q.table;
+    
+    if (q.where_clause != "") {
+        sql = sql + " WHERE " + q.where_clause;
+    }
+    
+    if (q.order_clause != "") {
+        sql = sql + " ORDER BY " + q.order_clause;
+    }
+    
+    if (q.limit > 0) {
+        // Simple standard limit, dialects vary but this is a toy builder
+        sql = sql + " LIMIT " + q.limit;
+    }
+    
+    return sql;
+}

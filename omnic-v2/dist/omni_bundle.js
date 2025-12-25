@@ -133,7 +133,7 @@ function is_digit(ch) {
      return /\d/.test(ch); 
 }
 function is_quote(ch) {
-     return ch === String.fromCharCode(34); 
+     return ch === '"' || ch === "'"; 
 }
 class Lexer {
     constructor(data = {}) {
@@ -366,10 +366,10 @@ function Lexer_next_token(l) {
 }
 } else {
     if (is_quote(l.ch)) {
-    let str_val = "";
+    let quote_char = l.ch;
     Lexer_read_char(l);
     let start = l.position;
-    while (is_quote(l.ch) == false) {
+    while (l.ch != quote_char && l.ch != "\0") {
     Lexer_read_char(l);
 }
     let end = l.position;
@@ -1552,7 +1552,7 @@ function CodeGenerator_gen_stmt_py(self, stmt) {
     let decl = indent_str + "def " + stmt.name + "(" + params + "):\n";
     self.indent = self.indent + 1;
     let body = CodeGenerator_gen_block_py(self, stmt.body);
-    self.indent = self.indent;
+    self.indent = self.indent - 1;
     // Unknown stmt kind: 0
     1;
     return decorators + decl + body;
@@ -1576,7 +1576,7 @@ function CodeGenerator_gen_stmt_py(self, stmt) {
     let init_fn = init_indent + "def __init__(self, data=None):\n";
     init_fn = init_fn + init_indent + "    if data is None: data = {}\n";
     init_fn = init_fn + assignments + "\n";
-    self.indent = self.indent;
+    self.indent = self.indent - 1;
     // Unknown stmt kind: 0
     1;
     return decorators + decl + init_fn;
@@ -1586,14 +1586,14 @@ function CodeGenerator_gen_stmt_py(self, stmt) {
     let out = indent_str + "if " + cond + ":\n";
     self.indent = self.indent + 1;
     out = out + CodeGenerator_gen_block_py(self, stmt.consequence);
-    self.indent = self.indent;
+    self.indent = self.indent - 1;
     // Unknown stmt kind: 0
     1;
     if (stmt.alternative) {
     out = out + "\n" + indent_str + "else:\n";
     self.indent = self.indent + 1;
     out = out + CodeGenerator_gen_block_py(self, stmt.alternative);
-    self.indent = self.indent;
+    self.indent = self.indent - 1;
     // Unknown stmt kind: 0
     1;
 }
@@ -1604,7 +1604,7 @@ function CodeGenerator_gen_stmt_py(self, stmt) {
     let out = indent_str + "while " + cond + ":\n";
     self.indent = self.indent + 1;
     out = out + CodeGenerator_gen_block_py(self, stmt.body);
-    self.indent = self.indent;
+    self.indent = self.indent - 1;
     // Unknown stmt kind: 0
     1;
     return out;
@@ -1975,11 +1975,66 @@ const HybridImpl = {
                "const " + name + " = {\n" + methods + "};\n";
     },
     
-    gen_import: function(stmt) {
+    gen_import: function(stmt, generator_instance) {
         let module_path = stmt.path || stmt.module || '';
         module_path = module_path.replace(/^['"]|['"]$/g, '');
         const alias = stmt.alias || module_path.split('/').pop().replace('.omni', '');
         
+        // Inline bundling for std/ imports
+        if (module_path.startsWith('std/') || module_path.startsWith('std\\')) {
+            let projectRoot = process.cwd();
+            let stdPath = path.join(projectRoot, module_path);
+            
+            // Try parent directories if not found
+            if (!fs.existsSync(stdPath)) {
+                let dir = projectRoot;
+                for (let i = 0; i < 5; i++) {
+                    dir = path.dirname(dir);
+                    stdPath = path.join(dir, module_path);
+                    if (fs.existsSync(stdPath)) break;
+                }
+            }
+            
+            if (fs.existsSync(stdPath)) {
+                try {
+                    const source = fs.readFileSync(stdPath, 'utf-8');
+                    
+                    // Parse the library using bundle functions
+                    // Note: new_lexer and new_parser are available in bundle scope
+                    const lexer = new_lexer(source);
+                    const parser = new_parser(lexer);
+                    const ast = Parser_parse_program(parser);
+                    
+                    // Determine target language
+                    let target = 'js';
+                    if (generator_instance && generator_instance.profile && generator_instance.profile.name) {
+                        target = generator_instance.profile.name;
+                    }
+                    
+                    // Generate inline code
+                    const generator = HybridCodeGenerator_new(target);
+                    
+                    let commentStart = target === 'python' || target === 'py' ? "#" : "//";
+                    let code = commentStart + " ===== INLINE: " + module_path + " =====\n";
+                    
+                    if (ast && ast.statements) {
+                        for (const s of ast.statements) {
+                            if (s.kind === 10) continue; // Skip imports (NODE_IMPORT = 10)
+                            const stmtCode = HybridCodeGenerator_gen_statement(generator, s);
+                            if (stmtCode) code += stmtCode + "\n";
+                        }
+                    }
+                    code += commentStart + " ===== END: " + module_path + " =====\n";
+                    return code;
+                } catch (e) {
+                    return "// [ERROR] Inline bundling failed for " + module_path + ": " + e.message;
+                }
+            } else {
+                return "// [WARN] Could not find: " + module_path + " (searched: " + stdPath + ")";
+            }
+        }
+        
+        // Fallback for non-std imports
         return "// MARKER: Hybrid Import\n" + 
                "const " + alias + " = require(\"" + module_path + "\");\n" +
                "if (typeof global !== 'undefined') Object.assign(global, " + alias + ");";
@@ -2139,7 +2194,7 @@ function HybridCodeGenerator_gen_statement(self, stmt) {
      params = stmt.params ? stmt.params.join(", ") : ""; 
     self.indent_level = self.indent_level + 1;
     let body = HybridCodeGenerator_gen_block(self, stmt.body);
-    self.indent_level = self.indent_level;
+    self.indent_level = self.indent_level - 1;
     // Unknown stmt kind: 0
     1;
     
@@ -2166,7 +2221,7 @@ function HybridCodeGenerator_gen_statement(self, stmt) {
     let cond = HybridCodeGenerator_gen_expression(self, stmt.condition);
     self.indent_level = self.indent_level + 1;
     let body = HybridCodeGenerator_gen_block(self, stmt.body);
-    self.indent_level = self.indent_level;
+    self.indent_level = self.indent_level - 1;
     // Unknown stmt kind: 0
     1;
     let result = "";
@@ -2189,8 +2244,14 @@ function HybridCodeGenerator_gen_statement(self, stmt) {
     return HybridCodeGenerator_gen_interface(self, stmt);
 }
     if (stmt.kind == NODE_ASSIGNMENT) {
+    let lhs = "";
+    if (stmt.target) {
+        lhs = HybridCodeGenerator_gen_expression(self, stmt.target);
+    } else {
+        lhs = stmt.name;
+    }
     let value = HybridCodeGenerator_gen_expression(self, stmt.value);
-    return stmt.name + " = " + value + self.profile.statement_end;
+    return lhs + " = " + value + self.profile.statement_end;
 }
     if (stmt.kind == NODE_CALL) {
     let result = "";
@@ -2289,12 +2350,15 @@ function HybridCodeGenerator_gen_expression(self, expr) {
     return result;
 }
     if (expr.kind == NODE_MEMBER) {
-    let obj = HybridCodeGenerator_gen_expression(self, expr.object);
-    return obj + "." + expr.member;
+    let obj = HybridCodeGenerator_gen_expression(self, expr.object || expr.target);
+    let prop = expr.member || expr.property;
+    if (typeof prop === 'object') {
+        prop = prop.value || prop.name || 'unknown_member';
+    }
+    return obj + "." + prop;
 }
     if (expr.kind == NODE_ARRAY) {
     let elements = "";
-    
             if (expr.elements) {
                 elements = expr.elements.map(e => HybridCodeGenerator_gen_expression(self, e)).join(', ');
             }
@@ -2302,16 +2366,33 @@ function HybridCodeGenerator_gen_expression(self, expr) {
     return "[" + elements + "]";
 }
     if (expr.kind == NODE_STRUCT_INIT) {
-    let fields = "";
+    let fields = [];
+    if (expr.fields) {
+        if (Array.isArray(expr.fields)) {
+             fields = expr.fields.map(f => {
+                 let val = HybridCodeGenerator_gen_expression(self, f.value);
+                 return { k: f.name, v: val };
+             });
+        } else {
+             fields = Object.entries(expr.fields).map(([k, v]) => {
+                 return { k: k, v: HybridCodeGenerator_gen_expression(self, v) };
+             });
+        }
+    }
     
-            if (expr.fields) {
-                fields = Object.entries(expr.fields)
-                    .map(([k, v]) => k + ": " + HybridCodeGenerator_gen_expression(self, v))
-                    .join(', ');
-            }
-        
-    return "new " + expr.name + "({ " + fields + " })";
+    if (self.target === 'python') {
+        let args = fields.map(f => f.k + "=" + f.v).join(', ');
+        return expr.name + "(" + args + ")";
+    } else {
+        let args = fields.map(f => f.k + ": " + f.v).join(', ');
+        return "new " + expr.name + "({ " + args + " })";
+    }
 }
+    if (expr.kind == NODE_ASSIGNMENT) {
+        let lhs = expr.left ? HybridCodeGenerator_gen_expression(self, expr.left) : (expr.target ? HybridCodeGenerator_gen_expression(self, expr.target) : expr.name);
+        let rhs = expr.right ? HybridCodeGenerator_gen_expression(self, expr.right) : (expr.value ? HybridCodeGenerator_gen_expression(self, expr.value) : "");
+        return lhs + " = " + rhs;
+    }
     let result = "";
      result = String(expr.value || expr.name || ''); 
     return result;
@@ -2333,7 +2414,7 @@ function HybridCodeGenerator_gen_if(self, stmt) {
     let cond = HybridCodeGenerator_gen_expression(self, stmt.condition);
     self.indent_level = self.indent_level + 1;
     let consequence = HybridCodeGenerator_gen_block(self, stmt.consequence);
-    self.indent_level = self.indent_level;
+    self.indent_level = self.indent_level - 1;
     // Unknown stmt kind: 0
     1;
     let has_alt = false;
@@ -2348,7 +2429,7 @@ function HybridCodeGenerator_gen_if(self, stmt) {
     if (has_alt) {
     self.indent_level = self.indent_level + 1;
     let alternative = HybridCodeGenerator_gen_block(self, stmt.alternative);
-    self.indent_level = self.indent_level;
+    self.indent_level = self.indent_level - 1;
     // Unknown stmt kind: 0
     1;
     let result = "";
@@ -2433,7 +2514,7 @@ function HybridCodeGenerator_gen_import(self, stmt) {
     let result = "";
     
         var impl = exports;
-        result = impl.gen_import(stmt);
+        result = impl.gen_import(stmt, self);
     
     return result;
 }
@@ -9055,6 +9136,13 @@ function cmd_run() {
             
             let finalCode = code;
             finalCode += "\nif __name__ == '__main__':\n    main()\n";
+            finalCode += "    import sys\n";
+            finalCode += "    if hasattr(sys, 'omni_root') and sys.omni_root:\n";
+            finalCode += "        print('ℹ App running. Close window to exit.')\n";
+            finalCode += "        try:\n";
+            finalCode += "            sys.omni_root.mainloop()\n";
+            finalCode += "        except KeyboardInterrupt:\n";
+            finalCode += "            pass\n";
             
             fs.writeFileSync(outFile, finalCode);
             spawnSync("python", [outFile], { stdio: 'inherit' });

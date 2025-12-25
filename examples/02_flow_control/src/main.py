@@ -6,47 +6,47 @@ def log(msg):
     print(str(msg))
         
 def to_str(n):
-        result = ""
+    result = ""
 
+    
+    result = str(n)
         
-        result = str(n)
-            
-        return result
+    return result
 def header(text):
-            log("╔══════════════════════════════════════╗");
-            log("║   " + text);
-            log("╚══════════════════════════════════════╝");
+    log("╔══════════════════════════════════════╗");
+    log("║   " + text);
+    log("╚══════════════════════════════════════╝");
 def factorial(n):
-                    if n <= 1:
-                                        return 1
-                    return n * factorial(n - 1)
+    if n <= 1:
+            return 1
+    return n * factorial(n - 1)
 def fibonacci(n):
-                            if n <= 1:
-                                                        return n
-                            return fibonacci(n - 1) + fibonacci(n - 2)
+    if n <= 1:
+            return n
+    return fibonacci(n - 1) + fibonacci(n - 2)
 def classify(n):
-                                    if n < 0:
-                                                                        return "negative"
-                                        if n == 0:
-                                                                                return "zero"
-                                        return "positive"
+    if n < 0:
+            return "negative"
+    if n == 0:
+            return "zero"
+    return "positive"
 def main():
-                                            header("OMNI - Flow Control");
-                                            log("");
-                                            log("1. Factorial (recursion):");
-                                            log("   5! = " + to_str(factorial(5)));
-                                            log("   10! = " + to_str(factorial(10)));
-                                            log("");
-                                            log("2. Fibonacci (recursion):");
-                                            log("   fib(10) = " + to_str(fibonacci(10)));
-                                            log("   fib(15) = " + to_str(fibonacci(15)));
-                                            log("");
-                                            log("3. Classification:");
-                                            log("   -5 is " + classify(0 - 5));
-                                            log("   0 is " + classify(0));
-                                            log("   10 is " + classify(10));
-                                            log("");
-                                            log("✓ Pure Omni logic - works on all modes!");
+    header("OMNI - Flow Control");
+    log("");
+    log("1. Factorial (recursion):");
+    log("   5! = " + to_str(factorial(5)));
+    log("   10! = " + to_str(factorial(10)));
+    log("");
+    log("2. Fibonacci (recursion):");
+    log("   fib(10) = " + to_str(fibonacci(10)));
+    log("   fib(15) = " + to_str(fibonacci(15)));
+    log("");
+    log("3. Classification:");
+    log("   -5 is " + classify(0 - 5));
+    log("   0 is " + classify(0));
+    log("   10 is " + classify(10));
+    log("");
+    log("✓ Pure Omni logic - works on all modes!");
 
 if __name__ == '__main__':
     main()

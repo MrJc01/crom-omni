@@ -1,46 +1,10 @@
 // ============================================================================
-// 01_HELLO_UNIVERSAL - Works on --cmd, --web, --app
+// 01_HELLO_UNIVERSAL - Pure Omni (no native blocks)
 // ============================================================================
-// Uses different output methods per mode:
-// --cmd: console output
-// --web: displays in browser DOM
-// --app: opens Tkinter window
+// This example uses ONLY std library functions
+// Works on --cmd, --web, --app automatically
 
-fn log(msg: string) {
-    native "js" {
-        console.log(msg);
-        // Also display in DOM for web mode
-        if (typeof document !== 'undefined') {
-            let container = document.getElementById('output');
-            if (!container) {
-                container = document.createElement('pre');
-                container.id = 'output';
-                container.style.cssText = 'padding: 20px; font-family: monospace; font-size: 14px; background: #1a1a2e; color: #0f0; max-width: 600px; margin: 40px auto; border-radius: 8px;';
-                document.body.style.background = '#0f0f23';
-                document.body.appendChild(container);
-            }
-            container.textContent += msg + '\n';
-        }
-    }
-    native "python" {
-print(str(msg))
-    }
-}
-
-fn to_str(n: i64) -> string {
-    let result = "";
-    native "js" { result = String(n); }
-    native "python" {
-result = str(n)
-    }
-    return result;
-}
-
-fn header(text: string) {
-    log("╔══════════════════════════════════════╗");
-    log("║   " + text);
-    log("╚══════════════════════════════════════╝");
-}
+import "std/core.omni";
 
 fn greet(name: string) -> string {
     return "Hello, " + name + "! Welcome to Omni.";
@@ -55,31 +19,25 @@ fn multiply(a: i64, b: i64) -> i64 {
 }
 
 fn main() {
-    header("OMNI - Hello Universal");
-    log("");
+    print("╔══════════════════════════════════════╗");
+    print("║   OMNI - Hello Universal             ║");
+    print("╚══════════════════════════════════════╝");
+    print("");
     
-    log("1. Simple Output:");
-    log("   Hello, World!");
-    log("");
+    print("1. Simple Output:");
+    print("   Hello, World!");
+    print("");
     
-    log("2. Arithmetic (pure Omni):");
+    print("2. Arithmetic:");
     let sum = add(42, 58);
     let product = multiply(7, 6);
-    log("   42 + 58 = " + to_str(sum));
-    log("   7 * 6 = " + to_str(product));
-    log("");
+    print("   42 + 58 = " + to_string(sum));
+    print("   7 * 6 = " + to_string(product));
+    print("");
     
-    log("3. String Operations:");
-    let message = greet("Developer");
-    log("   " + message);
-    log("");
+    print("3. Greeting:");
+    print("   " + greet("Developer"));
+    print("");
     
-    log("4. Variables:");
-    let count: i64 = 10;
-    let name: string = "Omni";
-    log("   count = " + to_str(count));
-    log("   name = " + name);
-    log("");
-    
-    log("✓ Works on --cmd, --web, and --app!");
+    print("✓ Pure Omni - works everywhere!");
 }

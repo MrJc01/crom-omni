@@ -214,7 +214,60 @@ let HybridImpl = {
         let module_path = stmt.path || stmt.module || '';
         module_path = module_path.replace(/^['"]|['"]$/g, '');
         let alias = stmt.alias || module_path.split('/').pop().replace('.omni', '');
+        console.log('[DEBUG GEN_IMPORT] module_path = "' + module_path + '"');
         
+        // Inline bundling for std/ imports
+        if (module_path.startsWith('std/') || module_path.startsWith('std\\')) {
+            // Find the std/ folder
+            let projectRoot = process.cwd();
+            let stdPath = path.join(projectRoot, module_path);
+            console.log('[DEBUG] Inline bundling: ' + module_path + ' -> ' + stdPath);
+            
+            // Try parent directories if not found
+            if (!fs.existsSync(stdPath)) {
+                let dir = projectRoot;
+                for (let i = 0; i < 5; i++) {
+                    dir = path.dirname(dir);
+                    stdPath = path.join(dir, module_path);
+                    if (fs.existsSync(stdPath)) break;
+                }
+            }
+            
+            if (fs.existsSync(stdPath)) {
+                try {
+                    const source = fs.readFileSync(stdPath, 'utf-8');
+                    const lexer_mod = require('./lexer.js');
+                    const parser_mod = require('./parser.js');
+                    const codegen_hybrid = require('./codegen_hybrid.js');
+                    
+                    const lexer = lexer_mod.Lexer_new(source);
+                    const tokens = lexer_mod.Lexer_tokenize(lexer);
+                    const parser = parser_mod.Parser_new(tokens);
+                    const ast = parser_mod.Parser_parse(parser);
+                    
+                    // Generate inline code using hybrid generator
+                    let generator = codegen_hybrid.HybridCodeGenerator_new('js');
+                    let code = "// ===== INLINE: " + module_path + " =====\n";
+                    
+                    if (ast && ast.statements) {
+                        for (const s of ast.statements) {
+                            // Skip import statements in imported files to avoid recursion issues
+                            if (s.kind === 10) continue; // NODE_IMPORT = 10
+                            let stmtCode = codegen_hybrid.HybridCodeGenerator_gen_statement(generator, s);
+                            if (stmtCode) code += stmtCode + "\n";
+                        }
+                    }
+                    code += "// ===== END: " + module_path + " =====\n";
+                    return code;
+                } catch (e) {
+                    return "// [ERROR] Failed to inline " + module_path + ": " + e.message;
+                }
+            } else {
+                return "// [WARN] Could not find: " + module_path + " (searched " + stdPath + ")";
+            }
+        }
+        
+        // Fallback for non-std imports
         return "// MARKER: Hybrid Import\n" + 
                "const " + alias + " = require(\"" + module_path + "\");\n" +
                "if (typeof global !== 'undefined') Object.assign(global, " + alias + ");";

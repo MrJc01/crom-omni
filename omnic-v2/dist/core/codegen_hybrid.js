@@ -108,6 +108,7 @@ function HybridCodeGenerator_generate(self, program) {
     return output;
 }
 function HybridCodeGenerator_gen_statement(self, stmt) {
+    console.log('[DEBUG gen_statement] stmt.kind:', stmt.kind, 'NODE_IMPORT:', NODE_IMPORT);
     if (stmt.kind == NODE_IMPORT) {
     return HybridCodeGenerator_gen_import(self, stmt);
 }
@@ -197,8 +198,14 @@ function HybridCodeGenerator_gen_statement(self, stmt) {
     return HybridCodeGenerator_gen_interface(self, stmt);
 }
     if (stmt.kind == NODE_ASSIGNMENT) {
+    let lhs = "";
+    if (stmt.target) {
+        lhs = HybridCodeGenerator_gen_expression(self, stmt.target);
+    } else {
+        lhs = stmt.name;
+    }
     let value = HybridCodeGenerator_gen_expression(self, stmt.value);
-    return stmt.name + " = " + value + self.profile.statement_end;
+    return lhs + " = " + value + self.profile.statement_end;
 }
     if (stmt.kind == NODE_CALL) {
     let result = "";
@@ -220,6 +227,7 @@ function HybridCodeGenerator_gen_statement(self, stmt) {
     return result;
 }
 function HybridCodeGenerator_gen_expression(self, expr) {
+    console.log('[DEBUG gen_expr] kind:', expr?.kind, 'NODE_ASSIGNMENT:', NODE_ASSIGNMENT);
     let is_null = false;
      is_null = !expr; 
     if (is_null) {
@@ -319,6 +327,18 @@ function HybridCodeGenerator_gen_expression(self, expr) {
             }
         
     return "new " + expr.name + "({ " + fields + " })";
+}
+    if (expr.kind == NODE_ASSIGNMENT) {
+    let lhs = "";
+    if (expr.left) lhs = HybridCodeGenerator_gen_expression(self, expr.left);
+    else if (expr.target) lhs = HybridCodeGenerator_gen_expression(self, expr.target);
+    else lhs = expr.name;
+
+    let rhs = "";
+    if (expr.right) rhs = HybridCodeGenerator_gen_expression(self, expr.right);
+    else if (expr.value) rhs = HybridCodeGenerator_gen_expression(self, expr.value);
+
+    return lhs + " = " + rhs;
 }
     let result = "";
      result = String(expr.value || expr.name || ''); 
@@ -440,6 +460,7 @@ function HybridCodeGenerator_gen_spawn(self, stmt) {
 function HybridCodeGenerator_gen_import(self, stmt) {
     let result = "";
     
+        console.log('[DEBUG HybridCodeGenerator_gen_import] Called with stmt.path:', stmt.path);
         const impl = require('./codegen_hybrid_impl.js');
         result = impl.gen_import(stmt);
     

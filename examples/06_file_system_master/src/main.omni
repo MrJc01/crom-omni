@@ -1,51 +1,8 @@
 // ============================================================================
 // 06_FILE_SYSTEM_MASTER - File I/O
 // ============================================================================
-
-fn print(msg: string) {
-    native "js" { console.log(msg); }
-    native "python" { print(msg) }
-}
-
-fn read_file_demo(path: string) -> string {
-    let content = "";
-    native "js" {
-        const fs = require('fs');
-        try {
-            content = fs.readFileSync(path, 'utf8');
-        } catch (e) {
-            content = "[Error reading file]";
-        }
-    }
-    native "python" {
-try:
-    with open(path, 'r') as f:
-        content = f.read()
-except:
-    content = '[Error reading file]'
-    }
-    return content;
-}
-
-fn write_file_demo(path: string, content: string) -> bool {
-    let success = false;
-    native "js" {
-        const fs = require('fs');
-        try {
-            fs.writeFileSync(path, content);
-            success = true;
-        } catch (e) {}
-    }
-    native "python" {
-try:
-    with open(path, 'w') as f:
-        f.write(content)
-    success = True
-except:
-    pass
-    }
-    return success;
-}
+import "std/core.omni";
+import "std/io.omni";
 
 fn main() {
     print("╔══════════════════════════════════════╗");
@@ -57,14 +14,14 @@ fn main() {
     let test_content = "Hello from Omni!";
     
     print("1. Writing File:");
-    let wrote = write_file_demo(test_file, test_content);
+    let wrote = write_file(test_file, test_content);
     if (wrote) {
         print("   Written to: " + test_file);
     }
     print("");
     
     print("2. Reading File:");
-    let read_content = read_file_demo(test_file);
+    let read_content = read_file(test_file);
     print("   Content: " + read_content);
     print("");
     

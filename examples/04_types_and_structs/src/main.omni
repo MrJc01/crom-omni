@@ -1,11 +1,7 @@
 // ============================================================================
 // 04_TYPES_AND_STRUCTS - Type System
 // ============================================================================
-
-fn print(msg: string) {
-    native "js" { console.log(msg); }
-    native "python" { print(msg) }
-}
+import "std/core.omni";
 
 // Using object literal instead of struct (parser workaround)
 fn create_rect(w: f64, h: f64) -> f64 {
@@ -23,7 +19,7 @@ fn main() {
     let pi: f64 = 3.14159;
     let active: bool = true;
     let name: string = "Omni";
-    print("   i64:    count = " + count);
+    print("   i64:    count = " + to_string(count));
     print("   f64:    pi = 3.14159");
     print("   bool:   active = true");
     print("   string: name = " + name);
@@ -31,14 +27,14 @@ fn main() {
     
     print("2. Arithmetic:");
     let sum = count + 8;
-    print("   42 + 8 = " + sum);
+    print("   42 + 8 = " + to_string(sum));
     print("");
     
     print("3. Area Calculation (simulated struct):");
     let width: f64 = 10.0;
     let height: f64 = 5.0;
     let area = create_rect(width, height);
-    print("   Rectangle: 10 x 5 = " + area);
+    print("   Rectangle: 10 x 5 = " + to_string_f(area));
     print("");
     
     print("✓ Types and primitives example completed!");

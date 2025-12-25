@@ -56,10 +56,10 @@
     "assignment": "{left} = {right}",
     
     "list_literal": "[{elements}]",
-    "dict_literal": "{{{pairs}}}",
+    "dict_literal": "{ {pairs} }",
     "dict_pair": "{key}: {value}",
     "tuple_literal": "({elements})",
-    "set_literal": "{{{elements}}}",
+    "set_literal": "{ {elements} }",
     
     "string_literal": "\"{value}\"",
     "string_fstring": "f\"{value}\"",

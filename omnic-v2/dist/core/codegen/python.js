@@ -43,14 +43,56 @@ function CodeGenerator_gen_stmt_py(self, stmt) {
 }
     if (stmt.kind == NODE_IMPORT) {
     let path = stmt.path;
-    let name = "";
     
-             path = path.replace(".omni", "");
-             path = path.replace(/\//g, "."); // core/token -> core.token
-             if (path.startsWith(".")) path = path.substring(1); // ./core -> /core -> core (fix logic later if needed)
-             if (path.startsWith(".")) path = path.substring(1);
-             name = path.split(".").pop();
+    // Inline bundling for std/ imports
+    if (path.startsWith("std/") || path.startsWith("std\\")) {
+        const fs = require('fs');
+        const p = require('path');
         
+        let projectRoot = process.cwd();
+        let stdPath = p.join(projectRoot, path);
+        
+        // Try parent directories
+        if (!fs.existsSync(stdPath)) {
+            let dir = projectRoot;
+            for (let i = 0; i < 5; i++) {
+                dir = p.dirname(dir);
+                stdPath = p.join(dir, path);
+                if (fs.existsSync(stdPath)) break;
+            }
+        }
+        
+        if (fs.existsSync(stdPath)) {
+            const source = fs.readFileSync(stdPath, 'utf-8');
+            const lexer_mod = require('../lexer.js');
+            const parser_mod = require('../parser.js');
+            
+            const lexer = lexer_mod.Lexer_new(source);
+            const tokens = lexer_mod.Lexer_tokenize(lexer);
+            const parser = parser_mod.Parser_new(tokens);
+            const ast = parser_mod.Parser_parse(parser);
+            
+            let code = "# ===== INLINE: " + path + " =====\n";
+            if (ast && ast.statements) {
+                for (const s of ast.statements) {
+                    let stmtCode = CodeGenerator_gen_stmt_py(self, s);
+                    if (stmtCode) code += stmtCode + "\n";
+                }
+            }
+            code += "# ===== END: " + path + " =====\n";
+            return code;
+        } else {
+            return "# [WARN] Could not find: " + path;
+        }
+    }
+    
+    // Fallback: regular Python import
+    let name = "";
+    path = path.replace(".omni", "");
+    path = path.replace(/\//g, ".");
+    if (path.startsWith(".")) path = path.substring(1);
+    if (path.startsWith(".")) path = path.substring(1);
+    name = path.split(".").pop();
     return indent_str + "import " + path + " as " + name;
 }
     if (stmt.kind == 80) {
