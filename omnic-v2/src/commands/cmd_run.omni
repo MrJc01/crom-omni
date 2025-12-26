@@ -55,6 +55,20 @@ fn cmd_run() -> bool {
         if (process.argv.includes("--web")) mode = "web";
         if (process.argv.includes("--web-app")) mode = "web-app";
         
+        // Framework/Target shortcuts
+        if (process.argv.includes("--php")) {
+             target = "php";
+             mode = "cmd"; 
+        }
+        if (process.argv.includes("--laravel")) {
+             target = "php";
+             mode = "cmd"; // For now, run as cmd script, detection logic inside codegen will handle specifics
+        }
+        if (process.argv.includes("--react")) {
+             target = "js";
+             mode = "web";
+        }
+        
         // Check custom target
         let t_idx = process.argv.indexOf("--target");
         if (t_idx > -1 && process.argv[t_idx+1]) {
@@ -96,7 +110,7 @@ fn cmd_run() -> bool {
         // Set target based on mode
         if (mode === "app") {
             target = "python";
-        } else {
+        } else if (target !== "php" && target !== "js") {
             target = "js";
         }
         
@@ -119,10 +133,16 @@ fn cmd_run() -> bool {
                 finalCode += "\nif (typeof main === 'function') main();\n";
             } else if (target === "python") {
                 finalCode += "\nif __name__ == '__main__':\n    main()\n";
+            } else if (target === "php") {
+                finalCode += "\nif (function_exists('main')) { main(); }\n";
             }
             
             fs.writeFileSync(outFile, finalCode);
-            const cmd = target === "python" ? "python" : "node";
+            
+            let cmd = "node";
+            if (target === "python") cmd = "python";
+            if (target === "php") cmd = "php";
+            
             spawnSync(cmd, [outFile], { stdio: 'inherit' });
         }
         

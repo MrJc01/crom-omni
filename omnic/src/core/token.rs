@@ -7,6 +7,7 @@ use std::fmt;
 #[logos(skip r"[ \t\n\r\f]+")] // Ignora espaços em branco (incluindo \r de CRLF)
 #[logos(skip r"//[^\n]*")]   // Ignora comentários de linha //
 #[logos(skip r"/\*([^*]|\*[^/])*\*/")] // Ignora comentários de bloco /* */
+#[logos(skip r"[^\x00-\x7F]+")] // Ignora caracteres não-ASCII (Unicode box-drawing, etc.)
 pub enum Token {
     // --- Palavras-Chave (Keywords) ---
     

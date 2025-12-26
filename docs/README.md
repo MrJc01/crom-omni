@@ -4,6 +4,12 @@
 
 ---
 
+## 🗺️ Strategy Roadmap
+
+See our 55-point [Strategy Roadmap](./STRATEGY.md) for the detailed execution plan, covering everything from Semantic Analysis to Sovereign Documentation.
+
+---
+
 ## 🚀 Quick Start
 
 ### Installation

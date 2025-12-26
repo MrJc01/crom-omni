@@ -488,21 +488,21 @@ fn HybridCodeGenerator_gen_struct(self: HybridCodeGenerator, stmt: any) -> strin
     
     // Generate class body
     let constructor_body = "";
-    native "js" {
+    native "js" { {
         const impl = require('./codegen_hybrid_impl.js');
         constructor_body = impl.gen_struct_body(stmt);
-    }
+    } }
     
     let class_body = "    constructor(data = {}) {\n" + constructor_body + "    }\n";
     
     let out = "";
-    native "js" {
+    native "js" { {
         const impl = require('./codegen_hybrid_impl.js');
         out = impl.LanguageProfile_render_impl(self.profile, "class_decl", {
             name: stmt.name,
             body: class_body
         });
-    }
+    } }
     
     // If @entity, add repository methods (HYBRID - Omni controls logic)
     if (is_entity) {

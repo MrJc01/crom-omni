@@ -556,12 +556,15 @@ fn FrameworkGenerator_write_all(self: FrameworkGenerator) {
 // EXPORTS
 // ============================================================================
 
-export FrameworkAdapter;
-export FrameworkAdapter_nextjs;
-export FrameworkAdapter_laravel;
-export FrameworkAdapter_android;
-export FrameworkGenerator;
-export FrameworkGenerator_new;
-export FrameworkGenerator_generate_structure;
-export FrameworkGenerator_generate_ui;
-export FrameworkGenerator_generate_server;
+native "js" {
+    exports.FrameworkAdapter = FrameworkAdapter;
+    exports.FrameworkAdapter_nextjs = FrameworkAdapter_nextjs;
+    exports.FrameworkAdapter_laravel = FrameworkAdapter_laravel;
+    exports.FrameworkAdapter_android = FrameworkAdapter_android;
+    exports.FrameworkGenerator = FrameworkGenerator;
+    exports.FrameworkGenerator_new = FrameworkGenerator_new;
+    exports.FrameworkGenerator_generate_structure = FrameworkGenerator_generate_structure;
+    exports.FrameworkGenerator_generate_ui = FrameworkGenerator_generate_ui;
+    exports.FrameworkGenerator_generate_server = FrameworkGenerator_generate_server;
+}
+

@@ -469,12 +469,15 @@ fn cmd_graph(input_file: string, output_file: string) {
 // EXPORTS
 // ============================================================================
 
-export GhostWriter;
-export GhostWriter_new;
-export GhostWriter_analyze;
-export GhostWriter_gen_class_diagram;
-export GhostWriter_gen_flowchart;
-export GhostWriter_gen_sequence_diagram;
-export GhostWriter_gen_call_graph;
-export GhostWriter_generate_docs;
-export cmd_graph;
+native "js" {
+    exports.GhostWriter = GhostWriter;
+    exports.GhostWriter_new = GhostWriter_new;
+    exports.GhostWriter_analyze = GhostWriter_analyze;
+    exports.GhostWriter_gen_class_diagram = GhostWriter_gen_class_diagram;
+    exports.GhostWriter_gen_flowchart = GhostWriter_gen_flowchart;
+    exports.GhostWriter_gen_sequence_diagram = GhostWriter_gen_sequence_diagram;
+    exports.GhostWriter_gen_call_graph = GhostWriter_gen_call_graph;
+    exports.GhostWriter_generate_docs = GhostWriter_generate_docs;
+    exports.cmd_graph = cmd_graph;
+}
+

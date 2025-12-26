@@ -60,17 +60,20 @@ fn Lexer_read_char(l: Lexer) {
 }
 
 fn Lexer_skip_whitespace(l: Lexer) {
-    let is_ws = false;
+    let should_skip = false;
     native "js" {
-        is_ws = l.ch === ' ' || l.ch === '\t' || l.ch === '\n' || l.ch === '\r';
+        // Skip whitespace AND non-ASCII characters (Unicode box-drawing, etc.)
+        const code = l.ch.charCodeAt(0);
+        should_skip = l.ch === ' ' || l.ch === '\t' || l.ch === '\n' || l.ch === '\r' || code > 127;
     }
-    while (is_ws) {
+    while (should_skip) {
         if (l.ch == "\n") {
             l.line = l.line + 1;
         }
         Lexer_read_char(l);
         native "js" {
-             is_ws = l.ch === ' ' || l.ch === '\t' || l.ch === '\n' || l.ch === '\r';
+            const code = l.ch.charCodeAt(0);
+            should_skip = l.ch === ' ' || l.ch === '\t' || l.ch === '\n' || l.ch === '\r' || code > 127;
         }
     }
 }

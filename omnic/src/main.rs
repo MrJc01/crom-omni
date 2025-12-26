@@ -9,6 +9,8 @@ use anyhow::{Context, Result, anyhow};
 use crate::core::parser::Parser as OmniParser; 
 use crate::core::codegen::CodeGenerator;
 use crate::core::config::OmniConfig;
+use crate::core::semantic;
+use rayon::prelude::*;
 
 #[derive(Parser)]
 #[command(name = "omnic")]
@@ -80,12 +82,14 @@ fn main() -> Result<()> {
 
                 println!("{} {} v{}", "Projeto:".blue().bold(), config.project.name, config.project.version);
 
-                for (target_name, target_cfg) in config.targets {
+                // Parallel compilation of targets using Rayon
+                let targets: Vec<_> = config.targets.into_iter().collect();
+                targets.par_iter().for_each(|(target_name, target_cfg)| {
                     println!("\n>> Construindo target '{}' ({})", target_name.yellow(), target_cfg.format);
 
                     let out_dir = PathBuf::from(&target_cfg.output);
                     if !out_dir.exists() {
-                        fs::create_dir_all(&out_dir)?;
+                        let _ = fs::create_dir_all(&out_dir);
                     }
 
                     let source_path = target_cfg.source.clone()
@@ -94,21 +98,21 @@ fn main() -> Result<()> {
                     
                     if !source_path.exists() {
                         println!("{} Arquivo fonte não encontrado: {}", "AVISO:".red(), source_path.display());
-                        continue;
+                        return;
                     }
 
                     let lang_enum = match target_cfg.format.as_str().parse::<TargetLang>() {
                         Ok(l) => l,
                         Err(_) => {
                             println!("Formato desconhecido '{}'. Pulando.", target_cfg.format);
-                            continue; 
+                            return; 
                         }
                     };
 
                     let generated_files_result = process_single_file(&source_path, lang_enum.clone(), *tokens, *ast, Some(&out_dir));
                     if let Err(e) = generated_files_result {
                         println!("{} {}", "ERRO:".red(), e);
-                        continue;
+                        return;
                     }
 
                     if target_cfg.bundle == Some(true) {
@@ -127,7 +131,7 @@ fn main() -> Result<()> {
                              Err(e) => println!("   ⚠️ Falha no empacotamento: {}", e),
                          }
                     }
-                }
+                });
                 println!("\n{}", "Build de Projeto Concluído!".green().bold());
             }
         }
@@ -170,6 +174,17 @@ fn process_single_file(
 
     if debug_ast {
         println!("{:#?}", program);
+    }
+
+    // 2.5 Semantic Analysis (Type Checking)
+    let analyzer = semantic::SemanticAnalyzer::new();
+    let mut analyzer = analyzer;
+    if let Err(e) = analyzer.analyze(&program) {
+        eprintln!("{} {}", "Semantic Warning:".yellow(), e);
+        // Continue anyway - semantic errors are warnings for now
+    }
+    for warning in &analyzer.warnings {
+        eprintln!("   {} {}", "⚠".yellow(), warning);
     }
 
     // 3. Generate

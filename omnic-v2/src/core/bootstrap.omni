@@ -382,5 +382,8 @@ fn cmd_bootstrap() {
 // EXPORTS
 // ============================================================================
 
-export get_c_runtime_header;
-export cmd_bootstrap;
+native "js" {
+    exports.get_c_runtime_header = get_c_runtime_header;
+    exports.cmd_bootstrap = cmd_bootstrap;
+}
+

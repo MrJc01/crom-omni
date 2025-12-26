@@ -530,8 +530,33 @@ impl<'a> Parser<'a> {
         Ok(Statement::For { var, iterator, body })
     }
 
+    /// Parse expression - handles || (lowest precedence logical operator)
     fn parse_expression(&mut self) -> Result<Expression> {
-        let mut left = self.parse_term()?; 
+        let mut left = self.parse_logical_and()?;
+
+        while let Ok(Token::LogicalOr) = self.peek_token() {
+            self.consume()?;
+            let right = self.parse_logical_and()?;
+            left = Expression::BinaryOp { left: Box::new(left), op: BinaryOperator::LogicalOr, right: Box::new(right) };
+        }
+        Ok(left)
+    }
+
+    /// Parse logical AND - handles && (higher precedence than ||)
+    fn parse_logical_and(&mut self) -> Result<Expression> {
+        let mut left = self.parse_comparison()?;
+
+        while let Ok(Token::LogicalAnd) = self.peek_token() {
+            self.consume()?;
+            let right = self.parse_comparison()?;
+            left = Expression::BinaryOp { left: Box::new(left), op: BinaryOperator::LogicalAnd, right: Box::new(right) };
+        }
+        Ok(left)
+    }
+
+    /// Parse comparison - handles ==, !=, <, >, <=, >= (higher precedence than &&)
+    fn parse_comparison(&mut self) -> Result<Expression> {
+        let mut left = self.parse_term()?;
 
         while let Ok(token) = self.peek_token() {
             match token {
@@ -565,22 +590,13 @@ impl<'a> Parser<'a> {
                     let right = self.parse_term()?;
                     left = Expression::BinaryOp { left: Box::new(left), op: BinaryOperator::GreaterEquals, right: Box::new(right) };
                 },
-                Token::LogicalAnd => {
-                    self.consume()?;
-                    let right = self.parse_term()?;
-                    left = Expression::BinaryOp { left: Box::new(left), op: BinaryOperator::LogicalAnd, right: Box::new(right) };
-                },
-                Token::LogicalOr => {
-                    self.consume()?;
-                    let right = self.parse_term()?;
-                    left = Expression::BinaryOp { left: Box::new(left), op: BinaryOperator::LogicalOr, right: Box::new(right) };
-                },
                 _ => break,
             }
         }
         Ok(left)
     }
 
+    /// Parse term - handles +, - (higher precedence than comparisons)
     fn parse_term(&mut self) -> Result<Expression> {
         let mut left = self.parse_factor()?; 
 
@@ -767,8 +783,41 @@ impl<'a> Parser<'a> {
     fn parse_type(&mut self) -> Result<Type> {
         let name = self.parse_identifier()?;
         
+        // Check for generic type parameters: Type<T> or Type<K, V>
+        if let Ok(Token::LessThan) = self.peek_token() {
+            self.consume()?;  // eat <
+            
+            // Parse first type parameter
+            let inner_type = self.parse_type()?;
+            
+            // Check for additional type parameters (Map<K, V>)
+            let mut type_params = vec![inner_type];
+            while let Ok(Token::Comma) = self.peek_token() {
+                self.consume()?;  // eat ,
+                type_params.push(self.parse_type()?);
+            }
+            
+            self.expect(Token::GreaterThan)?;  // eat >
+            
+            // Map generic names to Type variants
+            match name.as_str() {
+                "List" | "Vec" | "Array" => {
+                    Ok(Type::List(Box::new(type_params.into_iter().next().unwrap())))
+                }
+                // For now, Map and other generics are represented as Simple with full name
+                _ => {
+                    let params_str: Vec<String> = type_params.iter()
+                        .map(|t| match t {
+                            Type::Simple(s) => s.clone(),
+                            Type::List(inner) => format!("List<{:?}>", inner),
+                        })
+                        .collect();
+                    Ok(Type::Simple(format!("{}<{}>", name, params_str.join(", "))))
+                }
+            }
+        }
         // Check for array suffix: Type[]
-        if let Ok(Token::BracketOpen) = self.peek_token() {
+        else if let Ok(Token::BracketOpen) = self.peek_token() {
             self.consume()?;  // eat [
             self.expect(Token::BracketClose)?;  // eat ]
             Ok(Type::List(Box::new(Type::Simple(name))))

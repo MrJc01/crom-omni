@@ -286,3 +286,8 @@ node "${path.join(omniDir, 'dist', 'main.js')}" "$@"`;
         }
     }
 }
+
+
+
+
+

@@ -25,3 +25,16 @@ zip = "0.6"
 
 # Formatadores de Output (Cores no Terminal)
 colored = "2.0"
+
+# Parallel Processing
+rayon = "1.8"
+
+# File Watcher (Hot Reload)
+notify = "6.1"
+
+# TUI Framework
+ratatui = "0.28"
+crossterm = "0.28"
+
+# Cryptography (Checksums)
+sha2 = "0.10"
