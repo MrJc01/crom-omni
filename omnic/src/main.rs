@@ -27,6 +27,9 @@ enum Commands {
         /// Caminho para o arquivo fonte .omni (Opcional se usar config)
         file: Option<PathBuf>,
 
+        /// Caminho para o arquivo de saida (Opcional)
+        output_file: Option<PathBuf>,
+
         /// Mostra tokens (Debug)
         #[arg(long, short)]
         tokens: bool,
@@ -62,11 +65,11 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match &cli.command {
-        Commands::Build { file, tokens, ast, target } => {
+        Commands::Build { file, output_file, tokens, ast, target } => {
             // Modo 1: Arquivo Único
             if let Some(source_file) = file {
                 eprintln!("{} {} -> {:?}", "Compilando Arquivo:".green(), source_file.display(), target);
-                process_single_file(source_file, target.clone(), *tokens, *ast, None)?;
+                process_single_file(source_file, target.clone(), *tokens, *ast, output_file.as_deref())?;
             } 
             // Modo 2: Projeto (omni.config.json)
             else {
@@ -148,12 +151,22 @@ fn process_single_file(
     out_dir: Option<&Path>
 ) -> Result<()> {
     // 0. Carregar Prelude/Std Lib
-    // Simplificação: Assume que está em "lib/std/io.omni" relativo ao executável ou cwd
-    let std_path = Path::new("lib/std/io.omni");
+    // Check multiple locations
+    let possible_paths = [
+        "lib/std/io.omni",
+        "omnic/lib/std/io.omni",
+        "std/io.omni",
+    ];
+    
     let mut std_content = String::new();
-    if std_path.exists() {
-         std_content = fs::read_to_string(std_path).unwrap_or_default();
-         std_content.push('\n'); // Separador
+    for p in possible_paths {
+        let path = Path::new(p);
+        if path.exists() {
+             std_content = fs::read_to_string(path).unwrap_or_default();
+             std_content.push('\n'); 
+             println!("   📚 StdLib Carregada: {}", p);
+             break;
+        }
     }
 
     // 1. Read
@@ -196,15 +209,27 @@ fn process_single_file(
     let code = backend.generate(&program)?;
 
     // 4. Output
-    if let Some(dir) = out_dir {
-        let filename = match lang {
-            TargetLang::Js => "index.js",
-            TargetLang::Python => "__main__.py",
+    // 4. Output
+    if let Some(out_path) = out_dir {
+        // If out_path has extension, treat as file. If not, treat as dir.
+        let final_path = if out_path.extension().is_some() {
+            out_path.to_path_buf()
+        } else {
+            let filename = match lang {
+                TargetLang::Js => "index.js",
+                TargetLang::Python => "__main__.py",
+            };
+            out_path.join(filename)
         };
+
+        if let Some(parent) = final_path.parent() {
+            if !parent.exists() {
+               let _ = fs::create_dir_all(parent);
+            }
+        }
         
-        let out_path = dir.join(filename);
-        fs::write(&out_path, code)?;
-        println!("   {} Gerado: {}", "✔".green(), out_path.display());
+        fs::write(&final_path, code)?;
+        println!("   {} Gerado: {}", "✔".green(), final_path.display());
     } else {
         println!("{}", code);
     }

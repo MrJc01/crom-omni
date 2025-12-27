@@ -302,7 +302,7 @@ impl JsBackend {
     fn gen_expression(&self, expr: &Expression) -> String {
         match expr {
             Expression::Literal(l) => match l {
-                Literal::String(s) => format!("\"{}\"", s.replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r")),
+                Literal::String(s) => format!("\"{}\"", s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r")),
                 Literal::Integer(i) => i.to_string(),
                 Literal::Float(f) => f.to_string(),
                 Literal::Bool(b) => b.to_string(),

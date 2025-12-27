@@ -1,108 +1,51 @@
-# OMNI BIBLE: The Sovereign System Codex
+# OMNI BIBLE v1.5
 
-> "One Code to Rule Them All, One Code to Find Them, One Code to Bring Them All and in the Darkness Bind Them (to a single source of truth)."
+## 1. Architecture
 
-## Book I: Genesis (Philosophy)
+Omni is a meta-language designed to be the universal source of truth for software systems. It abstracts away the implementation details of specific languages and frameworks, allowing developers to define _what_ they want, while the Omni compiler handles _how_ it is implemented.
 
-The **Omni Sovereign System** is not just a language; it is a declaration of independence from the chaos of the software ecosystem.
+### Core Components
 
-### The Doctrine of Sovereignty
+- **Parser:** Validates Omni syntax and constructs the AST.
+- **AST (Abstract Syntax Tree):** The central representation of the code.
+- **Transformers:** Manipulate the AST (metamorphosis, optimization).
+- **Generators:** Output code for specific targets (JS, Python, PHP, C).
 
-1.  **Logic is Eternal**: Your business logic should survive framework deaths (React -> Vue -> Svelte -> ?).
-2.  **Write Once, Manifest Everywhere**: A single `.omni` file can become a Python script, a Node.js server, or a Rust binary.
-3.  **Zero Dependency (Goal)**: The final system will compile itself and run without external runtimes.
+## 2. Syntax & Capsules
 
----
+Omni code is organized into **Capsules**. A capsule is a self-contained unit of functionality.
 
-## Book II: Architecture (The Machine)
+```omni
+capsule UserManagement {
+    @entity
+    struct User {
+        id: int,
+        username: string,
+        email: string
+    }
 
-The system is composed of three trinities:
-
-### 1. The Core (Rust)
-
-The compiler (`omnic`) is the heart. Written in Rust for speed and safety. It parses `.omni` files, builds an AST (Abstract Syntax Tree), and transmutes it into the Target Language.
-
-### 2. The Soul (Omni Language)
-
-A statically typed, high-level language inspired by Rust, TypeScript, and C. It enforces correctness before compilation.
-
-### 3. The Manifestation (Targets)
-
-The output of the metamorphosis:
-
-- **JS/TS**: For Web and Node.js ecosystems.
-- **Python**: For AI, Data Science, and Scripting.
-- **C/Rust** (Coming Soon): For native performance and self-hosting.
-
----
-
-## Book III: Syntax (The Laws)
-
-### Variables & Types
-
-```rust
-let immutable: string = "Eternal";
-mut evanescent: i64 = 42;
-```
-
-### Structures (Data Shapes)
-
-```rust
-struct Entity {
-    id: i64,
-    name: string,
-    is_active: bool
-}
-```
-
-### Capsules (Modules)
-
-```rust
-capsule MathCore {
-    fn add(a: i64, b: i64) -> i64 {
-        return a + b;
+    flow CreateUser(name: string, mail: string) -> User {
+        // Logic here
     }
 }
 ```
 
-### Flow Control
+### Ingestion
 
-```rust
-if x > 10 {
-    print("Large");
-} else {
-    print("Small");
-}
+Existing code can be ingested into Omni capsules using the `ingest` command (planned).
 
-for item in list {
-    print(item);
-}
-```
+## 3. Metamorphosis
 
----
+Omni can transform its internal representation into various frameworks.
 
-## Book IV: The Bridge (Native Interop)
+- **--laravel:** Generates Controllers, Models, Routes.
+- **--react:** Generates Components, Hooks, State.
+- **--c:** Generates highly efficient native code (Sovereign goal).
 
-When the abstraction leaks, use the **Native Bridge**. This is the only place where platform-specific code is allowed.
+## 4. Ingestion Guide
 
-```rust
-fn web_alert(msg: string) {
-    native "js" {
-        alert(msg);
-    }
-    native "python" {
-        print("Alert: " + msg);
-    }
-}
-```
+(Guidelines for converting legacy projects to Omni - To be expanded)
 
-**WARNING**: Overuse of `native` breaks Sovereignty. Use standard libraries (`std/*`) whenever possible.
-
----
-
-## Book V: The Prophecy (Roadmap)
-
-1.  **Phase 1**: Clean Foundation (Done).
-2.  **Phase 2**: Quality Engine (Current).
-3.  **Phase 3**: Universal Ingestion (Node/Laravel -> Omni).
-4.  **Phase 4**: Self-Hosting (The Singularity - Omni compilation Omni).
+1. Identify domain entities.
+2. Map data flows to Omni `flow` blocks.
+3. Extract UI components to Omni UI nodes.

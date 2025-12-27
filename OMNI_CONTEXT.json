@@ -1,25 +1,20 @@
 {
-  "project_name": "Omni Sovereign System",
-  "version": "0.1.0-alpha",
-  "phase": "Metamorphosis",
-  "developer_persona": "Antigravity",
-  "last_updated": "2025-12-25",
-  "state": {
-    "clean_foundation": true,
-    "documentation_exists": true,
-    "test_engine_status": "pending_implementation",
-    "current_priority": "Task 02: Test Engine"
+  "version": "1.3.0",
+  "phase": "1.5 - Purification & Robustness",
+  "ast_state": {
+    "nodes": "stable",
+    "relationships": "stable",
+    "visual_decorators": "fragile"
   },
-  "path_mapping": {
-    "compiler": "./omnic",
-    "examples": "./examples",
-    "scripts": "./scripts"
+  "known_bugs": [
+    "Apostrophe corruption in native blocks (JS target)",
+    "Missing error location in syntax errors",
+    "Visual decorators desync on manual edit"
+  ],
+  "bootstrap_progress": {
+    "self_hosted": false,
+    "native_target": false
   },
-  "memory_bank": {
-    "critical_bugs_fixed": [],
-    "pending_decisions": [
-      "Define standard library structure for native I/O",
-      "Choose strategy for self-hosting (C vs Rust emit)"
-    ]
-  }
+  "last_update": "2025-12-27",
+  "active_sprint": "Sprint 01"
 }
