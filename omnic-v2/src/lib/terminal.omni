@@ -380,9 +380,6 @@ fn ParsedArgs_new() -> ParsedArgs {
     return args;
 }
 
-// ============================================================================
-// TABLE FORMATTER
-// ============================================================================
 
 fn CLI_table_simple(col1: string, col2: string) {
     native "js" {
@@ -390,7 +387,6 @@ fn CLI_table_simple(col1: string, col2: string) {
         console.log('  ' + c.cyan + col1.padEnd(20) + c.reset + col2);
     }
 }
-
 fn CLI_table_header(title: string) {
     native "js" {
         const c = CLI_COLORS();
@@ -399,32 +395,20 @@ fn CLI_table_header(title: string) {
         console.log('â”€'.repeat(50));
     }
 }
-
-// ============================================================================
-// VERSION AND BANNER
-// ============================================================================
-
 fn CLI_banner() {
     native "js" {
         const c = CLI_COLORS();
         console.log('');
-        console.log(c.cyan + c.bold + 
-            '   ____  __  __ _   _ ___ ' + c.reset);
-        console.log(c.cyan + 
-            '  / __ \\|  \\/  | \\ | |_ _|' + c.reset);
-        console.log(c.cyan + 
-            ' | |  | | |\\/| |  \\| || | ' + c.reset);
-        console.log(c.cyan + 
-            ' | |__| | |  | | |\\  || | ' + c.reset);
-        console.log(c.cyan + 
-            '  \\____/|_|  |_|_| \\_|___|' + c.reset);
+        console.log(c.cyan + c.bold + '   ____  __  __ _   _ ___ ' + c.reset);
+        console.log(c.cyan + '  / __ \\|  \\/  | \\ | |_ _|' + c.reset);
+        console.log(c.cyan + ' | |  | | |\\/| |  \\| || | ' + c.reset);
+        console.log(c.cyan + ' | |__| | |  | | |\\  || | ' + c.reset);
+        console.log(c.cyan + '  \\____/|_|  |_|_| \\_|___|' + c.reset);
         console.log('');
-        console.log(c.dim + 
-            '  Hybrid Metamorphosis Compiler' + c.reset);
+        console.log(c.dim + '  Hybrid Metamorphosis Compiler' + c.reset);
         console.log('');
     }
 }
-
 fn CLI_version() -> string {
     return "1.2.0";
 }

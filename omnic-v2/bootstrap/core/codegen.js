@@ -5,7 +5,9 @@ class CodeGenerator {
     }
 }
 function new_code_generator() {
-    return new CodeGenerator({  });
+    let cg = new CodeGenerator({  });
+    cg.exports = [];
+    return cg;
 }
 function CodeGenerator_generate(self, program) {
     let output = "";
@@ -13,6 +15,9 @@ function CodeGenerator_generate(self, program) {
         if (program && program.statements) {
             for (const stmt of program.statements) {
                 output = output + CodeGenerator_gen_statement(self, stmt) + "\n";
+            }
+            if (self.exports && self.exports.length > 0) {
+                output += "\nmodule.exports = { " + self.exports.join(", ") + " };\n";
             }
         }
     
@@ -43,12 +48,13 @@ function CodeGenerator_gen_statement(self, stmt) {
         return "";
     }
     if (stmt.kind == NODE_LET) {
-    return "const " + stmt.name + " = " + CodeGenerator_gen_expression(self, stmt.value) + ";";
+    return "let " + stmt.name + " = " + CodeGenerator_gen_expression(self, stmt.value) + ";";
 }
     if (stmt.kind == NODE_RETURN) {
     return "return " + CodeGenerator_gen_expression(self, stmt.value) + ";";
 }
     if (stmt.kind == NODE_FUNCTION) {
+    if (self.exports) self.exports.push(stmt.name);
     let params = "";
      params = stmt.params.join(", "); 
     let body = CodeGenerator_gen_block(self, stmt.body);
@@ -83,9 +89,10 @@ function CodeGenerator_gen_import(self, stmt) {
         if (path.startsWith(".") == false) path = "./" + path;
         // Extrai nome do arquivo para variável: "./core/token.js" -> "token"
         let name = path.split("/").pop().replace(".js", "");
-        // Gera: let token = require("./token.js");
-        return "const " + name + " = require(\"" + path + "\");\n" + 
-               "if (typeof global !== 'undefined') Object.assign(global, " + name + ");";
+        // Gera: const _token = require("./token.js");
+        // Evita sombreamento: se o modulo exporta 'token', e a var se chama 'token', token() falha se for usada como funcao
+        return "const _" + name + " = require(\"" + path + "\");\n" + 
+               "if (typeof global !== 'undefined') Object.assign(global, _" + name + ");";
     
     return "";
 }

@@ -252,6 +252,9 @@ impl JsBackend {
             }
             Statement::NativeBlock { lang, code } => {
                 if lang == "js" {
+                    // Emit native code as raw text
+                    // The native block content is extracted directly from source
+                    // and should be emitted as-is
                     code.join("\n")
                 } else {
                     String::new()

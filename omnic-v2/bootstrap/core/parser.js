@@ -167,12 +167,26 @@ function Parser_parse_native_block(p) {
         end_pos = pos;
         if (brace_count == 0) {
             code = input.substring(start_extract, pos - 1);
+            // Strip carriage returns from Windows CRLF line endings
+            code = code.replace(/\r/g, '');
         }
         p.lexer.read_position = end_pos;
         Lexer_read_char(p.lexer);
         p.cur_token = Lexer_next_token(p.lexer);
         p.peek_token = Lexer_next_token(p.lexer);
     
+    
+    
+    // Debug logging
+    // console.log("NativeBlock: lang=" + lang + ", start=" + start_pos + ", end=" + end_pos);
+    // console.log("Extracted code snippet: " + code.substring(0, 50).replace(/\n/g, "\\n"));
+    
+    // Log to file
+    const fs = require('fs');
+    fs.appendFileSync('debug_parser.log', `NativeBlock: lang=${lang}, start=${start_pos}, end=${end_pos}\nExtracted: ${code.substring(0, 50).replace(/\n/g, "\\n")}\n\n`);
+
+    return new NativeStmt({ kind: NODE_NATIVE, lang: lang, code: code });
+
     return new NativeStmt({ kind: NODE_NATIVE, lang: lang, code: code });
 }
 function Parser_parse_block(p) {

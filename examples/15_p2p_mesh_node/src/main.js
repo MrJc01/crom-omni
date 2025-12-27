@@ -20,25 +20,25 @@ function print_opt(msg, show_ui) {
 
 }
 function print(msg) {
-    print_opt(msg, true);
+        print_opt(msg, true);
 }
 function to_string(n) {
-    let result = "";
-     result = String(n); 
+            let result = "";
+             result = String(n); 
 
-    return result;
+            return result;
 }
 function to_string_f(n) {
-    let result = "";
-     result = String(n); 
+                let result = "";
+                 result = String(n); 
 
-    return result;
+                return result;
 }
 function to_string_b(b) {
-    let result = "";
-     result = b ? 'true' : 'false'; 
+                    let result = "";
+                     result = b ? 'true' : 'false'; 
 
-    return result;
+                    return result;
 }
 // ===== END: std/core.omni =====
 
@@ -56,12 +56,12 @@ function UUID_v4() {
     return result;
 }
 function UUID_short() {
-    let result = "";
-    
-            result = Math.random().toString(36).substring(2, 8);
+        let result = "";
         
+                result = Math.random().toString(36).substring(2, 8);
+            
 
-    return result;
+        return result;
 }
 // ===== END: std/uuid.omni =====
 
@@ -69,27 +69,29 @@ function generate_node_id() {
     return "node_" + UUID_short();
 }
 function simulate_broadcast(from, msg) {
-    print("   [" + from + "] Broadcasting: " + msg);
+        console.log("   [" + from + "] Broadcasting: " + msg);
 }
 function main() {
-    print("╔══════════════════════════════════════╗");
-    print("║   OMNI - P2P Mesh Node               ║");
-    print("╚══════════════════════════════════════╝");
-    print("");
-    print("1. Creating Nodes:");
-    let node1 = generate_node_id();
-    let node2 = generate_node_id();
-    let node3 = generate_node_id();
-    print("   Node 1: " + node1);
-    print("   Node 2: " + node2);
-    print("   Node 3: " + node3);
-    print("");
-    print("2. Simulating Network:");
-    simulate_broadcast(node1, "Hello mesh!");
-    simulate_broadcast(node2, "ACK received");
-    simulate_broadcast(node3, "Joining network");
-    print("");
-    print("✓ P2P mesh example completed!");
+            console.log("╔══════════════════════════════════════╗");
+            console.log("║   OMNI - P2P Mesh Node               ║");
+            console.log("╚══════════════════════════════════════╝");
+            console.log("");
+            console.log("1. Creating Nodes:");
+            let node1 = generate_node_id();
+            let node2 = generate_node_id();
+            let node3 = generate_node_id();
+            console.log("   Node 1: " + node1);
+            console.log("   Node 2: " + node2);
+            console.log("   Node 3: " + node3);
+            console.log("");
+            console.log("2. Simulating Network:");
+            simulate_broadcast(node1, "Hello mesh!");
+            simulate_broadcast(node2, "ACK received");
+            simulate_broadcast(node3, "Joining network");
+            console.log("");
+            console.log("✓ P2P mesh example completed!");
 }
 
-if (typeof main === 'function') main();
+module.exports = { generate_node_id, simulate_broadcast, main };
+
+if (typeof main === 'function') { main(); }

@@ -20,25 +20,25 @@ function print_opt(msg, show_ui) {
 
 }
 function print(msg) {
-    print_opt(msg, true);
+        print_opt(msg, true);
 }
 function to_string(n) {
-    let result = "";
-     result = String(n); 
+            let result = "";
+             result = String(n); 
 
-    return result;
+            return result;
 }
 function to_string_f(n) {
-    let result = "";
-     result = String(n); 
+                let result = "";
+                 result = String(n); 
 
-    return result;
+                return result;
 }
 function to_string_b(b) {
-    let result = "";
-     result = b ? 'true' : 'false'; 
+                    let result = "";
+                     result = b ? 'true' : 'false'; 
 
-    return result;
+                    return result;
 }
 // ===== END: std/core.omni =====
 
@@ -54,36 +54,38 @@ function Regex_replace(text, pattern, replacement) {
     return result;
 }
 function Regex_count(pattern, text) {
-    let count = 0;
-    
-            const re = new RegExp(pattern, 'g');
-            const matches = text.match(re);
-            count = matches ? matches.length : 0;
+        let count = 0;
         
+                const re = new RegExp(pattern, 'g');
+                const matches = text.match(re);
+                count = matches ? matches.length : 0;
+            
 
-    return count;
+        return count;
 }
 // ===== END: std/regex.omni =====
 
 function count_functions(source) {
-    return Regex_count("fn\\s+\\w+", source);
+    return Regex_count("fn\\\\s+\\\\w+", source);
 }
 function count_structs(source) {
-    return Regex_count("struct\\s+\\w+", source);
+        return Regex_count("struct\\\\s+\\\\w+", source);
 }
 function main() {
-    print("╔══════════════════════════════════════╗");
-    print("║   OMNI - Self Scan                   ║");
-    print("╚══════════════════════════════════════╝");
-    print("");
-    let sample = "fn main() {} fn helper() {} struct User {} struct Task {}";
-    let fn_count = count_functions(sample);
-    let struct_count = count_structs(sample);
-    print("Sample code analysis:");
-    print("  Functions: " + String(fn_count));
-    print("  Structs: " + String(struct_count));
-    print("");
-    print("✓ Self scan example completed!");
+            console.log("╔══════════════════════════════════════╗");
+            console.log("║   OMNI - Self Scan                   ║");
+            console.log("╚══════════════════════════════════════╝");
+            console.log("");
+            let sample = "fn main() {} fn helper() {} struct User {} struct Task {}";
+            let fn_count = count_functions(sample);
+            let struct_count = count_structs(sample);
+            console.log("Sample code analysis:");
+            console.log("  Functions: " + String(fn_count));
+            console.log("  Structs: " + String(struct_count));
+            console.log("");
+            console.log("✓ Self scan example completed!");
 }
 
-if (typeof main === 'function') main();
+module.exports = { count_functions, count_structs, main };
+
+if (typeof main === 'function') { main(); }

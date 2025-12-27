@@ -7,8 +7,24 @@
 
 fn print(msg: string) {
     native "js" { console.log(msg); }
-    native "python" { print(msg) }
+
+    native "python" { sys.stdout.write(str(msg) + '\n') }
 }
+
+// Decorator shims for JS target (since runtime library is bare)
+native "js" {
+    function get() {}
+    function post() {}
+    function screen() {}
+}
+
+native "python" {
+    def get(x): pass
+    def post(x): pass
+    def delete(x): pass
+    def screen(x): pass
+}
+
 
 // ============================================================================
 // DATA LAYER - @entity
@@ -131,6 +147,51 @@ fn create_web_ui() {
         
         renderTasks();
     }
+    native "python" {
+        import tkinter as tk
+        from tkinter import messagebox
+        
+        def on_add():
+             val = entry.get()
+             if val:
+                 listbox.insert(tk.END, val)
+                 entry.delete(0, tk.END)
+                 print("[API] POST /api/tasks - Created task: " + val)
+        
+        def on_delete():
+             sel = listbox.curselection()
+             if sel:
+                 val = listbox.get(sel[0])
+                 listbox.delete(sel[0])
+                 print("[API] DELETE /api/tasks - " + val)
+        
+        root = tk.Tk()
+        root.title("OMNI Task Manager (Native)")
+        root.geometry("400x500")
+        
+        lbl = tk.Label(root, text="Omni Task Manager", font=("Arial", 16))
+        lbl.pack(pady=10)
+        
+        frame = tk.Frame(root)
+        frame.pack(pady=10)
+        
+        entry = tk.Entry(frame, width=30)
+        entry.pack(side=tk.LEFT, padx=5)
+        
+        btn = tk.Button(frame, text="Add", command=on_add)
+        btn.pack(side=tk.LEFT)
+        
+        listbox = tk.Listbox(root, width=50, height=15)
+        listbox.pack(pady=10, padx=10)
+        
+        btn_del = tk.Button(root, text="Delete Selected", command=on_delete)
+        btn_del.pack(pady=5)
+        
+        lbl_info = tk.Label(root, text="@entity Task | @server API | @ui Desktop", fg="gray")
+        lbl_info.pack(side=tk.BOTTOM, pady=10)
+        
+        root.mainloop()
+    }
 }
 
 // ============================================================================
@@ -149,16 +210,7 @@ fn main() {
     print("  @ui.screen TaskManager");
     print("");
     
-    // Check if running in browser
-    native "js" {
-        if (typeof document !== 'undefined') {
-            // Web mode - create interactive UI
-        } else {
-            // Terminal mode - simulate
-            console.log("Run with --web to see the interactive UI!");
-        }
-    }
-    
+    // Launch UI (Native checks inside function)
     create_web_ui();
     
     print("✓ Fullstack app running!");

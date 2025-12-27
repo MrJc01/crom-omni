@@ -20,25 +20,25 @@ function print_opt(msg, show_ui) {
 
 }
 function print(msg) {
-    print_opt(msg, true);
+        print_opt(msg, true);
 }
 function to_string(n) {
-    let result = "";
-     result = String(n); 
+            let result = "";
+             result = String(n); 
 
-    return result;
+            return result;
 }
 function to_string_f(n) {
-    let result = "";
-     result = String(n); 
+                let result = "";
+                 result = String(n); 
 
-    return result;
+                return result;
 }
 function to_string_b(b) {
-    let result = "";
-     result = b ? 'true' : 'false'; 
+                    let result = "";
+                     result = b ? 'true' : 'false'; 
 
-    return result;
+                    return result;
 }
 // ===== END: std/core.omni =====
 
@@ -54,43 +54,45 @@ function Regex_replace(text, pattern, replacement) {
     return result;
 }
 function Regex_count(pattern, text) {
-    let count = 0;
-    
-            const re = new RegExp(pattern, 'g');
-            const matches = text.match(re);
-            count = matches ? matches.length : 0;
+        let count = 0;
         
+                const re = new RegExp(pattern, 'g');
+                const matches = text.match(re);
+                count = matches ? matches.length : 0;
+            
 
-    return count;
+        return count;
 }
 // ===== END: std/regex.omni =====
 
 function convert_php_line(line) {
     let result = "// Converted: ";
-    let step1 = Regex_replace(line, "\\$", "let ");
+    let step1 = Regex_replace(line, "\\\\$", "let ");
     let step2 = Regex_replace(step1, "->", ".");
     result = result + step2;
     return result;
 }
 function main() {
-    print("╔══════════════════════════════════════╗");
-    print("║   OMNI - Legacy Converter Demo       ║");
-    print("╚══════════════════════════════════════╝");
-    print("");
-    print("1. Original PHP Code:");
-    print("   $user = new User();");
-    print("   $user->name = 'Alice';");
-    print("");
-    print("2. Converted to Omni-style:");
-    print(convert_php_line("$user = new User();"));
-    print(convert_php_line("$user->name = 'Alice';"));
-    print("");
-    print("3. Conversion Features:");
-    print("   - Variable prefix $ removed");
-    print("   - Arrow -> becomes dot .");
-    print("   - New regex lib used (std/regex.omni)");
-    print("");
-    print("✓ Legacy converter example completed!");
+        console.log("╔══════════════════════════════════════╗");
+        console.log("║   OMNI - Legacy Converter Demo       ║");
+        console.log("╚══════════════════════════════════════╝");
+        console.log("");
+        console.log("1. Original PHP Code:");
+        console.log("   $user = new User();");
+        console.log("   $user->name = 'Alice';");
+        console.log("");
+        console.log("2. Converted to Omni-style:");
+        console.log(convert_php_line("$user = new User();"));
+        console.log(convert_php_line("$user->name = 'Alice';"));
+        console.log("");
+        console.log("3. Conversion Features:");
+        console.log("   - Variable prefix $ removed");
+        console.log("   - Arrow -> becomes dot .");
+        console.log("   - New regex lib used (std/regex.omni)");
+        console.log("");
+        console.log("✓ Legacy converter example completed!");
 }
 
-if (typeof main === 'function') main();
+module.exports = { convert_php_line, main };
+
+if (typeof main === 'function') { main(); }

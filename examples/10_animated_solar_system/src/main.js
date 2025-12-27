@@ -3,20 +3,20 @@
 
 // ===== INLINE: std/core.omni =====
 function print_opt(msg, show_ui) {
-    
-            console.log(msg);
-            if (show_ui && typeof document !== 'undefined') {
-                let c = document.getElementById('out');
-                if (!c) {
-                    c = document.createElement('pre');
-                    c.id = 'out';
-                    c.style.cssText = 'padding:20px;font-family:monospace;font-size:14px;background:#1a1a2e;color:#0f0;max-width:600px;margin:40px auto;border-radius:8px;';
-                    document.body.style.background = '#0f0f23';
-                    document.body.appendChild(c);
-                }
-                c.textContent += msg + '\n';
-            }
-        
+
+    console.log(msg);
+    if (show_ui && typeof document !== 'undefined') {
+        let c = document.getElementById('out');
+        if (!c) {
+            c = document.createElement('pre');
+            c.id = 'out';
+            c.style.cssText = 'padding:20px;font-family:monospace;font-size:14px;background:#1a1a2e;color:#0f0;max-width:600px;margin:40px auto;border-radius:8px;';
+            document.body.style.background = '#0f0f23';
+            document.body.appendChild(c);
+        }
+        c.textContent += msg + '\n';
+    }
+
 
 }
 function print(msg) {
@@ -24,19 +24,19 @@ function print(msg) {
 }
 function to_string(n) {
     let result = "";
-     result = String(n); 
+    result = String(n); 
 
     return result;
 }
 function to_string_f(n) {
     let result = "";
-     result = String(n); 
+    result = String(n); 
 
     return result;
 }
 function to_string_b(b) {
     let result = "";
-     result = b ? 'true' : 'false'; 
+    result = b ? 'true' : 'false'; 
 
     return result;
 }
@@ -68,222 +68,236 @@ class Mesh3D {
 
 }
 function ThreeJS_load(callback) {
-    
-            if (typeof document !== 'undefined') {
-                if (typeof THREE === 'undefined') {
-                     const script = document.createElement('script');
-                     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
-                     script.onload = callback;
-                     document.head.appendChild(script);
-                } else {
-                     callback();
-                }
-            } else {
-                // Node.js: Immediate callback
-                callback();
-            }
-        
+
+    if (typeof document !== 'undefined') {
+        if (typeof THREE === 'undefined') {
+             const script = document.createElement('script');
+             script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+             script.onload = callback;
+             document.head.appendChild(script);
+        } else {
+             callback();
+        }
+    } else {
+        // Node.js: Immediate callback
+        callback();
+    }
+
 
 }
 function Scene_create() {
     let scene = new Scene3D({ handle: 0 });
-    
-            if (typeof THREE !== 'undefined') {
-                scene.handle = new THREE.Scene();
-            } else {
-                // Headless / Node.js Scene
-                scene.handle = { type: 'scene', objects: [] };
-            }
-        
+
+    if (typeof THREE !== 'undefined') {
+        scene.handle = new THREE.Scene();
+    } else {
+        // Headless / Node.js Scene
+        scene.handle = { type: 'scene', objects: [] };
+    }
+
 
     return scene;
 }
 function Camera_create() {
     let cam = new Camera3D({ handle: 0 });
-    
-            if (typeof THREE !== 'undefined') {
-                cam.handle = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-                cam.handle.position.z = 10;
-            } else {
-                cam.handle = { x: 0, y: 0, z: 10, fov: 75 };
-            }
-        
+
+    if (typeof THREE !== 'undefined') {
+        cam.handle = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+        cam.handle.position.z = 10;
+    } else {
+        cam.handle = { x: 0, y: 0, z: 10, fov: 75 };
+    }
+
 
     return cam;
 }
 function Renderer_create() {
     let ren = new Renderer3D({ handle: 0 });
-    
-            if (typeof document !== 'undefined') {
-                 if (typeof THREE !== 'undefined') {
-                     const r = new THREE.WebGLRenderer({ antialias: true });
-                     r.setSize(window.innerWidth, window.innerHeight);
-                     document.body.appendChild(r.domElement);
-                     ren.handle = r;
-                     ren.type = 'webgl';
-                 }
-            } else {
-                ren.handle = { width: 80, height: 24 }; // Terminal size
-                ren.type = 'ascii';
-                ren.frame_count = 0;
-            }
-        
+
+    if (typeof document !== 'undefined') {
+         if (typeof THREE !== 'undefined') {
+             const r = new THREE.WebGLRenderer({ antialias: true });
+             r.setSize(window.innerWidth, window.innerHeight);
+             document.body.appendChild(r.domElement);
+             ren.handle = r;
+             ren.type = 'webgl';
+         }
+    } else {
+        ren.handle = { width: 80, height: 24 }; // Terminal size
+        ren.type = 'ascii';
+        ren.frame_count = 0;
+    }
+
 
     return ren;
 }
 function AnimationLoop(callback) {
-    
-            if (typeof requestAnimationFrame !== 'undefined') {
-                function loop() {
-                    callback();
-                    requestAnimationFrame(loop);
-                }
-                requestAnimationFrame(loop);
-            } else {
-                console.log("Animation loop running in terminal (ASCII)... press Ctrl+C to stop");
-                // Simple interval for Node.js
-                setInterval(callback, 100);
-            }
-        
+
+    if (typeof requestAnimationFrame !== 'undefined') {
+        function loop() {
+            callback();
+            requestAnimationFrame(loop);
+        }
+        requestAnimationFrame(loop);
+    } else {
+        console.log("Animation loop running in terminal (ASCII)... press Ctrl+C to stop");
+        // Simple interval for Node.js
+        setInterval(callback, 100);
+    }
+
 
 }
 function Sphere_create(radius, color, scene) {
     let mesh = new Mesh3D({ handle: 0 });
-    
-            // Web Mode
-            if (typeof THREE !== 'undefined' && scene.handle && scene.handle.add) {
-                const g = new THREE.SphereGeometry(radius, 16, 16); // Lower poly for perf
-                const m = new THREE.MeshBasicMaterial({ color: color, wireframe: true });
-                const s = new THREE.Mesh(g, m);
-                scene.handle.add(s);
-                mesh.handle = s;
-            } 
-            // Terminal Mode
-            else if (scene.handle && scene.handle.objects) {
-                let obj = { 
-                    type: 'sphere', 
-                    radius: radius, 
-                    color: color,
-                    x: 0, y: 0, z: 0,
-                    rx: 0, ry: 0, rz: 0 
-                };
-                scene.handle.objects.push(obj);
-                mesh.handle = obj;
-            }
-        
+
+    // Web Mode
+    if (typeof THREE !== 'undefined' && scene.handle && scene.handle.add) {
+        const g = new THREE.SphereGeometry(radius, 16, 16); // Lower poly for perf
+        const m = new THREE.MeshBasicMaterial({ color: color, wireframe: true });
+        const s = new THREE.Mesh(g, m);
+        scene.handle.add(s);
+        mesh.handle = s;
+    } 
+    // Terminal Mode
+    else if (scene.handle && scene.handle.objects) {
+        let obj = { 
+            type: 'sphere', 
+            radius: radius, 
+            color: color,
+            x: 0, y: 0, z: 0,
+            rx: 0, ry: 0, rz: 0 
+        };
+        scene.handle.objects.push(obj);
+        mesh.handle = obj;
+    }
+
 
     return mesh;
 }
 function Cube_create(size, color, scene) {
     let mesh = new Mesh3D({ handle: 0 });
-    
-            // Web Mode
-            if (typeof THREE !== 'undefined' && scene.handle && scene.handle.add) {
-                const g = new THREE.BoxGeometry(size, size, size);
-                const m = new THREE.MeshBasicMaterial({ color: color, wireframe: true });
-                const s = new THREE.Mesh(g, m);
-                scene.handle.add(s);
-                mesh.handle = s;
-            }
-            // Terminal Mode
-            else if (scene.handle && scene.handle.objects) {
-                 let obj = { 
-                    type: 'cube', 
-                    size: size, 
-                    color: color,
-                    x: 0, y: 0, z: 0,
-                    rx: 0, ry: 0, rz: 0 
-                };
-                scene.handle.objects.push(obj);
-                mesh.handle = obj;
-            }
-        
+
+    // Web Mode
+    if (typeof THREE !== 'undefined' && scene.handle && scene.handle.add) {
+        const g = new THREE.BoxGeometry(size, size, size);
+        const m = new THREE.MeshBasicMaterial({ color: color, wireframe: true });
+        const s = new THREE.Mesh(g, m);
+        scene.handle.add(s);
+        mesh.handle = s;
+    }
+    // Terminal Mode
+    else if (scene.handle && scene.handle.objects) {
+         let obj = { 
+            type: 'cube', 
+            size: size, 
+            color: color,
+            x: 0, y: 0, z: 0,
+            rx: 0, ry: 0, rz: 0 
+        };
+        scene.handle.objects.push(obj);
+        mesh.handle = obj;
+    }
+
 
     return mesh;
 }
 function Mesh_set_position(mesh, x, y, z) {
-    
-            if (mesh.handle) {
-                if (mesh.handle.position) {
-                    mesh.handle.position.set(x, y, z);
-                } else {
-                    mesh.handle.x = x;
-                    mesh.handle.y = y;
-                    mesh.handle.z = z;
-                }
-            }
-        
+
+    if (mesh.handle) {
+        if (mesh.handle.position) {
+            mesh.handle.position.set(x, y, z);
+        } else {
+            mesh.handle.x = x;
+            mesh.handle.y = y;
+            mesh.handle.z = z;
+        }
+    }
+
 
 }
 function Mesh_set_rotation(mesh, x, y, z) {
-    
-            if (mesh.handle) {
-                if (mesh.handle.rotation) {
-                    mesh.handle.rotation.set(x, y, z);
-                } else {
-                    mesh.handle.rx = x;
-                    mesh.handle.ry = y;
-                    mesh.handle.rz = z;
-                }
-            }
-        
+
+    if (mesh.handle) {
+        if (mesh.handle.rotation) {
+            mesh.handle.rotation.set(x, y, z);
+        } else {
+            mesh.handle.rx = x;
+            mesh.handle.ry = y;
+            mesh.handle.rz = z;
+        }
+    }
+
 
 }
 function Camera_set_z(cam, z) {
-    
-            if (cam.handle) {
-                if (cam.handle.position) cam.handle.position.z = z;
-                else cam.handle.z = z;
-            }
-        
+
+    if (cam.handle) {
+        if (cam.handle.position) cam.handle.position.z = z;
+        else cam.handle.z = z;
+    }
+
+
+}
+function Camera_set_position(cam, x, y, z) {
+
+    if (cam.handle) {
+        if (cam.handle.position) {
+            cam.handle.position.set(x, y, z);
+        } else {
+            cam.handle.x = x;
+            cam.handle.y = y;
+            cam.handle.z = z;
+        }
+    }
+
 
 }
 function Renderer_render(ren, scene, cam) {
-    
-            // Web Mode
-            if (ren.type === 'webgl') {
-                 ren.handle.render(scene.handle, cam.handle);
+
+    // Web Mode
+    if (ren.type === 'webgl') {
+         ren.handle.render(scene.handle, cam.handle);
+    }
+    // ASCII Mode (Terminal)
+    else if (ren.type === 'ascii') {
+        const w = ren.handle.width;
+        const h = ren.handle.height;
+        const buffer = new Array(h).fill(' ').map(() => new Array(w).fill(' '));
+
+        // Simple projection
+        const cx = w / 2;
+        const cy = h / 2;
+        const cam_z = cam.handle.z;
+
+        for (const obj of scene.handle.objects) {
+            let x = obj.x; 
+            let y = obj.y;
+            let z = obj.z;
+
+            // Relative to camera
+            let rel_z = cam_z - z;
+            if (rel_z < 0.1) continue; // Behind camera
+
+            let scale = 20 / rel_z; // Perspective factor
+
+            let screen_x = Math.floor(cx + x * scale * 2); // *2 for char aspect ratio
+            let screen_y = Math.floor(cy - y * scale);
+
+            // Draw symbol
+            if (screen_x >= 0 && screen_x < w && screen_y >= 0 && screen_y < h) {
+                let char = '*';
+                if (obj.type === 'cube') char = '#';
+                if (obj.type === 'sphere') char = 'O';
+                buffer[screen_y][screen_x] = char;
             }
-            // ASCII Mode (Terminal)
-            else if (ren.type === 'ascii') {
-                const w = ren.handle.width;
-                const h = ren.handle.height;
-                const buffer = new Array(h).fill(' ').map(() => new Array(w).fill(' '));
-                
-                // Simple projection
-                const cx = w / 2;
-                const cy = h / 2;
-                const cam_z = cam.handle.z;
-                
-                for (const obj of scene.handle.objects) {
-                    let x = obj.x; 
-                    let y = obj.y;
-                    let z = obj.z;
-                    
-                    // Relative to camera
-                    let rel_z = cam_z - z;
-                    if (rel_z < 0.1) continue; // Behind camera
-                    
-                    let scale = 20 / rel_z; // Perspective factor
-                    
-                    let screen_x = Math.floor(cx + x * scale * 2); // *2 for char aspect ratio
-                    let screen_y = Math.floor(cy - y * scale);
-                    
-                    // Draw symbol
-                    if (screen_x >= 0 && screen_x < w && screen_y >= 0 && screen_y < h) {
-                        let char = '*';
-                        if (obj.type === 'cube') char = '#';
-                        if (obj.type === 'sphere') char = 'O';
-                        buffer[screen_y][screen_x] = char;
-                    }
-                }
-                
-                // Output frame
-                console.clear();
-                console.log("OMNI 3D ASCII RENDERER");
-                console.log(buffer.map(row => row.join('')).join('\n'));
-            }
-        
+        }
+
+        // Output frame
+        console.clear();
+        console.log("OMNI 3D ASCII RENDERER");
+        console.log(buffer.map(row => row.join('')).join('\n'));
+    }
+
 
 }
 function Renderer_init(ren) {
@@ -294,78 +308,78 @@ function Renderer_init(ren) {
 // ===== INLINE: std/math.omni =====
 function abs(n) {
     if (n < 0) {
-            return 0 - n;
+        return 0 - n;
     }
     return n;
 }
 function min(a, b) {
     if (a < b) {
-            return a;
+        return a;
     }
     return b;
 }
 function max(a, b) {
     if (a > b) {
-            return a;
+        return a;
     }
     return b;
 }
 function clamp(value, min_val, max_val) {
     if (value < min_val) {
-            return min_val;
+        return min_val;
     }
     if (value > max_val) {
-            return max_val;
+        return max_val;
     }
     return value;
 }
 function sqrt(n) {
     let result = 0;
-     result = Math.sqrt(n); 
+    result = Math.sqrt(n); 
 
     return result;
 }
 function pow(base, exp) {
     let result = 0;
-     result = Math.pow(base, exp); 
+    result = Math.pow(base, exp); 
 
     return result;
 }
 function sin(n) {
     let result = 0;
-     result = Math.sin(n); 
+    result = Math.sin(n); 
 
     return result;
 }
 function cos(n) {
     let result = 0;
-     result = Math.cos(n); 
+    result = Math.cos(n); 
 
     return result;
 }
 function floor(n) {
     let result = 0;
-     result = Math.floor(n); 
+    result = Math.floor(n); 
 
     return result;
 }
 function ceil(n) {
     let result = 0;
-     result = Math.ceil(n); 
+    result = Math.ceil(n); 
 
     return result;
 }
 function random() {
     let result = 0;
-     result = Math.random(); 
+    result = Math.random(); 
 
     return result;
 }
 function random_int(min_val, max_val) {
     let result = 0;
-     
-            result = Math.floor(Math.random() * (max_val - min_val + 1)) + min_val; 
-        
+
+    result = Math.floor(Math.random() * (max_val - min_val + 1)) + min_val; 
+
 
     return result;
 }
@@ -379,7 +393,8 @@ let earth = new Mesh3D({ handle: 0 });
 let moon = new Mesh3D({ handle: 0 });
 let time = 0;
 function animate() {
-    ;
+
+    time = time + 0.01;
     let ex = cos(time) * 7;
     let ez = sin(time) * 7;
     Mesh_set_position(earth, ex, 0, ez);
@@ -389,18 +404,23 @@ function animate() {
     Renderer_render(renderer, scene, camera);
 }
 function init() {
-    ;
-    ;
-    ;
+
+    scene = Scene_create();
+    camera = Camera_create();
+    renderer = Renderer_create();
     Renderer_init(renderer);
     Camera_set_z(camera, 15);
-    ;
-    ;
-    ;
+    sun = Sphere_create(2, 16776960, scene);
+    earth = Sphere_create(0.5, 30719, scene);
+    moon = Sphere_create(0.15, 8947848, scene);
     AnimationLoop(animate);
 }
 function main() {
-    print("Starting Solar System Animation...");
-    print("Note: This example is best viewed with --web flag.");
+    console.log("Starting Solar System Animation...");
+    console.log("Note: This example is best viewed with --web flag.");
     ThreeJS_load(init);
 }
+
+module.exports = { animate, init, main };
+
+if (typeof main === 'function') { main(); }

@@ -3,20 +3,20 @@
 
 // ===== INLINE: std/core.omni =====
 function print_opt(msg, show_ui) {
-    
-            console.log(msg);
-            if (show_ui && typeof document !== 'undefined') {
-                let c = document.getElementById('out');
-                if (!c) {
-                    c = document.createElement('pre');
-                    c.id = 'out';
-                    c.style.cssText = 'padding:20px;font-family:monospace;font-size:14px;background:#1a1a2e;color:#0f0;max-width:600px;margin:40px auto;border-radius:8px;';
-                    document.body.style.background = '#0f0f23';
-                    document.body.appendChild(c);
-                }
-                c.textContent += msg + '\n';
-            }
-        
+
+    console.log(msg);
+    if (show_ui && typeof document !== 'undefined') {
+        let c = document.getElementById('out');
+        if (!c) {
+            c = document.createElement('pre');
+            c.id = 'out';
+            c.style.cssText = 'padding:20px;font-family:monospace;font-size:14px;background:#1a1a2e;color:#0f0;max-width:600px;margin:40px auto;border-radius:8px;';
+            document.body.style.background = '#0f0f23';
+            document.body.appendChild(c);
+        }
+        c.textContent += msg + '\n';
+    }
+
 
 }
 function print(msg) {
@@ -24,19 +24,19 @@ function print(msg) {
 }
 function to_string(n) {
     let result = "";
-     result = String(n); 
+    result = String(n); 
 
     return result;
 }
 function to_string_f(n) {
     let result = "";
-     result = String(n); 
+    result = String(n); 
 
     return result;
 }
 function to_string_b(b) {
     let result = "";
-     result = b ? 'true' : 'false'; 
+    result = b ? 'true' : 'false'; 
 
     return result;
 }
@@ -85,96 +85,140 @@ class TextInput {
 }
 function Window_create(config) {
     let win = new Window({ handle: 0, id: "main" });
-    
-            if (typeof document !== 'undefined') {
-                const div = document.createElement('div');
-                div.style.width = config.width + 'px';
-                div.style.height = config.height + 'px';
-                div.style.backgroundColor = config.background;
-                div.style.position = 'relative';
-                div.style.border = '1px solid #ccc';
-                div.style.margin = '20px auto';
-                div.style.fontFamily = 'sans-serif';
-                div.id = 'omni-window-main';
-                document.body.appendChild(div);
-                win.handle = div;
-            }
-        
+
+    if (typeof document !== 'undefined') {
+        // Global Page Styles
+        document.body.style.backgroundColor = '#222';
+        document.body.style.margin = '0';
+        document.body.style.height = '100vh';
+        document.body.style.display = 'flex';
+        document.body.style.alignItems = 'center';
+        document.body.style.justifyContent = 'center';
+        document.body.style.fontFamily = 'Segoe UI, sans-serif';
+
+        // Window Container (Outer Frame)
+        const winFrame = document.createElement('div');
+        winFrame.style.width = config.width + 'px';
+        // Height includes title bar, so we let it grow or set explicit?
+        // Tkinter geometry is usually client area. Let's make frame wrap.
+        winFrame.style.backgroundColor = '#fff'; // Frame bg (hidden by content mostly)
+        winFrame.style.boxShadow = '0 10px 25px rgba(0,0,0,0.5)';
+        winFrame.style.borderRadius = '8px';
+        winFrame.style.overflow = 'hidden';
+        winFrame.style.display = 'flex';
+        winFrame.style.flexDirection = 'column';
+        winFrame.id = 'omni-window-frame';
+
+        // Title Bar
+        const titleBar = document.createElement('div');
+        titleBar.innerText = config.title;
+        titleBar.style.backgroundColor = '#333';
+        titleBar.style.color = '#fff';
+        titleBar.style.padding = '8px 12px';
+        titleBar.style.fontSize = '14px';
+        titleBar.style.fontWeight = '600';
+        titleBar.style.userSelect = 'none';
+        winFrame.appendChild(titleBar);
+
+        // Content Area (Client Area)
+        const content = document.createElement('div');
+        content.style.position = 'relative';
+        content.style.width = config.width + 'px';
+        content.style.height = config.height + 'px';
+        content.style.backgroundColor = config.background;
+
+        winFrame.appendChild(content);
+        document.body.appendChild(winFrame);
+
+        // Handle points to Content Area so widgets place correctly (0,0 is top-left of content)
+        win.handle = content;
+    }
+
 
     return win;
 }
 function Button_create(win, text, x, y) {
     let btn = new Button({ handle: 0, id: "btn_" + text, text: text });
-    
-            if (typeof document !== 'undefined') {
-                const b = document.createElement('button');
-                b.innerText = text;
-                b.style.position = 'absolute';
-                b.style.left = x + 'px';
-                b.style.top = y + 'px';
-                if (win.handle) win.handle.appendChild(b);
-                btn.handle = b;
-            }
-        
+
+    if (typeof document !== 'undefined') {
+        const b = document.createElement('button');
+        b.innerText = text;
+        b.style.position = 'absolute';
+        b.style.left = x + 'px';
+        b.style.top = y + 'px';
+        if (win.handle) win.handle.appendChild(b);
+        btn.handle = b;
+    }
+
 
     return btn;
 }
 function Button_set_click(btn, callback) {
-    
-            if (btn.handle) btn.handle.onclick = callback;
-        
+
+    if (btn.handle) btn.handle.onclick = callback;
+
 
 }
 function Label_create(win, text, x, y) {
     let lbl = new Label({ handle: 0, id: "lbl", text: text });
-    
-            if (typeof document !== 'undefined') {
-                 const l = document.createElement('div');
-                 l.innerText = text;
-                 l.style.position = 'absolute';
-                 l.style.left = x + 'px';
-                 l.style.top = y + 'px';
-                 if (win.handle) win.handle.appendChild(l);
-                 lbl.handle = l;
-            }
-        
+
+    if (typeof document !== 'undefined') {
+         const l = document.createElement('div');
+         l.innerText = text;
+         l.style.position = 'absolute';
+         l.style.left = x + 'px';
+         l.style.top = y + 'px';
+         if (win.handle) win.handle.appendChild(l);
+         lbl.handle = l;
+    }
+
 
     return lbl;
 }
 function Label_set_text(lbl, text) {
-    
-            if (lbl.handle) lbl.handle.innerText = text;
-        
+
+    if (lbl.handle) lbl.handle.innerText = text;
+
 
 }
 function TextInput_create(win, x, y) {
     let inp = new TextInput({ handle: 0, id: "input" });
-    
-            if (typeof document !== 'undefined') {
-                const i = document.createElement('input');
-                i.type = 'text';
-                i.style.position = 'absolute';
-                i.style.left = x + 'px';
-                i.style.top = y + 'px';
-                if (win.handle) win.handle.appendChild(i);
-                inp.handle = i;
-            }
-        
+
+    if (typeof document !== 'undefined') {
+        const i = document.createElement('input');
+        i.type = 'text';
+        i.style.position = 'absolute';
+        i.style.left = x + 'px';
+        i.style.top = y + 'px';
+        if (win.handle) win.handle.appendChild(i);
+        inp.handle = i;
+    }
+
 
     return inp;
 }
 function TextInput_get_value(inp) {
     let val = "";
-    
-            if (inp.handle) val = inp.handle.value;
-        
+
+    if (inp.handle) val = inp.handle.value;
+
 
     return val;
 }
+function Window_bind_key(win, key, callback) {
+
+    if (typeof document !== 'undefined') {
+        document.addEventListener('keydown', (e) => {
+            if (e.key === key) callback();
+        });
+    }
+
+
+}
 function UI_run() {
-    
-            console.log("UI running (web mode)");
-        
+
+    console.log("UI running (web mode)");
+
 
 }
 // ===== END: std/ui.omni =====
@@ -184,31 +228,33 @@ let result_label = new Label({ handle: 0, id: "", text: "" });
 function on_greet() {
     let name = TextInput_get_value(name_input);
     if (name) {
-            Label_set_text(result_label, "Hello, " + name + "!");
+        Label_set_text(result_label, "Hello, " + name + "!");
     } else {
-            Label_set_text(result_label, "Hello, World!");
+        Label_set_text(result_label, "Hello, World!");
     }
 }
 function create_app() {
     let config = new WindowConfig({ title: "Omni GUI", width: 400, height: 300, background: "#f5f5f5" });
     let win = Window_create(config);
     Label_create(win, "Welcome to Omni GUI", 20, 20);
-    ;
+    name_input = TextInput_create(win, 20, 70);
     let btn = Button_create(win, "Greet", 20, 110);
     Button_set_click(btn, on_greet);
-    ;
-    print("UI Constructed. Running loop...");
+    result_label = Label_create(win, "", 20, 150);
+    console.log("UI Constructed. Running loop...");
     UI_run();
 }
 function main() {
-    print("╔══════════════════════════════════════╗");
-    print("║   OMNI - Desktop Window (Tkinter)    ║");
-    print("╚══════════════════════════════════════╝");
-    print("");
-    print("Launching UI...");
+    console.log("╔══════════════════════════════════════╗");
+    console.log("║   OMNI - Desktop Window (Tkinter)    ║");
+    console.log("╚══════════════════════════════════════╝");
+    console.log("");
+    console.log("Launching UI...");
     create_app();
-    print("");
-    print("✓ Desktop window closed.");
+    console.log("");
+    console.log("✓ Desktop window closed.");
 }
 
-if (typeof main === 'function') main();
+module.exports = { on_greet, create_app, main };
+
+if (typeof main === 'function') { main(); }

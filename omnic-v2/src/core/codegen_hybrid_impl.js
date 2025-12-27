@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const HybridImpl = {
+const codegen_hybrid_impl = {
     LanguageProfile_load_impl: function(self) {
         // Try multiple paths for profile
         const paths = [
@@ -84,18 +84,47 @@ const HybridImpl = {
         
         const targetLang = self.profile.name;
         
+        // Check if lang matches
         if (lang === 'js' || lang === 'javascript') {
-            if (targetLang === 'js' || targetLang === 'javascript') {
-                return stmt.code;
-            }
+            if (targetLang !== 'js' && targetLang !== 'javascript') return "";
         } else if (lang === 'py' || lang === 'python') {
-            if (targetLang === 'py' || targetLang === 'python') {
-                return stmt.code;
-            }
-        } else if (lang === targetLang) {
-            return stmt.code;
+            if (targetLang !== 'py' && targetLang !== 'python') return "";
+        } else if (lang !== targetLang) {
+            return "";
         }
-        return "";
+
+        // Language matched, strip common indentation
+        let code = stmt.code;
+        if (!code) return "";
+        
+        const lines = code.split('\n');
+        // Find min indent (ignoring first line if it starts immediately after brace, but parser usually captures full block string)
+        // Actually, parser captures text between braces.
+        
+        const nonEmptyLines = lines.filter(l => l.trim().length > 0);
+        if (nonEmptyLines.length > 0) {
+            const minIndent = nonEmptyLines.reduce((min, line) => {
+                const match = line.match(/^\s*/);
+                const indent = match ? match[0].length : 0;
+                return indent < min ? indent : min;
+                return indent < min ? indent : min;
+            }, Infinity);
+
+            try {
+                const debugPath = path.join('c:', 'Users', 'juanc', '.gemini', 'dedent_debug.txt');
+                fs.appendFileSync(debugPath, "MinIndent: " + minIndent + "\nCode:\n" + JSON.stringify(code) + "\n----------------\n");
+            } catch(e) {}
+
+            if (minIndent > 0 && minIndent !== Infinity) {
+                code = lines.map(line => {
+                    if (line.trim().length === 0) return ''; 
+                    // Verify if line actually has that indent
+                    return line.length >= minIndent ? line.substring(minIndent) : line;
+                }).join('\n');
+            }
+        }
+        
+        return code;
     },
 
     gen_expression_literal: function(self, expr) {
@@ -112,10 +141,46 @@ const HybridImpl = {
             (self.profile.templates.bool_false || 'false');
     },
 
-    gen_struct_body: function(stmt) {
+    gen_struct_body: function(stmt, generator_param) {
+        // Safe access to profile name if generator_param passed as first arg in some contexts, 
+        // but here 'stmt' is first arg, 'generator_param' (impl 'self') is likely context.
+        // Actually, looking at call site in codegen_hybrid.omni: 
+        // result = impl.HybridCodeGenerator_gen_statement_impl(self, stmt); -> calls specific gen functions?
+        // No, verify call site. 
+        // struct definition usually handled elsewhere. 
+        // Wait, 'gen_struct_body' is likely called from 'LanguageProfile_render' or similar.
+        
+        // Let's look at how it's called. It might not have access to 'self' (generator).
+        // However, we can handle it if we knew the target.
+        
+        // Assuming 'this' context or we need to pass target.
+        // Let's make it robust using global target if needed, or better, use 'self' if passed.
+        
+        // Looking at line 101: gen_expression_literal: function(self, expr)
+        // It seems 'self' is passed as first arg in many functions.
+        // But 'gen_struct_body: function(stmt)' at line 115 only has stmt.
+        
+        // I need to check where gen_struct_body is called.
+        // If it's a template helper, it might be hard.
+        
+        // Workaround: Check global.OMNI_TARGET
+        let is_python = (typeof global !== 'undefined' && (global.OMNI_TARGET === 'python' || global.OMNI_TARGET === 'py'));
+        if (typeof process !== 'undefined' && process.argv && process.argv.some(a => a === '--app' || a === '--python' || (typeof a === 'string' && a.endsWith('.py')))) {
+             is_python = true;
+        }
+
         let constructor_body = "";
+        let selfRef = is_python ? "self" : "this";
+        
         for (const field of stmt.fields || []) {
-            constructor_body += "        this." + field.name + " = data." + field.name + ";\n";
+            if (is_python) {
+                constructor_body += "        " + selfRef + "." + field.name + " = data.get('" + field.name + "')\n";
+                // Or data['field'] if we are sure it exists. data.get returns None if missing, which matches `data=None` default logic somewhat.
+                // But data={} default. data.get is safer.
+                // Original JS was data.field. 
+            } else {
+                constructor_body += "        " + selfRef + "." + field.name + " = data." + field.name + ";\n";
+            }
         }
         return constructor_body;
     },
@@ -123,17 +188,17 @@ const HybridImpl = {
     gen_entity_repo: function(stmt) {
         const name = stmt.name;
         const fields = (stmt.fields || []).filter(f => f.name !== 'id').map(f => f.name);
-        // field_names unused in original code logic?
         
+        // Use let in generated code for modern JS
         let out = "\n// @entity Repository: " + name + "\n";
         out += name + ".find = async (id) => {\n";
-        out += "    const db = await Database.get('main_db');\n";
-        out += "    const row = await db.get('SELECT * FROM " + name + " WHERE id = ?', [id]);\n";
+        out += "    let db = await Database.get('main_db');\n";
+        out += "    let row = await db.get('SELECT * FROM " + name + " WHERE id = ?', [id]);\n";
         out += "    return row ? new " + name + "(row) : null;\n";
         out += "};\n\n";
         
         out += name + ".all = async () => {\n";
-        out += "    const db = await Database.get('main_db');\n";
+        out += "    let db = await Database.get('main_db');\n";
         out += "    return (await db.all('SELECT * FROM " + name + "')).map(r => new " + name + "(r));\n";
         out += "};\n";
         return out;
@@ -150,11 +215,11 @@ const HybridImpl = {
             const paramJson = flow.params.map(p => p.name + ": " + p.name).join(', ');
             
             flows += "    async " + flow.name + "(" + params + ") {\n";
-            flows += "        const route = TopologyResolver.resolve('" + name + "');\n";
+            flows += "        let route = TopologyResolver.resolve('" + name + "');\n";
             flows += "        if (route.local) {\n";
             flows += "            return this._impl_" + flow.name + "(" + params + ");\n";
             flows += "        } else {\n";
-            flows += "            const response = await fetch(route.url + '/" + name + "/" + flow.name + "', {\n";
+            flows += "            let response = await fetch(route.url + '/" + name + "/" + flow.name + "', {\n";
             flows += "                method: 'POST',\n";
             flows += "                headers: { 'Content-Type': 'application/json' },\n";
             flows += "                body: JSON.stringify({ " + paramJson + " })\n";
@@ -180,7 +245,7 @@ const HybridImpl = {
     gen_spawn_code: function(fn_name, args_str) {
         let out = "(() => {\n";
         out += "    const { Worker } = require('worker_threads');\n";
-        out += "    const worker = new Worker(__filename, {\n";
+        out += "    let worker = new Worker(__filename, {\n";
         out += "        workerData: { fn: '" + fn_name + "', args: [" + args_str + "] }\n";
         out += "    });\n";
         out += "    worker.on('message', r => console.log('[spawn] " + fn_name + " done:', r));\n";
@@ -196,8 +261,8 @@ const HybridImpl = {
         for (const method of stmt.methods || []) {
             const params = method.params ? method.params.map(p => p.name).join(', ') : '';
             methods += "    async " + method.name + "(" + params + ") {\n";
-            methods += "        const url = Discovery.resolve('" + name + "');\n";
-            methods += "        const response = await fetch(url + '/" + name + "/" + method.name + "', {\n";
+            methods += "        let url = Discovery.resolve('" + name + "');\n";
+            methods += "        let response = await fetch(url + '/" + name + "/" + method.name + "', {\n";
             methods += "            method: 'POST',\n";
             methods += "            headers: { 'Content-Type': 'application/json' },\n";
             methods += "            body: JSON.stringify({ " + params + " })\n";
@@ -209,16 +274,129 @@ const HybridImpl = {
         return "// @service RPC Client: " + name + "\n" +
                "const " + name + " = {\n" + methods + "};\n";
     },
-    
-    gen_import: function(stmt) {
+
+    gen_import: function(stmt, generator_param) { // Renamed parameter to avoid clash
         let module_path = stmt.path || stmt.module || '';
         module_path = module_path.replace(/^['"]|['"]$/g, '');
         const alias = stmt.alias || module_path.split('/').pop().replace('.omni', '');
+        // console.log('[DEBUG GEN_IMPORT] module_path = "' + module_path + '"');
         
+        // Resolve target
+        let target = 'js';
+        if (generator_param && generator_param.profile && generator_param.profile.name) {
+             target = generator_param.profile.name;
+        } else if (typeof generator_param === 'string') {
+             target = generator_param; // Backwards compat if string passed
+        } else if (typeof global !== 'undefined' && global.OMNI_TARGET) {
+             target = global.OMNI_TARGET; // Workaround from cmd_run
+        }
+        
+        // Fallback detection from process.argv when generator is not passed
+        if (target === 'js') {
+             if (typeof process !== 'undefined' && process.argv && process.argv.some(a => a === '--app' || a === '--python' || (typeof a === 'string' && a.endsWith('.py')))) {
+                 target = 'python';
+             }
+        }
+        
+        // Inline bundling for std/ imports
+        if (module_path.startsWith('std/') || module_path.startsWith('std\\')) {
+            // Find the std/ folder
+            let projectRoot = process.cwd();
+            // Need to handle if running from dist/ or root
+            // If projectRoot has omnic-v2 then go up? 
+            // Assume process.cwd() is project root where command is run
+            
+            let stdPath = path.join(projectRoot, module_path);
+            // console.log('[DEBUG] Inline bundling: ' + module_path + ' -> ' + stdPath);
+            
+            // Try parent directories if not found (search up 5 levels)
+            if (!fs.existsSync(stdPath)) {
+                let dir = projectRoot;
+                for (let i = 0; i < 5; i++) {
+                    dir = path.dirname(dir);
+                    stdPath = path.join(dir, module_path);
+                    if (fs.existsSync(stdPath)) break;
+                }
+            }
+            
+            if (fs.existsSync(stdPath)) {
+                try {
+                    const source = fs.readFileSync(stdPath, 'utf-8');
+                    
+                    // Helper to get function or require it safely
+                    const get_fn = (name, modPath, subPath) => {
+                        if (typeof global[name] === 'function') return global[name];
+                        try {
+                            // Try local scope (eval hack if needed? no, check typeof directly above)
+                            // If we are here, typeof check failed.
+                            // Try require
+                            try { return require(modPath)[name]; } catch (e) {}
+                            try { return require(subPath)[name]; } catch (e) {}
+                        } catch (e) {}
+                        return undefined;
+                    };
+                    
+                    // Direct typeof check works if in same scope (hoisted)
+                    // But if this obj is defined BEFORE lexer, hoisting works.
+
+                    // Check for components using correct names (from src/*.omni)
+                    // Note: dist files export these names.
+                    const new_lexer_fn = (typeof new_lexer !== 'undefined') ? new_lexer : 
+                                         (typeof global.new_lexer !== 'undefined') ? global.new_lexer :
+                                         require('./core/lexer.js').new_lexer;
+                                         
+                    const new_parser_fn = (typeof new_parser !== 'undefined') ? new_parser : 
+                                          (typeof global.new_parser !== 'undefined') ? global.new_parser :
+                                          require('./core/parser.js').new_parser;
+                                          
+                    const parse_program_fn = (typeof Parser_parse_program !== 'undefined') ? Parser_parse_program : 
+                                            (typeof global.Parser_parse_program !== 'undefined') ? global.Parser_parse_program :
+                                            require('./core/parser.js').Parser_parse_program;
+                                            
+                    const Hybrid_new_fn = (typeof HybridCodeGenerator_new !== 'undefined') ? HybridCodeGenerator_new : 
+                                          (typeof global.HybridCodeGenerator_new !== 'undefined') ? global.HybridCodeGenerator_new :
+                                          require('./core/codegen_hybrid.js').HybridCodeGenerator_new;
+                                          
+                    const Hybrid_gen_fn = (typeof HybridCodeGenerator_gen_statement !== 'undefined') ? HybridCodeGenerator_gen_statement : 
+                                          (typeof global.HybridCodeGenerator_gen_statement !== 'undefined') ? global.HybridCodeGenerator_gen_statement :
+                                          require('./core/codegen_hybrid.js').HybridCodeGenerator_gen_statement;
+                    
+                    const lexer = new_lexer_fn(source);
+                    const parser = new_parser_fn(lexer);
+                    const ast = parse_program_fn(parser);
+                    
+                    // Generate inline code using hybrid generator
+                    // console.log("DEBUG TARGET: " + target);
+                    let generator = Hybrid_new_fn(target); // This is a local variable, distinct from generator_param
+                    let commentStart = (target === 'py' || target === 'python') ? "#" : "//";
+                    let code = commentStart + " ===== INLINE: " + module_path + " =====\n";
+                    
+                    if (ast && ast.statements) {
+                        for (const s of ast.statements) {
+                            // Skip import statements in imported files to avoid recursion issues
+                            if (s.kind === 10) continue; // NODE_IMPORT = 10
+                            generator.indent_level = 0; // Force reset to prevent drift
+                            let stmtCode = Hybrid_gen_fn(generator, s);
+                            if (stmtCode) code += stmtCode + "\n";
+                        }
+                    }
+                    code += commentStart + " ===== END: " + module_path + " =====\n";
+                    return code;
+                } catch (e) {
+                    const msg = (e.message || String(e)).replace(/\n/g, ' ');
+                    const stack = (e.stack || "").split('\n').map(l => "// " + l).join('\n');
+                    return "// [ERROR] Failed to inline " + module_path + ": " + msg + "\n" + stack;
+                }
+            } else {
+                return "// [WARN] Could not find: " + module_path + " (searched " + stdPath + ")";
+            }
+        }
+        
+        // Fallback for non-std imports
         return "// MARKER: Hybrid Import\n" + 
                "const " + alias + " = require(\"" + module_path + "\");\n" +
                "if (typeof global !== 'undefined') Object.assign(global, " + alias + ");";
     }
 };
 
-module.exports = HybridImpl;
+if (typeof module !== 'undefined') module.exports = codegen_hybrid_impl;

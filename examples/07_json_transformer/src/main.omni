@@ -10,7 +10,7 @@ fn json_demo() {
     // std/json.omni provides json_parse(string) -> any
     
     // Use concatenation to avoid escaping issues in Lexer
-    let q = '"';
+    let q = "\"";
     let json_str = "{" + q + "name" + q + ": " + q + "Alice" + q + ", " + q + "age" + q + ": 30}";
     print("   Original JSON String: " + json_str);
     

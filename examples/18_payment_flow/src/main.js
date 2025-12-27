@@ -20,25 +20,25 @@ function print_opt(msg, show_ui) {
 
 }
 function print(msg) {
-    print_opt(msg, true);
+        print_opt(msg, true);
 }
 function to_string(n) {
-    let result = "";
-     result = String(n); 
+            let result = "";
+             result = String(n); 
 
-    return result;
+            return result;
 }
 function to_string_f(n) {
-    let result = "";
-     result = String(n); 
+                let result = "";
+                 result = String(n); 
 
-    return result;
+                return result;
 }
 function to_string_b(b) {
-    let result = "";
-     result = b ? 'true' : 'false'; 
+                    let result = "";
+                     result = b ? 'true' : 'false'; 
 
-    return result;
+                    return result;
 }
 // ===== END: std/core.omni =====
 
@@ -104,87 +104,87 @@ function Window_create(config) {
     return win;
 }
 function Button_create(win, text, x, y) {
-    let btn = new Button({ handle: 0, id: "btn_" + text, text: text });
-    
-            if (typeof document !== 'undefined') {
-                const b = document.createElement('button');
-                b.innerText = text;
-                b.style.position = 'absolute';
-                b.style.left = x + 'px';
-                b.style.top = y + 'px';
-                if (win.handle) win.handle.appendChild(b);
-                btn.handle = b;
-            }
+        let btn = new Button({ handle: 0, id: "btn_" + text, text: text });
         
+                if (typeof document !== 'undefined') {
+                    const b = document.createElement('button');
+                    b.innerText = text;
+                    b.style.position = 'absolute';
+                    b.style.left = x + 'px';
+                    b.style.top = y + 'px';
+                    if (win.handle) win.handle.appendChild(b);
+                    btn.handle = b;
+                }
+            
 
-    return btn;
+        return btn;
 }
 function Button_set_click(btn, callback) {
-    
-            if (btn.handle) btn.handle.onclick = callback;
-        
+            
+                    if (btn.handle) btn.handle.onclick = callback;
+                
 
 }
 function Label_create(win, text, x, y) {
-    let lbl = new Label({ handle: 0, id: "lbl", text: text });
-    
-            if (typeof document !== 'undefined') {
-                 const l = document.createElement('div');
-                 l.innerText = text;
-                 l.style.position = 'absolute';
-                 l.style.left = x + 'px';
-                 l.style.top = y + 'px';
-                 if (win.handle) win.handle.appendChild(l);
-                 lbl.handle = l;
-            }
-        
+                let lbl = new Label({ handle: 0, id: "lbl", text: text });
+                
+                        if (typeof document !== 'undefined') {
+                             const l = document.createElement('div');
+                             l.innerText = text;
+                             l.style.position = 'absolute';
+                             l.style.left = x + 'px';
+                             l.style.top = y + 'px';
+                             if (win.handle) win.handle.appendChild(l);
+                             lbl.handle = l;
+                        }
+                    
 
-    return lbl;
+                return lbl;
 }
 function Label_set_text(lbl, text) {
-    
-            if (lbl.handle) lbl.handle.innerText = text;
-        
+                    
+                            if (lbl.handle) lbl.handle.innerText = text;
+                        
 
 }
 function TextInput_create(win, x, y) {
-    let inp = new TextInput({ handle: 0, id: "input" });
-    
-            if (typeof document !== 'undefined') {
-                const i = document.createElement('input');
-                i.type = 'text';
-                i.style.position = 'absolute';
-                i.style.left = x + 'px';
-                i.style.top = y + 'px';
-                if (win.handle) win.handle.appendChild(i);
-                inp.handle = i;
-            }
-        
+                        let inp = new TextInput({ handle: 0, id: "input" });
+                        
+                                if (typeof document !== 'undefined') {
+                                    const i = document.createElement('input');
+                                    i.type = 'text';
+                                    i.style.position = 'absolute';
+                                    i.style.left = x + 'px';
+                                    i.style.top = y + 'px';
+                                    if (win.handle) win.handle.appendChild(i);
+                                    inp.handle = i;
+                                }
+                            
 
-    return inp;
+                        return inp;
 }
 function TextInput_get_value(inp) {
-    let val = "";
-    
-            if (inp.handle) val = inp.handle.value;
-        
+                            let val = "";
+                            
+                                    if (inp.handle) val = inp.handle.value;
+                                
 
-    return val;
+                            return val;
 }
 function Window_bind_key(win, key, callback) {
-    
-            if (typeof document !== 'undefined') {
-                document.addEventListener('keydown', (e) => {
-                    if (e.key === key) callback();
-                });
-            }
-        
+                                
+                                        if (typeof document !== 'undefined') {
+                                            document.addEventListener('keydown', (e) => {
+                                                if (e.key === key) callback();
+                                            });
+                                        }
+                                    
 
 }
 function UI_run() {
-    
-            console.log("UI running (web mode)");
-        
+                                    
+                                            console.log("UI running (web mode)");
+                                        
 
 }
 // ===== END: std/ui.omni =====
@@ -199,18 +199,18 @@ function Time_now_ms() {
     return t;
 }
 function Time_schedule(delay_ms, callback) {
-    
-            setTimeout(callback, delay_ms);
         
+                setTimeout(callback, delay_ms);
+            
 
 }
 function Time_iso_string(timestamp) {
-    let s = "";
-    
-            s = new Date(timestamp).toISOString();
-        
+            let s = "";
+            
+                    s = new Date(timestamp).toISOString();
+                
 
-    return s;
+            return s;
 }
 // ===== END: std/time.omni =====
 
@@ -228,37 +228,39 @@ function log_status(msg) {
     let s = app_state_ref;
     let now = Time_now_ms();
     let iso = Time_iso_string(now);
-    print("[" + iso + "] " + msg);
+    console.log("[" + iso + "] " + msg);
     Label_set_text(s.lbl_status, "Status: " + msg);
 }
 function on_complete() {
-    log_status("Payment APPROVED");
+        log_status("Payment APPROVED");
 }
 function process_payment() {
-    let s = app_state_ref;
-    let amt_str = TextInput_get_value(s.inp_amount);
-    if (amt_str === "") {
-            log_status("Error: Enter amount");
-    } else {
-            log_status("Processing $" + amt_str + "...");
-            Time_schedule(1000, on_complete);
-    }
+            let s = app_state_ref;
+            let amt_str = TextInput_get_value(s.inp_amount);
+                    if (amt_str === "") {
+                                    log_status("Error: Enter amount");
+                    } else {
+                                        log_status("Processing $" + amt_str + "...");
+                                        Time_schedule(1000, on_complete);
+                    }
 }
 function init() {
-    print("Starting Payment Flow...");
-    let win = Window_create(new WindowConfig({ title: "Payment System", width: 400, height: 300, background: "#f0f0f0" }));
-    Label_create(win, "Payment Gateway", 20, 20);
-    Label_create(win, "Amount ($):", 20, 60);
-    let inp = TextInput_create(win, 120, 60);
-    let btn = Button_create(win, "Process Payment", 20, 100);
-    Button_set_click(btn, process_payment);
-    let lbl_status = Label_create(win, "Status: Ready", 20, 150);
-    let state = new AppState({ win: win, lbl_status: lbl_status, inp_amount: inp, btn_pay: btn });
-    app_state_ref = state;
-    UI_run();
+                        console.log("Starting Payment Flow...");
+                        let win = Window_create(new WindowConfig({ title: "Payment System", width: 400, height: 300, background: "#f0f0f0" }));
+                        Label_create(win, "Payment Gateway", 20, 20);
+                        Label_create(win, "Amount ($):", 20, 60);
+                        let inp = TextInput_create(win, 120, 60);
+                        let btn = Button_create(win, "Process Payment", 20, 100);
+                        Button_set_click(btn, process_payment);
+                        let lbl_status = Label_create(win, "Status: Ready", 20, 150);
+                        let state = new AppState({ win: win, lbl_status: lbl_status, inp_amount: inp, btn_pay: btn });
+                        app_state_ref = state;
+                        UI_run();
 }
 function main() {
-    init();
+                            init();
 }
 
-if (typeof main === 'function') main();
+module.exports = { log_status, on_complete, process_payment, init, main };
+
+if (typeof main === 'function') { main(); }

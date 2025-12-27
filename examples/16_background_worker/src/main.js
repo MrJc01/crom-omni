@@ -20,25 +20,25 @@ function print_opt(msg, show_ui) {
 
 }
 function print(msg) {
-    print_opt(msg, true);
+        print_opt(msg, true);
 }
 function to_string(n) {
-    let result = "";
-     result = String(n); 
+            let result = "";
+             result = String(n); 
 
-    return result;
+            return result;
 }
 function to_string_f(n) {
-    let result = "";
-     result = String(n); 
+                let result = "";
+                 result = String(n); 
 
-    return result;
+                return result;
 }
 function to_string_b(b) {
-    let result = "";
-     result = b ? 'true' : 'false'; 
+                    let result = "";
+                     result = b ? 'true' : 'false'; 
 
-    return result;
+                    return result;
 }
 // ===== END: std/core.omni =====
 
@@ -52,49 +52,59 @@ function Time_now_ms() {
     return t;
 }
 function Time_schedule(delay_ms, callback) {
-    
-            setTimeout(callback, delay_ms);
         
+                setTimeout(callback, delay_ms);
+            
 
+}
+function Time_iso_string(timestamp) {
+            let s = "";
+            
+                    s = new Date(timestamp).toISOString();
+                
+
+            return s;
 }
 // ===== END: std/time.omni =====
 
 let tasks_completed = 0;
 let start_time = 0;
 function task_done() {
-    ;
-    print("   [Worker] Task finished!");
-    if (tasks_completed === 4) {
-            let end_time = Time_now_ms();
-            let duration = end_time - start_time;
-            print("");
-            print("3. Worker Stats:");
-            print("   Tasks completed: " + to_string(tasks_completed));
-            print("   Total time: " + to_string(duration) + "ms");
-            print("");
-            print("✓ Background worker example completed!");
-    }
+    tasks_completed = tasks_completed + 1;
+    console.log("   [Worker] Task finished!");
+        if (tasks_completed === 4) {
+                let end_time = Time_now_ms();
+                let duration = end_time - start_time;
+                console.log("");
+                console.log("3. Worker Stats:");
+                console.log("   Tasks completed: " + to_string(tasks_completed));
+                console.log("   Total time: " + to_string(duration) + "ms");
+                console.log("");
+                console.log("✓ Background worker example completed!");
+        }
 }
 function process_task(id, name, delay) {
-    print("   [Task " + to_string(id) + "] Scheduled: " + name + " (" + to_string(delay) + "ms)");
-    Time_schedule(delay, task_done);
+            console.log("   [Task " + to_string(id) + "] Scheduled: " + name + " (" + to_string(delay) + "ms)");
+            Time_schedule(delay, task_done);
 }
 function main() {
-    print("╔══════════════════════════════════════╗");
-    print("║   OMNI - Background Worker           ║");
-    print("╚══════════════════════════════════════╝");
-    print("");
-    ;
-    print("1. Creating Task Queue:");
-    print("   Queue initialized");
-    print("");
-    print("2. Scheduling Tasks:");
-    process_task(1, "Parse data", 500);
-    process_task(2, "Transform records", 1000);
-    process_task(3, "Save to database", 1500);
-    process_task(4, "Send notification", 2000);
-    print("");
-    print("   (Main thread continues while workers run...)");
+                console.log("╔══════════════════════════════════════╗");
+                console.log("║   OMNI - Background Worker           ║");
+                console.log("╚══════════════════════════════════════╝");
+                console.log("");
+                start_time = Time_now_ms();
+                console.log("1. Creating Task Queue:");
+                console.log("   Queue initialized");
+                console.log("");
+                console.log("2. Scheduling Tasks:");
+                process_task(1, "Parse data", 500);
+                process_task(2, "Transform records", 1000);
+                process_task(3, "Save to database", 1500);
+                process_task(4, "Send notification", 2000);
+                console.log("");
+                console.log("   (Main thread continues while workers run...)");
 }
 
-if (typeof main === 'function') main();
+module.exports = { task_done, process_task, main };
+
+if (typeof main === 'function') { main(); }

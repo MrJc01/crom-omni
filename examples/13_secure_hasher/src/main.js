@@ -20,25 +20,25 @@ function print_opt(msg, show_ui) {
 
 }
 function print(msg) {
-    print_opt(msg, true);
+        print_opt(msg, true);
 }
 function to_string(n) {
-    let result = "";
-     result = String(n); 
+            let result = "";
+             result = String(n); 
 
-    return result;
+            return result;
 }
 function to_string_f(n) {
-    let result = "";
-     result = String(n); 
+                let result = "";
+                 result = String(n); 
 
-    return result;
+                return result;
 }
 function to_string_b(b) {
-    let result = "";
-     result = b ? 'true' : 'false'; 
+                    let result = "";
+                     result = b ? 'true' : 'false'; 
 
-    return result;
+                    return result;
 }
 // ===== END: std/core.omni =====
 
@@ -66,42 +66,44 @@ function sha256(input) {
     return result;
 }
 function md5(input) {
-    let result = "";
-    
-            if (typeof require !== 'undefined') {
-                const crypto = require('crypto');
-                result = crypto.createHash('md5').update(input).digest('hex');
-            } else {
-                 // Simple djb2 for non-node fallback mock
-                let h = 5381;
-                for (let i = 0; i < input.length; i++) {
-                    h = (h * 33) ^ input.charCodeAt(i);
-                }
-                result = (h >>> 0).toString(16);
-            }
+        let result = "";
         
+                if (typeof require !== 'undefined') {
+                    const crypto = require('crypto');
+                    result = crypto.createHash('md5').update(input).digest('hex');
+                } else {
+                     // Simple djb2 for non-node fallback mock
+                    let h = 5381;
+                    for (let i = 0; i < input.length; i++) {
+                        h = (h * 33) ^ input.charCodeAt(i);
+                    }
+                    result = (h >>> 0).toString(16);
+                }
+            
 
-    return result;
+        return result;
 }
 // ===== END: std/crypto.omni =====
 
 function main() {
-    print("╔══════════════════════════════════════╗");
-    print("║   OMNI - Secure Hasher               ║");
-    print("╚══════════════════════════════════════╝");
-    print("");
+    console.log("╔══════════════════════════════════════╗");
+    console.log("║   OMNI - Secure Hasher               ║");
+    console.log("╚══════════════════════════════════════╝");
+    console.log("");
     let input = "Hello, Omni!";
-    print("Input: " + input);
-    print("");
-    print("1. SHA-256:");
+    console.log("Input: " + input);
+    console.log("");
+    console.log("1. SHA-256:");
     let sha = sha256(input);
-    print("   " + sha);
-    print("");
-    print("2. MD5:");
+    console.log("   " + sha);
+    console.log("");
+    console.log("2. MD5:");
     let md = md5(input);
-    print("   " + md);
-    print("");
-    print("✓ Crypto example completed!");
+    console.log("   " + md);
+    console.log("");
+    console.log("✓ Crypto example completed!");
 }
 
-if (typeof main === 'function') main();
+module.exports = { main };
+
+if (typeof main === 'function') { main(); }

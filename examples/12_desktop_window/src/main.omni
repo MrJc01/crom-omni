@@ -23,6 +23,9 @@ fn on_greet() {
 }
 
 fn create_app() {
+    native "python" {
+        global name_input, result_label
+    }
     let config = WindowConfig {
         title: "Omni GUI",
         width: 400,

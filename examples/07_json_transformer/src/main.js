@@ -20,25 +20,25 @@ function print_opt(msg, show_ui) {
 
 }
 function print(msg) {
-    print_opt(msg, true);
+        print_opt(msg, true);
 }
 function to_string(n) {
-    let result = "";
-     result = String(n); 
+            let result = "";
+             result = String(n); 
 
-    return result;
+            return result;
 }
 function to_string_f(n) {
-    let result = "";
-     result = String(n); 
+                let result = "";
+                 result = String(n); 
 
-    return result;
+                return result;
 }
 function to_string_b(b) {
-    let result = "";
-     result = b ? 'true' : 'false'; 
+                    let result = "";
+                     result = b ? 'true' : 'false'; 
 
-    return result;
+                    return result;
 }
 // ===== END: std/core.omni =====
 
@@ -56,51 +56,53 @@ function json_parse(str) {
     return result;
 }
 function json_stringify(obj) {
-    let result = "";
-    
-            try {
-                result = JSON.stringify(obj, null, 2);
-            } catch (e) {
-                console.error("JSON stringify error: " + e.message);
-            }
+        let result = "";
         
+                try {
+                    result = JSON.stringify(obj, null, 2);
+                } catch (e) {
+                    console.error("JSON stringify error: " + e.message);
+                }
+            
 
-    return result;
+        return result;
 }
 function json_get(obj, key) {
-    let value = 0;
-    
-            value = obj[key];
-        
+            let value = 0;
+            
+                    value = obj[key];
+                
 
-    return value;
+            return value;
 }
 // ===== END: std/json.omni =====
 
 function json_demo() {
-    let q = """;
+    let q = "\\\"";
     let json_str = "{" + q + "name" + q + ": " + q + "Alice" + q + ", " + q + "age" + q + ": 30}";
-    print("   Original JSON String: " + json_str);
+    console.log("   Original JSON String: " + json_str);
     let obj = json_parse(json_str);
     let name = json_get(obj, "name");
-    print("   Parsed Name: " + name);
+    console.log("   Parsed Name: " + name);
     let str = json_stringify(obj);
-    print("   Stringified back: " + str);
+    console.log("   Stringified back: " + str);
 }
 function main() {
-    print("╔══════════════════════════════════════╗");
-    print("║   OMNI - JSON Transformer            ║");
-    print("╚══════════════════════════════════════╝");
-    print("");
-    print("1. JSON Operations:");
-    json_demo();
-    print("");
-    print("2. JSON Features:");
-    print("   - Parse strings to objects");
-    print("   - Stringify objects to strings");
-    print("   - Works on JS and Python");
-    print("");
-    print("✓ JSON transformer example completed!");
+        console.log("╔══════════════════════════════════════╗");
+        console.log("║   OMNI - JSON Transformer            ║");
+        console.log("╚══════════════════════════════════════╝");
+        console.log("");
+        console.log("1. JSON Operations:");
+        json_demo();
+        console.log("");
+        console.log("2. JSON Features:");
+        console.log("   - Parse strings to objects");
+        console.log("   - Stringify objects to strings");
+        console.log("   - Works on JS and Python");
+        console.log("");
+        console.log("✓ JSON transformer example completed!");
 }
 
-if (typeof main === 'function') main();
+module.exports = { json_demo, main };
+
+if (typeof main === 'function') { main(); }

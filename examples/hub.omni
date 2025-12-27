@@ -118,7 +118,7 @@ native "js" {
     }
     
     // Main menu
-    async function main() {
+    async function hub_main() {
         const rl = readline.createInterface({
             input: process.stdin,
             output: process.stdout
@@ -174,5 +174,5 @@ native "js" {
         }
     }
     
-    main().catch(console.error);
+    hub_main().catch(console.error);
 }

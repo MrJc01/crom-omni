@@ -145,17 +145,26 @@ fn AnimationLoop(callback: any) {
              global omni_tk_root
              if 'omni_tk_root' in globals() and omni_tk_root:
                  omni_tk_root.after(16, loop) # kick off
-                 # mainloop moved to main or handled by UI_run? 
-                 # Usually loop must start before mainloop
                  
                  def _forever():
-                     loop()
-                     omni_tk_root.after(30, _forever)
+                     try:
+                        loop()
+                        omni_tk_root.after(30, _forever)
+                     except Exception as e:
+                        print(f"Loop Error: {e}")
+
                  _forever()
                  
                  omni_tk_root.mainloop() 
-        except:
-             pass
+             else:
+                 print("Error: AnimationLoop failed. No Tkinter root found (omni_tk_root is missing).")
+                 print("Did you call Renderer_create()?")
+                 input("Press Enter to exit...")
+        except Exception as e:
+             print(f"Animation/Tkinter Error: {e}")
+             import traceback
+             traceback.print_exc()
+             input("Press Enter to exit...")
     }
 }
 

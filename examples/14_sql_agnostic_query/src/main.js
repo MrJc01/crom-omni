@@ -20,25 +20,25 @@ function print_opt(msg, show_ui) {
 
 }
 function print(msg) {
-    print_opt(msg, true);
+        print_opt(msg, true);
 }
 function to_string(n) {
-    let result = "";
-     result = String(n); 
+            let result = "";
+             result = String(n); 
 
-    return result;
+            return result;
 }
 function to_string_f(n) {
-    let result = "";
-     result = String(n); 
+                let result = "";
+                 result = String(n); 
 
-    return result;
+                return result;
 }
 function to_string_b(b) {
-    let result = "";
-     result = b ? 'true' : 'false'; 
+                    let result = "";
+                     result = b ? 'true' : 'false'; 
 
-    return result;
+                    return result;
 }
 // ===== END: std/core.omni =====
 
@@ -57,60 +57,62 @@ function Query_select(table) {
     return new Query({ table: table, fields: "*", where_clause: "", order_clause: "", limit: 0 });
 }
 function Query_fields(q, fields) {
-    q.fields = fields;
-    return q;
+        q.fields = fields;
+        return q;
 }
 function Query_where(q, condition) {
-    if (q.where_clause === "") {
-            q.where_clause = condition;
-    } else {
-            q.where_clause = q.where_clause + " AND " + condition;
-    }
-    return q;
+                    if (q.where_clause === "") {
+                                    q.where_clause = condition;
+                    } else {
+                                        q.where_clause = q.where_clause + " AND " + condition;
+                    }
+                    return q;
 }
 function Query_order_by(q, field) {
-    q.order_clause = field;
-    return q;
+                        q.order_clause = field;
+                        return q;
 }
 function Query_limit(q, limit) {
-    q.limit = limit;
-    return q;
+                            q.limit = limit;
+                            return q;
 }
 function Query_to_string(q) {
-    let sql = "SELECT " + q.fields + " FROM " + q.table;
-    if (q.where_clause !== "") {
-            sql = sql + " WHERE " + q.where_clause;
-    }
-    if (q.order_clause !== "") {
-            sql = sql + " ORDER BY " + q.order_clause;
-    }
-    if (q.limit > 0) {
-            sql = sql + " LIMIT " + q.limit;
-    }
-    return sql;
+                                let sql = "SELECT " + q.fields + " FROM " + q.table;
+                                    if (q.where_clause !== "") {
+                                                                        sql = sql + " WHERE " + q.where_clause;
+                                    }
+                                        if (q.order_clause !== "") {
+                                                                                sql = sql + " ORDER BY " + q.order_clause;
+                                        }
+                                            if (q.limit > 0) {
+                                                                                        sql = sql + " LIMIT " + q.limit;
+                                            }
+                                            return sql;
 }
 // ===== END: std/sql.omni =====
 
 function main() {
-    print("╔══════════════════════════════════════╗");
-    print("║   OMNI - SQL Query Builder           ║");
-    print("╚══════════════════════════════════════╝");
-    print("");
-    print("Building a SQL query:");
-    print("");
+    console.log("╔══════════════════════════════════════╗");
+    console.log("║   OMNI - SQL Query Builder           ║");
+    console.log("╚══════════════════════════════════════╝");
+    console.log("");
+    console.log("Building a SQL query:");
+    console.log("");
     let q = Query_select("users");
-    print("1. " + Query_to_string(q));
+    console.log("1. " + Query_to_string(q));
     q = Query_where(q, "active = true");
     q = Query_where(q, "age >= 18");
-    print("2. " + Query_to_string(q));
+    console.log("2. " + Query_to_string(q));
     q = Query_order_by(q, "created_at DESC");
     q = Query_limit(q, 50);
-    print("3. " + Query_to_string(q));
-    print("");
-    print("Final Query:");
-    print("   " + Query_to_string(q));
-    print("");
-    print("✓ SQL Query Builder example completed!");
+    console.log("3. " + Query_to_string(q));
+    console.log("");
+    console.log("Final Query:");
+    console.log("   " + Query_to_string(q));
+    console.log("");
+    console.log("✓ SQL Query Builder example completed!");
 }
 
-if (typeof main === 'function') main();
+module.exports = { main };
+
+if (typeof main === 'function') { main(); }

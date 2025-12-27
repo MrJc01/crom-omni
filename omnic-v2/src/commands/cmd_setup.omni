@@ -19,7 +19,7 @@ fn get_omni_home() -> string {
         else if (__dirname) {
             home = path.dirname(__dirname);
         }
-        // Priority 3: User's home directory
+        // Priority 3: Users home directory
         else {
             const platform = os.platform();
             if (platform === 'win32') {

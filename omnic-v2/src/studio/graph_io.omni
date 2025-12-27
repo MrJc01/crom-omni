@@ -89,7 +89,7 @@ fn get_installed_package_nodes() -> any {
                             }
                         }
                     } catch (e) {
-                        // Skip files that can't be read
+                        // Skip files that cannot be read
                     }
                 }
             }

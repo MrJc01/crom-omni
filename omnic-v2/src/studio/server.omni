@@ -56,8 +56,8 @@ fn StudioServer_start(self: StudioServer, dir: string) {
             
             if (req.url === '/api/packages') {
                 // Warning: PackageRegistry_new might need import or be available
-                // Assuming it's available via global context or we need to import it here.
-                // For now, let's assume it's imported in facade or globally available.
+                // Assuming its available via global context or we need to import it here.
+                // For now, assume its imported in facade or globally available.
                 const registry = PackageRegistry_new();
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify(registry.packages));

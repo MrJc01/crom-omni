@@ -18,6 +18,7 @@ let moon: Mesh3D = Mesh3D { handle: 0 };
 let time: f64 = 0.0;
 
 fn animate() {
+    native "python" { global time }
     time = time + 0.01;
     
     // Earth orbits sun (radius 7)
@@ -35,6 +36,7 @@ fn animate() {
 }
 
 fn init() {
+    native "python" { global scene, camera, renderer, sun, earth, moon }
     scene = Scene_create();
     camera = Camera_create();
     renderer = Renderer_create();

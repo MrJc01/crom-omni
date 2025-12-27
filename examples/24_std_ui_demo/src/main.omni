@@ -32,6 +32,9 @@ fn on_clear_click() {
 }
 
 fn main() {
+    native "python" {
+        global name_input, greeting_label
+    }
     print("╔══════════════════════════════════════╗");
     print("║   OMNI - STD/UI Library Demo         ║");
     print("╚══════════════════════════════════════╝");
@@ -53,15 +56,15 @@ fn main() {
     print("[OK] Label created using Label_create()");
     
     let name_label = Label_create(win, "Enter your name:", 20, 60);
-    name_input = TextInput_create(win, 20, 90, 200);
+    name_input = TextInput_create(win, 20, 90);
     print("[OK] TextInput created using TextInput_create()");
     
     let greet_btn = Button_create(win, "Greet", 20, 130);
-    Button_on_click(greet_btn, on_greet_click);
+    Button_set_click(greet_btn, on_greet_click);
     print("[OK] Button created with Button_on_click()");
     
     let clear_btn = Button_create(win, "Clear", 100, 130);
-    Button_on_click(clear_btn, on_clear_click);
+    Button_set_click(clear_btn, on_clear_click);
     
     greeting_label = Label_create(win, "", 20, 180);
     

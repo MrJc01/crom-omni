@@ -61,30 +61,41 @@ fn Parser_parse_statement(p: Parser) -> any {
         return Parser_parse_import(p);
     }
     // Fix: Handle unexpected } cleanly
-    if (p.cur_token.kind == TOKEN_RBRACE) {
+    if (p.cur_token.kind == 45) { // TOKEN_RBRACE
        // Just consume it to avoid infinite loop
        Parser_next_token(p);
        return 0;
     }
-    if (p.cur_token.kind == TOKEN_IF) {
+    if (p.cur_token.kind == 64) { // TOKEN_IF
         return Parser_parse_if(p);
     }
-    if (p.cur_token.kind == TOKEN_WHILE) {
+    if (p.cur_token.kind == 67) { // TOKEN_WHILE
         return Parser_parse_while(p);
     }
-    if (p.cur_token.kind == TOKEN_LET) {
+    if (p.cur_token.kind == 68) { // TOKEN_FOR
+        return Parser_parse_for(p);
+    }
+    if (p.cur_token.kind == 61) { // TOKEN_LET
         return Parser_parse_let(p);
     }
-    if (p.cur_token.kind == TOKEN_FN) {
+    if (p.cur_token.kind == 60) { // TOKEN_FN
         return Parser_parse_fn(p);
     }
-    if (p.cur_token.kind == TOKEN_STRUCT) {
+    if (p.cur_token.kind == 70) { // TOKEN_STRUCT
         return Parser_parse_struct(p);
     }
-    if (p.cur_token.kind == TOKEN_RETURN) {
+    if (p.cur_token.kind == 66) { // TOKEN_RETURN
         return Parser_parse_return(p);
     }
-    if (p.cur_token.kind == TOKEN_NATIVE) {
+    // TOKEN_CAPSULE identifier is 93
+    if (p.cur_token.kind == 93) {
+        return Parser_parse_capsule(p);
+    }
+    // TOKEN_FLOW identifier is 94
+    if (p.cur_token.kind == 94) {
+        return Parser_parse_fn(p);
+    }
+    if (p.cur_token.kind == 80) { // TOKEN_NATIVE
         return Parser_parse_native_block(p);
     }
     return Parser_parse_expr_stmt(p);
@@ -123,6 +134,14 @@ fn Parser_parse_let(p: Parser) -> LetStmt {
     if (p.cur_token.kind == 30) { // TOKEN_COLON
         Parser_next_token(p); // skip :
         Parser_next_token(p); // skip type
+        
+        // Handle array type syntax []
+        while (p.cur_token.kind == 46) { // TOKEN_LBRACKET
+            Parser_next_token(p); // skip [
+            if (p.cur_token.kind == 47) { // TOKEN_RBRACKET
+                Parser_next_token(p); // skip ]
+            }
+        }
     }
     
     Parser_next_token(p); // skip =
@@ -387,12 +406,17 @@ fn Parser_parse_factor(p: Parser) -> any {
     if (p.cur_token.kind == TOKEN_BANG) {
         Parser_next_token(p); // skip !
         let operand = Parser_parse_factor(p);
-        // Create "!operand" - for now just return the operand (simplification)
-        // TODO: Proper unary NOT node
-        return operand;
+        node = UnaryExpr { kind: NODE_UNARY, op: "!", operand: operand };
+        return node;
     }
     
+    
+    if (p.cur_token.kind == TOKEN_NATIVE) {
+        return Parser_parse_native_block(p);
+    }
+
     // 1. Primary Expressions
+
     if (p.cur_token.kind == TOKEN_INT) {
         let val = 0;
         native "js" { val = Number(p.cur_token.lexeme); }
@@ -547,4 +571,29 @@ fn Parser_parse_decorator(p: Parser) -> Decorator {
         Parser_next_token(p); // skip )
     }
     return Decorator { name: name, args: args };
+}
+
+fn Parser_parse_for(p: Parser) -> ForStmt {
+    Parser_next_token(p); // skip for
+    let iter = p.cur_token.lexeme;
+    Parser_next_token(p); // skip identifier (iterator)
+    
+    // skip 'in' - HARDCODED 69
+    if (p.cur_token.kind == 69) {
+        Parser_next_token(p); 
+    }
+    
+    let collection = Parser_parse_expression(p);
+    let body = Parser_parse_block(p);
+    
+    return ForStmt { kind: NODE_FOR, iterator: iter, collection: collection, body: body };
+}
+
+fn Parser_parse_capsule(p: Parser) -> CapsuleDecl {
+    Parser_next_token(p); // skip capsule
+    let name = p.cur_token.lexeme;
+    Parser_next_token(p); // skip name
+    
+    let body = Parser_parse_block(p);
+    return CapsuleDecl { kind: 90, name: name, body: body };
 }

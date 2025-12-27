@@ -128,7 +128,11 @@ fn Lexer_lookup_ident(ident: string) -> i64 {
     if (ident == "import") return 90; // TOKEN_IMPORT
     if (ident == "package") return 91; // TOKEN_PACKAGE
     if (ident == "export") return 92; // TOKEN_EXPORT
+    if (ident == "capsule") return 93;
+    if (ident == "flow") return 94;
     if (ident == "while") return TOKEN_WHILE;
+    if (ident == "for") return 68; 
+    if (ident == "in") return 69;
     return TOKEN_IDENTIFIER;
 }
 
@@ -154,7 +158,13 @@ fn Lexer_next_token(l: Lexer) -> Token {
         return tok;
     }
 
-    // Single char tokens
+    if (l.ch == ":") {
+        tok.kind = 30; // TOKEN_COLON
+        tok.lexeme = ":";
+        Lexer_read_char(l);
+        return tok;
+    }
+    
     if (l.ch == "=") {
         let peek_eq = char_at(l.input, l.read_position);
         if (peek_eq == "=") {
@@ -193,9 +203,6 @@ fn Lexer_next_token(l: Lexer) -> Token {
     } else if (l.ch == ",") {
         tok.kind = TOKEN_COMMA;
         tok.lexeme = ",";
-    } else if (l.ch == ":") {
-        tok.kind = 30; // TOKEN_COLON
-        tok.lexeme = ":";
     } else if (l.ch == ".") {
         tok.kind = 31; // TOKEN_DOT
         tok.lexeme = ".";
@@ -239,8 +246,13 @@ fn Lexer_next_token(l: Lexer) -> Token {
         let str_val = "";
         Lexer_read_char(l); // skip open quote
         let start = l.position;
-        while (is_quote(l.ch) == false) {
-             Lexer_read_char(l);
+        while (is_quote(l.ch) == false && l.ch != "\0") {
+             if (l.ch == "\\") {
+                 Lexer_read_char(l);
+                 Lexer_read_char(l);
+             } else {
+                 Lexer_read_char(l);
+             }
         }
         let end = l.position;
         native "js" {

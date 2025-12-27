@@ -41,7 +41,7 @@ fn LanguageProfile_new(name: string) -> LanguageProfile {
 
 fn LanguageProfile_load(self: LanguageProfile) -> LanguageProfile {
     native "js" {
-        const impl = require('./codegen_hybrid_impl.js');
+        const impl = require ('./codegen_hybrid_impl.js');
         return impl.LanguageProfile_load_impl(self);
     }
     return self;
@@ -50,7 +50,7 @@ fn LanguageProfile_load(self: LanguageProfile) -> LanguageProfile {
 fn LanguageProfile_render(self: LanguageProfile, template_name: string, data: any) -> string {
     let result = "";
     native "js" {
-        const impl = require('./codegen_hybrid_impl.js');
+        const impl = require ('./codegen_hybrid_impl.js');
         result = impl.LanguageProfile_render_impl(self, template_name, data);
     }
     return result;
@@ -67,7 +67,7 @@ fn LanguageProfile_map_type(self: LanguageProfile, omni_type: string) -> string 
 fn LanguageProfile_map_operator(self: LanguageProfile, op: string) -> string {
     let result = op;
     native "js" {
-        const impl = require('./codegen_hybrid_impl.js');
+        const impl = require ('./codegen_hybrid_impl.js');
         result = impl.LanguageProfile_map_operator_impl(self, op);
     }
     return result;
@@ -101,7 +101,7 @@ fn HybridCodeGenerator_new(target: string) -> HybridCodeGenerator {
 fn HybridCodeGenerator_indent(self: HybridCodeGenerator, code: string) -> string {
     let result = "";
     native "js" {
-        const impl = require('./codegen_hybrid_impl.js');
+        const impl = require ('./codegen_hybrid_impl.js');
         result = impl.HybridCodeGenerator_indent_impl(self, code);
     }
     return result;
@@ -131,7 +131,19 @@ fn HybridCodeGenerator_generate(self: HybridCodeGenerator, program: Program) -> 
         
         // Auto-exports
         if (self.exports.length > 0) {
-            output += "\nmodule.exports = { " + self.exports.join(", ") + " };\n";
+            if (self.profile.name === "python") {
+                output += "\n__all__ = [" + self.exports.map(e => '"' + e + '"').join(', ') + "]\n";
+            } else {
+                output += "\nmodule.exports = { " + self.exports.join(", ") + " };\n";
+            }
+        }
+
+        // Auto-main execution
+        var nl = String.fromCharCode(10);
+        if (self.profile.name === "python") {
+                output += nl + "if __name__ == '__main__':" + nl + "    if 'main' in globals():" + nl + "        main()" + nl;
+        } else {
+                output += nl + "if (typeof main === 'function') { main(); }" + nl;
         }
         
         // AST Parity Validation
@@ -158,7 +170,7 @@ fn HybridCodeGenerator_gen_statement(self: HybridCodeGenerator, stmt: any) -> st
     if (stmt.kind == NODE_NATIVE) {
         let result = "";
         native "js" {
-            const impl = require('./codegen_hybrid_impl.js');
+            const impl = require ('./codegen_hybrid_impl.js');
             result = impl.check_native_lang(self, stmt);
         }
         return result;
@@ -169,7 +181,7 @@ fn HybridCodeGenerator_gen_statement(self: HybridCodeGenerator, stmt: any) -> st
         let value = HybridCodeGenerator_gen_expression(self, stmt.value);
         let result = "";
         native "js" {
-            const impl = require('./codegen_hybrid_impl.js');
+            const impl = require ('./codegen_hybrid_impl.js');
             result = impl.LanguageProfile_render_impl(self.profile, "let_decl", {
                 name: stmt.name,
                 value: value
@@ -183,7 +195,7 @@ fn HybridCodeGenerator_gen_statement(self: HybridCodeGenerator, stmt: any) -> st
         let value = HybridCodeGenerator_gen_expression(self, stmt.value);
         let result = "";
         native "js" {
-            const impl = require('./codegen_hybrid_impl.js');
+            const impl = require ('./codegen_hybrid_impl.js');
             result = impl.LanguageProfile_render_impl(self.profile, "return_stmt", {
                 value: value
             });
@@ -196,17 +208,18 @@ fn HybridCodeGenerator_gen_statement(self: HybridCodeGenerator, stmt: any) -> st
         let params = "";
         native "js" { params = stmt.params ? stmt.params.join(", ") : ""; }
         
-        self.indent_level = self.indent_level + 1;
+        let saved_indent = self.indent_level;
+        self.indent_level = 1;
         let body = HybridCodeGenerator_gen_block(self, stmt.body);
-        self.indent_level = self.indent_level - 1;
+        self.indent_level = saved_indent;
         
         native "js" {
-            if (stmt.is_exported) self.exports.push(stmt.name);
+            self.exports.push(stmt.name);
         }
         
         let result = "";
         native "js" {
-            const impl = require('./codegen_hybrid_impl.js');
+            const impl = require ('./codegen_hybrid_impl.js');
             result = impl.LanguageProfile_render_impl(self.profile, "fn_decl", {
                 name: stmt.name,
                 params: params,
@@ -230,19 +243,41 @@ fn HybridCodeGenerator_gen_statement(self: HybridCodeGenerator, stmt: any) -> st
     if (stmt.kind == NODE_WHILE) {
         let cond = HybridCodeGenerator_gen_expression(self, stmt.condition);
         
-        self.indent_level = self.indent_level + 1;
+        let saved_indent = self.indent_level;
+        self.indent_level = 1;
         let body = HybridCodeGenerator_gen_block(self, stmt.body);
-        self.indent_level = self.indent_level - 1;
+        self.indent_level = saved_indent;
         
         let result = "";
         native "js" {
-            const impl = require('./codegen_hybrid_impl.js');
+            const impl = require ('./codegen_hybrid_impl.js');
             result = impl.LanguageProfile_render_impl(self.profile, "while_stmt", {
                 condition: cond,
                 body: body
             });
         }
         return result;
+    }
+
+    // For statement - Explicit Handling (No template in profile yet)
+    if (stmt.kind == 19) {
+         let iter = stmt.iterator;
+         let col = HybridCodeGenerator_gen_expression(self, stmt.collection);
+         
+         let saved_indent = self.indent_level;
+         self.indent_level = 1;
+         let body = HybridCodeGenerator_gen_block(self, stmt.body);
+         self.indent_level = saved_indent;
+         
+         let code = "";
+         native "js" {
+             if (self.profile.name === "python") {
+                 code = "for " + iter + " in " + col + ":\n" + body;
+             } else {
+                 code = "for (const " + iter + " of " + col + ") {\n" + body + "}";
+             }
+         }
+         return code;
     }
     
     // Capsule - HYBRID (Complex Omni Logic)
@@ -262,27 +297,61 @@ fn HybridCodeGenerator_gen_statement(self: HybridCodeGenerator, stmt: any) -> st
     
     // Assignment
     if (stmt.kind == NODE_ASSIGNMENT) {
-        let value = HybridCodeGenerator_gen_expression(self, stmt.value);
-        return stmt.name + " = " + value + self.profile.statement_end;
+        let left = HybridCodeGenerator_gen_expression(self, stmt.left);
+        let right = HybridCodeGenerator_gen_expression(self, stmt.right);
+        return left + " = " + right + self.profile.statement_end;
     }
     
     // Call as statement
+    // Call as statement
     if (stmt.kind == NODE_CALL) {
+        let callee = "";
+        let function_node = 0;
+        native "js" { function_node = stmt.function || stmt.callee || stmt.name; } // legacy check
+        
+        // If stmt.name is string (legacy), we handle it? 
+        // Best to use recursive gen if node.
+        
+        if (function_node) {
+             // Check if its a node (object) or string
+             let is_node = false;
+             native "js" { is_node = typeof function_node === "object"; }
+             if (is_node) {
+                callee = HybridCodeGenerator_gen_expression(self, function_node);
+             } else {
+                native "js" { callee = String(function_node); }
+             }
+        }
+
+        let args = "";
+        native "js" {
+            if (stmt.args && stmt.args.length > 0) {
+                args = stmt.args.map(a => HybridCodeGenerator_gen_expression(self, a)).join(', ');
+            }
+        }
+
         let result = "";
         native "js" {
-            const impl = require('./codegen_hybrid_impl.js');
+            const impl = require ('./codegen_hybrid_impl.js');
             result = impl.LanguageProfile_render_impl(self.profile, "call_expr", {
-                callee: stmt.name, // Simplified for direct calls
-                args: "" // Simplified
+                callee: callee,
+                args: args
             });
-             // This block seems wrong/duplicate, referencing old logic
         }
-        // Correct logic below
+        return result + self.profile.statement_end;
     }
 
     // Expression Statement
     if (stmt.kind == 20) { // NODE_EXPRESSION_STMT
+        // Hack: Force statement_end empty for Python
+        native "js" {
+            if (self.profile.name === 'python') self.profile.statement_end = '';
+        }
+    
         let expr = HybridCodeGenerator_gen_expression(self, stmt.expr);
+        // Suppress empty statements (e.g. filtered native blocks or ghost nodes)
+        if (expr == "") { return ""; }
+        
         return expr + self.profile.statement_end;
     }
     
@@ -296,23 +365,60 @@ fn HybridCodeGenerator_gen_expression(self: HybridCodeGenerator, expr: any) -> s
     native "js" { is_null = !expr; }
     if (is_null) return "";
     
+    if (expr.kind == NODE_NATIVE) {
+        let result = "";
+        native "js" {
+            const impl = require ('./codegen_hybrid_impl.js');
+            // Check if lang matches
+            let code = impl.check_native_lang(self, expr);
+            if (code) {
+                // Wrap in IIFE for expression context
+                result = "(() => { " + code + " })()";
+            } else {
+                result = "null"; // Fallback for wrong target
+            }
+        }
+        return result;
+    }
+
     // Literal number
     if (expr.kind == NODE_LITERAL) {
         let val = "";
         native "js" { 
             val = String(expr.value);
             // Map booleans
-            if (val === 'true') val = self.profile.templates.bool_true || 'true';
-            if (val === 'false') val = self.profile.templates.bool_false || 'false';
-            if (val === 'null') val = self.profile.templates.null || 'null';
+            if (val === "true") val = self.profile.templates.bool_true || "true";
+            if (val === "false") val = self.profile.templates.bool_false || "false";
+            if (val === "null") val = self.profile.templates.null || "null";
         }
         return val;
+    }
+    
+    // Unary Expression
+    if (expr.kind == NODE_UNARY) {
+        let op = expr.op;
+        let operand = HybridCodeGenerator_gen_expression(self, expr.operand);
+        // Special mapping for NOT
+        if (op == "!") {
+             native "js" { 
+                 if (self.profile.operators && self.profile.operators.not) op = self.profile.operators.not;
+                 else op = "!";
+             }
+        }
+        return op + operand;
+    }
+
+    // Assignment Expression
+    if (expr.kind == NODE_ASSIGNMENT) {
+        let left = HybridCodeGenerator_gen_expression(self, expr.left);
+        let right = HybridCodeGenerator_gen_expression(self, expr.right);
+        return left + " = " + right;
     }
     
     // String
     if (expr.kind == NODE_STRING) {
         let result = "";
-        native "js" { result = '"' + expr.value + '"'; }
+        native "js" { result = JSON.stringify(expr.value); }
         return result;
     }
     
@@ -320,7 +426,7 @@ fn HybridCodeGenerator_gen_expression(self: HybridCodeGenerator, expr: any) -> s
     if (expr.kind == NODE_BOOL) {
         let result = "";
         native "js" {
-            const impl = require('./codegen_hybrid_impl.js');
+            const impl = require ('./codegen_hybrid_impl.js');
             result = impl.gen_expression_bool(self, expr);
         }
         return result;
@@ -330,6 +436,11 @@ fn HybridCodeGenerator_gen_expression(self: HybridCodeGenerator, expr: any) -> s
     if (expr.kind == NODE_IDENTIFIER) {
         let result = "";
         native "js" { result = expr.value || expr.name || ''; }
+        if (result == "print") {
+             let is_js = false;
+             native "js" { is_js = self.profile.name !== "python"; }
+             if (is_js) return "console.log";
+        }
         return result;
     }
     
@@ -341,7 +452,7 @@ fn HybridCodeGenerator_gen_expression(self: HybridCodeGenerator, expr: any) -> s
         
         let result = "";
         native "js" {
-            const impl = require('./codegen_hybrid_impl.js');
+            const impl = require ('./codegen_hybrid_impl.js');
             result = impl.LanguageProfile_render_impl(self.profile, "binary_expr", {
                 left: left,
                 op: op,
@@ -354,17 +465,18 @@ fn HybridCodeGenerator_gen_expression(self: HybridCodeGenerator, expr: any) -> s
     // Call expression - TEMPLATE BASED
     if (expr.kind == NODE_CALL) {
         let callee = "";
+        let function_node = 0;
+        
+        native "js" {
+             function_node = expr.function || expr.callee;
+        }
+        
+        if (function_node) {
+             callee = HybridCodeGenerator_gen_expression(self, function_node);
+        }
+        
         let args = "";
         native "js" {
-            // Fix: Check expr.function for identifier, or expr.name if legacy
-            if (expr.function && (expr.function.kind == 15 || expr.function.value)) {
-                 callee = expr.function.value || expr.function.name;
-            } else if (expr.name) {
-                 callee = expr.name;
-            } else if (expr.callee) { // Support legacy parser format if any
-                 callee = expr.callee.value || expr.callee.name;
-            }
-            
             if (expr.args) {
                 args = expr.args.map(a => HybridCodeGenerator_gen_expression(self, a)).join(', ');
             }
@@ -372,7 +484,7 @@ fn HybridCodeGenerator_gen_expression(self: HybridCodeGenerator, expr: any) -> s
         
         let result = "";
         native "js" {
-            const impl = require('./codegen_hybrid_impl.js');
+            const impl = require ('./codegen_hybrid_impl.js');
             result = impl.LanguageProfile_render_impl(self.profile, "call_expr", {
                 callee: callee,
                 args: args
@@ -382,9 +494,9 @@ fn HybridCodeGenerator_gen_expression(self: HybridCodeGenerator, expr: any) -> s
     }
     
     // Member access
-    if (expr.kind == NODE_MEMBER) {
-        let obj = HybridCodeGenerator_gen_expression(self, expr.object);
-        return obj + "." + expr.member;
+    if (expr.kind == NODE_MEMBER) { // 9
+        let obj = HybridCodeGenerator_gen_expression(self, expr.target);
+        return obj + "." + expr.property;
     }
     
     // Array literal
@@ -401,14 +513,24 @@ fn HybridCodeGenerator_gen_expression(self: HybridCodeGenerator, expr: any) -> s
     // Struct initialization
     if (expr.kind == NODE_STRUCT_INIT) {
         let fields = "";
+        let is_python = false;
+        native "js" { is_python = self.profile.name === "python"; }
+        
         native "js" {
-            if (expr.fields) {
-                fields = Object.entries(expr.fields)
-                    .map(([k, v]) => k + ": " + HybridCodeGenerator_gen_expression(self, v))
-                    .join(', ');
+            if (expr.fields && Array.isArray(expr.fields)) {
+                if (is_python) {
+                    fields = expr.fields.map(f => "'" + f.name + "': " + HybridCodeGenerator_gen_expression(self, f.value)).join(', ');
+                } else {
+                    fields = expr.fields.map(f => f.name + ": " + HybridCodeGenerator_gen_expression(self, f.value)).join(', ');
+                }
             }
         }
-        return "new " + expr.name + "({ " + fields + " })";
+        
+        if (is_python) {
+             return expr.name + "({ " + fields + " })";
+        } else {
+             return "new " + expr.name + "({ " + fields + " })";
+        }
     }
     
     let result = "";
@@ -426,16 +548,23 @@ fn HybridCodeGenerator_gen_block(self: HybridCodeGenerator, body: any) -> string
             const code = HybridCodeGenerator_gen_statement(self, s);
             return HybridCodeGenerator_indent(self, code);
         }).join('\n');
+        
+        // Python requires 'pass' for empty blocks
+        if (self.profile.name === 'python' && (!result || result.trim() === '')) {
+            result = HybridCodeGenerator_indent(self, 'pass');
+        }
     }
+    return result;
     return result;
 }
 
 fn HybridCodeGenerator_gen_if(self: HybridCodeGenerator, stmt: any) -> string {
     let cond = HybridCodeGenerator_gen_expression(self, stmt.condition);
     
-    self.indent_level = self.indent_level + 1;
+    let saved_indent = self.indent_level;
+    self.indent_level = 1;
     let consequence = HybridCodeGenerator_gen_block(self, stmt.consequence);
-    self.indent_level = self.indent_level - 1;
+    self.indent_level = saved_indent;
     
     let has_alt = false;
     native "js" { 
@@ -448,13 +577,14 @@ fn HybridCodeGenerator_gen_if(self: HybridCodeGenerator, stmt: any) -> string {
     }
     
     if (has_alt) {
-        self.indent_level = self.indent_level + 1;
+        let saved_alt_indent = self.indent_level;
+        self.indent_level = 1;
         let alternative = HybridCodeGenerator_gen_block(self, stmt.alternative);
-        self.indent_level = self.indent_level - 1;
+        self.indent_level = saved_alt_indent;
         
         let result = "";
         native "js" {
-            const impl = require('./codegen_hybrid_impl.js');
+            const impl = require ('./codegen_hybrid_impl.js');
             result = impl.LanguageProfile_render_impl(self.profile, "if_else_stmt", {
                 condition: cond,
                 consequence: consequence,
@@ -466,7 +596,7 @@ fn HybridCodeGenerator_gen_if(self: HybridCodeGenerator, stmt: any) -> string {
     
     let result = "";
     native "js" {
-        const impl = require('./codegen_hybrid_impl.js');
+        const impl = require ('./codegen_hybrid_impl.js');
         result = impl.LanguageProfile_render_impl(self.profile, "if_stmt", {
             condition: cond,
             consequence: consequence
@@ -489,15 +619,22 @@ fn HybridCodeGenerator_gen_struct(self: HybridCodeGenerator, stmt: any) -> strin
     // Generate class body
     let constructor_body = "";
     native "js" { {
-        const impl = require('./codegen_hybrid_impl.js');
+        const impl = require ('./codegen_hybrid_impl.js');
         constructor_body = impl.gen_struct_body(stmt);
     } }
     
-    let class_body = "    constructor(data = {}) {\n" + constructor_body + "    }\n";
+    let class_body = "";
+    native "js" {
+        if (self.profile.name === "python") {
+            class_body = "    def __init__(self, data={}):\n" + constructor_body;
+        } else {
+            class_body = "    constructor(data = {}) {\n" + constructor_body + "    }\n";
+        }
+    }
     
     let out = "";
     native "js" { {
-        const impl = require('./codegen_hybrid_impl.js');
+        const impl = require ('./codegen_hybrid_impl.js');
         out = impl.LanguageProfile_render_impl(self.profile, "class_decl", {
             name: stmt.name,
             body: class_body
@@ -515,17 +652,64 @@ fn HybridCodeGenerator_gen_struct(self: HybridCodeGenerator, stmt: any) -> strin
 fn HybridCodeGenerator_gen_entity_repo(self: HybridCodeGenerator, stmt: any) -> string {
     let result = "";
     native "js" {
-        const impl = require('./codegen_hybrid_impl.js');
+        const impl = require ('./codegen_hybrid_impl.js');
         result = impl.gen_entity_repo(stmt);
     }
     return result;
 }
 
 fn HybridCodeGenerator_gen_capsule(self: HybridCodeGenerator, stmt: any) -> string {
+    let name = stmt.name;
     let result = "";
+    
     native "js" {
-        const impl = require('./codegen_hybrid_impl.js');
-        result = impl.gen_capsule(stmt);
+        const is_python = self.profile.name === "python";
+        
+        if (is_python) {
+            result = "class " + name + ":\n";
+            if (!stmt.body || !stmt.body.statements || stmt.body.statements.length === 0) {
+                result += "    pass\n";
+            } else {
+                for (const s of stmt.body.statements) {
+                    // Let/Var -> Class Attribute
+                    if (s.kind == 2 || s.kind == 61) {
+                         let val = HybridCodeGenerator_gen_expression(self, s.value);
+                         result += "    " + s.name + " = " + val + "\n";
+                    }
+                    // Function -> Static Method
+                    if (s.kind == 4 || s.kind == 94) {
+                        let params = s.params ? s.params.join(", ") : "";
+                        
+                        let saved_indent = self.indent_level;
+                        self.indent_level = 2; // Methods inside Class need 2 levels (8 spaces)
+                        let body = HybridCodeGenerator_gen_block(self, s.body);
+                        self.indent_level = saved_indent;
+                        
+                        let method = "    @staticmethod\n    def " + s.name + "(" + params + "):\n" + body + "\n";
+                        result += method;
+                    }
+                }
+            }
+        } else {
+            // JavaScript Object
+            let props = "";
+            if (stmt.body && stmt.body.statements) {
+                for (const s of stmt.body.statements) {
+                    if (s.kind == 2 || s.kind == 61) { 
+                        let val = HybridCodeGenerator_gen_expression(self, s.value);
+                        props += "    " + s.name + ": " + val + ",\n";
+                    }
+                    if (s.kind == 4 || s.kind == 94) { 
+                        let params = s.params ? s.params.join(", ") : "";
+                        self.indent_level++;
+                        let body = HybridCodeGenerator_gen_block(self, s.body);
+                        self.indent_level--;
+                        props += "    " + s.name + "(" + params + ") {\n" + body + "    },\n";
+                    }
+                }
+            }
+            result = "// Capsule: " + name + "\nconst " + name + " = {\n" + props + "\n};\n";
+        }
     }
     return result;
 }
@@ -544,7 +728,7 @@ fn HybridCodeGenerator_gen_spawn(self: HybridCodeGenerator, stmt: any) -> string
     
     let out = "";
     native "js" {
-        const impl = require('./codegen_hybrid_impl.js');
+        const impl = require ('./codegen_hybrid_impl.js');
         out = impl.gen_spawn_code(fn_name, args);
     }
     
@@ -554,7 +738,7 @@ fn HybridCodeGenerator_gen_spawn(self: HybridCodeGenerator, stmt: any) -> string
 fn HybridCodeGenerator_gen_import(self: HybridCodeGenerator, stmt: any) -> string {
     let result = "";
     native "js" {
-        const impl = require('./codegen_hybrid_impl.js');
+        const impl = require ('./codegen_hybrid_impl.js');
         result = impl.gen_import(stmt);
     }
     return result;
@@ -576,7 +760,7 @@ fn HybridCodeGenerator_gen_interface(self: HybridCodeGenerator, stmt: any) -> st
 fn HybridCodeGenerator_gen_service_client(self: HybridCodeGenerator, stmt: any) -> string {
     let result = "";
     native "js" {
-        const impl = require('./codegen_hybrid_impl.js');
+        const impl = require ('./codegen_hybrid_impl.js');
         result = impl.gen_service_client(stmt);
     }
     return result;

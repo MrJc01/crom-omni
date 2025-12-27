@@ -104,7 +104,7 @@ fn main() {
         native "js" { package_name = process.argv[3] || ''; }
         
         if (package_name == "") {
-            terminal.CLI_error("Usage: omni uninstall <package_name>");
+            CLI_error("Usage: omni uninstall <package_name>");
             return 1;
         }
         
@@ -329,6 +329,12 @@ fn main() {
                 show_coverage = true;
             }
         }
+        
+        if (!output_path && input_path) {
+             const path = require('path');
+             const ext = target_lang === "python" ? ".py" : ".js";
+             output_path = input_path.replace(path.extname(input_path), ext);
+        }
     }
 
     CLI_info("Compiling: " + input_path);
@@ -341,7 +347,7 @@ fn main() {
             const path = require('path');
             
             if (fs.existsSync(package_path)) {
-                terminal.CLI_info("Loading package: " + package_path);
+                CLI_info("Loading package: " + package_path);
                 
                 const grammarPath = fs.statSync(package_path).isDirectory() 
                     ? path.join(package_path, 'grammar.json')
@@ -396,11 +402,11 @@ fn main() {
             const coverage = gen.ast_node_count > 0 
                 ? (gen.generated_count / gen.ast_node_count * 100).toFixed(1)
                 : 100;
-            terminal.CLI_info("AST Coverage: " + coverage + "% (" + 
+            CLI_info("AST Coverage: " + coverage + "% (" + 
                 gen.generated_count + "/" + gen.ast_node_count + " nodes)");
                 
             if (coverage < 100) {
-                terminal.CLI_warning("Some AST nodes were not generated");
+                CLI_warning("Some AST nodes were not generated");
             }
         }
     }
@@ -410,4 +416,12 @@ fn main() {
     
     CLI_success("Output: " + output_path);
     CLI_success("Compiled successfully!");
+}
+
+native "js" {
+    if (require.main === module) {
+        if (typeof main === 'function') {
+            main();
+        }
+    }
 }

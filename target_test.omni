@@ -1,9 +1,0 @@
-
-fn main() {
-    native "js" {
-        console.log("I am JS");
-    }
-    native "python" {
-        print("I am Python")
-    }
-}

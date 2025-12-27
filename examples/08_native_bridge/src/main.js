@@ -20,25 +20,25 @@ function print_opt(msg, show_ui) {
 
 }
 function print(msg) {
-    print_opt(msg, true);
+        print_opt(msg, true);
 }
 function to_string(n) {
-    let result = "";
-     result = String(n); 
+            let result = "";
+             result = String(n); 
 
-    return result;
+            return result;
 }
 function to_string_f(n) {
-    let result = "";
-     result = String(n); 
+                let result = "";
+                 result = String(n); 
 
-    return result;
+                return result;
 }
 function to_string_b(b) {
-    let result = "";
-     result = b ? 'true' : 'false'; 
+                    let result = "";
+                     result = b ? 'true' : 'false'; 
 
-    return result;
+                    return result;
 }
 // ===== END: std/core.omni =====
 
@@ -56,45 +56,47 @@ function os_platform() {
     return platform;
 }
 function os_time_ms() {
-    let ts = 0;
-    
-            ts = Date.now();
+        let ts = 0;
         
+                ts = Date.now();
+            
 
-    return ts;
+        return ts;
 }
 function os_version() {
-    let ver = "unknown";
-    
-            if (typeof process !== 'undefined') {
-                ver = process.version;
-            } else {
-                ver = "browser";
-            }
-        
+            let ver = "unknown";
+            
+                    if (typeof process !== 'undefined') {
+                        ver = process.version;
+                    } else {
+                        ver = "browser";
+                    }
+                
 
-    return ver;
+            return ver;
 }
 // ===== END: std/os.omni =====
 
 function main() {
-    print("╔══════════════════════════════════════╗");
-    print("║   OMNI - System Info                 ║");
-    print("╚══════════════════════════════════════╝");
-    print("");
-    print("1. Platform Detection:");
+    console.log("╔══════════════════════════════════════╗");
+    console.log("║   OMNI - System Info                 ║");
+    console.log("╚══════════════════════════════════════╝");
+    console.log("");
+    console.log("1. Platform Detection:");
     let platform = os_platform();
-    print("   Platform: " + platform);
-    print("");
-    print("2. Timestamp:");
+    console.log("   Platform: " + platform);
+    console.log("");
+    console.log("2. Timestamp:");
     let ts = os_time_ms();
-    print("   Current timestamp: " + to_string(ts));
-    print("");
-    print("3. Runtime Info:");
+    console.log("   Current timestamp: " + to_string(ts));
+    console.log("");
+    console.log("3. Runtime Info:");
     let ver = os_version();
-    print("   Runtime Version: " + ver);
-    print("");
-    print("✓ System info example completed!");
+    console.log("   Runtime Version: " + ver);
+    console.log("");
+    console.log("✓ System info example completed!");
 }
 
-if (typeof main === 'function') main();
+module.exports = { main };
+
+if (typeof main === 'function') { main(); }

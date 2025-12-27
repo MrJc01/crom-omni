@@ -20,25 +20,25 @@ function print_opt(msg, show_ui) {
 
 }
 function print(msg) {
-    print_opt(msg, true);
+        print_opt(msg, true);
 }
 function to_string(n) {
-    let result = "";
-     result = String(n); 
+            let result = "";
+             result = String(n); 
 
-    return result;
+            return result;
 }
 function to_string_f(n) {
-    let result = "";
-     result = String(n); 
+                let result = "";
+                 result = String(n); 
 
-    return result;
+                return result;
 }
 function to_string_b(b) {
-    let result = "";
-     result = b ? 'true' : 'false'; 
+                    let result = "";
+                     result = b ? 'true' : 'false'; 
 
-    return result;
+                    return result;
 }
 // ===== END: std/core.omni =====
 
@@ -86,204 +86,218 @@ function ThreeJS_load(callback) {
 
 }
 function Scene_create() {
-    let scene = new Scene3D({ handle: 0 });
-    
-            if (typeof THREE !== 'undefined') {
-                scene.handle = new THREE.Scene();
-            } else {
-                // Headless / Node.js Scene
-                scene.handle = { type: 'scene', objects: [] };
-            }
+        let scene = new Scene3D({ handle: 0 });
         
+                if (typeof THREE !== 'undefined') {
+                    scene.handle = new THREE.Scene();
+                } else {
+                    // Headless / Node.js Scene
+                    scene.handle = { type: 'scene', objects: [] };
+                }
+            
 
-    return scene;
+        return scene;
 }
 function Camera_create() {
-    let cam = new Camera3D({ handle: 0 });
-    
-            if (typeof THREE !== 'undefined') {
-                cam.handle = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-                cam.handle.position.z = 10;
-            } else {
-                cam.handle = { x: 0, y: 0, z: 10, fov: 75 };
-            }
-        
+            let cam = new Camera3D({ handle: 0 });
+            
+                    if (typeof THREE !== 'undefined') {
+                        cam.handle = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+                        cam.handle.position.z = 10;
+                    } else {
+                        cam.handle = { x: 0, y: 0, z: 10, fov: 75 };
+                    }
+                
 
-    return cam;
+            return cam;
 }
 function Renderer_create() {
-    let ren = new Renderer3D({ handle: 0 });
-    
-            if (typeof document !== 'undefined') {
-                 if (typeof THREE !== 'undefined') {
-                     const r = new THREE.WebGLRenderer({ antialias: true });
-                     r.setSize(window.innerWidth, window.innerHeight);
-                     document.body.appendChild(r.domElement);
-                     ren.handle = r;
-                     ren.type = 'webgl';
-                 }
-            } else {
-                ren.handle = { width: 80, height: 24 }; // Terminal size
-                ren.type = 'ascii';
-                ren.frame_count = 0;
-            }
-        
+                let ren = new Renderer3D({ handle: 0 });
+                
+                        if (typeof document !== 'undefined') {
+                             if (typeof THREE !== 'undefined') {
+                                 const r = new THREE.WebGLRenderer({ antialias: true });
+                                 r.setSize(window.innerWidth, window.innerHeight);
+                                 document.body.appendChild(r.domElement);
+                                 ren.handle = r;
+                                 ren.type = 'webgl';
+                             }
+                        } else {
+                            ren.handle = { width: 80, height: 24 }; // Terminal size
+                            ren.type = 'ascii';
+                            ren.frame_count = 0;
+                        }
+                    
 
-    return ren;
+                return ren;
 }
 function AnimationLoop(callback) {
-    
-            if (typeof requestAnimationFrame !== 'undefined') {
-                function loop() {
-                    callback();
-                    requestAnimationFrame(loop);
-                }
-                requestAnimationFrame(loop);
-            } else {
-                console.log("Animation loop running in terminal (ASCII)... press Ctrl+C to stop");
-                // Simple interval for Node.js
-                setInterval(callback, 100);
-            }
-        
+                    
+                            if (typeof requestAnimationFrame !== 'undefined') {
+                                function loop() {
+                                    callback();
+                                    requestAnimationFrame(loop);
+                                }
+                                requestAnimationFrame(loop);
+                            } else {
+                                console.log("Animation loop running in terminal (ASCII)... press Ctrl+C to stop");
+                                // Simple interval for Node.js
+                                setInterval(callback, 100);
+                            }
+                        
 
 }
 function Sphere_create(radius, color, scene) {
-    let mesh = new Mesh3D({ handle: 0 });
-    
-            // Web Mode
-            if (typeof THREE !== 'undefined' && scene.handle && scene.handle.add) {
-                const g = new THREE.SphereGeometry(radius, 16, 16); // Lower poly for perf
-                const m = new THREE.MeshBasicMaterial({ color: color, wireframe: true });
-                const s = new THREE.Mesh(g, m);
-                scene.handle.add(s);
-                mesh.handle = s;
-            } 
-            // Terminal Mode
-            else if (scene.handle && scene.handle.objects) {
-                let obj = { 
-                    type: 'sphere', 
-                    radius: radius, 
-                    color: color,
-                    x: 0, y: 0, z: 0,
-                    rx: 0, ry: 0, rz: 0 
-                };
-                scene.handle.objects.push(obj);
-                mesh.handle = obj;
-            }
-        
+                        let mesh = new Mesh3D({ handle: 0 });
+                        
+                                // Web Mode
+                                if (typeof THREE !== 'undefined' && scene.handle && scene.handle.add) {
+                                    const g = new THREE.SphereGeometry(radius, 16, 16); // Lower poly for perf
+                                    const m = new THREE.MeshBasicMaterial({ color: color, wireframe: true });
+                                    const s = new THREE.Mesh(g, m);
+                                    scene.handle.add(s);
+                                    mesh.handle = s;
+                                } 
+                                // Terminal Mode
+                                else if (scene.handle && scene.handle.objects) {
+                                    let obj = { 
+                                        type: 'sphere', 
+                                        radius: radius, 
+                                        color: color,
+                                        x: 0, y: 0, z: 0,
+                                        rx: 0, ry: 0, rz: 0 
+                                    };
+                                    scene.handle.objects.push(obj);
+                                    mesh.handle = obj;
+                                }
+                            
 
-    return mesh;
+                        return mesh;
 }
 function Cube_create(size, color, scene) {
-    let mesh = new Mesh3D({ handle: 0 });
-    
-            // Web Mode
-            if (typeof THREE !== 'undefined' && scene.handle && scene.handle.add) {
-                const g = new THREE.BoxGeometry(size, size, size);
-                const m = new THREE.MeshBasicMaterial({ color: color, wireframe: true });
-                const s = new THREE.Mesh(g, m);
-                scene.handle.add(s);
-                mesh.handle = s;
-            }
-            // Terminal Mode
-            else if (scene.handle && scene.handle.objects) {
-                 let obj = { 
-                    type: 'cube', 
-                    size: size, 
-                    color: color,
-                    x: 0, y: 0, z: 0,
-                    rx: 0, ry: 0, rz: 0 
-                };
-                scene.handle.objects.push(obj);
-                mesh.handle = obj;
-            }
-        
+                            let mesh = new Mesh3D({ handle: 0 });
+                            
+                                    // Web Mode
+                                    if (typeof THREE !== 'undefined' && scene.handle && scene.handle.add) {
+                                        const g = new THREE.BoxGeometry(size, size, size);
+                                        const m = new THREE.MeshBasicMaterial({ color: color, wireframe: true });
+                                        const s = new THREE.Mesh(g, m);
+                                        scene.handle.add(s);
+                                        mesh.handle = s;
+                                    }
+                                    // Terminal Mode
+                                    else if (scene.handle && scene.handle.objects) {
+                                         let obj = { 
+                                            type: 'cube', 
+                                            size: size, 
+                                            color: color,
+                                            x: 0, y: 0, z: 0,
+                                            rx: 0, ry: 0, rz: 0 
+                                        };
+                                        scene.handle.objects.push(obj);
+                                        mesh.handle = obj;
+                                    }
+                                
 
-    return mesh;
+                            return mesh;
 }
 function Mesh_set_position(mesh, x, y, z) {
-    
-            if (mesh.handle) {
-                if (mesh.handle.position) {
-                    mesh.handle.position.set(x, y, z);
-                } else {
-                    mesh.handle.x = x;
-                    mesh.handle.y = y;
-                    mesh.handle.z = z;
-                }
-            }
-        
+                                
+                                        if (mesh.handle) {
+                                            if (mesh.handle.position) {
+                                                mesh.handle.position.set(x, y, z);
+                                            } else {
+                                                mesh.handle.x = x;
+                                                mesh.handle.y = y;
+                                                mesh.handle.z = z;
+                                            }
+                                        }
+                                    
 
 }
 function Mesh_set_rotation(mesh, x, y, z) {
-    
-            if (mesh.handle) {
-                if (mesh.handle.rotation) {
-                    mesh.handle.rotation.set(x, y, z);
-                } else {
-                    mesh.handle.rx = x;
-                    mesh.handle.ry = y;
-                    mesh.handle.rz = z;
-                }
-            }
-        
+                                    
+                                            if (mesh.handle) {
+                                                if (mesh.handle.rotation) {
+                                                    mesh.handle.rotation.set(x, y, z);
+                                                } else {
+                                                    mesh.handle.rx = x;
+                                                    mesh.handle.ry = y;
+                                                    mesh.handle.rz = z;
+                                                }
+                                            }
+                                        
 
 }
 function Camera_set_z(cam, z) {
-    
-            if (cam.handle) {
-                if (cam.handle.position) cam.handle.position.z = z;
-                else cam.handle.z = z;
-            }
-        
+                                        
+                                                if (cam.handle) {
+                                                    if (cam.handle.position) cam.handle.position.z = z;
+                                                    else cam.handle.z = z;
+                                                }
+                                            
+
+}
+function Camera_set_position(cam, x, y, z) {
+                                            
+                                                    if (cam.handle) {
+                                                        if (cam.handle.position) {
+                                                            cam.handle.position.set(x, y, z);
+                                                        } else {
+                                                            cam.handle.x = x;
+                                                            cam.handle.y = y;
+                                                            cam.handle.z = z;
+                                                        }
+                                                    }
+                                                
 
 }
 function Renderer_render(ren, scene, cam) {
-    
-            // Web Mode
-            if (ren.type === 'webgl') {
-                 ren.handle.render(scene.handle, cam.handle);
-            }
-            // ASCII Mode (Terminal)
-            else if (ren.type === 'ascii') {
-                const w = ren.handle.width;
-                const h = ren.handle.height;
-                const buffer = new Array(h).fill(' ').map(() => new Array(w).fill(' '));
-                
-                // Simple projection
-                const cx = w / 2;
-                const cy = h / 2;
-                const cam_z = cam.handle.z;
-                
-                for (const obj of scene.handle.objects) {
-                    let x = obj.x; 
-                    let y = obj.y;
-                    let z = obj.z;
-                    
-                    // Relative to camera
-                    let rel_z = cam_z - z;
-                    if (rel_z < 0.1) continue; // Behind camera
-                    
-                    let scale = 20 / rel_z; // Perspective factor
-                    
-                    let screen_x = Math.floor(cx + x * scale * 2); // *2 for char aspect ratio
-                    let screen_y = Math.floor(cy - y * scale);
-                    
-                    // Draw symbol
-                    if (screen_x >= 0 && screen_x < w && screen_y >= 0 && screen_y < h) {
-                        let char = '*';
-                        if (obj.type === 'cube') char = '#';
-                        if (obj.type === 'sphere') char = 'O';
-                        buffer[screen_y][screen_x] = char;
-                    }
-                }
-                
-                // Output frame
-                console.clear();
-                console.log("OMNI 3D ASCII RENDERER");
-                console.log(buffer.map(row => row.join('')).join('\n'));
-            }
-        
+                                                
+                                                        // Web Mode
+                                                        if (ren.type === 'webgl') {
+                                                             ren.handle.render(scene.handle, cam.handle);
+                                                        }
+                                                        // ASCII Mode (Terminal)
+                                                        else if (ren.type === 'ascii') {
+                                                            const w = ren.handle.width;
+                                                            const h = ren.handle.height;
+                                                            const buffer = new Array(h).fill(' ').map(() => new Array(w).fill(' '));
+                                                            
+                                                            // Simple projection
+                                                            const cx = w / 2;
+                                                            const cy = h / 2;
+                                                            const cam_z = cam.handle.z;
+                                                            
+                                                            for (const obj of scene.handle.objects) {
+                                                                let x = obj.x; 
+                                                                let y = obj.y;
+                                                                let z = obj.z;
+                                                                
+                                                                // Relative to camera
+                                                                let rel_z = cam_z - z;
+                                                                if (rel_z < 0.1) continue; // Behind camera
+                                                                
+                                                                let scale = 20 / rel_z; // Perspective factor
+                                                                
+                                                                let screen_x = Math.floor(cx + x * scale * 2); // *2 for char aspect ratio
+                                                                let screen_y = Math.floor(cy - y * scale);
+                                                                
+                                                                // Draw symbol
+                                                                if (screen_x >= 0 && screen_x < w && screen_y >= 0 && screen_y < h) {
+                                                                    let char = '*';
+                                                                    if (obj.type === 'cube') char = '#';
+                                                                    if (obj.type === 'sphere') char = 'O';
+                                                                    buffer[screen_y][screen_x] = char;
+                                                                }
+                                                            }
+                                                            
+                                                            // Output frame
+                                                            console.clear();
+                                                            console.log("OMNI 3D ASCII RENDERER");
+                                                            console.log(buffer.map(row => row.join('')).join('\n'));
+                                                        }
+                                                    
 
 }
 function Renderer_init(ren) {
@@ -298,28 +312,30 @@ let cube = new Mesh3D({ handle: 0 });
 let rx = 0;
 let ry = 0;
 function animate() {
-    ;
-    ;
+    rx = rx + 0.01;
+    ry = ry + 0.01;
     Mesh_set_rotation(cube, rx, ry, 0);
     Renderer_render(renderer, scene, camera);
 }
 function init() {
-    ;
-    ;
-    ;
-    Renderer_init(renderer);
-    Camera_set_z(camera, 5);
-    ;
-    AnimationLoop(animate);
+        scene = Scene_create();
+        camera = Camera_create();
+        renderer = Renderer_create();
+        Renderer_init(renderer);
+        Camera_set_z(camera, 5);
+        cube = Cube_create(2, 0, x00ff00, scene);
+        AnimationLoop(animate);
 }
 function main() {
-    print("╔══════════════════════════════════════╗");
-    print("║   OMNI - 3D Cube                     ║");
-    print("╚══════════════════════════════════════╝");
-    print("");
-    print("Initializing 3D Scene...");
-    print("Note: Use --web to see the visual result.");
-    ThreeJS_load(init);
+            console.log("╔══════════════════════════════════════╗");
+            console.log("║   OMNI - 3D Cube                     ║");
+            console.log("╚══════════════════════════════════════╝");
+            console.log("");
+            console.log("Initializing 3D Scene...");
+            console.log("Note: Use --web to see the visual result.");
+            ThreeJS_load(init);
 }
 
-if (typeof main === 'function') main();
+module.exports = { animate, init, main };
+
+if (typeof main === 'function') { main(); }

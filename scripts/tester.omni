@@ -1,0 +1,172 @@
+// scripts/tester.omni
+// O "Guardião da Qualidade" - Testa compilação, execução e paridade
+
+capsule OmniTester {
+    let EXAMPLES_DIR = "./examples";
+    let TARGETS = ["js", "python"];
+    
+    flow run_full_suite() {
+        print("🚀 Iniciando Suite de Testes Global do Omni...");
+        let results = [];
+        let total_bugs = 0;
+
+        // 1. Scan de Arquivos
+        let files = native "js" { 
+            const fs = require('fs');
+            const path = require('path');
+            const root = OmniTester.EXAMPLES_DIR;
+            let all_files = [];
+            
+            // Get subdirectories
+            const entries = fs.readdirSync(root, { withFileTypes: true });
+            
+            for (const entry of entries) {
+                if (entry.isDirectory()) {
+                    // Check for .omni file with same name as dir or index.omni?
+                    // Just find any .omni file in the dir
+                    const dirPath = path.join(root, entry.name);
+                    const subFiles = fs.readdirSync(dirPath).filter(f => f.endsWith('.omni'));
+                    for (const sub of subFiles) {
+                         // Store relative path: "01_hello/hello.omni"
+                         all_files.push(entry.name + "/" + sub);
+                    }
+                } else if (entry.name.endsWith('.omni')) {
+                    all_files.push(entry.name);
+                }
+            }
+            return all_files; 
+        };
+
+        for file in (files) {
+            print("-----------------------------------------");
+            print("🧪 Testando: " + file);
+            
+            let success = OmniTester.test_metamorphosis(file, OmniTester.TARGETS);
+            if (!success) {
+                total_bugs = total_bugs + 1;
+            }
+        }
+
+        OmniTester.generate_report(results, total_bugs);
+    }
+
+    flow test_metamorphosis(file: string, targets: any) -> bool {
+        let outputs = [];
+        let compile_errors = 0;
+        let runtime_errors = 0;
+        
+        for target in (targets) {
+            print("   -> Target: " + target);
+            
+            // 1. Compile
+            let ext_out = ".js";
+            if (target == "python") { ext_out = ".py"; }
+            let cmd = ".\\omni.bat ";
+            cmd = cmd + OmniTester.EXAMPLES_DIR;
+            cmd = cmd + "/" + file + " ";
+            cmd = cmd + OmniTester.EXAMPLES_DIR + "/" + file + "_out" + ext_out;
+            cmd = cmd + " --target " + target;
+            
+            let compile_ok = native "js" { 
+                const { execSync } = require('child_process');
+                try { 
+                    execSync(cmd, { stdio: 'pipe' }); 
+                    return true; 
+                } catch(e) { 
+                    console.log("      ❌ Compile Error: " + e.message);
+                    return false; 
+                }
+            };
+            
+            if (!compile_ok) {
+                compile_errors = compile_errors + 1;
+                continue;
+            }
+            
+            // 2. Execute & Capture
+            let out_val = OmniTester.validate_execution(file, target);
+            if (out_val == "__ERROR__") {
+                runtime_errors = runtime_errors + 1;
+            } else {
+                outputs.push(out_val);
+            }
+        }
+        
+        if (compile_errors > 0 || runtime_errors > 0) {
+            return false;
+        }
+        
+        // 3. Verify Parity
+        if (outputs.length > 1) {
+            let base = outputs[0];
+            let parity_ok = true;
+            
+            // Use native JS for simple string comparison loop to avoid index hassle
+            parity_ok = native "js" {
+                const base = outputs[0];
+                for (let i = 1; i < outputs.length; i++) {
+                    if (outputs[i] !== base) return false;
+                }
+                return true;
+            };
+            
+            if (!parity_ok) {
+                print("   ❌ Parity Mismatch!");
+                print("      JS Output: " + outputs[0]);
+                print("      Py Output: " + outputs[1]);
+                return false;
+            } else {
+                print("   ✅ Parity OK");
+            }
+        }
+        
+        return true;
+    }
+
+    flow validate_execution(file: string, target: string) -> string {
+        let ext = ".js";
+        let run_cmd = "node";
+        
+        if (target == "python") {
+            ext = ".py";
+            run_cmd = "python";
+        }
+
+        let executable = OmniTester.EXAMPLES_DIR + "/" + file + "_out" + ext;
+        let command = run_cmd + " " + executable;
+        
+        // Execute and return stdout as string, or "__ERROR__"
+        let result = native "js" {
+            const { execSync } = require('child_process');
+            const fs = require('fs');
+            
+            if (!fs.existsSync(executable)) return "__ERROR__";
+
+            try {
+                const out = execSync(command, { timeout: 5000, encoding: 'utf8' });
+                return out.trim();
+            } catch(e) {
+                console.log("      ❌ Runtime Error: " + e.message);
+                return "__ERROR__";
+            }
+        };
+        
+        return result;
+    }
+
+    fn generate_report(results: any, bugs: i64) {
+        print("=========================================");
+        print("📊 RELATÓRIO FINAL DE ENGENHARIA");
+        print("   Bugs Encontrados: " + bugs);
+        let status_msg = "⚠️ REQUER MANUTENÇÃO";
+        if (bugs == 0) {
+            status_msg = "✅ SISTEMA SOBERANO";
+        }
+        print("   Status: " + status_msg);
+        print("=========================================");
+    }
+}
+
+fn main() {
+    OmniTester.run_full_suite();
+}

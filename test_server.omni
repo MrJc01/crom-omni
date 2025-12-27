@@ -1,5 +1,0 @@
-
-@serve(port=8080)
-fn main() {
-    print("Starting server...")
-}
