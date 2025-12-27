@@ -29,7 +29,7 @@ Antes de começar, você precisa ter as ferramentas certas. O Omni é construíd
 1.  **Instale o Rust**: Se não tiver, procure por "Rustup" na internet e instale.
 2.  **Clone o Projeto**: Baixe o código do Crom-Omni para sua máquina.
     ```bash
-    git clone https://github.com/seu-usuario/crom-omni.git
+    git clone https://github.com/MrJc01/crom-omni.git
     cd crom-omni
     ```
 3.  **Compile o Compilador** (Sim, parece redundante, mas você está construindo a ferramenta que vai construir seus programas):

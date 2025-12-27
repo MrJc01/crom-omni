@@ -34,7 +34,7 @@ O compilador `omnic` (escrito em Node.js/Rust) é capaz de:
 1. Clone o repositório:
 
    ```bash
-   git clone https://github.com/seu-usuario/crom-omni.git
+   git clone https://github.com/MrJc01/crom-omni.git
    cd crom-omni
    ```
 
