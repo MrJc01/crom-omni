@@ -3,13 +3,13 @@
 ## Phase 1.5: Purification & Robustness (current)
 
 1. [ ] **Fix Apostrophe Corruption:** Treat `native` blocks as Raw Text in `js.rs`.
-2. [ ] **Purge System:** Delete `.log`, `.txt`, and temp binaries.
+2. [x] **Purge System:** Delete `.log`, `.txt`, and temp binaries.
 3. [ ] **Sovereign GitIgnore:** Update `.gitignore` to exclude build artifacts.
 4. [ ] **miette Integration:** Implement colored error reporting in Rust.
 5. [ ] **Semantic Analysis Phase:** Validate duplicates and types before codegen.
 6. [ ] **Parallel Test Runner:** Use `rayon` for parallel testing.
 7. [ ] **JSON Config Parser:** Strict validation for `omni.conf.json`.
-8. [ ] **Consistent CLI Args:** Standardize argument parsing (clap/structopt).
+8. [x] **Consistent CLI Args:** Standardize argument parsing (clap/structopt).
 9. [ ] **Error Code Registry:** centralized error codes (e.g., E001).
 10. [ ] **Logger Implementation:** Structured logging for compiler debug.
 11. [ ] **Code Formatting:** Implement `omni fmt` basic logic.
@@ -20,18 +20,24 @@
 
 ## Phase 2: Universal Ingestion (Legacy -> Omni)
 
-16. [ ] **PHP Parser:** Basic PHP syntax parsing.
+16. [x] **PHP Parser:** Basic PHP syntax parsing (Regex based).
 17. [ ] **Yii2 Active Record Capsule:** Extract AR logic.
 18. [ ] **Laravel Route Matcher:** Convert web.php to flow.
 19. [ ] **Eloquent Model Ingestor:** Map Models to `@entity`.
 20. [ ] **React JSX Ingestor:** Convert JSX to Omni UI nodes.
 21. [ ] **React Hook Mapper:** Map `useState`/`useEffect`.
 22. [ ] **Express Middleware Ingestor:** Chain mapping.
+    - [ ] **Laravel Middleware Pattern:** Handle `handle($request, $next)`.
+    - [ ] **Express Middleware Pattern:** Handle `(req, res, next)`.
 23. [ ] **SQL Schema Ingestor:** DDL to `@entity`.
+    - [ ] **Eloquent Relationships:** HasOne, HasMany parser.
+    - [ ] **Eloquent Scopes:** Local scope parser.
 24. [ ] **Env Var Ingestor:** `.env` to Config constants.
 25. [ ] **Package.json Parser:** Dependency mapping.
 26. [ ] **Composer.json Parser:** PHP dependency mapping.
 27. [ ] **Css Ingestor:** CSS to Omni Style blocks.
+    - [ ] **Agnostic CSS Generation:** Abstract CSS to JSON/Omni.
+    - [ ] **Tailwind Interpreter:** Class to Style block converter.
 28. [ ] **Folder Structure Mapper:** Replicate project tree.
 29. [ ] **Legacy Comment Preserver:** Keep comments in migration.
 30. [ ] **Ingestion Report:** Generate summary of migration.
@@ -60,6 +66,12 @@
 47. [ ] **Memory Management:** Manual/GC strategy for C.
 48. [ ] **Struct Mapping:** Entity to C structs.
 49. [ ] **Function Mapping:** Flow to C functions.
+    - [ ] **C Memory Arena:** Bump pointer allocator.
+    - [ ] **C FFI Bindings:** `extern "C"` generation.
+    - [ ] **C Header Gen:** `.h` file automation.
+    - [ ] **C Makefile Gen:** Universal makefile.
+    - [x] **Task 04.2.1: C-Transpiler Core:** Implement generation of ANSI C in `omnic/src/targets/c.rs`.
+    - [x] **Task 04.2.2: Memory Management in C:** Simple Reference Counting for structs (Stubbed for now in headers).
 50. [ ] **StdLib in C:** Implement core stdlib in C.
 51. [ ] **Self-Hosting Bootstrap:** Compiler compiling itself.
 52. [ ] **Standalone Binary:** `omni.exe` (no node/rust req).

@@ -2,6 +2,11 @@
 'use strict';
 
 
+function print(msg) {
+console.log(msg);
+
+}
+
 // Capsule: OmniTester
 const OmniTester = {};
 

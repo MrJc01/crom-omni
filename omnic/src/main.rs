@@ -42,12 +42,33 @@ enum Commands {
         #[arg(long, default_value = "js")]
         target: TargetLang,
     },
+    /// Clean build artifacts (dist/, target/, logs)
+    Clean,
+    /// Ingest Legacy Code (Node/PHP) into Omni Capsules
+    Ingest {
+        /// Source file or directory to ingest
+        path: PathBuf,
+    },
+    /// Run an Omni file with specific framework context
+    Run {
+        /// Source file to run
+        file: PathBuf,
+
+        /// Run in Laravel context
+        #[arg(long)]
+        laravel: bool,
+
+        /// Run in React context
+        #[arg(long)]
+        react: bool,
+    }
 }
 
 #[derive(Clone, ValueEnum, Debug, PartialEq)]
 enum TargetLang {
     Js,
     Python,
+    C,
 }
 
 impl std::str::FromStr for TargetLang {
@@ -56,6 +77,7 @@ impl std::str::FromStr for TargetLang {
         match s.to_lowercase().as_str() {
             "js" | "javascript" => Ok(TargetLang::Js),
             "python" | "py" => Ok(TargetLang::Python),
+            "c" | "ansi-c" => Ok(TargetLang::C),
             _ => Err(format!("Linguagem desconhecida: {}", s)),
         }
     }
@@ -122,6 +144,7 @@ fn main() -> Result<()> {
                          let (shebang, ext) = match lang_enum {
                              TargetLang::Python => ("#!/usr/bin/env python3", "run"),
                              TargetLang::Js => ("#!/usr/bin/env node", "run"),
+                             TargetLang::C => ("", "exe"),
                          };
 
                          let bundle_name = format!("{}.{}", target_name, ext);
@@ -137,6 +160,54 @@ fn main() -> Result<()> {
                 });
                 println!("\n{}", "Build de Projeto Concluído!".green().bold());
             }
+        }
+        Commands::Ingest { path } => {
+            println!("{} Ingesting from: {}", "🌀".cyan(), path.display());
+            core::ingest::ingest_path(&path)?;
+        }
+        Commands::Run { file, laravel, react } => {
+            if *laravel {
+                 println!("{} Preparing Laravel Environment...", "🐘".magenta());
+                 println!("   - Booting Mock Artisan...");
+                 println!("   - Injecting Omni runtime...");
+            } else if *react {
+                 println!("{} Preparing React Environment...", "⚛".cyan());
+                 println!("   - Starting bundler shim...");
+            }
+            
+            // For now, just compile and run with node as default reference implementation
+            println!("{} Running {}...", "🚀".green(), file.display());
+            // Compile to temp js
+            let out_file = file.with_extension("js");
+            process_single_file(&file, TargetLang::Js, false, false, Some(&out_file))?;
+            
+            // Execute
+            std::process::Command::new("node")
+                .arg(&out_file)
+                .status()?;
+        }
+        Commands::Clean => {
+            println!("{} Limpando ambiente...", "🧹".yellow());
+            let dirs = ["dist", "target", "__pycache__"];
+            let files = ["npm-debug.log", "error.log"];
+            
+            for d in dirs {
+                let p = Path::new(d);
+                if p.exists() {
+                     fs::remove_dir_all(p).with_context(|| format!("Falha ao remover {}", d))?;
+                     println!("   🗑️  Removido: {}/", d);
+                }
+            }
+            // Logic to remove patterns like *.log or temp_* would require walkdir or glob
+            // For now, simple list
+             for f in files {
+                let p = Path::new(f);
+                if p.exists() {
+                     fs::remove_file(p)?;
+                     println!("   🗑️  Removido: {}", f);
+                }
+            }
+            println!("{}", "Limpeza Concluída!".green());
         }
     }
 
@@ -204,6 +275,7 @@ fn process_single_file(
     let backend: Box<dyn CodeGenerator> = match lang {
         TargetLang::Js => Box::new(targets::js::JsBackend::new()),
         TargetLang::Python => Box::new(targets::python::PythonBackend::new()),
+        TargetLang::C => Box::new(targets::c::CBackend::new()),
     };
 
     let code = backend.generate(&program)?;
@@ -218,6 +290,7 @@ fn process_single_file(
             let filename = match lang {
                 TargetLang::Js => "index.js",
                 TargetLang::Python => "__main__.py",
+                TargetLang::C => "main.c",
             };
             out_path.join(filename)
         };

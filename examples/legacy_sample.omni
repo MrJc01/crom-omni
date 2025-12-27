@@ -1,0 +1,9 @@
+capsule Legacy_sample {
+    flow calculate_total(price: Any, tax: Any) {
+        native "php" {
+            // Originally: function calculate_total(...)
+            // Logic preserved for manual review
+        }
+    }
+
+}

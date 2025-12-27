@@ -32,4 +32,5 @@ target/
 
 # Binary Sovereign (Ignore generated binaries, but check in the source)
 *.exe
-omni.exe
+*.pdb
+!omnic/target/debug/omni.exe

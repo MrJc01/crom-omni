@@ -38,3 +38,6 @@ crossterm = "0.28"
 
 # Cryptography (Checksums)
 sha2 = "0.10"
+
+# Regex for Ingestion
+regex = "1.10"
