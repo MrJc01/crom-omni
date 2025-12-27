@@ -61,7 +61,14 @@ enum Commands {
         /// Run in React context
         #[arg(long)]
         react: bool,
-    }
+
+        /// Run as C Native Binary
+        #[arg(long)]
+        c: bool,
+    },
+    /// Verify system dependencies (gcc, node)
+    /// Verify system dependencies (gcc, node)
+    Doctor,
 }
 
 #[derive(Clone, ValueEnum, Debug, PartialEq)]
@@ -165,7 +172,30 @@ fn main() -> Result<()> {
             println!("{} Ingesting from: {}", "🌀".cyan(), path.display());
             core::ingest::ingest_path(&path)?;
         }
-        Commands::Run { file, laravel, react } => {
+        Commands::Doctor => {
+             println!("{} Executing Omni Doctor...", "🚑".red());
+             
+             // Check Node
+             print!("   - Node.js Runtime: ");
+             match std::process::Command::new("node").arg("--version").output() {
+                 Ok(o) => println!("{} ({})", "OK".green(), String::from_utf8_lossy(&o.stdout).trim()),
+                 Err(_) => println!("{}", "MISSING (Install Node.js)".red().bold()),
+             }
+
+             // Check GCC
+             print!("   - GCC/MinGW (C Target): ");
+             match std::process::Command::new("gcc").arg("--version").output() {
+                 Ok(_) => println!("{}", "OK".green()),
+                 Err(_) => {
+                     println!("{}", "MISSING".red().bold());
+                     println!("     {} Install MinGW (Windows) or GCC (Linux/Mac) to use --c", "ℹ".blue());
+                     println!("     Windows: choco install mingw");
+                 }
+             }
+
+             println!("\n{}", "Diagnosis Complete.".green());
+        }
+        Commands::Run { file, laravel, react, c } => {
             if *laravel {
                  println!("{} Preparing Laravel Environment...", "🐘".magenta());
                  println!("   - Booting Mock Artisan...");
@@ -173,6 +203,32 @@ fn main() -> Result<()> {
             } else if *react {
                  println!("{} Preparing React Environment...", "⚛".cyan());
                  println!("   - Starting bundler shim...");
+            } else if *c {
+                 println!("{} Preparing C Environment...", "⚙".cyan());
+                 
+                 // 1. Compile to C
+                 let out_c = file.with_extension("c");
+                 process_single_file(&file, TargetLang::C, false, false, Some(&out_c))?;
+                 
+                 // 2. Compile C to Exe using GCC
+                 let out_exe = file.with_extension("exe");
+                 println!("   🔨 Compiling Native Binary: {}", out_exe.display());
+                 
+                 let status = std::process::Command::new("gcc")
+                    .arg(&out_c)
+                    .arg("-o")
+                    .arg(&out_exe)
+                    .status()
+                    .context("Failed to invoke gcc. Is it installed?")?;
+                 
+                 if !status.success() {
+                     return Err(anyhow!("GCC compilation failed"));
+                 }
+
+                 // 3. Execute
+                 println!("   🚀 Executing Native Binary...");
+                 std::process::Command::new(&out_exe).status()?;
+                 return Ok(());
             }
             
             // For now, just compile and run with node as default reference implementation

@@ -74,12 +74,11 @@ impl CodeGenerator for JsBackend {
         }
 
         // 3. Main Call? 
-        // Se houver main, poderíamos chamar automaticamente. 
-        // O Omni geralmente é compilado para ser executado, então se tiver main:
+        // Se houver main, chamamos automaticamente (Parity with Python)
         if program.items.iter().any(|i| matches!(i, TopLevelItem::Function(f) if f.name == "main")) {
-            buffer.push_str("\n// Entry Point\n");
-            buffer.push_str("if (require.main === module) {\n");
-             buffer.push_str("    main();\n");
+            buffer.push_str("\n// Auto-Main Invocation (Phase 6 Parity)\n");
+            buffer.push_str("if (typeof main === 'function') {\n");
+            buffer.push_str("    main();\n");
             buffer.push_str("}\n");
         }
 

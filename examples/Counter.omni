@@ -1,0 +1,11 @@
+capsule Counter {
+    // React Hook -> Mutable Variable
+    let mut count = 0;
+
+    // React Hook -> Mutable Variable
+    let mut name = "Omni";
+
+    // Ingested constant
+    let Counter = native "js" { return ...; };
+
+}

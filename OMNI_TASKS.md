@@ -71,7 +71,28 @@
     - [ ] **C Header Gen:** `.h` file automation.
     - [ ] **C Makefile Gen:** Universal makefile.
     - [x] **Task 04.2.1: C-Transpiler Core:** Implement generation of ANSI C in `omnic/src/targets/c.rs`.
-    - [x] **Task 04.2.2: Memory Management in C:** Simple Reference Counting for structs (Stubbed for now in headers).
+    - [ ] **Task 04.2.2: Memory Management in C:** Simple Reference Counting for structs.
+
+## Level 4: Soberania C-Nativa
+
+- [ ] **Task 04.2.2:** RC Injetor. Injetar funções de retain/release em structs C.
+- [ ] **Task 04.2.3:** String implementation in C. Criar um wrapper `omni_string` para evitar leaks.
+- [ ] **Task 04.4:** Compiler-in-compiler. Traduzir o Lexer de Rust para Omni puro.
+
+## Level 5: Testes de Paridade (Inquebrável)
+
+- [ ] **Task 05.1:** Bit-by-bit Parity. O tester deve validar se `run --js` e `run --c` produzem a mesma saída.
+- [ ] **Task 05.2:** Chaos Monkey. Script que deleta arquivos `dist/` aleatoriamente para testar recuperação.
+- [ ] **Task 05.3: Error Source Locator.** O compilador Rust deve apontar o arquivo/linha original .omni.
+- [ ] **Task 05.4: Automatic Fix Loop.** Hook para permitir autismo correção baseada em `test_report.json`.
+
+## Level 6: Integração Profunda (Industrial)
+
+- [ ] **Task 06.1: Component Mapping.** Ingerir sub-componentes React e manter o Grafo de Dependência.
+- [ ] **Task 06.2: Universal Router.** Mapear rotas Express/Laravel para uma única cápsula Router agnóstica.
+- [ ] **Task 06.3: C ownership model.** Injetar retain/release em cada atribuição de struct no C.
+- [ ] **Task 06.4: Incremental Compilation.** Gerar hashes de arquivos para evitar recompilação desnecessária.
+
 50. [ ] **StdLib in C:** Implement core stdlib in C.
 51. [ ] **Self-Hosting Bootstrap:** Compiler compiling itself.
 52. [ ] **Standalone Binary:** `omni.exe` (no node/rust req).

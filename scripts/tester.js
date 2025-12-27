@@ -25,6 +25,7 @@ OmniTester.run_full_suite = function() {
     total_bugs = total_bugs + 1;
 }
 
+results.push({ file: file, success: success });
 }
 
     OmniTester.generate_report(results, total_bugs);
@@ -101,16 +102,24 @@ OmniTester.validate_execution = function(file, target) {
 }
 ;
 OmniTester.generate_report = function(results, bugs) {
-    print("=========================================");
-    print("📊 RELATÓRIO FINAL DE ENGENHARIA");
-    print("   Bugs Encontrados: " + bugs);
-    let status_msg = "⚠️ REQUER MANUTENÇÃO";
-    if (bugs === 0) {
-    status_msg = "✅ SISTEMA SOBERANO";
-}
-
-    print("   Status: " + status_msg);
-    print("=========================================");
+const fs = require('fs');
+            const path = require('path');
+            
+            const report = {
+                timestamp: new Date().toISOString(),
+                total_bugs: bugs,
+                summary: bugs === 0 ? "STABLE" : "UNSTABLE",
+                results: results
+            };
+            
+            const json = JSON.stringify(report, null, 2);
+            fs.writeFileSync('test_report.json', json);
+            
+            console.log("=========================================");
+            console.log("📊 RELATÓRIO FINAL DE ENGENHARIA");
+            console.log("   Bugs Encontrados: " + bugs);
+            console.log("   Relatório salvo em: test_report.json");
+            console.log("=========================================");
 }
 ;
 OmniTester.scan_files = function() {

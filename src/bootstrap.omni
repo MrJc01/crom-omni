@@ -1,0 +1,23 @@
+capsule Bootstrap {
+    // This file will eventually become the Omni compiler written in Omni.
+    // Task 04.4: Compiler-in-compiler
+
+    struct Token {
+        kind: string,
+        lexeme: string,
+        line: int
+    }
+
+    flow lex(source: string) -> List<Token> {
+        let tokens: List<Token> = [];
+        // Future: Implement lexing logic here
+        return tokens;
+    }
+
+    flow main() {
+        io.print("Omni Self-Hosting Bootstrap v0.1");
+        let source = "let x = 10;";
+        let tokens = lex(source);
+        io.print("Lexing complete.");
+    }
+}

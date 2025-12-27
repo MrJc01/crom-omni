@@ -24,7 +24,7 @@ fn ingest_file(path: &Path) -> Result<()> {
     
     let omni_code = match ext {
         "php" => ingest_php(&content, path),
-        "js" | "ts" => ingest_node(&content, path),
+        "js" | "ts" | "jsx" | "tsx" => ingest_node(&content, path),
         _ => return Ok(()), // Skip unknown extensions
     };
     
@@ -50,15 +50,9 @@ fn ingest_php(content: &str, path: &Path) -> Result<String> {
     // 2. Detect Classes: class Name extends Model
     let re_class = Regex::new(r"class\s+(\w+)\s+extends\s+Model").unwrap();
 
-    let mut flows = String::new();
-    let mut decorators = String::new();
+    // 3. Detect Middleware: public function handle($request, Closure $next)
+    let re_middleware = Regex::new(r"public\s+function\s+handle\s*\(\s*\$request\s*,\s*Closure\s+\$next\s*\)").unwrap();
 
-    for cap in re_class.captures_iter(content) {
-        let class_name = &cap[1];
-        decorators.push_str("@entity\n"); // Add entity decorator
-        // We could also rename the capsule to match the model if strictly 1 file = 1 model
-    }
-    
     for cap in re_func.captures_iter(content) {
         let name = &cap[1];
         let args = &cap[2]; // $a, $b
@@ -85,13 +79,48 @@ fn ingest_node(content: &str, path: &Path) -> Result<String> {
     // function x(...)
     let re_func = Regex::new(r"function\s+(\w+)\s*\(([^)]*)\)").unwrap();
     let re_const = Regex::new(r"const\s+(\w+)\s*=").unwrap();
+    // React Hook: const [count, setCount] = useState(0);
+    let re_const = Regex::new(r"const\s+(\w+)\s*=").unwrap();
+    // React Hook: const [count, setCount] = useState(0);
+    let re_hook = Regex::new(r"const\s+\[(\w+),\s*set\w+\]\s*=\s*useState\((.*)\)").unwrap();
+    // React Props: const User = ({ name }) =>
+    let re_react_props = Regex::new(r"const\s+(\w+)\s*=\s*\(\{\s*([^}]+)\s*\}\)\s*=>").unwrap();
     
     let mut items = String::new();
+    
+    for cap in re_hook.captures_iter(content) {
+         let var_name = &cap[1];
+         let init_val = &cap[2];
+         items.push_str(&format!("\n    // React Hook -> Mutable Variable\n    let mut {} = {};\n", var_name, init_val));
+    }
     
     for cap in re_const.captures_iter(content) {
          items.push_str(&format!("\n    // Ingested constant\n    let {} = native \"js\" {{ return ...; }};\n", &cap[1]));
     }
     
+    // React Props Mapping
+    for cap in re_react_props.captures_iter(content) {
+        let comp_name = &cap[1];
+        let props_str = &cap[2];
+        
+        let props: Vec<&str> = props_str.split(',')
+            .map(|s| s.trim())
+            .filter(|s| !s.is_empty())
+            .collect();
+        
+        let mut omni_params = String::new();
+        for p in props {
+            if !omni_params.is_empty() { omni_params.push_str(", "); }
+            omni_params.push_str(&format!("{}: string", p)); // Default to string for now
+        }
+        
+        items.push_str(&format!("\n    // React Component: {}\n", comp_name));
+        items.push_str(&format!("    flow {}({}) {{\n", comp_name, omni_params));
+        items.push_str("        // Metamorphosis: Component logic here\n");
+        items.push_str("        native \"jsx\" { return ...; }\n");
+        items.push_str("    }\n");
+    }
+
     for cap in re_func.captures_iter(content) {
         let name = &cap[1];
         let args = &cap[2].trim();

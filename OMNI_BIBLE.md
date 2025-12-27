@@ -49,3 +49,16 @@ Omni can transform its internal representation into various frameworks.
 1. Identify domain entities.
 2. Map data flows to Omni `flow` blocks.
 3. Extract UI components to Omni UI nodes.
+
+## 5. Gerenciamento de Memória e Ciclo de Vida
+
+O Omni adota uma abordagem híbrida de Soberania de Memória:
+
+1.  **Targets Gerenciados (JS/Python):** Delega para o GC do host.
+2.  **Target C (Soberano):** Implementa **Reference Counting (RC)** intrusivo.
+    - Todo struct possui `int _ref_count`.
+    - `retain()` é chamado em atribuições e passagens de função.
+    - `release()` é injetado automaticamente pelo compilador ao final do escopo.
+    - Ciclos de referência devem ser quebrados manualmente via `weak` (futuro).
+
+O objetivo é evitar um Garbage Collector pesado no binário final, mantendo a performance previsível.

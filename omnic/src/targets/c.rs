@@ -21,6 +21,19 @@ impl CodeGenerator for CBackend {
         code.push_str("#include <string.h>\n");
         code.push_str("#include <stdbool.h>\n\n");
         
+        // Memory Management Headers (Omni RC)
+        code.push_str("// --- Omni Memory Management ---\n");
+        code.push_str("typedef struct { int _ref_count; } OmniRef;\n");
+        code.push_str("void omni_retain(void* ptr) {\n");
+        code.push_str("    if (ptr) ((OmniRef*)ptr)->_ref_count++;\n");
+        code.push_str("}\n");
+        code.push_str("void omni_release(void* ptr) {\n");
+        code.push_str("    if (ptr) {\n");
+        code.push_str("        ((OmniRef*)ptr)->_ref_count--;\n");
+        code.push_str("        if (((OmniRef*)ptr)->_ref_count <= 0) free(ptr);\n");
+        code.push_str("    }\n");
+        code.push_str("}\n// ------------------------------\n\n");
+        
         // Typedefs básicos para Any (void*)
         code.push_str("typedef void* Any;\n\n");
 
