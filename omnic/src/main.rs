@@ -335,34 +335,69 @@ fn run() -> Result<()> {
                  let serve_dir = file.parent().unwrap_or(Path::new("."));
                  let port = 3000;
                  
-                 println!("   🚀 Starting server at http://localhost:{}", port);
-                 
                  if *web_app {
-                     // Auto-open browser
-                     println!("   🌐 Opening browser...");
-                     #[cfg(target_os = "windows")]
-                     std::process::Command::new("cmd")
-                         .args(["/C", "start", &format!("http://localhost:{}/{}", port, html_file.file_name().unwrap().to_str().unwrap())])
-                         .spawn()?;
+                     // Open in Chrome/Edge app mode (chromeless window)
+                     println!("   🖼️ Opening native-like window...");
+                     
+                     let html_path = html_file.canonicalize().unwrap_or(html_file.clone());
+                     let html_url = format!("file:///{}", html_path.display().to_string().replace("\\", "/"));
+                     
+                     // Try Chrome first
+                     let chrome_result = std::process::Command::new("chrome")
+                         .args(["--app", &html_url, "--window-size=800,600"])
+                         .spawn();
+                     
+                     if chrome_result.is_err() {
+                         // Try Edge
+                         let edge_result = std::process::Command::new("msedge")
+                             .args(["--app", &html_url, "--window-size=800,600"])
+                             .spawn();
+                         
+                         if edge_result.is_err() {
+                             // Fallback: Start HTTP server and open in default browser
+                             println!("   📌 Falling back to HTTP server mode...");
+                             println!("   🚀 Starting server at http://localhost:{}", port);
+                             #[cfg(target_os = "windows")]
+                             std::process::Command::new("cmd")
+                                 .args(["/C", "start", &format!("http://localhost:{}/{}", port, html_file.file_name().unwrap().to_str().unwrap())])
+                                 .spawn()?;
+                             
+                             std::process::Command::new("python")
+                                 .args(["-m", "http.server", &port.to_string()])
+                                 .current_dir(serve_dir)
+                                 .status()?;
+                         } else {
+                             println!("   ✓ Opened in Edge app mode");
+                             edge_result.unwrap().wait()?;
+                         }
+                     } else {
+                         println!("   ✓ Opened in Chrome app mode");
+                         chrome_result.unwrap().wait()?;
+                     }
+                     
+                     return Ok(());
                  } else {
-                     println!("   Open: http://localhost:{}/{}", port, html_file.file_name().unwrap().to_str().unwrap());
+                     // --web mode: Start HTTP server, user opens browser manually
+                     println!("   🚀 Starting server at http://localhost:{}", port);
+                     println!("   📌 Open: http://localhost:{}/{}", port, html_file.file_name().unwrap().to_str().unwrap());
+                     
+                     // Start simple HTTP server (Python)
+                     std::process::Command::new("python")
+                         .args(["-m", "http.server", &port.to_string()])
+                         .current_dir(serve_dir)
+                         .status()?;
+                     
+                     return Ok(());
                  }
-                 
-                 // Start simple HTTP server (Python)
-                 let status = std::process::Command::new("python")
-                     .args(["-m", "http.server", &port.to_string()])
-                     .current_dir(serve_dir)
-                     .status()?;
-                 
-                 return Ok(());
             } else if *cmd {
                  println!("{} Running in Command-Line Mode...", "💻".green());
                  // Just compile to JS and run with node (with ASCII animation support)
             } else if *app {
                  println!("{} Preparing Native Application Window...", "🖥️".cyan());
                  
-                 // Check if file uses std/ui.omni (Tkinter)
                  let source_content = fs::read_to_string(&file).unwrap_or_default();
+                 
+                 // Check if file uses std/ui.omni (Tkinter)
                  if source_content.contains("std/ui.omni") || source_content.contains("Window_create") || source_content.contains("GUI_") {
                      println!("   🐍 Detected UI components - using Python/Tkinter");
                      
@@ -388,6 +423,99 @@ fn run() -> Result<()> {
                      std::process::Command::new("python")
                          .arg(&out_py)
                          .status()?;
+                     
+                     return Ok(());
+                 } 
+                 // Check if file uses 3D (Scene3D, Camera3D, etc.) - use pywebview
+                 else if source_content.contains("std/3d.omni") || source_content.contains("Scene3D") || source_content.contains("Camera3D") || source_content.contains("ThreeJS") {
+                     println!("   🎮 Detected 3D content - using pywebview native window");
+                     
+                     // Generate JS + HTML
+                     let out_file = file.with_extension("js");
+                     process_single_file(&file, TargetLang::Js, false, false, Some(&out_file))?;
+                     
+                     // Prepend 3D runtime
+                     let runtime_paths = ["omnic/lib/std/runtime_3d.js", "lib/std/runtime_3d.js"];
+                     for runtime_path in runtime_paths {
+                         if Path::new(runtime_path).exists() {
+                             let runtime = fs::read_to_string(runtime_path).unwrap_or_default();
+                             let generated = fs::read_to_string(&out_file).unwrap_or_default();
+                             let combined = format!("{}\n\n// === Generated Omni Code ===\n{}", runtime, generated);
+                             fs::write(&out_file, combined)?;
+                             println!("   🎮 3D Runtime prepended");
+                             break;
+                         }
+                     }
+                     
+                     // Create HTML wrapper
+                     let html_file = file.with_extension("html");
+                     let js_name = out_file.file_name().unwrap().to_str().unwrap();
+                     let html_content = format!(r#"<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8">
+<title>Omni 3D App</title>
+<style>body {{ margin: 0; background: #1a1a2e; overflow: hidden; }}</style>
+</head><body>
+<script src="{}"></script>
+</body></html>"#, js_name);
+                     fs::write(&html_file, html_content)?;
+                     
+                     let serve_dir = file.parent().unwrap_or(Path::new("."));
+                     let html_path = html_file.canonicalize().unwrap_or(html_file.clone());
+                     let html_url = format!("file:///{}", html_path.display().to_string().replace("\\", "/"));
+                     
+                     // Try to open in Chrome/Edge app mode (chromeless native-like window)
+                     println!("   🖼️ Opening Omni 3D App window...");
+                     
+                     // Chrome paths
+                     let chrome_paths = [
+                         r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+                         r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+                     ];
+                     
+                     // Edge paths
+                     let edge_paths = [
+                         r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+                         r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+                     ];
+                     
+                     let mut opened = false;
+                     
+                     // Try Chrome first
+                     for chrome_path in chrome_paths {
+                         if Path::new(chrome_path).exists() {
+                             println!("   ✓ Opening in Chrome app mode");
+                             std::process::Command::new(chrome_path)
+                                 .args(["--app", &html_url, "--window-size=900,700", "--disable-extensions"])
+                                 .spawn()?
+                                 .wait()?;
+                             opened = true;
+                             break;
+                         }
+                     }
+                     
+                     // Try Edge if Chrome not found
+                     if !opened {
+                         for edge_path in edge_paths {
+                             if Path::new(edge_path).exists() {
+                                 println!("   ✓ Opening in Edge app mode");
+                                 std::process::Command::new(edge_path)
+                                     .args(["--app", &html_url, "--window-size=900,700", "--disable-extensions"])
+                                     .spawn()?
+                                     .wait()?;
+                                 opened = true;
+                                 break;
+                             }
+                         }
+                     }
+                     
+                     // Final fallback
+                     if !opened {
+                         println!("   📌 Opening in default browser...");
+                         std::process::Command::new("explorer")
+                             .arg(&html_path)
+                             .spawn()?;
+                     }
                      
                      return Ok(());
                  } else {

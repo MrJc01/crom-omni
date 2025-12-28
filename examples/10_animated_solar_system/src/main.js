@@ -204,8 +204,18 @@ function AnimationLoop(callback) {
         }
         loop();
     } else {
-        // Terminal animation loop
+        // Terminal animation loop - runs forever until Ctrl+C
         _asciiState.running = true;
+        
+        // Handle Ctrl+C gracefully
+        process.on('SIGINT', () => {
+            _asciiState.running = false;
+            clearScreen();
+            console.log('\n[3D] Animation stopped by user.');
+            process.stdout.write(SHOW_CURSOR);
+            process.exit(0);
+        });
+        
         const interval = setInterval(() => {
             if (!_asciiState.running) {
                 clearInterval(interval);
@@ -213,14 +223,6 @@ function AnimationLoop(callback) {
             }
             callback();
         }, 50); // 20 FPS
-        
-        // Stop after 10 seconds for demo
-        setTimeout(() => {
-            _asciiState.running = false;
-            clearScreen();
-            console.log('Animation complete!');
-            process.stdout.write(SHOW_CURSOR);
-        }, 10000);
     }
 }
 
