@@ -72,6 +72,12 @@ impl CodeGenerator for PythonBackend {
                     // Python doesn't have const, just use variable assignment
                     buffer.push_str(&format!("{} = {}\n", name, self.gen_expression(value)));
                 }
+                TopLevelItem::NativeBlock { lang, code } => {
+                    if lang == "python" || lang == "py" {
+                        buffer.push_str(&code.join("\n"));
+                        buffer.push('\n');
+                    }
+                }
             }
             buffer.push('\n');
         }
@@ -117,6 +123,12 @@ impl PythonBackend {
     }
 
     fn gen_function(&self, f: &FunctionDeclaration, indent: usize) -> String {
+        // Skip generating 'print' function as it's already provided by runtime
+        // This prevents recursive print when source has native "js" block
+        if f.name == "print" {
+            return String::new();
+        }
+        
         let prefix = self.indent(indent);
         
         // Params

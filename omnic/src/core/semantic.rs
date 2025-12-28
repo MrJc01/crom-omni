@@ -279,6 +279,10 @@ impl SemanticAnalyzer {
                     is_mutable: false,
                 })?;
             }
+
+            TopLevelItem::NativeBlock { .. } => {
+                // Native blocks don't declare symbols visible to Omni yet
+            }
         }
         Ok(())
     }

@@ -27,6 +27,10 @@ pub enum TopLevelItem {
         value: Expression,
         is_mut: bool,
     },
+    NativeBlock {
+        lang: String,
+        code: Vec<String>,
+    },
 }
 
 /// Declaração de Função

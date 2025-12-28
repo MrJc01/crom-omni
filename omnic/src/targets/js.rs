@@ -69,6 +69,11 @@ impl CodeGenerator for JsBackend {
                     let keyword = "let";
                     buffer.push_str(&format!("{} {} = {};\n", keyword, name, self.gen_expression(value)));
                 }
+                TopLevelItem::NativeBlock { lang, code } => {
+                    if lang == "js" {
+                        buffer.push_str(&code.join("\n"));
+                    }
+                }
             }
             buffer.push('\n');
         }
@@ -172,6 +177,12 @@ impl JsBackend {
                     // Nested capsule
                     code.push_str(&format!("{}.{} = {{}};\n", c.name, nested.name));
                     // Recursively generate nested content - simplified for now
+                }
+                TopLevelItem::NativeBlock { lang, code: native_lines } => {
+                    if lang == "js" {
+                        code.push_str(&native_lines.join("\n"));
+                        code.push('\n');
+                    }
                 }
             }
         }

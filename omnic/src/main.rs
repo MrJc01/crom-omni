@@ -77,12 +77,26 @@ enum Commands {
         /// Run in Hollow VM (Bytecode)
         #[arg(long)]
         bytecode: bool,
+
+        /// Run as Web App (alias for --react)
+        #[arg(long)]
+        web: bool,
+
+        /// Run as Web App (Explicit)
+        #[arg(long, alias = "web-app")]
+        web_app: bool,
+
+        /// Run in Command-Line Mode (Console output only)
+        #[arg(long)]
+        cmd: bool,
     },
     /// Visual Trace Step-by-Step (Hollow VM Studio)
     Studio {
         /// Source file to debug
         file: PathBuf,
     },
+    /// Interactive TUI Dashboard
+    Ui,
     /// Verify system dependencies (gcc, node)
     Doctor,
     /// Deep clean build artifacts and fix locks
@@ -221,7 +235,10 @@ fn run() -> Result<()> {
              let node_ver = std::process::Command::new("node").arg("-v").output();
              match node_ver {
                  Ok(v) => println!("     ✅ Node.js: {}", String::from_utf8_lossy(&v.stdout).trim()),
-                 Err(_) => println!("     ❌ Node.js NOT FOUND (Required for JS Target)"),
+                 Err(_) => {
+                     println!("     ❌ Node.js NOT FOUND (Required for JS Target)");
+                     println!("        Download: https://nodejs.org/");
+                 }
              }
 
              // Check GCC
@@ -231,7 +248,7 @@ fn run() -> Result<()> {
                  Err(_) => {
                      println!("{}", "MISSING".red().bold());
                      println!("     {} Install MinGW (Windows) or GCC (Linux/Mac) to use --c", "ℹ".blue());
-                     println!("     Windows: choco install mingw");
+                     println!("     Windows Command: choco install mingw");
                  }
              }
 
@@ -239,6 +256,9 @@ fn run() -> Result<()> {
         }
         Some(Commands::Repair) => {
             commands::repair::clean_build_artifacts()?;
+        }
+        Some(Commands::Ui) => {
+            core::tui::run_tui()?;
         }
         Some(Commands::Studio { file }) => {
             println!("{}", "🔮 Omni Studio: Visual Trace Mode".magenta().bold());
@@ -269,18 +289,111 @@ fn run() -> Result<()> {
              use clap::CommandFactory;
              Cli::command().print_help()?;
         }
-        Some(Commands::Run { file, laravel, react, c, app, bytecode }) => {
+        Some(Commands::Run { file, laravel, react, c, app, bytecode, web, web_app, cmd }) => {
             if *laravel {
                  println!("{} Preparing Laravel Environment...", "🐘".magenta());
                  println!("   - Booting Mock Artisan...");
                  println!("   - Injecting Omni runtime...");
-            } else if *react {
-                 println!("{} Preparing React Environment...", "⚛".cyan());
-                 println!("   - Starting bundler shim...");
+            } else if *react || *web || *web_app {
+                 println!("{} Preparing Web Environment...", "🌐".cyan());
+                 
+                 // 1. Generate JS file
+                 let out_file = file.with_extension("js");
+                 process_single_file(&file, TargetLang::Js, false, false, Some(&out_file))?;
+                 
+                 // 2. Prepend 3D runtime if needed
+                 let source_content = fs::read_to_string(&file).unwrap_or_default();
+                 if source_content.contains("std/3d.omni") || source_content.contains("Scene3D") {
+                     let runtime_paths = ["omnic/lib/std/runtime_3d.js", "lib/std/runtime_3d.js"];
+                     for runtime_path in runtime_paths {
+                         if Path::new(runtime_path).exists() {
+                             let runtime = fs::read_to_string(runtime_path).unwrap_or_default();
+                             let generated = fs::read_to_string(&out_file).unwrap_or_default();
+                             let combined = format!("{}\n\n// === Generated Omni Code ===\n{}", runtime, generated);
+                             fs::write(&out_file, combined)?;
+                             println!("   🎮 3D Runtime prepended");
+                             break;
+                         }
+                     }
+                 }
+                 
+                 // 3. Create HTML wrapper
+                 let html_file = file.with_extension("html");
+                 let js_name = out_file.file_name().unwrap().to_str().unwrap();
+                 let html_content = format!(r#"<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8">
+<title>Omni Web - {}</title>
+<style>body {{ margin: 0; background: #1a1a2e; }}</style>
+</head><body>
+<script src="{}"></script>
+</body></html>"#, js_name, js_name);
+                 fs::write(&html_file, html_content)?;
+                 println!("   ✔ Generated: {}", html_file.display());
+                 
+                 // 4. Get directory for server
+                 let serve_dir = file.parent().unwrap_or(Path::new("."));
+                 let port = 3000;
+                 
+                 println!("   🚀 Starting server at http://localhost:{}", port);
+                 
+                 if *web_app {
+                     // Auto-open browser
+                     println!("   🌐 Opening browser...");
+                     #[cfg(target_os = "windows")]
+                     std::process::Command::new("cmd")
+                         .args(["/C", "start", &format!("http://localhost:{}/{}", port, html_file.file_name().unwrap().to_str().unwrap())])
+                         .spawn()?;
+                 } else {
+                     println!("   Open: http://localhost:{}/{}", port, html_file.file_name().unwrap().to_str().unwrap());
+                 }
+                 
+                 // Start simple HTTP server (Python)
+                 let status = std::process::Command::new("python")
+                     .args(["-m", "http.server", &port.to_string()])
+                     .current_dir(serve_dir)
+                     .status()?;
+                 
+                 return Ok(());
+            } else if *cmd {
+                 println!("{} Running in Command-Line Mode...", "💻".green());
+                 // Just compile to JS and run with node (with ASCII animation support)
             } else if *app {
                  println!("{} Preparing Native Application Window...", "🖥️".cyan());
-                 println!("   - Initializing Window Context...");
-                 // Proceed to default run (e.g. node or C generic) but with APP env var
+                 
+                 // Check if file uses std/ui.omni (Tkinter)
+                 let source_content = fs::read_to_string(&file).unwrap_or_default();
+                 if source_content.contains("std/ui.omni") || source_content.contains("Window_create") || source_content.contains("GUI_") {
+                     println!("   🐍 Detected UI components - using Python/Tkinter");
+                     
+                     // Compile to Python
+                     let out_py = file.with_extension("py");
+                     process_single_file(&file, TargetLang::Python, false, false, Some(&out_py))?;
+                     
+                     // Prepend UI runtime
+                     let runtime_paths = ["omnic/lib/std/runtime_ui.py", "lib/std/runtime_ui.py"];
+                     for runtime_path in runtime_paths {
+                         if Path::new(runtime_path).exists() {
+                             let runtime = fs::read_to_string(runtime_path).unwrap_or_default();
+                             let generated = fs::read_to_string(&out_py).unwrap_or_default();
+                             let combined = format!("{}\n\n# === Generated Omni Code ===\n{}", runtime, generated);
+                             fs::write(&out_py, combined)?;
+                             println!("   🎨 UI Runtime prepended");
+                             break;
+                         }
+                     }
+                     
+                     // Run with Python
+                     println!("   🚀 Launching native window...");
+                     std::process::Command::new("python")
+                         .arg(&out_py)
+                         .status()?;
+                     
+                     return Ok(());
+                 } else {
+                     println!("   - Initializing Window Context...");
+                     // Fall through to default Node.js execution
+                 }
             } else if *c {
                  println!("{} Preparing C Environment...", "⚙".cyan());
                  
@@ -337,6 +450,27 @@ fn run() -> Result<()> {
             // Compile to temp js
             let out_file = file.with_extension("js");
             process_single_file(&file, TargetLang::Js, false, false, Some(&out_file))?;
+            
+            // Check if source uses 3D library and prepend runtime if needed
+            let source_content = fs::read_to_string(&file).unwrap_or_default();
+            if source_content.contains("std/3d.omni") || source_content.contains("Scene3D") || source_content.contains("Camera3D") {
+                // Prepend 3D runtime
+                let runtime_paths = [
+                    "omnic/lib/std/runtime_3d.js",
+                    "lib/std/runtime_3d.js",
+                ];
+                
+                for runtime_path in runtime_paths {
+                    if Path::new(runtime_path).exists() {
+                        let runtime = fs::read_to_string(runtime_path).unwrap_or_default();
+                        let generated = fs::read_to_string(&out_file).unwrap_or_default();
+                        let combined = format!("{}\n\n// === Generated Omni Code ===\n{}", runtime, generated);
+                        fs::write(&out_file, combined)?;
+                        println!("   🎮 3D Runtime prepended");
+                        break;
+                    }
+                }
+            }
             
             // Execute
             std::process::Command::new("node")
@@ -409,7 +543,7 @@ fn process_single_file(
     let backend: Box<dyn CodeGenerator> = match lang {
         TargetLang::Js => Box::new(targets::js::JsBackend::new()),
         TargetLang::Python => Box::new(targets::python::PythonBackend::new()),
-        TargetLang::C => Box::new(targets::c::CBackend::new()),
+        TargetLang::C => Box::new(targets::c_backend::CBackend::new()),
         TargetLang::Bytecode => Box::new(targets::bytecode::BytecodeBackend::new()),
     };
 

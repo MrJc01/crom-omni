@@ -1,0 +1,17 @@
+// std/math.omni - Math Standard Library
+
+native "js" {
+function cos(x) { return Math.cos(x); }
+function sin(x) { return Math.sin(x); }
+function tan(x) { return Math.tan(x); }
+function sqrt(x) { return Math.sqrt(x); }
+function abs(x) { return Math.abs(x); }
+function floor(x) { return Math.floor(x); }
+function ceil(x) { return Math.ceil(x); }
+function round(x) { return Math.round(x); }
+function pow(base, exp) { return Math.pow(base, exp); }
+function min(a, b) { return Math.min(a, b); }
+function max(a, b) { return Math.max(a, b); }
+const PI = Math.PI;
+const E = Math.E;
+}

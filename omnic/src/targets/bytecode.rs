@@ -45,32 +45,33 @@ impl CodeGenerator for BytecodeBackend {
 
         // Very simple Linear scan for statements in flows
         for item in &program.items {
-            if let crate::core::ast::TopLevelItem::Capsule(c) = item {
-                for c_item in &c.items {
-                    if let crate::core::ast::TopLevelItem::Flow(f) = c_item {
-                        for stmt in &f.body.statements {
-                           match stmt {
-                               Statement::LetBinding { name, value, .. } => {
-                                   self.compile_expr(value, &mut ops);
-                                   ops.push(OpCode::StoreVar(name.clone()));
-                               }
-                               Statement::Expression(Expression::Call { function, args }) => {
-                                   // Special case for print
-                                   // Assuming function is Identifier "print"
-                                   if let Expression::Identifier(fname) = function.as_ref() {
-                                       if fname == "print" || fname.contains("print") {
-                                            if let Some(arg) = args.first() {
-                                                self.compile_expr(arg, &mut ops);
-                                                ops.push(OpCode::Print);
-                                            }
+            match item {
+                crate::core::ast::TopLevelItem::Capsule(c) => {
+                    for c_item in &c.items {
+                        if let crate::core::ast::TopLevelItem::Flow(f) = c_item {
+                            for stmt in &f.body.statements {
+                               match stmt {
+                                   Statement::LetBinding { name, value, .. } => {
+                                       self.compile_expr(value, &mut ops);
+                                       ops.push(OpCode::StoreVar(name.clone()));
+                                   }
+                                   Statement::Expression(Expression::Call { function, args }) => {
+                                       if let Expression::Identifier(fname) = function.as_ref() {
+                                           if fname == "print" || fname.contains("print") {
+                                                if let Some(arg) = args.first() {
+                                                    self.compile_expr(arg, &mut ops);
+                                                    ops.push(OpCode::Print);
+                                                }
+                                           }
                                        }
                                    }
+                                   _ => {}
                                }
-                               _ => {}
-                           }
+                            }
                         }
                     }
                 }
+                _ => {} // Ignore NativeBlock, Structs, etc.
             }
         }
         

@@ -117,7 +117,15 @@ impl<'a> Parser<'a> {
                     Err(anyhow!("Erro interno parsing let"))
                 }
             }
-            _ => Err(anyhow!("Esperado 'struct', 'fn', 'capsule', 'flow' ou 'let' no nível superior (encontrado {:?})", token)),
+            Token::Native => {
+                 let stmt = self.parse_native_block()?;
+                 if let Statement::NativeBlock { lang, code } = stmt {
+                     Ok(TopLevelItem::NativeBlock { lang, code })
+                 } else {
+                     Err(anyhow!("Erro interno parsing native block"))
+                 }
+            }
+            _ => Err(anyhow!("Esperado 'struct', 'fn', 'capsule', 'flow', 'native' ou 'let' no nível superior (encontrado {:?})", token)),
         }
     }
 

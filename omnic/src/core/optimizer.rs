@@ -268,6 +268,7 @@ impl DeadCodeEliminator {
             TopLevelItem::LetBinding { name, .. } => {
                 self.used_variables.contains(name)
             }
+            TopLevelItem::NativeBlock { .. } => true, // Always keep native blocks
         }
     }
 
