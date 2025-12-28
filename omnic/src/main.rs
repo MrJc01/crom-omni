@@ -15,16 +15,18 @@ use crate::core::semantic;
 
 #[derive(Parser)]
 #[command(name = "omnic")]
+#[command(version = "0.1.0")]
 #[command(about = "Compilador Oficial da Plataforma Omni", long_about = None)]
 struct Cli {
     #[command(subcommand)]
-    command: Commands,
+    command: Option<Commands>,
 }
 
 #[derive(Subcommand)]
 enum Commands {
     /// Compila um arquivo E/OU processa omni.config.json
     #[command(alias = "compile")]
+
     Build {
         /// Caminho para o arquivo fonte .omni (Opcional se usar config)
         file: Option<PathBuf>,
@@ -82,7 +84,6 @@ enum Commands {
         file: PathBuf,
     },
     /// Verify system dependencies (gcc, node)
-    /// Verify system dependencies (gcc, node)
     Doctor,
     /// Deep clean build artifacts and fix locks
     Repair,
@@ -129,11 +130,11 @@ fn run() -> Result<()> {
     let cli = Cli::parse();
 
     match &cli.command {
-        Commands::Build { file, output_file, tokens, ast, target } => {
+        Some(Commands::Build { file, output_file, tokens, ast, target }) => {
             // Modo 1: Arquivo Único
             if let Some(source_file) = file {
                 eprintln!("{} {} -> {:?}", "Compilando Arquivo:".green(), source_file.display(), target);
-                process_single_file(source_file, target.clone(), *tokens, *ast, output_file.as_deref())?;
+                process_single_file(&source_file, target.clone(), *tokens, *ast, output_file.as_deref())?;
             } 
             // Modo 2: Projeto (omni.config.json)
             else {
@@ -205,11 +206,15 @@ fn run() -> Result<()> {
                 println!("\n{}", "Build de Projeto Concluído!".green().bold());
             }
         }
-        Commands::Ingest { path } => {
+        Some(Commands::Clean) => {
+             commands::clean::clean()?;
+        }
+
+        Some(Commands::Ingest { path }) => {
             println!("{} Ingesting from: {}", "🌀".cyan(), path.display());
             core::ingest::ingest_path(&path)?;
         }
-        Commands::Doctor => {
+        Some(Commands::Doctor) => {
              println!("{} Executing Omni Doctor...", "🚑".red());
              
              // Check Node
@@ -232,10 +237,39 @@ fn run() -> Result<()> {
 
              println!("\n{}", "Diagnosis Complete.".green());
         }
-        Commands::Repair => {
+        Some(Commands::Repair) => {
             commands::repair::clean_build_artifacts()?;
         }
-        Commands::Run { file, laravel, react, c, app, bytecode } => {
+        Some(Commands::Studio { file }) => {
+            println!("{}", "🔮 Omni Studio: Visual Trace Mode".magenta().bold());
+            println!("   File: {}", file.display());
+
+            // 1. Generate VM code
+            let out_vm = file.with_extension("vm");
+            process_single_file(&file, TargetLang::Bytecode, false, false, Some(&out_vm))?;
+
+            // 2. Execute with Trace
+            use crate::core::vm::{VirtualMachine, OpCode};
+            // Demo calc ops for now
+            let ops = vec![
+                 OpCode::LoadConst(10i64),
+                 OpCode::LoadConst(20i64),
+                 OpCode::Add,
+                 OpCode::Print,
+                 OpCode::Halt,
+            ];
+
+            let mut vm = VirtualMachine::new(ops);
+            println!("\n{}", "--- VM PULSE START ---".dimmed());
+            vm.run(); 
+            println!("{}", "--- VM PULSE END ---".dimmed());
+        }
+        None => {
+            // Se nenhum comando for passado, mostra o help
+             use clap::CommandFactory;
+             Cli::command().print_help()?;
+        }
+        Some(Commands::Run { file, laravel, react, c, app, bytecode }) => {
             if *laravel {
                  println!("{} Preparing Laravel Environment...", "🐘".magenta());
                  println!("   - Booting Mock Artisan...");
@@ -308,56 +342,6 @@ fn run() -> Result<()> {
             std::process::Command::new("node")
                 .arg(&out_file)
                 .status()?;
-        }
-        Commands::Studio { file } => {
-            println!("{}", "🔮 Omni Studio: Visual Trace Mode".magenta().bold());
-            println!("   File: {}", file.display());
-
-            // 1. Generate VM code
-            let out_vm = file.with_extension("vm");
-            process_single_file(file, TargetLang::Bytecode, false, false, Some(&out_vm))?;
-
-            // 2. Execute with Trace
-            use crate::core::vm::{VirtualMachine, OpCode};
-            // Demo calc ops for now
-            let ops = vec![
-                 OpCode::LoadConst(10i64),
-                 OpCode::LoadConst(20i64),
-                 OpCode::Add,
-                 OpCode::Print,
-                 OpCode::Halt,
-            ];
-
-            let mut vm = VirtualMachine::new(ops);
-            println!("\n{}", "--- VM PULSE START ---".dimmed());
-            // Custom trace loop (Phase 11.3)
-            // In a real implementation we would modify vm.run() to take a debug flag
-            // For now, let's just run it, but we could eventually inspect state here.
-            vm.run(); 
-            println!("{}", "--- VM PULSE END ---".dimmed());
-        }
-        Commands::Clean => {
-            println!("{} Limpando ambiente...", "🧹".yellow());
-            let dirs = ["dist", "target", "__pycache__"];
-            let files = ["npm-debug.log", "error.log"];
-            
-            for d in dirs {
-                let p = Path::new(d);
-                if p.exists() {
-                     fs::remove_dir_all(p).with_context(|| format!("Falha ao remover {}", d))?;
-                     println!("   🗑️  Removido: {}/", d);
-                }
-            }
-            // Logic to remove patterns like *.log or temp_* would require walkdir or glob
-            // For now, simple list
-             for f in files {
-                let p = Path::new(f);
-                if p.exists() {
-                     fs::remove_file(p)?;
-                     println!("   🗑️  Removido: {}", f);
-                }
-            }
-            println!("{}", "Limpeza Concluída!".green());
         }
     }
 

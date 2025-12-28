@@ -9,7 +9,7 @@ description = "The Omni Platform Compiler (MVP)"
 
 [dependencies]
 # CLI Argument Parsing
-clap = { version = "4.4", features = ["derive"] }
+clap = { version = "4.4", features = ["derive", "cargo"] }
 
 # Lexer Generator (Fast & Declarative)
 logos = "0.13"

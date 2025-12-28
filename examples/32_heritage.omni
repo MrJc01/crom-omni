@@ -1,0 +1,38 @@
+import std.http;
+capsule C_32_heritage {
+    // Database Interactions Detected (Semantic Analysis)
+    @database(provider: "generic")
+    flow db_ops() {
+        // TODO: Auto-map ORM/SQL queries
+        native "sql" { /* Legacy Query / ORM Call */ }
+    }
+
+    // Semantic Inheritance: User extends Model
+    use Model; // Composition over Inheritance
+
+    flow create(name: Any, email: Any) {
+        native "php" {
+            // Originally: function create(...)
+            // Logic preserved for manual review
+        }
+    }
+
+    flow find(id: Any) {
+        native "php" {
+            // Originally: function find(...)
+            // Logic preserved for manual review
+        }
+    }
+
+    flow raw_query() {
+        native "php" {
+            // Originally: function raw_query(...)
+            // Logic preserved for manual review
+        }
+    }
+
+    flow main() {
+        std.http.listen(8080);
+    }
+
+}

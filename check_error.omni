@@ -1,0 +1,165 @@
+    Checking clap_builder v4.5.53
+    Checking clap v4.5.53
+    Checking omnic v0.1.0 (C:\Users\juanc\OneDrive\Documents\GitHub\crom-omni\omnic)
+error[E0433]: failed to resolve: could not find `clean` in `commands`
+   --> src\main.rs:210:24
+    |
+210 |              commands::clean::clean()?;
+    |                        ^^^^^ could not find `clean` in `commands`
+
+error[E0433]: failed to resolve: could not find `studio` in `commands`
+   --> src\main.rs:244:24
+    |
+244 |              commands::studio::studio(file)?;
+    |                        ^^^^^^ could not find `studio` in `commands`
+
+warning: unused import: `LexerError`
+ --> src\core\parser.rs:3:33
+  |
+3 | use crate::core::lexer::{Lexer, LexerError};
+  |                                 ^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `Path`
+ --> src\core\envman.rs:6:17
+  |
+6 | use std::path::{Path, PathBuf};
+  |                 ^^^^
+
+warning: unused import: `Context`
+ --> src\core\envman.rs:9:22
+  |
+9 | use anyhow::{Result, Context};
+  |                      ^^^^^^^
+
+warning: unused import: `Context`
+  --> src\core\testrunner.rs:10:22
+   |
+10 | use anyhow::{Result, Context};
+   |                      ^^^^^^^
+
+warning: unused import: `std::collections::HashMap`
+ --> src\core\roadmap.rs:5:5
+  |
+5 | use std::collections::HashMap;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `PathBuf`
+ --> src\core\ingest\mod.rs:1:23
+  |
+1 | use std::path::{Path, PathBuf};
+  |                       ^^^^^^^
+
+warning: unused import: `anyhow`
+ --> src\core\ingest\mod.rs:3:22
+  |
+3 | use anyhow::{Result, anyhow};
+  |                      ^^^^^^
+
+warning: unused imports: `Deserialize` and `Serialize`
+ --> src\core\templates.rs:7:13
+  |
+7 | use serde::{Deserialize, Serialize};
+  |             ^^^^^^^^^^^  ^^^^^^^^^
+
+warning: unused import: `Context`
+ --> src\core\templates.rs:8:22
+  |
+8 | use anyhow::{Result, Context};
+  |                      ^^^^^^^
+
+warning: unused import: `Type`
+ --> src\targets\c.rs:2:65
+  |
+2 | use crate::core::ast::{Program, Statement, Expression, Literal, Type};
+  |                                                                 ^^^^
+
+error[E0308]: mismatched types
+   --> src\main.rs:325:9
+    |
+132 |     match &cli.command {
+    |           ------------ this expression has type `&std::option::Option<Commands>`
+...
+325 |         Commands::Studio { file } => {
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^ expected `Option<Commands>`, found `Commands`
+    |
+    = note: expected enum `std::option::Option<Commands>`
+               found enum `Commands`
+
+error[E0308]: mismatched types
+   --> src\main.rs:352:9
+    |
+ 50 |     Clean,
+    |     ----- unit variant defined here
+...
+132 |     match &cli.command {
+    |           ------------ this expression has type `&std::option::Option<Commands>`
+...
+352 |         Commands::Clean => {
+    |         ^^^^^^^^^^^^^^^ expected `Option<Commands>`, found `Commands`
+    |
+    = note: expected enum `std::option::Option<Commands>`
+               found enum `Commands`
+
+warning: unused variable: `struct_name`
+   --> src\core\semantic.rs:532:38
+    |
+532 |                     OmniType::Struct(struct_name) => {
+    |                                      ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_struct_name`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `r`
+   --> src\core\optimizer.rs:181:50
+    |
+181 |             (Literal::Integer(l), Literal::Float(r)) => {
+    |                                                  ^ help: if this is intentional, prefix it with an underscore: `_r`
+
+warning: value assigned to `line_num` is never read
+   --> src\core\docindex.rs:212:28
+    |
+212 |         let mut line_num = 0;
+    |                            ^
+    |
+    = help: maybe it is overwritten before being read?
+    = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `re_middleware`
+  --> src\core\ingest\mod.rs:58:9
+   |
+58 |     let re_middleware = Regex::new(r"public\s+function\s+handle\s*\(\s*\$request\s*,\s*Closure\s+\$next\s*\)").unwrap();
+   |         ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_re_middleware`
+
+warning: variable `has_db` is assigned to, but never used
+  --> src\core\ingest\mod.rs:70:9
+   |
+70 |     let mut has_db = false;
+   |         ^^^^^^^^^^
+   |
+   = note: consider using `_has_db` instead
+
+warning: value assigned to `has_db` is never read
+  --> src\core\ingest\mod.rs:73:9
+   |
+73 |         has_db = true;
+   |         ^^^^^^^^^^^^^
+   |
+   = help: maybe it is overwritten before being read?
+
+warning: unused variable: `is_mut`
+   --> src\targets\js.rs:211:50
+    |
+211 |             Statement::LetBinding { name, value, is_mut, .. } => {
+    |                                                  ^^^^^^ help: try ignoring the field: `is_mut: _`
+
+warning: unused variable: `debug_tokens`
+   --> src\main.rs:383:5
+    |
+383 |     debug_tokens: bool, 
+    |     ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_debug_tokens`
+
+Some errors have detailed explanations: E0308, E0433.
+For more information about an error, try `rustc --explain E0308`.
+warning: `omnic` (bin "omnic") generated 18 warnings
+error: could not compile `omnic` (bin "omnic") due to 4 previous errors; 18 warnings emitted

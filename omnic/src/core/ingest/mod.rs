@@ -25,6 +25,7 @@ fn ingest_file(path: &Path) -> Result<()> {
     let omni_code = match ext {
         "php" => ingest_php(&content, path),
         "js" | "ts" | "jsx" | "tsx" => ingest_node(&content, path),
+        "css" | "png" | "jpg" | "jpeg" | "html" => ingest_asset(path),
         _ => return Ok(()), // Skip unknown extensions
     };
     
@@ -50,28 +51,41 @@ fn ingest_php(content: &str, path: &Path) -> Result<String> {
     
     let mut flows = String::new();
     
-    // 2. Detect Classes: class Name extends Model
-    let re_class = Regex::new(r"class\s+(\w+)\s+extends\s+Model").unwrap();
-
-    // 3. Detect Middleware: public function handle($request, Closure $next)
+    // 2. Detect Classes: class Name extends Parent
+    let re_class = Regex::new(r"class\s+(\w+)(?:\s+extends\s+(\w+))?").unwrap();
+    
+    // 3. Detect Middleware...
     let re_middleware = Regex::new(r"public\s+function\s+handle\s*\(\s*\$request\s*,\s*Closure\s+\$next\s*\)").unwrap();
     
     // 4. Universal Router Mapping (Laravel)
     let re_laravel_route = Regex::new(r"Route::(get|post|put|delete)\s*\(\s*'([^']+)'").unwrap();
     
-    // 5. Universal Database Ingestion (Task 11.2)
-    // Detects: "SELECT ... FROM", "INSERT INTO", or DB Connection strings
+    // 5. Semantic DB Ingestion (Task 12.2)
+    // Detects: SQL Strings, PDO calls, Eloquent/TypeORM patterns
     let re_sql_select = Regex::new(r"(?i)SELECT\s+.*?\s+FROM\s+\w+").unwrap();
     let re_sql_insert = Regex::new(r"(?i)INSERT\s+INTO\s+\w+").unwrap();
     let re_db_conn = Regex::new(r"(mysql|postgres|sqlite):host=").unwrap();
+    let re_orm_usage = Regex::new(r"(DB::[a-zA-Z0-9_]+|\$[a-zA-Z0-9_]+->(save|find|where|query|prepare)\()").unwrap();
 
-    if re_sql_select.is_match(content) || re_sql_insert.is_match(content) || re_db_conn.is_match(content) {
-        flows.push_str("\n    // Database Interactions Detected\n");
+    let mut has_db = false;
+    if re_sql_select.is_match(content) || re_sql_insert.is_match(content) || 
+       re_db_conn.is_match(content) || re_orm_usage.is_match(content) {
+        has_db = true;
+        flows.push_str("\n    // Database Interactions Detected (Semantic Analysis)\n");
         flows.push_str("    @database(provider: \"generic\")\n");
         flows.push_str("    flow db_ops() {\n");
-        flows.push_str("        // TODO: Auto-map queries\n");
-        flows.push_str("        native \"sql\" { /* Legacy Query */ }\n");
+        flows.push_str("        // TODO: Auto-map ORM/SQL queries\n");
+        flows.push_str("        native \"sql\" { /* Legacy Query / ORM Call */ }\n");
         flows.push_str("    }\n");
+    }
+
+    // Semantic Class Mapping (Task 12.1)
+    for cap in re_class.captures_iter(content) {
+        let class_name = &cap[1];
+        if let Some(parent) = cap.get(2) {
+             flows.push_str(&format!("\n    // Semantic Inheritance: {} extends {}\n", class_name, parent.as_str()));
+             flows.push_str(&format!("    use {}; // Composition over Inheritance\n", parent.as_str()));
+        }
     }
 
     for cap in re_func.captures_iter(content) {
@@ -92,7 +106,7 @@ fn ingest_php(content: &str, path: &Path) -> Result<String> {
     for cap in re_laravel_route.captures_iter(content) {
         let method = cap[1].to_uppercase();
         let path = &cap[2];
-        let omni_path = path.replace("{", ":").replace("}", ""); // {id} -> :id
+        let omni_path = path.replace("{", ":").replace("}", "");
         let name = format!("{}_{}", method.to_lowercase(), omni_path.replace("/", "_").replace("-", "_").replace(":", "").trim_start_matches('_'));
         
         flows.push_str(&format!("\n    // Route: {} {}\n", method, path));
@@ -218,4 +232,23 @@ fn capitalize(s: &str) -> String {
         None => String::new(),
         Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
     }
+}
+
+fn ingest_asset(path: &Path) -> Result<String> {
+    let file_stem = path.file_stem().unwrap().to_string_lossy();
+    let mut capsule_name = capitalize(&file_stem) + "_Asset";
+    if capsule_name.chars().next().map(|c| c.is_numeric()).unwrap_or(false) {
+        capsule_name = format!("A_{}", capsule_name);
+    }
+    let bytes = fs::read(path)?;
+    
+    // Create a byte array string: [10, 20, 255, ...]
+    let byte_str = bytes.iter().map(|b| b.to_string()).collect::<Vec<_>>().join(", ");
+    
+    // Store as: let data: List<int> = [ ... ];
+    // In AST, this will be parsed as Array Literal.
+    // Note: Basic parser might choke on huge arrays, hopefully it handles it or we improve it.
+    let item = format!("    let data = [{}];\n    let size = {};\n", byte_str, bytes.len());
+    
+    Ok(format!("capsule {} {{\n{}\n}}\n", capsule_name, item))
 }

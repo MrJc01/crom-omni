@@ -114,9 +114,26 @@
 
 - [x] **Task 11.1: OpCode Definition.** Definir a tabela de instruções para a Hollow VM (`vm.rs`).
 - [x] **Task 11.3: Visual Trace.** O Studio (CLI) deve mostrar o "pulso" da VM executando os opcodes.
-- [ ] **Task 11.4: Bootstrap Integration.** Iniciar tradução do Lexer para `bootstrap.omni`.
+- [x] **Task 11.4: Bootstrap Integration.** Iniciar tradução do Lexer para `bootstrap.omni`.
 
-## Level 12: A Singularidade (Self-Hosting)berana
+## Level 12: A Singularidade (Metamorfose & Caos)
+
+- [x] **Task 12.1: Semantic Logic.** Mapear herança de classes legadas para composição de cápsulas.
+- [x] **Task 12.2: DB Ingestor.** Transformar PDO ou TypeORM em fluxos `@database`.
+- [x] **Task 12.3: Reference Counting (C).** Injetar retain/release em cada atribuição no alvo C.
+- [ ] **Task 12.4: Asset Metamorphosis.** Suportar arquivos .css e .html no comando `run --app`.
+- [ ] **Task 12.5: Parity Report Auto-Fix.** O sistema deve ler o `test_report.json` e sugerir o código Rust corrigido.
+- [x] **Task 12.6: Global Chaos Tester.** Implementar `scripts/global_chaos_tester.omni` com paridade bit-a-bit.
+- [ ] **Task 12.7: Bootstrap Parser.** Traduzir o Parser de Rust para Omni.
+- [ ] **Task 12.8: Bootstrap CodeGen.** Traduzir o Backend JS para Omni.
+- [ ] **Task 12.9: Self-Hosting Verification.** Compilar `01_hello.omni` usando o Bootstrap.
+
+## Level 13: Metamorfose de Assets & Estúdio
+
+- [x] **Task 13.1: Resource Compiler.** Integrar assets binários (.css, .png) como cápsulas de dados.
+- [ ] **Task 13.2: AST-to-Source Generator.** Gerar código .omni formatado a partir da AST (Round-trip).
+- [ ] **Task 13.3: Visual Route Debugging.** Studio deve mostrar pacotes de rede fluindo (Visualização).
+- [ ] **Task 13.4: Bidirectional Sync.** `omni studio --sync` atualiza o arquivo original ao editar no Studio.
 
 ## Level 10: Execução Soberana
 

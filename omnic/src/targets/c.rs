@@ -177,7 +177,25 @@ impl CBackend {
                     format!("{}/* Native block ({}) ignored */\n", pad, lang)
                 }
             }
-            // Basic support ONLY for hello world
+            Statement::LetBinding { name, value, .. } => {
+                let val_code = self.gen_expression(value);
+                // If value starts with '{', it's an array initializer.
+                if val_code.trim().starts_with('{') {
+                     // const unsigned char name[] = { ... };
+                     format!("{}const unsigned char {}[] = {};\n", pad, name, val_code)
+                } else {
+                     format!("{}Any {} = {};\n{}omni_retain({});\n", pad, name, val_code, pad, name)
+                }
+            }
+            Statement::Assignment { target, value } => {
+                 let target_code = self.gen_expression(target);
+                 let val_code = self.gen_expression(value);
+                 // RC Dance: Release old, Assign new, Retain new
+                 format!("{}omni_release({});\n{}{} = {};\n{}omni_retain({});\n", 
+                    pad, target_code, 
+                    pad, target_code, val_code, 
+                    pad, target_code)
+            }
             _ => format!("{}// Unsupported statement in C prototype\n", pad),
         }
     }
@@ -190,19 +208,49 @@ impl CBackend {
                 Literal::Float(f) => f.to_string(),
                 Literal::Bool(b) => if *b { "true".to_string() } else { "false".to_string() },
             },
+            Expression::BinaryOp { left, op, right } => {
+                let l = self.gen_expression(left);
+                let r = self.gen_expression(right);
+                let op_str = match op {
+                    crate::core::ast::BinaryOperator::Add => "+",
+                    crate::core::ast::BinaryOperator::Subtract => "-",
+                    crate::core::ast::BinaryOperator::Multiply => "*",
+                    crate::core::ast::BinaryOperator::Divide => "/",
+                    crate::core::ast::BinaryOperator::Equals => "==",
+                    crate::core::ast::BinaryOperator::NotEquals => "!=",
+                    crate::core::ast::BinaryOperator::LessThan => "<",
+                    crate::core::ast::BinaryOperator::GreaterThan => ">",
+                    crate::core::ast::BinaryOperator::LessEquals => "<=",
+                    crate::core::ast::BinaryOperator::GreaterEquals => ">=",
+                    crate::core::ast::BinaryOperator::LogicalAnd => "&&",
+                    crate::core::ast::BinaryOperator::LogicalOr => "||",
+                };
+                format!("({} {} {})", l, op_str, r)
+            }
             Expression::Call { function, args } => {
                  let func_name = self.gen_expression(function);
                  // Mapping built-ins
-                 if func_name == "\"io.print\"" || func_name == "io_print" { // Hardcoded hack for stdlib mapping
-                     // In C, print depends on type. For prototype, assume string
+                 if func_name == "\"io.print\"" || func_name == "io_print" { 
                      if let Some(arg) = args.first() {
                          return format!("printf(\"%s\\n\", (char*){})", self.gen_expression(arg));
                      }
                  }
                  format!("{}({})", func_name, args.iter().map(|a| self.gen_expression(a)).collect::<Vec<_>>().join(", "))
             }
-            Expression::Identifier(name) => name.replace(".", "_"), // main.print -> main_print
-            _ => "/* expr */".to_string(),
+            Expression::Identifier(name) => name.replace(".", "_"),
+            Expression::Array(elements) => {
+                 let elems = elements.iter().map(|e| self.gen_expression(e)).collect::<Vec<_>>().join(", ");
+                 format!("{{ {} }}", elems)
+            },
+            Expression::StructInit { name, .. } => {
+                format!("/* StructInit {} */ 0", name) // Placeholder: NULL (0)
+            }
+            Expression::MemberAccess { object, member } => {
+                // Assuming object is Any (void*), we can't dereference without cast.
+                // For now, prototype just prints a warning comment
+                format!("/* {}.{} */", self.gen_expression(object), member)
+            }
+            _ => "0 /* unsupported expr */".to_string(),
         }
     }
 }

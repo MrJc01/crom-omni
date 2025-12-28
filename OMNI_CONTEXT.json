@@ -1,6 +1,7 @@
 {
-  "version": "1.3.0",
-  "phase": "1.11 - Intellectual Independence",
+  "project": "Omni Sovereign Protocol",
+  "phase": "1.13 - Asset Metamorphosis",
+  "version": "1.4.0",
   "architecture": {
     "entry_point_standard": "auto-main",
     "memory_model": "hybrid-rc",
@@ -18,9 +19,9 @@
     "Phase 6 Build Lock: omnic.exe locked during rebuild (Being fixed in Phase 8 via omni repair)"
   ],
   "bootstrap_progress": {
-    "self_hosted": false,
+    "self_hosted": "partial",
     "native_target": false
   },
-  "last_update": "2025-12-27",
-  "active_sprint": "Sprint 01"
+  "active_sprint": "Sprint 01",
+  "last_update": "2025-12-28"
 }
