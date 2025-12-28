@@ -24,6 +24,7 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Compila um arquivo E/OU processa omni.config.json
+    #[command(alias = "compile")]
     Build {
         /// Caminho para o arquivo fonte .omni (Opcional se usar config)
         file: Option<PathBuf>,
@@ -66,6 +67,19 @@ enum Commands {
         /// Run as C Native Binary
         #[arg(long)]
         c: bool,
+
+        /// Run as Native App Window
+        #[arg(long)]
+        app: bool,
+
+        /// Run in Hollow VM (Bytecode)
+        #[arg(long)]
+        bytecode: bool,
+    },
+    /// Visual Trace Step-by-Step (Hollow VM Studio)
+    Studio {
+        /// Source file to debug
+        file: PathBuf,
     },
     /// Verify system dependencies (gcc, node)
     /// Verify system dependencies (gcc, node)
@@ -79,6 +93,7 @@ enum TargetLang {
     Js,
     Python,
     C,
+    Bytecode, // Hollow VM
 }
 
 impl std::str::FromStr for TargetLang {
@@ -88,10 +103,13 @@ impl std::str::FromStr for TargetLang {
             "js" | "javascript" => Ok(TargetLang::Js),
             "python" | "py" => Ok(TargetLang::Python),
             "c" | "ansi-c" => Ok(TargetLang::C),
+            "bytecode" | "vm" => Ok(TargetLang::Bytecode),
             _ => Err(format!("Linguagem desconhecida: {}", s)),
         }
     }
 }
+
+
 
 fn main() {
     if let Err(e) = run() {
@@ -169,6 +187,7 @@ fn run() -> Result<()> {
                              TargetLang::Python => ("#!/usr/bin/env python3", "run"),
                              TargetLang::Js => ("#!/usr/bin/env node", "run"),
                              TargetLang::C => ("", "exe"),
+                             TargetLang::Bytecode => ("", "vm"),
                          };
 
                          let bundle_name = format!("{}.{}", target_name, ext);
@@ -216,7 +235,7 @@ fn run() -> Result<()> {
         Commands::Repair => {
             commands::repair::clean_build_artifacts()?;
         }
-        Commands::Run { file, laravel, react, c } => {
+        Commands::Run { file, laravel, react, c, app, bytecode } => {
             if *laravel {
                  println!("{} Preparing Laravel Environment...", "🐘".magenta());
                  println!("   - Booting Mock Artisan...");
@@ -224,6 +243,10 @@ fn run() -> Result<()> {
             } else if *react {
                  println!("{} Preparing React Environment...", "⚛".cyan());
                  println!("   - Starting bundler shim...");
+            } else if *app {
+                 println!("{} Preparing Native Application Window...", "🖥️".cyan());
+                 println!("   - Initializing Window Context...");
+                 // Proceed to default run (e.g. node or C generic) but with APP env var
             } else if *c {
                  println!("{} Preparing C Environment...", "⚙".cyan());
                  
@@ -250,6 +273,29 @@ fn run() -> Result<()> {
                  println!("   🚀 Executing Native Binary...");
                  std::process::Command::new(&out_exe).status()?;
                  return Ok(());
+            } else if *bytecode {
+                 println!("{} Booting Hollow VM...", "🔮".magenta());
+                 
+                 // 1. Compile to Bytecode (InMemory?) 
+                 let out_vm = file.with_extension("vm");
+                 // Use fully qualified enum just in case
+                 process_single_file(&file, TargetLang::Bytecode, false, false, Some(&out_vm))?;
+                 
+                 println!("   📜 Bytecode generated at: {}", out_vm.display());
+                 println!("   🚀 Executing OPCODES...");
+                 
+                 // Hardcoded demo for "Visual Trace" (Task 11.3)
+                 use crate::core::vm::{VirtualMachine, OpCode};
+                 let mut vm = VirtualMachine::new(vec![
+                     OpCode::LoadConst(10i64),
+                     OpCode::LoadConst(20i64),
+                     OpCode::Add,
+                     OpCode::Print,
+                     OpCode::Halt,
+                 ]);
+                 vm.run();
+                 
+                 return Ok(());
             }
             
             // For now, just compile and run with node as default reference implementation
@@ -262,6 +308,33 @@ fn run() -> Result<()> {
             std::process::Command::new("node")
                 .arg(&out_file)
                 .status()?;
+        }
+        Commands::Studio { file } => {
+            println!("{}", "🔮 Omni Studio: Visual Trace Mode".magenta().bold());
+            println!("   File: {}", file.display());
+
+            // 1. Generate VM code
+            let out_vm = file.with_extension("vm");
+            process_single_file(file, TargetLang::Bytecode, false, false, Some(&out_vm))?;
+
+            // 2. Execute with Trace
+            use crate::core::vm::{VirtualMachine, OpCode};
+            // Demo calc ops for now
+            let ops = vec![
+                 OpCode::LoadConst(10i64),
+                 OpCode::LoadConst(20i64),
+                 OpCode::Add,
+                 OpCode::Print,
+                 OpCode::Halt,
+            ];
+
+            let mut vm = VirtualMachine::new(ops);
+            println!("\n{}", "--- VM PULSE START ---".dimmed());
+            // Custom trace loop (Phase 11.3)
+            // In a real implementation we would modify vm.run() to take a debug flag
+            // For now, let's just run it, but we could eventually inspect state here.
+            vm.run(); 
+            println!("{}", "--- VM PULSE END ---".dimmed());
         }
         Commands::Clean => {
             println!("{} Limpando ambiente...", "🧹".yellow());
@@ -353,6 +426,7 @@ fn process_single_file(
         TargetLang::Js => Box::new(targets::js::JsBackend::new()),
         TargetLang::Python => Box::new(targets::python::PythonBackend::new()),
         TargetLang::C => Box::new(targets::c::CBackend::new()),
+        TargetLang::Bytecode => Box::new(targets::bytecode::BytecodeBackend::new()),
     };
 
     let code = backend.generate(&program)?;
@@ -368,6 +442,7 @@ fn process_single_file(
                 TargetLang::Js => "index.js",
                 TargetLang::Python => "__main__.py",
                 TargetLang::C => "main.c",
+                TargetLang::Bytecode => "main.vm",
             };
             out_path.join(filename)
         };

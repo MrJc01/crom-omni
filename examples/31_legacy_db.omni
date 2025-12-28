@@ -1,0 +1,21 @@
+import std.http;
+capsule C_31_legacy_db {
+    // Database Interactions Detected
+    @database(provider: "generic")
+    flow db_ops() {
+        // TODO: Auto-map queries
+        native "sql" { /* Legacy Query */ }
+    }
+
+    flow get_users() {
+        native "php" {
+            // Originally: function get_users(...)
+            // Logic preserved for manual review
+        }
+    }
+
+    flow main() {
+        std.http.listen(8080);
+    }
+
+}

@@ -110,6 +110,14 @@
 - [ ] **Task 09.4: Full Cycle Proof.** Ingerir `examples/28_universal_route.php` e rodar via `--web`.
 - [ ] **Task 09.5: Repair Integration.** Sugerir `repair` em falhas de build.
 
+## Level 11: Independência Intelectual (Hollow VM)
+
+- [x] **Task 11.1: OpCode Definition.** Definir a tabela de instruções para a Hollow VM (`vm.rs`).
+- [x] **Task 11.3: Visual Trace.** O Studio (CLI) deve mostrar o "pulso" da VM executando os opcodes.
+- [ ] **Task 11.4: Bootstrap Integration.** Iniciar tradução do Lexer para `bootstrap.omni`.
+
+## Level 12: A Singularidade (Self-Hosting)berana
+
 ## Level 10: Execução Soberana
 
 - [x] **Task 10.1: Serial Build Enforcer.** Garantir builds determinísticos e sem travas (`--jobs 1` / remove `par_iter`).

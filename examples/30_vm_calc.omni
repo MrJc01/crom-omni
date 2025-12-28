@@ -1,0 +1,8 @@
+flow main() {
+    let a = 10;
+    let b = 20;
+    // Omni VM Calc: 10 + 20 should be 30
+    // Currently bytecode logic is primitive (hardcoded demo), but let's write real Omni code
+    // The backend should generate opcodes for this.
+    print(a + b);
+}
