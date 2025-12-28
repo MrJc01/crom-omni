@@ -4,7 +4,7 @@
 // Run with: omni run examples/10_animated_solar_system/src/main.omni --web
 // ============================================================================
 
-import "std/core.omni";
+// import "std/core.omni";
 import "std/3d.omni";
 import "std/math.omni";
 
