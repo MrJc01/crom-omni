@@ -1,5 +1,6 @@
 mod core;
 mod targets;
+mod commands;
 
 use clap::{Parser, Subcommand, ValueEnum};
 use std::fs;
@@ -69,6 +70,8 @@ enum Commands {
     /// Verify system dependencies (gcc, node)
     /// Verify system dependencies (gcc, node)
     Doctor,
+    /// Deep clean build artifacts and fix locks
+    Repair,
 }
 
 #[derive(Clone, ValueEnum, Debug, PartialEq)]
@@ -90,7 +93,21 @@ impl std::str::FromStr for TargetLang {
     }
 }
 
-fn main() -> Result<()> {
+fn main() {
+    if let Err(e) = run() {
+        eprintln!("{} {}", "Error:".red().bold(), e);
+        
+        let err_str = e.to_string();
+        if err_str.contains("Access is denied") || err_str.contains("used by another process") {
+             eprintln!("\n{} Build seems locked. Try running:", "💡".yellow().bold());
+             eprintln!("    omni repair");
+        }
+        
+        std::process::exit(1);
+    }
+}
+
+fn run() -> Result<()> {
     let cli = Cli::parse();
 
     match &cli.command {
@@ -159,10 +176,11 @@ fn main() -> Result<()> {
                          
                          println!("   📦 Empacotando para: {}", bundle_path.display());
                          
-                         match core::packager::create_bundle(&out_dir, &bundle_path, shebang) {
-                             Ok(_) => println!("   ✨ Bundle criado com sucesso!"),
-                             Err(e) => println!("   ⚠️ Falha no empacotamento: {}", e),
-                         }
+                         // match core::packager::create_bundle(&out_dir, &bundle_path, shebang) {
+                         //     Ok(_) => println!("   ✨ Bundle criado com sucesso!"),
+                         //     Err(e) => println!("   ⚠️ Falha no empacotamento: {}", e),
+                         // }
+                         println!("   ⚠️ Bundling disabled temporarily (Phase 9)");
                     }
                 });
                 println!("\n{}", "Build de Projeto Concluído!".green().bold());
@@ -176,10 +194,10 @@ fn main() -> Result<()> {
              println!("{} Executing Omni Doctor...", "🚑".red());
              
              // Check Node
-             print!("   - Node.js Runtime: ");
-             match std::process::Command::new("node").arg("--version").output() {
-                 Ok(o) => println!("{} ({})", "OK".green(), String::from_utf8_lossy(&o.stdout).trim()),
-                 Err(_) => println!("{}", "MISSING (Install Node.js)".red().bold()),
+             let node_ver = std::process::Command::new("node").arg("-v").output();
+             match node_ver {
+                 Ok(v) => println!("     ✅ Node.js: {}", String::from_utf8_lossy(&v.stdout).trim()),
+                 Err(_) => println!("     ❌ Node.js NOT FOUND (Required for JS Target)"),
              }
 
              // Check GCC
@@ -194,6 +212,9 @@ fn main() -> Result<()> {
              }
 
              println!("\n{}", "Diagnosis Complete.".green());
+        }
+        Commands::Repair => {
+            commands::repair::clean_build_artifacts()?;
         }
         Commands::Run { file, laravel, react, c } => {
             if *laravel {

@@ -74,31 +74,38 @@ fn ingest_node(content: &str, path: &Path) -> Result<String> {
     let file_stem = path.file_stem().unwrap().to_string_lossy();
     let capsule_name = capitalize(&file_stem);
     
-    // JS Heuristics
-    // const x = ...
-    // function x(...)
+    // 1. Regex Definitions
     let re_func = Regex::new(r"function\s+(\w+)\s*\(([^)]*)\)").unwrap();
     let re_const = Regex::new(r"const\s+(\w+)\s*=").unwrap();
-    // React Hook: const [count, setCount] = useState(0);
-    let re_const = Regex::new(r"const\s+(\w+)\s*=").unwrap();
-    // React Hook: const [count, setCount] = useState(0);
     let re_hook = Regex::new(r"const\s+\[(\w+),\s*set\w+\]\s*=\s*useState\((.*)\)").unwrap();
-    // React Props: const User = ({ name }) =>
     let re_react_props = Regex::new(r"const\s+(\w+)\s*=\s*\(\{\s*([^}]+)\s*\}\)\s*=>").unwrap();
-    
+    let re_laravel_route = Regex::new(r"Route::(get|post|put|delete)\s*\(\s*'([^']+)'").unwrap();
+    let re_express_route = Regex::new(r"app\.(get|post|put|delete)\s*\(\s*'([^']+)'").unwrap();
+
     let mut items = String::new();
-    
+
+    // 2. Process Hooks (Mutable State)
     for cap in re_hook.captures_iter(content) {
          let var_name = &cap[1];
          let init_val = &cap[2];
          items.push_str(&format!("\n    // React Hook -> Mutable Variable\n    let mut {} = {};\n", var_name, init_val));
     }
     
+    // 3. Process Constants (unless it's a component or hook already caught? simplest heuristic for now)
+    // Note: This matches 'const x =' which might overlap with hooks/components. 
+    // In a real parser we'd check ranges, but for regex-ingest we'll just allow duplicate comments or rely on specific patterns.
+    // For now, let's skip re_const execution to avoid clutter if we prefer structured ingestion, 
+    // OR we can leave it but we typically want to avoid ingesting the same line twice.
+    // Let's keep it simple: if it looks like a simple const, we take it.
     for cap in re_const.captures_iter(content) {
-         items.push_str(&format!("\n    // Ingested constant\n    let {} = native \"js\" {{ return ...; }};\n", &cap[1]));
+         let name = &cap[1];
+         // Basic filter to avoid ingesting 'Route' or 'app' as constants if they appear so
+         if name != "Route" && name != "app" {
+            items.push_str(&format!("\n    // Ingested constant\n    let {} = native \"js\" {{ return ...; }};\n", name));
+         }
     }
     
-    // React Props Mapping
+    // 4. React Props Mapping
     for cap in re_react_props.captures_iter(content) {
         let comp_name = &cap[1];
         let props_str = &cap[2];
@@ -121,6 +128,7 @@ fn ingest_node(content: &str, path: &Path) -> Result<String> {
         items.push_str("    }\n");
     }
 
+    // 5. Functions
     for cap in re_func.captures_iter(content) {
         let name = &cap[1];
         let args = &cap[2].trim();
@@ -134,6 +142,34 @@ fn ingest_node(content: &str, path: &Path) -> Result<String> {
         items.push_str(&format!("\n    flow {}({}) {{\n        native \"js\"`\n            // Original JS function {}\n        `\n    }}\n", name, omni_args, name));
     }
 
+    // 6. Universal Router Mapping (Laravel)
+    for cap in re_laravel_route.captures_iter(content) {
+        let method = cap[1].to_uppercase();
+        let path = &cap[2];
+        let omni_path = path.replace("{", ":").replace("}", ""); // {id} -> :id
+        let name = format!("{}_{}", method.to_lowercase(), omni_path.replace("/", "_").replace("-", "_").replace(":", "").trim_start_matches('_'));
+        
+        items.push_str(&format!("\n    // Route: {} {}\n", method, path));
+        items.push_str(&format!("    @route(method: \"{}\", path: \"{}\")\n", method, omni_path));
+        items.push_str(&format!("    flow {}() {{\n", name));
+        items.push_str("        native \"php\" { return ...; }\n");
+        items.push_str("    }\n");
+    }
+
+    // 7. Universal Router Mapping (Express)
+    for cap in re_express_route.captures_iter(content) {
+        let method = cap[1].to_uppercase();
+        let path = &cap[2];
+        let omni_path = path.replace("{", ":").replace("}", ""); // Standardize param syntax
+        let name = format!("{}_{}", method.to_lowercase(), omni_path.replace("/", "_").replace("-", "_").replace(":", "").trim_start_matches('_'));
+        
+        items.push_str(&format!("\n    // Route: {} {}\n", method, path));
+        items.push_str(&format!("    @route(method: \"{}\", path: \"{}\")\n", method, omni_path));
+        items.push_str(&format!("    flow {}() {{\n", name));
+        items.push_str("        native \"js\" { return ...; }\n");
+        items.push_str("    }\n");
+    }
+    
     Ok(format!("capsule {} {{{}\n}}\n", capsule_name, items))
 }
 

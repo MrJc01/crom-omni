@@ -28,9 +28,9 @@ pub mod faq; // Searchable FAQ system
 pub mod metamorph; // Framework adapters
 pub mod diagramgen; // Mermaid diagram generator
 pub mod roadmap; // Visual roadmap tracker
-pub mod phpingest; // PHP to Omni ingestion
-pub mod jsingest; // JavaScript/TypeScript to Omni ingestion
-pub mod pyingest; // Python to Omni ingestion
+// pub mod phpingest; // Deprecated by core/ingest
+// pub mod jsingest; // Deprecated by core/ingest
+// pub mod pyingest; // Deprecated by core/ingest
 pub mod typeinfer; // Type inference engine
 pub mod diffinspect; // Diff inspector for ingestion
 pub mod ingest; // Unified ingestion command
@@ -47,9 +47,9 @@ pub mod reactgen; // React/JSX generator
 pub mod laravelgen; // Laravel PHP generator
 pub mod vuegen; // Vue/Svelte generator
 pub mod cgen; // Native C generator
-pub mod laravelingest; // Laravel pattern recognition
-pub mod yiiingest; // Yii2 Active Record ingestion
-pub mod reactingest; // React/JSX ingestion
+// pub mod laravelingest; // Deprecated
+// pub mod yiiingest; // Deprecated
+// pub mod reactingest; // Deprecated
 pub mod docextract; // Docstring extraction
 pub mod config;
-pub mod packager; // New export
+// pub mod packager; // New export

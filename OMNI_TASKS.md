@@ -93,6 +93,35 @@
 - [ ] **Task 06.3: C ownership model.** Injetar retain/release em cada atribuição de struct no C.
 - [ ] **Task 06.4: Incremental Compilation.** Gerar hashes de arquivos para evitar recompilação desnecessária.
 
+## Level 8: Maestria Ambiental
+
+- [x] **Task 08.1: Shadow Sync.** Garantir limpeza do `omnic_temp.exe` (via Repair).
+- [ ] **Task 08.2: HTTP Header Mapping.** Suportar Headers/Cookies em `std/http`.
+- [x] **Task 08.3: Dynamic Route Logic.** Ingestão de `{id}` para `@route`.
+- [ ] **Task 08.4: Standalone Ingestion.** Download automático de parsers.
+- [x] **Task 08.5: Omni Repair.** Comando de auto-cura do build.
+- [x] **Task 08.6: HTTP Adapter (JS).** Implementação zero-dep para Node.js.
+
+## Level 9: O Grande Ciclo (Metamorfose)
+
+- [ ] **Task 09.1: Ingestor Unification.** Unificar lógica Node/PHP/React num único motor semântico.
+- [ ] **Task 09.2: First HTTP Request.** Validar o ciclo Request/Response no alvo JS.
+- [ ] **Task 09.3: C Socket Implementation.** Implementar o backend de rede para o alvo C.
+- [ ] **Task 09.4: Full Cycle Proof.** Ingerir `examples/28_universal_route.php` e rodar via `--web`.
+- [ ] **Task 09.5: Repair Integration.** Sugerir `repair` em falhas de build.
+
+## Level 10: Omnipresença (Future)
+
+- [ ] **Task 10.1: Kernel Module Target.**
+- [ ] **Task 10.2: FPGA Synthesis.**
+
+## Level 7: Roteamento e Resiliência
+
+- [ ] **Task 07.1: Shadow Execution.** Implementar rotação de binários no build (`omni.bat` shadow copy).
+- [ ] **Task 07.2: Route Pattern Matcher.** Ingerir sistemas de roteamento (Express/Laravel) para `@route`.
+- [ ] **Task 07.3: Universal HTTP Capsule.** Contrato `std.http` unificado.
+- [ ] **Task 07.4: Binary Self-Update.** Lógica de auto-update do binário.
+
 50. [ ] **StdLib in C:** Implement core stdlib in C.
 51. [ ] **Self-Hosting Bootstrap:** Compiler compiling itself.
 52. [ ] **Standalone Binary:** `omni.exe` (no node/rust req).

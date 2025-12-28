@@ -1,9 +1,10 @@
 {
   "version": "1.3.0",
-  "phase": "1.5 - Purification & Robustness",
+  "phase": "1.9 - The Great Cycle",
   "architecture": {
     "entry_point_standard": "auto-main",
-    "memory_model": "hybrid-rc"
+    "memory_model": "hybrid-rc",
+    "execution_mode": "shadow-copy"
   },
   "ast_state": {
     "nodes": "stable",
@@ -13,7 +14,8 @@
   "known_bugs": [
     "Apostrophe corruption in native blocks (JS target)",
     "Missing error location in syntax errors",
-    "Visual decorators desync on manual edit"
+    "Visual decorators desync on manual edit",
+    "Phase 6 Build Lock: omnic.exe locked during rebuild (Being fixed in Phase 8 via omni repair)"
   ],
   "bootstrap_progress": {
     "self_hosted": false,

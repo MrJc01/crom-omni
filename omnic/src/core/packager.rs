@@ -1,5 +1,5 @@
 use std::fs::{self, File};
-use std::io::{Write, Read, Seek};
+use std::io::{Write, Seek};
 use std::path::Path;
 use anyhow::{Result, Context};
 use zip::write::FileOptions;

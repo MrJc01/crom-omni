@@ -1,58 +1,50 @@
-// ============================================================================
-// STD/HTTP.omni - HTTP Client Library
-// ============================================================================
-// Cross-platform HTTP requests
+// std/http.omni
+// Universal HTTP Contract
 
-struct HttpResponse {
-    status: i64,
-    body: string,
-    ok: bool
-}
+capsule std_http {
+    
+    // Abstract Request Object
+    struct Request {
+        method: string,
+        path: string,
+        headers: any, // Map<string, string>
+        body: any
+    }
 
-fn http_get(url: string) -> HttpResponse {
-    let response = HttpResponse { status: 0, body: "", ok: false };
-    native "js" {
-        // Simulated for demo - real implementation would use fetch/http
-        response.status = 200;
-        response.body = '{"status": "ok", "source": "omni-http"}';
-        response.ok = true;
-        console.log("[HTTP] GET " + url);
+    // Abstract Response Object
+    struct Response {
+        status: i32,
+        body: any
     }
-    native "python" {
-import urllib.request
-try:
-    with urllib.request.urlopen(url) as r:
-        response.body = r.read().decode('utf-8')
-        response.status = r.status
-        response.ok = True
-except Exception as e:
-    response.body = str(e)
-    response.ok = False
-print(f"[HTTP] GET {url}")
-    }
-    return response;
-}
 
-fn http_post(url: string, data: string) -> HttpResponse {
-    let response = HttpResponse { status: 0, body: "", ok: false };
-    native "js" {
-        response.status = 201;
-        response.body = '{"created": true}';
-        response.ok = true;
-        console.log("[HTTP] POST " + url);
+    // Server listening (Node Native)
+    flow listen(port: i32) {
+        native "js" {
+            const http = require('http');
+            const server = http.createServer((req, res) => {
+                res.writeHead(200, { 'Content-Type': 'text/plain' });
+                res.end('Omni Sovereign Core v1.0');
+            });
+            server.listen(port, () => {
+                console.log(`🚀 Sovereign Server running on port ${port}`);
+            });
+        }
+        native "php" {
+            // PHP usually runs behind Apache/Nginx, so listen is no-op or starts built-in server
+            echo "PHP Server running via php -S localhost:" . $port;
+        }
     }
-    native "python" {
-import urllib.request
-try:
-    req = urllib.request.Request(url, data=data.encode('utf-8'), method='POST')
-    with urllib.request.urlopen(req) as r:
-        response.body = r.read().decode('utf-8')
-        response.status = r.status
-        response.ok = True
-except Exception as e:
-    response.body = str(e)
-    response.ok = False
-print(f"[HTTP] POST {url}")
+
+    // Client Request (Fetch / Guzzle)
+    flow get(url: string) -> Response {
+        native "js" {
+            const res = await fetch(url);
+            return { status: res.status, body: await res.json() };
+        }
+        native "php" {
+            $client = new \GuzzleHttp\Client();
+            $res = $client->request('GET', $url);
+            return ['status' => $res->getStatusCode(), 'body' => json_decode($res->getBody())];
+        }
     }
-    return response;
 }
