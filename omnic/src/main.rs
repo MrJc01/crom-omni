@@ -15,26 +15,54 @@ use crate::core::semantic;
 
 
 
-fn get_available_port(start: u16) -> Option<u16> {
-    (start..=9000).find(|port| is_port_available(*port))
-}
+
+use std::net::TcpListener;
+use std::io::{self, Write};
 
 fn is_port_available(port: u16) -> bool {
-    std::net::TcpListener::bind(("127.0.0.1", port)).is_ok()
+    // Check both loopback and wildcard to ensure port is truly free
+    TcpListener::bind(("127.0.0.1", port)).is_ok() && TcpListener::bind(("0.0.0.0", port)).is_ok()
 }
 
-fn kill_process_on_port(port: u16) {
-    #[cfg(target_os = "windows")]
-    {
-        // Find PID: netstat -ano | findstr :PORT
-        // This is complex to do purely with std::command properly parsing, 
-        // a simpler nuclear option for dev env:
-        // Use powershell to kill listener.
-        let output = std::process::Command::new("powershell")
-            .args(["-Command", &format!("Get-NetTCPConnection -LocalPort {} -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess | ForEach-Object {{ Stop-Process -Id $_ -Force }}", port)])
-            .output();
-        // Ignore output errors, it might fail if no process etc.
+fn find_available_port(start_port: u16) -> u16 {
+    let mut port = start_port;
+    // Try up to 100 ports
+    while !is_port_available(port) && port < start_port + 100 {
+        port += 1;
     }
+    
+    if port != start_port {
+        println!("{} Port {} busy, switching to {}", "⚠️".yellow(), start_port, port);
+    }
+    port
+}
+
+fn get_python_dll_path() -> Option<String> {
+    // Attempt to deduce python3xx.dll from sys.executable
+    let output = std::process::Command::new("python")
+        .args(["-c", "import sys; import os; print(sys.executable)"])
+        .output()
+        .ok()?;
+    
+    if !output.status.success() {
+        return None;
+    }
+
+    let executable_path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    let path = PathBuf::from(&executable_path);
+    let parent = path.parent()?;
+    
+    // Check for python3xx.dll in the same directory
+    // We can try to list files matching python3*.dll
+    if let Ok(entries) = fs::read_dir(parent) {
+        for entry in entries.flatten() {
+            let name = entry.file_name().to_string_lossy().to_string();
+            if name.starts_with("python3") && name.ends_with(".dll") {
+                return Some(entry.path().to_string_lossy().to_string());
+            }
+        }
+    }
+    None
 }
 
 #[derive(Parser)]
@@ -376,8 +404,25 @@ fn run() -> Result<()> {
                  
                  // 4. Determine Mode
                  let serve_dir = file.parent().unwrap_or(Path::new("."));
+                 
+                 let mut use_tauri = *web_app;
+                 let mut use_native = *app;
 
-                 if *web_app {
+                 // Logic Check: Fallback if Python is too new
+                 if use_native {
+                     if let Some(dll) = get_python_dll_path() {
+                        // Debug info
+                        // println!("DEBUG: Python DLL found: {}", dll);
+                         if dll.contains("314") || dll.contains("3.14") || dll.contains("313") {
+                             println!("{} Python 3.13+ detected (Incompatible with Native Renderer)", "⚠️".yellow());
+                             println!("   🦋 Automatically switching to Tauri Mode (--web-app)...");
+                             use_native = false;
+                             use_tauri = true;
+                         }
+                     }
+                 }
+
+                 if use_tauri {
                      println!("   🦋 Metamorphosis: Tauri Mode...");
                      
                      // 1. Create scaffolding directory
@@ -524,30 +569,8 @@ fn main() {
                      fs::write(icons_dir.join("icon.ico"), &ico_bytes)?;
                      
                      // 8. Start Python HTTP Server for "devUrl"
-                     // Interactive Port Logic requested by user
-                     let mut port = 8080;
-                     if !is_port_available(port) {
-                         println!("⚠️  Port {} is in use.", port);
-                         println!("   (k) Kill process on port {}", port);
-                         println!("   (n) switch to New available port");
-                         print!("   Select [k/N]: ");
-                         use std::io::{self, Write};
-                         io::stdout().flush().unwrap();
-                         
-                         let mut input = String::new();
-                         io::stdin().read_line(&mut input).unwrap();
-                         let choice = input.trim().to_lowercase();
-                         
-                         if choice == "k" || choice == "s" || choice == "y" { // s/y from user request context (sim/yes)
-                             println!("   🔪 Killing process on port {}...", port);
-                             kill_process_on_port(port);
-                             std::thread::sleep(std::time::Duration::from_millis(1000));
-                         } else {
-                             port = get_available_port(8081).unwrap_or(8081);
-                             println!("   twisted_rightwards_arrows: Switched to port {}", port);
-                         }
-                     }
-
+                     // 8. Start Python HTTP Server for "devUrl"
+                     let port = find_available_port(8080);
                      println!("   🚀 Starting Backend Server on port {}...", port);
                      
                      let mut server_process = std::process::Command::new("python")
@@ -566,7 +589,9 @@ fn main() {
                      // We generated it with 8080 unless it was modified.
                      // Let's replace "localhost:XXXX" just to be sure if we can regex, but replace simple is fine for now if we assume clean gen?
                      // Actually, we regenerate tauri.conf.json EVERY RUN in step 3. So it is always 8080 initially.
-                     let new_conf = conf_content.replace("http://localhost:8080", &format!("http://localhost:{}", port));
+                     // IMPORTANT: Serve specific file to avoid directory listing!
+                     let target_url = format!("http://localhost:{}/{}", port, html_file.file_name().unwrap().to_str().unwrap());
+                     let new_conf = conf_content.replace("http://localhost:8080", &target_url);
                      fs::write(&tauri_conf_path, new_conf)?;
 
                      // Wait for server warm-up
@@ -593,36 +618,16 @@ fn main() {
                      return Ok(());
                  }
                  
-                 if *app {
+                 if use_native {
                      println!("   🖥️  Native App Mode (WebView2/Python)...");
                      
-                     let mut port = 8080;
-                     // Only check port if we are creating a fresh server? 
-                     // Assuming Internal Server strategy for --app too.
-                     if !is_port_available(port) {
-                         // Default to auto-switch for --app or ask? strict parity: ask.
-                         // But --app is less "setup heavy" than tauri. Let's ask.
-                         println!("⚠️  Port {} is in use.", port);
-                         println!("   (k) Kill process on port {}", port);
-                         println!("   (n) switch to New available port");
-                         print!("   Select [k/N]: ");
-                         use std::io::{self, Write};
-                         io::stdout().flush().unwrap();
-                         
-                         let mut input = String::new();
-                         io::stdin().read_line(&mut input).unwrap();
-                         let choice = input.trim().to_lowercase();
-                         
-                         if choice == "k" || choice == "s" || choice == "y" {
-                             println!("   🔪 Killing process on port {}...", port);
-                             kill_process_on_port(port);
-                             std::thread::sleep(std::time::Duration::from_millis(1000));
-                         } else {
-                             port = get_available_port(8081).unwrap_or(8081);
-                             println!("   twisted_rightwards_arrows: Switched to port {}", port);
-                         }
+                     let port = find_available_port(8080);
+                     
+                     // Fix PythonNet on Windows
+                     #[cfg(target_os = "windows")]
+                     if let Some(dll_path) = get_python_dll_path() {
+                         std::env::set_var("PYTHONNET_PYDLL", dll_path);
                      }
-
                      let serve_dir = file.parent().unwrap_or(Path::new("."));
                      
                      // A. Start Python HTTP Server
@@ -688,7 +693,7 @@ if __name__ == '__main__':
 
                  } else {
                      // Web Mode
-                     let port = get_available_port(3000).unwrap_or(3000);
+                     let port = find_available_port(3000);
                      println!("   🚀 Starting server at http://localhost:{}", port);
                      println!("   📌 Open: http://localhost:{}/{}", port, html_file.file_name().unwrap().to_str().unwrap());
                      
