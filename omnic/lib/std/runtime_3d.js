@@ -222,7 +222,7 @@ function AnimationLoop(callback) {
                 return;
             }
             callback();
-        }, 50); // 20 FPS
+        }, 16); // 60 FPS
     }
 }
 

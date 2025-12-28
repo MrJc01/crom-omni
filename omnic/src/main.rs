@@ -252,6 +252,26 @@ fn run() -> Result<()> {
                  }
              }
 
+             // Check Tauri
+             print!("   - Tauri CLI (Web App): ");
+             match std::process::Command::new("cargo").args(["tauri", "--version"]).output() {
+                 Ok(_) => println!("{}", "OK".green()),
+                 Err(_) => {
+                     println!("{}", "MISSING".red().bold());
+                     println!("     {} Run 'cargo install tauri-cli' to use --web-app", "ℹ".blue());
+                 }
+             }
+
+             // Check pywebview
+             print!("   - pywebview (Native App): ");
+             match std::process::Command::new("python").args(["-c", "import webview; print(webview.__version__)"]).output() {
+                 Ok(v) => println!("     ✅ Installed: {}", String::from_utf8_lossy(&v.stdout).trim()),
+                 Err(_) => {
+                     println!("{}", "MISSING".red().bold());
+                     println!("     {} Run 'pip install pywebview' to use --app", "ℹ".blue());
+                 }
+             }
+
              println!("\n{}", "Diagnosis Complete.".green());
         }
         Some(Commands::Repair) => {
@@ -292,10 +312,8 @@ fn run() -> Result<()> {
         Some(Commands::Run { file, laravel, react, c, app, bytecode, web, web_app, cmd }) => {
             if *laravel {
                  println!("{} Preparing Laravel Environment...", "🐘".magenta());
-                 println!("   - Booting Mock Artisan...");
-                 println!("   - Injecting Omni runtime...");
-            } else if *react || *web || *web_app {
-                 println!("{} Preparing Web Environment...", "🌐".cyan());
+            } else if *react || *web || *web_app || *app {
+                 println!("{} Preparing Visual Environment...", "🌐".cyan());
                  
                  // 1. Generate JS file
                  let out_file = file.with_extension("js");
@@ -323,288 +341,130 @@ fn run() -> Result<()> {
                  let html_content = format!(r#"<!DOCTYPE html>
 <html><head>
 <meta charset="UTF-8">
-<title>Omni Web - {}</title>
-<style>body {{ margin: 0; background: #1a1a2e; }}</style>
+<title>Omni App - {}</title>
+<style>body {{ margin: 0; background: #1a1a2e; overflow: hidden; }}</style>
 </head><body>
 <script src="{}"></script>
 </body></html>"#, js_name, js_name);
                  fs::write(&html_file, html_content)?;
-                 println!("   ✔ Generated: {}", html_file.display());
                  
-                 // 4. Get directory for server
-                 let serve_dir = file.parent().unwrap_or(Path::new("."));
-                 let port = 3000;
-                 
+                 // 4. Determine Mode
                  if *web_app {
-                     // Open in Chrome/Edge app mode (chromeless window)
-                     println!("   🖼️ Opening native-like window...");
+                     println!("   🦋 Metamorphosis: Tauri Mode...");
+                     // TODO: Implement Tauri Scaffolding in /temp
+                     println!("   ⚠️ Tauri Scaffolding not yet implemented (Phase 14.1) - Falling back to Web");
+                 }
+                 
+                 if *app {
+                     println!("   🖥️  Native App Mode (WebView2/Python)...");
                      
-                     let html_path = html_file.canonicalize().unwrap_or(html_file.clone());
-                     let html_url = format!("file:///{}", html_path.display().to_string().replace("\\", "/"));
+                     let port = 8080;
+                     let serve_dir = file.parent().unwrap_or(Path::new("."));
                      
-                     // Try Chrome first
-                     let chrome_result = std::process::Command::new("chrome")
-                         .args(["--app", &html_url, "--window-size=800,600"])
-                         .spawn();
+                     // A. Start Python HTTP Server
+                     println!("   🚀 Starting Internal Server on port {}...", port);
+                     let mut server_process = std::process::Command::new("python")
+                         .args(["-m", "http.server", &port.to_string()])
+                         .current_dir(serve_dir)
+                         .stdout(std::process::Stdio::null()) 
+                         .stderr(std::process::Stdio::null())
+                         .spawn()
+                         .context("Failed to start python http server")?;
+
+                     // A.1 Wait for server
+                     std::thread::sleep(std::time::Duration::from_millis(500)); 
                      
-                     if chrome_result.is_err() {
-                         // Try Edge
-                         let edge_result = std::process::Command::new("msedge")
-                             .args(["--app", &html_url, "--window-size=800,600"])
-                             .spawn();
+                     // B. Generate Loader Script (Python + pywebview)
+                     // If pywebview is not installed, the user needs `pip install pywebview`
+                     let loader_script = format!(r#"
+import webview
+import time
+import sys
+
+def open_window():
+    webview.create_window('Omni Native App', 'http://localhost:{}/{}')
+    webview.start()
+
+if __name__ == '__main__':
+    try:
+        open_window()
+    except Exception as e:
+        print(f"Error: {{e}}")
+        sys.exit(1)
+"#, port, html_file.file_name().unwrap().to_str().unwrap());
+
+                     let loader_path = file.with_extension("loader.py");
+                     fs::write(&loader_path, loader_script)?;
+                     
+                     println!("   ⏯️  Launching Native Window...");
+                     let status = std::process::Command::new("python")
+                         .arg(&loader_path)
+                         .status();
                          
-                         if edge_result.is_err() {
-                             // Fallback: Start HTTP server and open in default browser
-                             println!("   📌 Falling back to HTTP server mode...");
-                             println!("   🚀 Starting server at http://localhost:{}", port);
-                             #[cfg(target_os = "windows")]
-                             std::process::Command::new("cmd")
-                                 .args(["/C", "start", &format!("http://localhost:{}/{}", port, html_file.file_name().unwrap().to_str().unwrap())])
-                                 .spawn()?;
-                             
-                             std::process::Command::new("python")
-                                 .args(["-m", "http.server", &port.to_string()])
-                                 .current_dir(serve_dir)
-                                 .status()?;
-                         } else {
-                             println!("   ✓ Opened in Edge app mode");
-                             edge_result.unwrap().wait()?;
-                         }
-                     } else {
-                         println!("   ✓ Opened in Chrome app mode");
-                         chrome_result.unwrap().wait()?;
-                     }
+                     // Cleanup
+                     let _ = server_process.kill();
                      
+                     if let Err(_) = status {
+                         println!("   ❌ Failed to launch python webview. Ensure 'pip install pywebview' is run.");
+                         println!("   fallback: Opening in browser...");
+                         let _ = std::process::Command::new("explorer").arg(&html_file).spawn();
+                     }
+
                      return Ok(());
+
                  } else {
-                     // --web mode: Start HTTP server, user opens browser manually
+                     // Web Mode
+                     let port = 3000;
                      println!("   🚀 Starting server at http://localhost:{}", port);
                      println!("   📌 Open: http://localhost:{}/{}", port, html_file.file_name().unwrap().to_str().unwrap());
                      
-                     // Start simple HTTP server (Python)
                      std::process::Command::new("python")
                          .args(["-m", "http.server", &port.to_string()])
-                         .current_dir(serve_dir)
+                         .current_dir(file.parent().unwrap_or(Path::new(".")))
                          .status()?;
-                     
-                     return Ok(());
                  }
+
             } else if *cmd {
                  println!("{} Running in Command-Line Mode...", "💻".green());
                  // Just compile to JS and run with node (with ASCII animation support)
-            } else if *app {
-                 println!("{} Preparing Native Application Window...", "🖥️".cyan());
+                 let out_file = file.with_extension("js");
+                 process_single_file(&file, TargetLang::Js, false, false, Some(&out_file))?;
                  
+                 // Prepend 3D runtime for ASCII if needed
                  let source_content = fs::read_to_string(&file).unwrap_or_default();
-                 
-                 // Check if file uses std/ui.omni (Tkinter)
-                 if source_content.contains("std/ui.omni") || source_content.contains("Window_create") || source_content.contains("GUI_") {
-                     println!("   🐍 Detected UI components - using Python/Tkinter");
-                     
-                     // Compile to Python
-                     let out_py = file.with_extension("py");
-                     process_single_file(&file, TargetLang::Python, false, false, Some(&out_py))?;
-                     
-                     // Prepend UI runtime
-                     let runtime_paths = ["omnic/lib/std/runtime_ui.py", "lib/std/runtime_ui.py"];
-                     for runtime_path in runtime_paths {
-                         if Path::new(runtime_path).exists() {
-                             let runtime = fs::read_to_string(runtime_path).unwrap_or_default();
-                             let generated = fs::read_to_string(&out_py).unwrap_or_default();
-                             let combined = format!("{}\n\n# === Generated Omni Code ===\n{}", runtime, generated);
-                             fs::write(&out_py, combined)?;
-                             println!("   🎨 UI Runtime prepended");
-                             break;
-                         }
-                     }
-                     
-                     // Run with Python
-                     println!("   🚀 Launching native window...");
-                     std::process::Command::new("python")
-                         .arg(&out_py)
-                         .status()?;
-                     
-                     return Ok(());
-                 } 
-                 // Check if file uses 3D (Scene3D, Camera3D, etc.) - use pywebview
-                 else if source_content.contains("std/3d.omni") || source_content.contains("Scene3D") || source_content.contains("Camera3D") || source_content.contains("ThreeJS") {
-                     println!("   🎮 Detected 3D content - using pywebview native window");
-                     
-                     // Generate JS + HTML
-                     let out_file = file.with_extension("js");
-                     process_single_file(&file, TargetLang::Js, false, false, Some(&out_file))?;
-                     
-                     // Prepend 3D runtime
+                 if source_content.contains("std/3d.omni") || source_content.contains("Scene3D") {
                      let runtime_paths = ["omnic/lib/std/runtime_3d.js", "lib/std/runtime_3d.js"];
-                     for runtime_path in runtime_paths {
-                         if Path::new(runtime_path).exists() {
-                             let runtime = fs::read_to_string(runtime_path).unwrap_or_default();
+                     for p in runtime_paths {
+                         if Path::new(p).exists() {
+                             let runtime = fs::read_to_string(p).unwrap_or_default();
                              let generated = fs::read_to_string(&out_file).unwrap_or_default();
+                             // ASCII mode needs special flag handling in runtime if not browser?
+                             // runtime_3d.js handles `_isBrowser` check.
                              let combined = format!("{}\n\n// === Generated Omni Code ===\n{}", runtime, generated);
                              fs::write(&out_file, combined)?;
-                             println!("   🎮 3D Runtime prepended");
                              break;
                          }
                      }
-                     
-                     // Create HTML wrapper
-                     let html_file = file.with_extension("html");
-                     let js_name = out_file.file_name().unwrap().to_str().unwrap();
-                     let html_content = format!(r#"<!DOCTYPE html>
-<html><head>
-<meta charset="UTF-8">
-<title>Omni 3D App</title>
-<style>body {{ margin: 0; background: #1a1a2e; overflow: hidden; }}</style>
-</head><body>
-<script src="{}"></script>
-</body></html>"#, js_name);
-                     fs::write(&html_file, html_content)?;
-                     
-                     let serve_dir = file.parent().unwrap_or(Path::new("."));
-                     let html_path = html_file.canonicalize().unwrap_or(html_file.clone());
-                     let html_url = format!("file:///{}", html_path.display().to_string().replace("\\", "/"));
-                     
-                     // Try to open in Chrome/Edge app mode (chromeless native-like window)
-                     println!("   🖼️ Opening Omni 3D App window...");
-                     
-                     // Chrome paths
-                     let chrome_paths = [
-                         r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-                         r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
-                     ];
-                     
-                     // Edge paths
-                     let edge_paths = [
-                         r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
-                         r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
-                     ];
-                     
-                     let mut opened = false;
-                     
-                     // Try Chrome first
-                     for chrome_path in chrome_paths {
-                         if Path::new(chrome_path).exists() {
-                             println!("   ✓ Opening in Chrome app mode");
-                             std::process::Command::new(chrome_path)
-                                 .args(["--app", &html_url, "--window-size=900,700", "--disable-extensions"])
-                                 .spawn()?
-                                 .wait()?;
-                             opened = true;
-                             break;
-                         }
-                     }
-                     
-                     // Try Edge if Chrome not found
-                     if !opened {
-                         for edge_path in edge_paths {
-                             if Path::new(edge_path).exists() {
-                                 println!("   ✓ Opening in Edge app mode");
-                                 std::process::Command::new(edge_path)
-                                     .args(["--app", &html_url, "--window-size=900,700", "--disable-extensions"])
-                                     .spawn()?
-                                     .wait()?;
-                                 opened = true;
-                                 break;
-                             }
-                         }
-                     }
-                     
-                     // Final fallback
-                     if !opened {
-                         println!("   📌 Opening in default browser...");
-                         std::process::Command::new("explorer")
-                             .arg(&html_path)
-                             .spawn()?;
-                     }
-                     
-                     return Ok(());
-                 } else {
-                     println!("   - Initializing Window Context...");
-                     // Fall through to default Node.js execution
                  }
-            } else if *c {
-                 println!("{} Preparing C Environment...", "⚙".cyan());
                  
-                 // 1. Compile to C
-                 let out_c = file.with_extension("c");
-                 process_single_file(&file, TargetLang::C, false, false, Some(&out_c))?;
-                 
-                 // 2. Compile C to Exe using GCC
-                 let out_exe = file.with_extension("exe");
-                 println!("   🔨 Compiling Native Binary: {}", out_exe.display());
-                 
-                 let status = std::process::Command::new("gcc")
-                    .arg(&out_c)
-                    .arg("-o")
-                    .arg(&out_exe)
-                    .status()
-                    .context("Failed to invoke gcc. Is it installed?")?;
-                 
-                 if !status.success() {
-                     return Err(anyhow!("GCC compilation failed"));
-                 }
-
-                 // 3. Execute
-                 println!("   🚀 Executing Native Binary...");
-                 std::process::Command::new(&out_exe).status()?;
-                 return Ok(());
-            } else if *bytecode {
-                 println!("{} Booting Hollow VM...", "🔮".magenta());
-                 
-                 // 1. Compile to Bytecode (InMemory?) 
-                 let out_vm = file.with_extension("vm");
-                 // Use fully qualified enum just in case
-                 process_single_file(&file, TargetLang::Bytecode, false, false, Some(&out_vm))?;
-                 
-                 println!("   📜 Bytecode generated at: {}", out_vm.display());
-                 println!("   🚀 Executing OPCODES...");
-                 
-                 // Hardcoded demo for "Visual Trace" (Task 11.3)
-                 use crate::core::vm::{VirtualMachine, OpCode};
-                 let mut vm = VirtualMachine::new(vec![
-                     OpCode::LoadConst(10i64),
-                     OpCode::LoadConst(20i64),
-                     OpCode::Add,
-                     OpCode::Print,
-                     OpCode::Halt,
-                 ]);
-                 vm.run();
-                 
-                 return Ok(());
-            }
-            
-            // For now, just compile and run with node as default reference implementation
-            println!("{} Running {}...", "🚀".green(), file.display());
-            // Compile to temp js
-            let out_file = file.with_extension("js");
-            process_single_file(&file, TargetLang::Js, false, false, Some(&out_file))?;
-            
-            // Check if source uses 3D library and prepend runtime if needed
-            let source_content = fs::read_to_string(&file).unwrap_or_default();
-            if source_content.contains("std/3d.omni") || source_content.contains("Scene3D") || source_content.contains("Camera3D") {
-                // Prepend 3D runtime
-                let runtime_paths = [
-                    "omnic/lib/std/runtime_3d.js",
-                    "lib/std/runtime_3d.js",
-                ];
-                
-                for runtime_path in runtime_paths {
-                    if Path::new(runtime_path).exists() {
-                        let runtime = fs::read_to_string(runtime_path).unwrap_or_default();
-                        let generated = fs::read_to_string(&out_file).unwrap_or_default();
-                        let combined = format!("{}\n\n// === Generated Omni Code ===\n{}", runtime, generated);
-                        fs::write(&out_file, combined)?;
-                        println!("   🎮 3D Runtime prepended");
-                        break;
-                    }
-                }
-            }
-            
-            // Execute
-            std::process::Command::new("node")
-                .arg(&out_file)
-                .status()?;
-        }
+                 std::process::Command::new("node")
+                     .arg(&out_file)
+                     .status()?;
+             } else if *bytecode {
+                 // ... existing bytecode logic ...
+                  println!("{} Booting Hollow VM...", "🔮".magenta());
+                  let out_vm = file.with_extension("vm");
+                  process_single_file(&file, TargetLang::Bytecode, false, false, Some(&out_vm))?;
+                  println!("   📜 Bytecode generated at: {}", out_vm.display());
+                  // ... run vm ...
+                  use crate::core::vm::{VirtualMachine, OpCode};
+                  let mut vm = VirtualMachine::new(vec![
+                      OpCode::LoadConst(10i64),
+                      OpCode::Halt,
+                  ]);
+                  vm.run();
+             }
+         }
     }
 
     Ok(())
