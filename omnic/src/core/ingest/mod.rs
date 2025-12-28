@@ -39,7 +39,10 @@ fn ingest_file(path: &Path) -> Result<()> {
 
 fn ingest_php(content: &str, path: &Path) -> Result<String> {
     let file_stem = path.file_stem().unwrap().to_string_lossy();
-    let capsule_name = capitalize(&file_stem);
+    let mut capsule_name = capitalize(&file_stem);
+    if capsule_name.chars().next().map(|c| c.is_numeric()).unwrap_or(false) {
+        capsule_name = format!("C_{}", capsule_name); // Hex-safe prefix
+    }
     
     // Simple regex heuristics for PHP
     // 1. Detect Functions: function name(...)
@@ -52,6 +55,9 @@ fn ingest_php(content: &str, path: &Path) -> Result<String> {
 
     // 3. Detect Middleware: public function handle($request, Closure $next)
     let re_middleware = Regex::new(r"public\s+function\s+handle\s*\(\s*\$request\s*,\s*Closure\s+\$next\s*\)").unwrap();
+    
+    // 4. Universal Router Mapping (Laravel)
+    let re_laravel_route = Regex::new(r"Route::(get|post|put|delete)\s*\(\s*'([^']+)'").unwrap();
 
     for cap in re_func.captures_iter(content) {
         let name = &cap[1];
@@ -66,7 +72,25 @@ fn ingest_php(content: &str, path: &Path) -> Result<String> {
             
         flows.push_str(&format!("\n    flow {}({}) {{\n        native \"php\" {{\n            // Originally: function {}(...)\n            // Logic preserved for manual review\n        }}\n    }}\n", name, omni_args, name));
     }
+
+    // Universal Router Mapping (Laravel)
+    for cap in re_laravel_route.captures_iter(content) {
+        let method = cap[1].to_uppercase();
+        let path = &cap[2];
+        let omni_path = path.replace("{", ":").replace("}", ""); // {id} -> :id
+        let name = format!("{}_{}", method.to_lowercase(), omni_path.replace("/", "_").replace("-", "_").replace(":", "").trim_start_matches('_'));
+        
+        flows.push_str(&format!("\n    // Route: {} {}\n", method, path));
+        flows.push_str(&format!("    @route(method: \"{}\", path: \"{}\")\n", method, omni_path));
+        flows.push_str(&format!("    flow {}() {{\n", name));
+        flows.push_str("        native \"php\" { return ...; }\n");
+        flows.push_str("    }\n");
+    }
     
+    // Inject Main Flow for Server Metamorphosis
+    flows.push_str("\n    flow main() {\n        std.http.listen(8080);\n    }\n");
+
+    let decorators = "import std.http;\n";
     Ok(format!("{}capsule {} {{{}\n}}\n", decorators, capsule_name, flows))
 }
 

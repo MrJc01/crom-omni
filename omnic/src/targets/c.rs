@@ -35,6 +35,68 @@ impl CodeGenerator for CBackend {
         code.push_str("    WSAStartup(MAKEWORD(2,2), &wsa);\n");
         code.push_str("    #endif\n");
         code.push_str("}\n\n");
+
+        code.push_str("void std_http_listen(int port) {\n");
+        code.push_str("    if (port == 0) port = 8080;\n");
+        code.push_str("    #ifdef _WIN32\n");
+        code.push_str("        SOCKET server_fd, new_socket;\n");
+        code.push_str("    #else\n");
+        code.push_str("        int server_fd, new_socket;\n");
+        code.push_str("    #endif\n");
+        code.push_str("    struct sockaddr_in address;\n");
+        code.push_str("    int addrlen = sizeof(address);\n");
+        code.push_str("    const char *hello = \"HTTP/1.1 200 OK\\r\\nContent-Type: text/plain\\r\\nContent-Length: 26\\r\\n\\r\\nOmni Sovereign Core v1.0\";\n");
+        
+        code.push_str("    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) exit(1);\n");
+        code.push_str("    address.sin_family = AF_INET;\n");
+        code.push_str("    address.sin_addr.s_addr = INADDR_ANY;\n");
+        code.push_str("    address.sin_port = htons(port);\n");
+        code.push_str("    bind(server_fd, (struct sockaddr *)&address, sizeof(address));\n");
+        code.push_str("    listen(server_fd, 3);\n");
+        code.push_str("    printf(\"🚀 Sovereign Server running on port %d (C-Native)\\n\", port);\n");
+        code.push_str("    while(1) {\n");
+        code.push_str("        #ifdef _WIN32\n");
+        code.push_str("            new_socket = accept(server_fd, (struct sockaddr *)&address, &addrlen);\n");
+        code.push_str("            send(new_socket, hello, (int)strlen(hello), 0);\n");
+        code.push_str("            closesocket(new_socket);\n");
+        code.push_str("        #else\n");
+        code.push_str("            new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen);\n");
+        code.push_str("            send(new_socket, hello, strlen(hello), 0);\n");
+        code.push_str("            close(new_socket);\n");
+        code.push_str("        #endif\n");
+        code.push_str("    }\n");
+        code.push_str("}\n\n");
+
+        code.push_str("void std_http_listen(int port) {\n");
+        code.push_str("    if (port == 0) port = 8080;\n");
+        code.push_str("    #ifdef _WIN32\n");
+        code.push_str("        SOCKET server_fd, new_socket;\n");
+        code.push_str("    #else\n");
+        code.push_str("        int server_fd, new_socket;\n");
+        code.push_str("    #endif\n");
+        code.push_str("    struct sockaddr_in address;\n");
+        code.push_str("    int addrlen = sizeof(address);\n");
+        code.push_str("    const char *hello = \"HTTP/1.1 200 OK\\r\\nContent-Type: text/plain\\r\\nContent-Length: 26\\r\\n\\r\\nOmni Sovereign Core v1.0C\";\n");
+        
+        code.push_str("    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) exit(1);\n");
+        code.push_str("    address.sin_family = AF_INET;\n");
+        code.push_str("    address.sin_addr.s_addr = INADDR_ANY;\n");
+        code.push_str("    address.sin_port = htons(port);\n");
+        code.push_str("    bind(server_fd, (struct sockaddr *)&address, sizeof(address));\n");
+        code.push_str("    listen(server_fd, 3);\n");
+        code.push_str("    printf(\"🚀 Sovereign Server running on port %d (C-Native)\\n\", port);\n");
+        code.push_str("    while(1) {\n");
+        code.push_str("        #ifdef _WIN32\n");
+        code.push_str("            new_socket = accept(server_fd, (struct sockaddr *)&address, &addrlen);\n");
+        code.push_str("            send(new_socket, hello, (int)strlen(hello), 0);\n");
+        code.push_str("            closesocket(new_socket);\n");
+        code.push_str("        #else\n");
+        code.push_str("            new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen);\n");
+        code.push_str("            send(new_socket, hello, strlen(hello), 0);\n");
+        code.push_str("            close(new_socket);\n");
+        code.push_str("        #endif\n");
+        code.push_str("    }\n");
+        code.push_str("}\n\n");
         
         // Memory Management Headers (Omni RC)
         code.push_str("// --- Omni Memory Management ---\n");

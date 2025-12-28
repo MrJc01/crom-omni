@@ -33,6 +33,9 @@ capsule std_http {
             // PHP usually runs behind Apache/Nginx, so listen is no-op or starts built-in server
             echo "PHP Server running via php -S localhost:" . $port;
         }
+        native "c" {
+            std_http_listen(port);
+        }
     }
 
     // Client Request (Fetch / Guzzle)

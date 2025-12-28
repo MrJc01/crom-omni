@@ -11,7 +11,7 @@ use crate::core::parser::Parser as OmniParser;
 use crate::core::codegen::CodeGenerator;
 use crate::core::config::OmniConfig;
 use crate::core::semantic;
-use rayon::prelude::*;
+// use rayon::prelude::*; // Disabled for Serial Build (Phase 10)
 
 #[derive(Parser)]
 #[command(name = "omnic")]
@@ -131,9 +131,9 @@ fn run() -> Result<()> {
 
                 println!("{} {} v{}", "Projeto:".blue().bold(), config.project.name, config.project.version);
 
-                // Parallel compilation of targets using Rayon
+                // Serial compilation to prevent file locking on Windows (Phase 10)
                 let targets: Vec<_> = config.targets.into_iter().collect();
-                targets.par_iter().for_each(|(target_name, target_cfg)| {
+                targets.iter().for_each(|(target_name, target_cfg)| {
                     println!("\n>> Construindo target '{}' ({})", target_name.yellow(), target_cfg.format);
 
                     let out_dir = PathBuf::from(&target_cfg.output);

@@ -110,10 +110,12 @@
 - [ ] **Task 09.4: Full Cycle Proof.** Ingerir `examples/28_universal_route.php` e rodar via `--web`.
 - [ ] **Task 09.5: Repair Integration.** Sugerir `repair` em falhas de build.
 
-## Level 10: Omnipresença (Future)
+## Level 10: Execução Soberana
 
-- [ ] **Task 10.1: Kernel Module Target.**
-- [ ] **Task 10.2: FPGA Synthesis.**
+- [x] **Task 10.1: Serial Build Enforcer.** Garantir builds determinísticos e sem travas (`--jobs 1` / remove `par_iter`).
+- [x] **Task 10.2: C HTTP Server.** Servidor HTTP real rodando em C puro (Unix/Win Sockets).
+- [x] **Task 10.3: Bytecode Generator.** Primeira versão do alvo `--target bytecode` (Hollow VM).
+- [ ] **Task 10.4: Parity Report v2.** Comparar performance de rede: Node.js vs C Nativo.
 
 ## Level 7: Roteamento e Resiliência
 
