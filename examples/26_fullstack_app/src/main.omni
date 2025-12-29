@@ -45,17 +45,17 @@ let next_id: i64 = 1;
 // SERVER LAYER - @server
 // ============================================================================
 
-@server.get("/api/tasks")
+@get("/api/tasks")
 fn api_get_tasks() {
     print("[API] GET /api/tasks - Returning " + tasks.length + " tasks");
 }
 
-@server.post("/api/tasks")
+@post("/api/tasks")
 fn api_create_task(title: string) {
     print("[API] POST /api/tasks - Creating: " + title);
 }
 
-@server.delete("/api/tasks/:id")
+@delete("/api/tasks/:id")
 fn api_delete_task(id: i64) {
     print("[API] DELETE /api/tasks/" + id);
 }
@@ -64,7 +64,7 @@ fn api_delete_task(id: i64) {
 // UI LAYER - @ui
 // ============================================================================
 
-@ui.screen("TaskManager")
+@screen("TaskManager")
 capsule TaskManager {
     fn render() {
         print("[UI] Rendering Task Manager screen");
