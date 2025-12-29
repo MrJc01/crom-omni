@@ -41,3 +41,6 @@ sha2 = "0.10"
 
 # Regex for Ingestion
 regex = "1.10"
+
+# Internal Server
+tiny_http = "0.12"

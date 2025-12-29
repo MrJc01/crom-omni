@@ -4,7 +4,7 @@ import time
 import sys
 
 def open_window():
-    webview.create_window('Omni Native App', 'http://localhost:8080/main.html')
+    webview.create_window('Omni Native App', 'http://localhost:3003/main.html')
     webview.start()
 
 if __name__ == '__main__':

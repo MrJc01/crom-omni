@@ -403,26 +403,58 @@ fn run() -> Result<()> {
                  fs::write(&html_file, html_content)?;
                  
                  // 4. Determine Mode
+                 // 4. Determine Mode
                  let serve_dir = file.parent().unwrap_or(Path::new("."));
+                 let html_path = html_file.clone();
+                 let js_path = out_file.clone();   
                  
                  let mut use_tauri = *web_app;
                  let mut use_native = *app;
+                 let mut auto_switch_to_tauri = false;
 
                  // Logic Check: Fallback if Python is too new
+                 
+                 // Dynamic Port Selection to avoid "AddressInUse" panic
+                 let port = find_available_port(3003); 
+
+                 // --- UNIFIED INTERNAL SERVER (Starts for both Tauri and Native) ---
+                 let server_html_path = html_path.clone(); 
+                 let server_js_path = js_path.clone();     
+                 
+                 println!("   🚀 Starting Unified Visual Server on port {}...", port);
+                 std::thread::spawn(move || {
+                     let server = tiny_http::Server::http(format!("0.0.0.0:{}", port)).unwrap();
+                     for request in server.incoming_requests() {
+                         let url = request.url();
+                         if url == "/" || url == "/main.html" || url == "/index.html" {
+                             let html_content = std::fs::read_to_string(&server_html_path).unwrap_or_else(|_| "<h1>Error loading HTML</h1>".to_string());
+                             let response = tiny_http::Response::from_string(html_content)
+                                 .with_header(tiny_http::Header::from_bytes(&b"Content-Type"[..], &b"text/html"[..]).unwrap());
+                             let _ = request.respond(response);
+                         } else if url.ends_with(".js") {
+                             let js_content = std::fs::read_to_string(&server_js_path).unwrap_or_else(|_| "// Error loading JS".to_string());
+                             let response = tiny_http::Response::from_string(js_content)
+                                 .with_header(tiny_http::Header::from_bytes(&b"Content-Type"[..], &b"application/javascript"[..]).unwrap());
+                             let _ = request.respond(response);
+                         } else {
+                             let response = tiny_http::Response::from_string("404 Not Found").with_status_code(404);
+                             let _ = request.respond(response);
+                         }
+                    }
+                 });
+
+                 // Logic Check: Just warn if Python is too new
                  if use_native {
                      if let Some(dll) = get_python_dll_path() {
-                        // Debug info
-                        // println!("DEBUG: Python DLL found: {}", dll);
                          if dll.contains("314") || dll.contains("3.14") || dll.contains("313") {
-                             println!("{} Python 3.13+ detected (Incompatible with Native Renderer)", "⚠️".yellow());
-                             println!("   🦋 Automatically switching to Tauri Mode (--web-app)...");
-                             use_native = false;
-                             use_tauri = true;
+                             println!("{} Python 3.13+ detected.", "⚠️".yellow());
+                             println!("   (Native Renderer might differ, but proceeding as requested via --app)");
                          }
                      }
                  }
 
-                 if use_tauri {
+
+                 if use_tauri || auto_switch_to_tauri {
                      println!("   🦋 Metamorphosis: Tauri Mode...");
                      
                      // 1. Create scaffolding directory
@@ -459,7 +491,7 @@ serde_json = "1.0"
                      fs::write(src_tauri_dir.join("Cargo.toml"), cargo_toml)?;
 
                      // 3. Generate tauri.conf.json (V2 Schema)
-                     // Using port 8080 as we will start a server there
+                     // Using port 3003 as requested
                      let tauri_conf = format!(r#"
 {{
   "productName": "{}",
@@ -468,7 +500,7 @@ serde_json = "1.0"
   "build": {{
     "beforeDevCommand": "",
     "beforeBuildCommand": "",
-    "devUrl": "http://localhost:8080",
+    "devUrl": "http://localhost:3003",
     "frontendDist": "../src"
   }},
   "app": {{
@@ -568,36 +600,11 @@ fn main() {
                      ico_bytes.extend_from_slice(png_bytes);
                      fs::write(icons_dir.join("icon.ico"), &ico_bytes)?;
                      
-                     // 8. Start Python HTTP Server for "devUrl"
-                     // 8. Start Python HTTP Server for "devUrl"
-                     let port = find_available_port(8080);
-                     println!("   🚀 Starting Backend Server on port {}...", port);
-                     
-                     let mut server_process = std::process::Command::new("python")
-                         .args(["-m", "http.server", &port.to_string()])
-                         .current_dir(serve_dir)
-                         .stdout(std::process::Stdio::null()) 
-                         .stderr(std::process::Stdio::null())
-                         .spawn()
-                         .context("Failed to start python http server")?;
-                         
-                     // Update tauri.conf.json with correct port
-                     let tauri_conf_path = src_tauri_dir.join("tauri.conf.json");
-                     let conf_content = fs::read_to_string(&tauri_conf_path)?;
-                     // Regex or simple replace could fail if previous run changed it. 
-                     // Ideally parse JSON, but replace is safer if we know structure.
-                     // We generated it with 8080 unless it was modified.
-                     // Let's replace "localhost:XXXX" just to be sure if we can regex, but replace simple is fine for now if we assume clean gen?
-                     // Actually, we regenerate tauri.conf.json EVERY RUN in step 3. So it is always 8080 initially.
-                     // IMPORTANT: Serve specific file to avoid directory listing!
-                     let target_url = format!("http://localhost:{}/{}", port, html_file.file_name().unwrap().to_str().unwrap());
-                     let new_conf = conf_content.replace("http://localhost:8080", &target_url);
-                     fs::write(&tauri_conf_path, new_conf)?;
+                     // Servidor Interno Inteligente -> Using Unified Server
+                     // std::thread::spawn(move || { ... });
 
-                     // Wait for server warm-up
-                     std::thread::sleep(std::time::Duration::from_millis(1000));
 
-                     println!("   🦀 Launching Tauri 2.0 Dev (Jobs Limited to 2 for RAM protection)...");
+                     println!("   🦀 Launching Tauri 2.0 Interface (Jobs Limited to 2)...");
                      let status = std::process::Command::new("cargo")
                          .arg("tauri")
                          .arg("dev")
@@ -606,8 +613,6 @@ fn main() {
                          .status()
                          .context("Failed to run cargo tauri dev");
 
-                     // Kill server when tauri exits
-                     let _ = server_process.kill();
                      
                      if let Err(e) = status {
                         println!("   ❌ Tauri dev failed: {}", e);
@@ -621,24 +626,22 @@ fn main() {
                  if use_native {
                      println!("   🖥️  Native App Mode (WebView2/Python)...");
                      
-                     let port = find_available_port(8080);
+                     // let port = find_available_port(8080); // Use outer port
+                     dbg!(port);
+
                      
-                     // Fix PythonNet on Windows
-                     #[cfg(target_os = "windows")]
-                     if let Some(dll_path) = get_python_dll_path() {
-                         std::env::set_var("PYTHONNET_PYDLL", dll_path);
-                     }
+                     // Fix PythonNet on Windows -> DISABLED for Python 3.13 compatibility check
+                     // #[cfg(target_os = "windows")]
+                     // if let Some(dll_path) = get_python_dll_path() {
+                     //     std::env::set_var("PYTHONNET_PYDLL", dll_path);
+                     // }
+
                      let serve_dir = file.parent().unwrap_or(Path::new("."));
                      
                      // A. Start Python HTTP Server
-                     println!("   🚀 Starting Internal Server on port {}...", port);
-                     let mut server_process = std::process::Command::new("python")
-                         .args(["-m", "http.server", &port.to_string()])
-                         .current_dir(serve_dir)
-                         .stdout(std::process::Stdio::null()) 
-                         .stderr(std::process::Stdio::null())
-                         .spawn()
-                         .context("Failed to start python http server")?;
+                     // A. Start Python HTTP Server -> UNIFIED SERVER REUSED
+                     // No need to spawn python -m http.server here.
+
  
                      // A.1 Wait for server
                      std::thread::sleep(std::time::Duration::from_millis(500)); 
@@ -665,13 +668,21 @@ if __name__ == '__main__':
                      let loader_path = file.with_extension("loader.py");
                      fs::write(&loader_path, loader_script)?;
                      
-                     println!("   ⏯️  Launching Native Window...");
-                     let status_result = std::process::Command::new("python")
-                         .arg(&loader_path)
-                         .status();
+                     println!("   ⏯️  Launching Native Window (via py -3.13)...");
+                     // Attempt to use 'py -3.13' to avoid Python 3.14 issues
+                     let status_result = std::process::Command::new("py")
+                         .args(["-3.13", loader_path.to_str().unwrap()])
+                         .status()
+                         .or_else(|_| {
+                             println!("   ⚠️  'py' launcher failed, falling back to default 'python'...");
+                             std::process::Command::new("python")
+                                 .arg(&loader_path)
+                                 .status()
+                         });
                          
                      // Cleanup
-                     let _ = server_process.kill();
+                     // let _ = server_process.kill();
+
                      
                      match status_result {
                          Ok(s) => {
