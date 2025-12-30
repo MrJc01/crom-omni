@@ -1,0 +1,49 @@
+// Universal CRUD - Omni Cross-Platform Test Project (Parser-Compatible)
+// Matches syntax from 01_hello_universal
+
+import "std/core.omni";
+
+// ========================
+// DATA LAYER: Struct
+// ========================
+struct User {
+    id: i64
+    name: string
+    email: string
+}
+
+// ========================
+// LOGIC LAYER
+// ========================
+fn saveUser(name: string, email: string) -> bool {
+    print("Saving user: " + name);
+    return true;
+}
+
+fn listUsers() {
+    print("User 1: Alice (alice@example.com)");
+    print("User 2: Bob (bob@example.com)");
+}
+
+fn deleteUser(id: i64) -> bool {
+    print("Deleting user with id: " + to_string(id));
+    return true;
+}
+
+// ========================
+// MAIN ENTRY POINT
+// ========================
+fn main() {
+    print("=== Universal CRUD Demo ===");
+    
+    // List users
+    listUsers();
+    
+    // Create new user
+    saveUser("Charlie", "charlie@example.com");
+    
+    // Delete user
+    deleteUser(1);
+    
+    print("=== Demo Complete ===");
+}

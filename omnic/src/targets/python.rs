@@ -24,6 +24,10 @@ impl CodeGenerator for PythonBackend {
         buffer.push_str("    if val is True: print('true')\n");
         buffer.push_str("    elif val is False: print('false')\n");
         buffer.push_str("    else: print(val)\n\n");
+        
+        // Helper for Omni's to_string function
+        buffer.push_str("def to_string(val):\n");
+        buffer.push_str("    return str(val)\n\n");
 
         // 1. Package / Imports
         for import in &program.imports {

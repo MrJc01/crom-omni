@@ -148,6 +148,7 @@ enum AppType {
     Tauri,
     Web,
     Server,
+    Python, // Pure Python script output
 }
 
 #[derive(Clone, ValueEnum, Debug, PartialEq)]
@@ -447,6 +448,7 @@ fn run() -> Result<()> {
                  AppType::Tauri => InternalAppType::Tauri,
                  AppType::Web => InternalAppType::Web,
                  AppType::Server => InternalAppType::Server,
+                 AppType::Python => InternalAppType::Python,
              };
 
              // Start Server (If needed for Native/Web)
@@ -506,6 +508,16 @@ fn run() -> Result<()> {
                  }
              } else if internal_type == InternalAppType::Tauri {
                   // Tauri dev is launched inside package_tauri
+             } else if internal_type == InternalAppType::Python {
+                  // Pure Python Mode - generate and run Python code
+                  println!("   🐍 Python Mode: Generating and running Python code...");
+                  let py_file = file.with_extension("py");
+                  process_single_file(&file, TargetLang::Python, false, false, Some(&py_file))?;
+                  
+                  println!("   ⏯️  Running: python {}", py_file.display());
+                  std::process::Command::new("python")
+                      .arg(&py_file)
+                      .status()?;
              } else if internal_type == InternalAppType::Web {
                  println!("   🌍 Web App Running at http://localhost:{}", port);
                  // Keep alive

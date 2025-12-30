@@ -9,6 +9,7 @@ pub enum InternalAppType {
     Tauri,
     Web,
     Server,
+    Python, // Pure Python script
 }
 
 #[derive(Debug, Clone)]
@@ -25,7 +26,8 @@ pub fn package_app(options: &PackageOptions) -> Result<()> {
         InternalAppType::Tauri => package_tauri(options),
         InternalAppType::Native => package_native(options),
         InternalAppType::Web => package_web(options),
-        _ => Ok(()), // Server/Other types might not need packaging or handled elsewhere
+        InternalAppType::Python => package_python(options),
+        _ => Ok(()), // Server types handled elsewhere
     }
 }
 
@@ -174,27 +176,34 @@ fn package_native(options: &PackageOptions) -> Result<()> {
     
     println!("      Target: {}/{}", os, arch);
 
-    // This is where we would invoke PyInstaller or Nuitka for Python targets
-    // Or GCC for C targets.
-    // For now, since we are moving the existing logic which was just "Run with pywebview", 
-    // we should create the "loader.py" here.
+    // Determine HTML filename based on source file
+    let html_filename = options.source_file
+        .file_stem()
+        .map(|s| format!("{}.html", s.to_string_lossy()))
+        .unwrap_or_else(|| "index.html".to_string());
     
     let loader_script = format!(r#"
 import webview
 import sys
 import os
 
-# Get path to local index.html
+# Get path to local HTML file
 current_dir = os.path.dirname(os.path.abspath(__file__))
-html_path = os.path.join(current_dir, "index.html")
+html_path = os.path.join(current_dir, "{}")
 
 def open_window():
     if os.path.exists(html_path):
         webview.create_window('Omni Native App', f'file://{{html_path}}')
     else:
-        # Fallback to server if needed, or strictly local file
-        print(f"Error: index.html not found at {{html_path}}")
-        # Try finding js file
+        # Try to find any HTML file in the directory
+        for f in os.listdir(current_dir):
+            if f.endswith('.html'):
+                html_path = os.path.join(current_dir, f)
+                webview.create_window('Omni Native App', f'file://{{html_path}}')
+                break
+        else:
+            print(f"Error: No HTML file found in {{current_dir}}")
+            sys.exit(1)
     webview.start()
 
 if __name__ == '__main__':
@@ -203,7 +212,7 @@ if __name__ == '__main__':
     except Exception as e:
         print(f"Error: {{e}}")
         sys.exit(1)
-"#);
+"#, html_filename);
 
     let loader_path = options.output_dir.join("native_loader.py");
     fs::write(&loader_path, loader_script)?;
@@ -233,5 +242,23 @@ if __name__ == '__main__':
 fn package_web(_options: &PackageOptions) -> Result<()> {
     println!("   🌐 Web App Ready.");
     // Just ensure HTML exists.
+    Ok(())
+}
+
+fn package_python(options: &PackageOptions) -> Result<()> {
+    println!("   🐍 Pure Python Mode...");
+    
+    // For Python target, we assume the codegen already generated a .py file
+    // The packager just needs to ensure it runs properly
+    let py_file = options.source_file.with_extension("py");
+    
+    if py_file.exists() {
+        println!("   ✨ Python script ready: {}", py_file.display());
+    } else {
+        // Create a wrapper script that calls the generated JS via Node (fallback)
+        // Or indicate that Python codegen should be invoked
+        println!("   ⚠️ Python file not found. Ensure --target python is used in build.");
+    }
+    
     Ok(())
 }
