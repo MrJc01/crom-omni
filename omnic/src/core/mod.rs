@@ -53,4 +53,5 @@ pub mod cgen; // Native C generator
 pub mod docextract; // Docstring extraction
 pub mod config;
 pub mod vm; // Hollow VM Prototype
-// pub mod packager; // New export
+pub mod packager; // New export
+pub mod adapters; // New export

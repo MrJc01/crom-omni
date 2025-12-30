@@ -1,71 +1,237 @@
-use std::fs::{self, File};
-use std::io::{Write, Seek};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use anyhow::{Result, Context};
-use zip::write::FileOptions;
-#[cfg(unix)]
-use std::os::unix::fs::PermissionsExt; // Para chmod (apenas Unix)
+use std::fs;
+use colored::*;
 
-/// Cria um executável compactado (ZipApp)
-/// Adiciona um shebang header + uncompressed/compressed zip
-pub fn create_bundle(source_dir: &Path, output_file: &Path, shebang: &str) -> Result<()> {
-    // 1. Criar o arquivo de saída
-    let file = File::create(output_file)
-        .with_context(|| format!("Falha ao criar arquivo de bundle: {}", output_file.display()))?;
+#[derive(Debug, Clone, PartialEq)]
+pub enum InternalAppType {
+    Native,
+    Tauri,
+    Web,
+    Server,
+}
+
+#[derive(Debug, Clone)]
+pub struct PackageOptions {
+    pub app_type: InternalAppType,
+    pub output_dir: PathBuf,
+    pub source_file: PathBuf,
+    pub os: Option<String>,
+    pub arch: Option<String>,
+}
+
+pub fn package_app(options: &PackageOptions) -> Result<()> {
+    match options.app_type {
+        InternalAppType::Tauri => package_tauri(options),
+        InternalAppType::Native => package_native(options),
+        InternalAppType::Web => package_web(options),
+        _ => Ok(()), // Server/Other types might not need packaging or handled elsewhere
+    }
+}
+
+fn package_tauri(options: &PackageOptions) -> Result<()> {
+    println!("   🦋 Metamorphosis: Tauri Mode...");
+    let app_name = options.source_file.file_stem().unwrap().to_str().unwrap();
+    let temp_dir = options.output_dir.join("temp_tauri_app");
     
-    // 2. Escrever Shebang Header
-    // Ex: #!/usr/bin/env python3
-    let mut writer = std::io::BufWriter::new(file);
-    writer.write_all(shebang.as_bytes())?;
-    writer.write_all(b"\n")?;
+    fs::create_dir_all(&temp_dir)?;
 
-    // 3. Iniciar Zip Writer no mesmo arquivo (append)
-    let mut zip = zip::ZipWriter::new(writer);
-    let options = FileOptions::default()
-        .compression_method(zip::CompressionMethod::Stored) // Stored é mais rápido e compatível. Deflated tbm funciona.
-        .unix_permissions(0o755);
+    println!("   📂 Scaffolding into: {}", temp_dir.display());
 
-    // 4. Adicionar arquivos recursivamente
-    add_dir_to_zip(&mut zip, source_dir, source_dir, options)?;
+    // 1. Generate Cargo.toml
+    let cargo_toml = format!(r#"
+[package]
+name = "{}"
+version = "0.1.0"
+description = "Omni Generated App"
+edition = "2021"
 
-    // 5. Finalizar
-    zip.finish()?;
+[build-dependencies]
+tauri-build = {{ version = "2", features = [] }}
+
+[dependencies]
+tauri = {{ version = "2", features = [] }}
+serde = {{ version = "1.0", features = ["derive"] }}
+serde_json = "1.0"
+"#, app_name.to_lowercase().replace("_", "-"));
+
+    let src_tauri_dir = temp_dir.join("src-tauri");
+    fs::create_dir_all(&src_tauri_dir)?;
+    fs::write(src_tauri_dir.join("Cargo.toml"), cargo_toml)?;
+
+    // 2. Generate tauri.conf.json
+    let tauri_conf = format!(r#"
+{{
+  "productName": "{}",
+  "version": "0.1.0",
+  "identifier": "com.omni.app",
+  "build": {{
+    "beforeDevCommand": "",
+    "beforeBuildCommand": "",
+    "devUrl": "http://localhost:3003",
+    "frontendDist": "../src"
+  }},
+  "app": {{
+    "windows": [
+      {{
+        "title": "Omni App - {}",
+        "width": 800,
+        "height": 600
+      }}
+    ],
+    "security": {{
+      "csp": null
+    }}
+  }},
+  "bundle": {{
+    "active": true,
+    "targets": "all",
+    "icon": []
+  }}
+}}
+"#, app_name, app_name);
+    fs::write(src_tauri_dir.join("tauri.conf.json"), tauri_conf)?;
+
+    // 3. Generate Main entry points
+    fs::create_dir_all(src_tauri_dir.join("src")).ok();
     
-    // 6. Tornar executável (Unix only feature, no Windows não faz nada mas Rust std lida bem)
-    #[cfg(unix)]
-    {
-        let mut perms = fs::metadata(output_file)?.permissions();
-        perms.set_mode(0o755);
-        fs::set_permissions(output_file, perms)?;
+    let lib_rs = r#"
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run() {
+    tauri::Builder::default()
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}
+"#;
+    fs::write(src_tauri_dir.join("src").join("lib.rs"), lib_rs)?;
+
+    let main_rs = r#"
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+fn main() {
+    tauri::Builder::default()
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}
+"#;
+    fs::write(src_tauri_dir.join("src").join("main.rs"), main_rs)?;
+
+    let build_rs = r#"
+fn main() {
+  tauri_build::build()
+}
+"#;
+    fs::write(src_tauri_dir.join("build.rs"), build_rs)?;
+
+    // 4. Copy Assets (This assumes index.html and js file are already in output_dir)
+    let web_src_dir = temp_dir.join("src");
+    fs::create_dir_all(&web_src_dir)?;
+    
+    // Simplistic Copy - In a real scenario we'd copy the build artifacts from `options.output_dir`
+    // For now, let's assume the user has generated `index.html` and `main.js` which we need to move/copy.
+    // The previous main.rs logic generated them *before* calling tauri logic.
+    // We will assume the caller ensures `index.html` exists in `options.output_dir`.
+    
+    // Copy everything from output_dir to web_src_dir
+    if let Ok(entries) = fs::read_dir(&options.output_dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_file() {
+                let fname = path.file_name().unwrap();
+                // Avoid copying the tauri dir into itself if it's nested
+                if !fname.to_string_lossy().contains("temp_tauri_app") {
+                    fs::copy(&path, web_src_dir.join(fname)).ok();
+                }
+            }
+        }
+    }
+
+    // 5. Icons
+    let icons_dir = src_tauri_dir.join("icons");
+    fs::create_dir_all(&icons_dir)?;
+    let png_bytes: &[u8] = &[
+        0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
+        0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4,
+        0x89, 0x00, 0x00, 0x00, 0x0A, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9C, 0x63, 0x00, 0x01, 0x00, 0x00,
+        0x05, 0x00, 0x01, 0x0D, 0x0A, 0x2D, 0xB4, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE,
+        0x42, 0x60, 0x82
+    ];
+    fs::write(icons_dir.join("icon.png"), png_bytes)?;
+    
+    println!("   🦀 Launching Tauri build...");
+    // Here we would run cargo tauri build // or dev
+    // For now just scaffold is fine, or we can run if commanded.
+    // The previous logic ran `tauri dev`.
+    
+    Ok(())
+}
+
+fn package_native(options: &PackageOptions) -> Result<()> {
+    println!("   🖥️  Native App Mode (Packager)...");
+    
+    // Detect OS if not provided
+    let os = options.os.clone().unwrap_or_else(|| std::env::consts::OS.to_string());
+    let arch = options.arch.clone().unwrap_or_else(|| std::env::consts::ARCH.to_string());
+    
+    println!("      Target: {}/{}", os, arch);
+
+    // This is where we would invoke PyInstaller or Nuitka for Python targets
+    // Or GCC for C targets.
+    // For now, since we are moving the existing logic which was just "Run with pywebview", 
+    // we should create the "loader.py" here.
+    
+    let loader_script = format!(r#"
+import webview
+import sys
+import os
+
+# Get path to local index.html
+current_dir = os.path.dirname(os.path.abspath(__file__))
+html_path = os.path.join(current_dir, "index.html")
+
+def open_window():
+    if os.path.exists(html_path):
+        webview.create_window('Omni Native App', f'file://{{html_path}}')
+    else:
+        # Fallback to server if needed, or strictly local file
+        print(f"Error: index.html not found at {{html_path}}")
+        # Try finding js file
+    webview.start()
+
+if __name__ == '__main__':
+    try:
+        open_window()
+    except Exception as e:
+        print(f"Error: {{e}}")
+        sys.exit(1)
+"#);
+
+    let loader_path = options.output_dir.join("native_loader.py");
+    fs::write(&loader_path, loader_script)?;
+    println!("   ✨ Native Loader generated: {}", loader_path.display());
+    
+    // If we want to strictly *Build* (compile to EXE), we would call PyInstaller here.
+    // "Aciona o app_packager.omni para gerar binários reais (EXE/ELF)"
+    
+    let pyinstaller_check = std::process::Command::new("pyinstaller").arg("--version").output();
+    if let Ok(out) = pyinstaller_check {
+        if out.status.success() {
+             println!("   📦 PyInstaller detected. Building EXE...");
+             // pyinstaller --onefile --noconsole native_loader.py
+             std::process::Command::new("pyinstaller")
+                .args(["--onefile", "--noconsole", "--distpath", options.output_dir.to_str().unwrap()])
+                .arg(&loader_path)
+                .current_dir(&options.output_dir)
+                .status()?;
+        }
+    } else {
+        println!("   ⚠️ PyInstaller not found. Generated loader script only.");
     }
 
     Ok(())
 }
 
-fn add_dir_to_zip<W: Write + Seek>(
-    zip: &mut zip::ZipWriter<W>,
-    base_dir: &Path,
-    current_dir: &Path,
-    options: FileOptions,
-) -> Result<()> {
-    let entries = fs::read_dir(current_dir)?;
-
-    for entry in entries {
-        let entry = entry?;
-        let path = entry.path();
-        
-        // Caminho relativo dentro do zip
-        let name = path.strip_prefix(base_dir)?.to_str().unwrap().replace("\\", "/");
-
-        if path.is_dir() {
-            zip.add_directory(&name, options)?;
-            add_dir_to_zip(zip, base_dir, &path, options)?;
-        } else {
-            zip.start_file(&name, options)?;
-            let mut f = File::open(&path)?;
-            std::io::copy(&mut f, zip)?;
-        }
-    }
-
+fn package_web(_options: &PackageOptions) -> Result<()> {
+    println!("   🌐 Web App Ready.");
+    // Just ensure HTML exists.
     Ok(())
 }

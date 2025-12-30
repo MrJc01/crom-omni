@@ -1,19 +1,19 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct OmniConfig {
     pub project: ProjectConfig,
     pub targets: HashMap<String, TargetConfig>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct ProjectConfig {
     pub name: String,
     pub version: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct TargetConfig {
     pub format: String, // "js", "python", "c", etc.
     pub output: String, // "dist/api"
