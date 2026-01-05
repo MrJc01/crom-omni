@@ -1,8 +1,0 @@
-{
-  "name": "HttpApiClient",
-  "version": "1.0.0",
-  "description": "Demonstrates HTTP requests with std.http",
-  "entry": "src/main.omni",
-  "defaultMode": "cmd",
-  "targets": ["cmd", "web"]
-}

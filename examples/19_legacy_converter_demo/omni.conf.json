@@ -1,8 +1,0 @@
-{
-  "name": "LegacyConverterDemo",
-  "version": "1.0.0",
-  "description": "PHP/JS to Omni ingestion demo",
-  "entry": "src/main.omni",
-  "defaultMode": "cmd",
-  "targets": ["cmd"]
-}

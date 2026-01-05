@@ -1,2 +1,0 @@
-fn foo() -> string { return "bar"; }
-fn main() { print(foo()); }

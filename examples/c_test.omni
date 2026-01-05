@@ -1,7 +1,0 @@
-capsule Main {
-    flow main() {
-        io.print("Hello from C-Native Omni!");
-        let x = 42;
-        io.print(x);
-    }
-}

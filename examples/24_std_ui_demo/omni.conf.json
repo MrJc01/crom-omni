@@ -1,8 +1,0 @@
-{
-  "name": "StdUIDemo",
-  "version": "1.0.0",
-  "description": "Demonstrates std/ui library - global functions for cross-platform GUI",
-  "entry": "src/main.omni",
-  "defaultMode": "app",
-  "targets": ["app", "web", "web-app"]
-}

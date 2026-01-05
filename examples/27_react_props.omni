@@ -1,8 +1,0 @@
-capsule 27_react_props {
-    // React Hook -> Mutable Variable
-    let mut status = initialStatus;
-
-    // Ingested constant
-    let UserProfile = native "js" { return ...; };
-
-}

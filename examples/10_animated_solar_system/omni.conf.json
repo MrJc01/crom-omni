@@ -1,8 +1,0 @@
-{
-  "name": "AnimatedSolarSystem",
-  "version": "1.0.0",
-  "description": "Complex 3D animation with physics simulation",
-  "entry": "src/main.omni",
-  "defaultMode": "web",
-  "targets": ["web", "web-app"]
-}

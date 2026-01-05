@@ -1,8 +1,0 @@
-{
-  "name": "NativeBridge",
-  "version": "1.0.0",
-  "description": "Demonstrates native code injection for JS/Python/C",
-  "entry": "src/main.omni",
-  "defaultMode": "cmd",
-  "targets": ["cmd", "app"]
-}

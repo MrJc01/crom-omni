@@ -1,8 +1,0 @@
-{
-  "name": "FlowControl",
-  "version": "1.0.0",
-  "description": "Demonstrates if/else, while loops, and recursion",
-  "entry": "src/main.omni",
-  "defaultMode": "cmd",
-  "targets": ["cmd"]
-}

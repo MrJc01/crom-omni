@@ -1,8 +1,0 @@
-{
-  "name": "StressTypes",
-  "version": "1.0.0",
-  "description": "Stress test for type system",
-  "entry": "src/main.omni",
-  "defaultMode": "cmd",
-  "targets": ["cmd"]
-}

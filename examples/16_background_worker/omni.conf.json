@@ -1,8 +1,0 @@
-{
-  "name": "BackgroundWorker",
-  "version": "1.0.0",
-  "description": "Worker pools and parallelism",
-  "entry": "src/main.omni",
-  "defaultMode": "cmd",
-  "targets": ["cmd"]
-}

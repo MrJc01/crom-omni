@@ -1,3 +1,0 @@
-fn main() {
-    print("DEBUG: VM is working");
-}

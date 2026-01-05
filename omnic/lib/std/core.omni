@@ -1,6 +1,0 @@
-// std/core.omni - Core Standard Library
-
-// Print function
-fn print(msg: string) {
-    native "js" { console.log(msg); }
-}

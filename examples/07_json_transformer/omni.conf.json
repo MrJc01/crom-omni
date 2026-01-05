@@ -1,8 +1,0 @@
-{
-  "name": "JsonTransformer",
-  "version": "1.0.0",
-  "description": "Demonstrates JSON parsing and transformation",
-  "entry": "src/main.omni",
-  "defaultMode": "cmd",
-  "targets": ["cmd"]
-}
